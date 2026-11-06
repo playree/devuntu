@@ -64,7 +64,8 @@ describe.each(routes)('$kind トークン', (route) => {
     id: 'token-1',
     expiresAt: null,
     lastUsedAt: null,
-    user: { ...route.user, banned: false, isAgent: route.isAgent },
+    // エージェントは 2FA を持てない
+    user: { ...route.user, banned: false, isAgent: route.isAgent, twoFactorEnabled: !route.isAgent },
     ...override,
   })
 
@@ -162,6 +163,14 @@ describe.each(routes)('$kind トークン', (route) => {
       )
 
       expect(await route.verify(plain)).toEqual({ ok: false, error: 'invalid_token' })
+    })
+
+    it('2FA 必須の運用で、2FA を設定していない人のトークンは通さない(エージェントは対象外)', async () => {
+      findUnique().mockResolvedValue(
+        fakeRow({ user: { ...route.user, banned: false, isAgent: route.isAgent, twoFactorEnabled: false } }) as never,
+      )
+
+      expect((await route.verify(plain)).ok).toBe(route.isAgent)
     })
 
     it('最終利用が未記録なら自分のテーブルの行を更新する', async () => {

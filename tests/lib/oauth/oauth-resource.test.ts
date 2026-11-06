@@ -37,7 +37,7 @@ const givenClient = (override: Record<string, unknown> = {}) => {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  vi.mocked(prisma.user.findUnique).mockResolvedValue({ ...user, banned: false } as never)
+  vi.mocked(prisma.user.findUnique).mockResolvedValue({ ...user, banned: false, twoFactorEnabled: true } as never)
 })
 
 describe('verifyMcpAccessToken', () => {
@@ -94,6 +94,13 @@ describe('verifyMcpAccessToken', () => {
     givenPayload()
     givenClient()
     vi.mocked(prisma.user.findUnique).mockResolvedValue({ ...user, banned: true } as never)
+    expect(await verifyMcpAccessToken('jwt')).toEqual({ ok: false, error: 'invalid_token' })
+  })
+
+  it('2FA 必須の運用で、2FA を設定していないユーザーのトークンは拒否する', async () => {
+    givenPayload()
+    givenClient()
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({ ...user, banned: false, twoFactorEnabled: false } as never)
     expect(await verifyMcpAccessToken('jwt')).toEqual({ ok: false, error: 'invalid_token' })
   })
 

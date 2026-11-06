@@ -1,4 +1,5 @@
 import { MCP_RESOURCE, MCP_SCOPE } from '@/lib/auth/mcp-scope'
+import { requiresTwoFaSetup } from '@/lib/auth/two-fa'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
 import { makeUrl } from '@/lib/server-utils'
@@ -101,7 +102,7 @@ export const verifyMcpAccessToken = async (token: string): Promise<ResourceAuthR
     }),
     prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, name: true, email: true, role: true, banned: true },
+      select: { id: true, name: true, email: true, role: true, banned: true, twoFactorEnabled: true },
     }),
   ])
   if (!client || client.disabled) {
@@ -114,6 +115,11 @@ export const verifyMcpAccessToken = async (token: string): Promise<ResourceAuthR
   }
   if (!user || user.banned) {
     logger.info({ userId }, 'mcp token user unavailable')
+    return { ok: false, error: 'invalid_token' }
+  }
+  // 2FA 必須の運用では、2FA を設定するまで発行済みのトークンも使わせない(認可の入口と揃える)
+  if (requiresTwoFaSetup(user)) {
+    logger.info({ userId }, 'mcp token user requires 2fa setup')
     return { ok: false, error: 'invalid_token' }
   }
 

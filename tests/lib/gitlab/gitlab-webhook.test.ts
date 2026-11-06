@@ -50,7 +50,9 @@ const TARGET = {
 }
 const KEY = { provider: 'gitlab', baseUrl: BASE_URL, repo: 'group/proj' }
 
-const mergeRequestEvent = (override: { action?: string; state?: string; branch?: string; path?: string } = {}) => ({
+const mergeRequestEvent = (
+  override: { action?: string; state?: string; branch?: string; path?: string; sourceProjectId?: number | null } = {},
+) => ({
   object_kind: 'merge_request',
   project: { id: 1, path_with_namespace: override.path ?? 'Group/Proj' },
   object_attributes: {
@@ -61,6 +63,8 @@ const mergeRequestEvent = (override: { action?: string; state?: string; branch?:
     action: override.action ?? 'open',
     updated_at: '2026-09-27 10:00:00 UTC',
     source_branch: override.branch ?? 'feature/ABC-1',
+    source_project_id: override.sourceProjectId === undefined ? 1 : override.sourceProjectId,
+    target_project_id: 1,
     last_commit: { id: 'ABC123' },
   },
 })
@@ -115,6 +119,17 @@ describe('Merge Request Hook', () => {
       },
       skipDuplicates: true,
     })
+  })
+
+  it('フォーク(別プロジェクト)のブランチからの MR は自動で紐付けず、状態の反映だけする', async () => {
+    for (const sourceProjectId of [2, null]) {
+      vi.mocked(prisma.ticketLink.updateMany).mockClear()
+      await handleGitlabEvent('Merge Request Hook', mergeRequestEvent({ sourceProjectId }), TARGET)
+
+      expect(prisma.ticket.findUnique).not.toHaveBeenCalled()
+      expect(prisma.ticketLink.createMany).not.toHaveBeenCalled()
+      expect(prisma.ticketLink.updateMany).toHaveBeenCalled()
+    }
   })
 
   it('別のボードのキーの表示IDでは紐付けない', async () => {

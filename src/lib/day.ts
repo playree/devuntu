@@ -145,6 +145,24 @@ export const startOfWeek = (date?: string | null, tz: string = DEFAULT_TZ) => {
 }
 
 /**
+ * 指定日を含む週の起点を、今週の `before` 週前から `after` 週後までに収める(範囲外は端の週)。
+ * `hasPrev` / `hasNext` は前後の週へ移れるか。
+ */
+export const startOfWeekWithin = (
+  date: string | null | undefined,
+  tz: string,
+  { before, after }: { before: number; after: number },
+) => {
+  const today = startOfWeek(null, tz).format('YYYY-MM-DD')
+  const min = addDaysDateOnly(today, -7 * before)
+  const max = addDaysDateOnly(today, 7 * after)
+  const target = startOfWeek(date, tz).format('YYYY-MM-DD')
+  // YYYY-MM-DD の辞書順は日付順
+  const clamped = target < min ? min : target > max ? max : target
+  return { weekStart: zonedMinutes(clamped, 0, tz), hasPrev: clamped > min, hasNext: clamped < max }
+}
+
+/**
  * 週の取得レンジ(ISO文字列。timeMin: 週初日0:00, timeMax: 翌週初日0:00)
  *
  * 両端とも暦日を進めてから tz で解決するので、DST の切替を挟む週でも壁時計の 0:00 を指す。

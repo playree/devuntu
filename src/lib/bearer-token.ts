@@ -11,6 +11,7 @@
 import { nanoid } from 'nanoid'
 import { createHash } from 'node:crypto'
 import { MCP_SCOPE } from './auth/mcp-scope'
+import { requiresTwoFaSetup } from './auth/two-fa'
 import { nowDate, withinMinutes } from './day'
 import { logger } from './logger'
 import type { ResourceAuthResult } from './oauth/oauth-resource'
@@ -42,20 +43,30 @@ export const BEARER_TOKEN_ROW_SELECT = {
   id: true,
   expiresAt: true,
   lastUsedAt: true,
-  user: { select: { id: true, name: true, email: true, role: true, banned: true, isAgent: true } },
+  user: {
+    select: { id: true, name: true, email: true, role: true, banned: true, isAgent: true, twoFactorEnabled: true },
+  },
 } as const
 
 type BearerTokenRow = {
   id: string
   expiresAt: Date | null
   lastUsedAt: Date | null
-  user: { id: string; name: string; email: string; role: string | null; banned: boolean | null; isAgent: boolean }
+  user: {
+    id: string
+    name: string
+    email: string
+    role: string | null
+    banned: boolean | null
+    isAgent: boolean
+    twoFactorEnabled: boolean | null
+  }
 }
 
 /**
  * ハッシュで引いたトークンの行を検証し、OAuth 側(`verifyMcpAccessToken`)と同じ形の結果にする。
  *
- * 有効期限と持ち主の状態(BAN / 種別)を確かめ、最終利用時刻を必要なときだけ書き直す。
+ * 有効期限と持ち主の状態(BAN / 種別 / 2FA の設定)を確かめ、最終利用時刻を必要なときだけ書き直す。
  * 利用記録の失敗で認証まで落とさない。
  */
 export const verifyBearerTokenRow = async (
@@ -83,6 +94,11 @@ export const verifyBearerTokenRow = async (
   const { user } = row
   if (user.isAgent !== opts.agentUser || user.banned) {
     logger.info({ [idKey]: row.id, userId: user.id }, `${label} user unavailable`)
+    return { ok: false, error: 'invalid_token' }
+  }
+  // 2FA 必須の運用では、2FA を設定するまで発行済みのトークンも使わせない(エージェントは 2FA を持てないので除く)
+  if (!opts.agentUser && requiresTwoFaSetup(user)) {
+    logger.info({ [idKey]: row.id, userId: user.id }, `${label} user requires 2fa setup`)
     return { ok: false, error: 'invalid_token' }
   }
 

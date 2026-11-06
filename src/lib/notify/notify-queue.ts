@@ -17,7 +17,7 @@ import { logger } from '../logger'
 import { prisma } from '../prisma'
 import { NOTIFY_CLAIM_TIMEOUT_MS, NOTIFY_FAILED_RETENTION_MS, type NotifyChannel } from './notify'
 import { isDeliveryAborting, isDeliverySettled, type DeliveryOutcome } from './notify-outcome'
-import { isRetryExhausted, retryScheduledAt } from './notify-schedule'
+import { emailRetryScheduledAt, isRetryExhausted, retryScheduledAt } from './notify-schedule'
 
 export type ClaimedOutbox = {
   id: string
@@ -194,9 +194,10 @@ export const settleDelivery = async (
     return
   }
 
+  const scheduledAt = channel === 'email' ? emailRetryScheduledAt(now, attempts) : retryScheduledAt(now, attempts)
   await prisma.notifyDelivery.update({
     where: { id },
-    data: { status: 'pending', claimedAt: null, scheduledAt: retryScheduledAt(now, attempts), lastError: outcome },
+    data: { status: 'pending', claimedAt: null, scheduledAt, lastError: outcome },
   })
 }
 

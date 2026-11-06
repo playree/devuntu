@@ -1,5 +1,5 @@
 import { cached } from '@/lib/cache'
-import { startOfWeek, weekRange } from '@/lib/day'
+import { startOfWeekWithin, weekRange } from '@/lib/day'
 import { envu } from '@/lib/env-util'
 import { expandBusyTimes, mergeBusySlots } from '@/lib/google/calendar-busy'
 import { getGoogleFreeBusy } from '@/lib/google/google-calendar-server'
@@ -13,6 +13,13 @@ import { PublicCalClient } from './client'
 
 /** 公開カレンダーの空き時間をキャッシュする時間。表示の鮮度と API 呼び出し回数の折り合い */
 const PUBLIC_CAL_TTL_MS = 5 * 60 * 1000
+
+/**
+ * 表示できる週の範囲(今週から前後何週か)。`?date=` を変え続けてキャッシュを外し、
+ * Google API のクォータを消費させられないよう、週の数を限る。
+ * 週ごとのキャッシュと合わせて、Google API の呼び出しは所有者あたり TTL ごとに週の数まで(17 回 / 5 分)に収まる
+ */
+const PUBLIC_CAL_WEEKS = { before: 4, after: 12 }
 
 /** メタデータとページ本体で同じ共有を引くので、リクエスト内では 1 回だけ問い合わせる */
 const findShare = cache(async (publicId: string) =>
@@ -52,7 +59,7 @@ const PublicCalPage = async ({
   const tz = share.user.timezone ?? envu.server.DEFAULT_TIMEZONE
   const title = scCalendarShareOptions.safeParse(share.options).data?.title ?? ''
 
-  const weekStart = startOfWeek(date, tz)
+  const { weekStart, hasPrev, hasNext } = startOfWeekWithin(date, tz, PUBLIC_CAL_WEEKS)
   const { timeMin, timeMax } = weekRange(weekStart, tz)
 
   /**
@@ -74,6 +81,15 @@ const PublicCalPage = async ({
     return mergeBusySlots([...busy, ...expandBusyTimes(rules, weekStart, tz)])
   })
 
-  return <PublicCalClient weekStartISO={weekStart.toISOString()} busy={merged} timezone={tz} title={title} />
+  return (
+    <PublicCalClient
+      weekStartISO={weekStart.toISOString()}
+      busy={merged}
+      timezone={tz}
+      title={title}
+      hasPrev={hasPrev}
+      hasNext={hasNext}
+    />
+  )
 }
 export default PublicCalPage

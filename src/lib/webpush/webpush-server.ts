@@ -16,6 +16,7 @@ import { logger } from '../logger'
 import type { DeliveryOutcome } from '../notify/notify-outcome'
 import { prisma } from '../prisma'
 import { MAX_WEBPUSH_LABEL, MAX_WEBPUSH_SUBSCRIPTIONS, type WebPushMessage } from './webpush'
+import { isPrivateAddressError, webPushAgent } from './webpush-address'
 import { isAllowedWebPushEndpoint } from './webpush-endpoint'
 
 /** 送信のタイムアウト。Slack と同じ歯止めに揃える */
@@ -108,7 +109,8 @@ export const sendWebPush = async (
     await webpush.sendNotification(
       { endpoint: subscription.endpoint, keys: { p256dh: subscription.p256dh, auth: subscription.auth } },
       JSON.stringify(message),
-      { TTL: 60 * 60 * 24, timeout: SEND_TIMEOUT_MS },
+      // 形は通っても名前解決すると内部を指すホストがあるので、接続時の名前解決で止める
+      { TTL: 60 * 60 * 24, timeout: SEND_TIMEOUT_MS, agent: webPushAgent },
     )
     await prisma.webPushSubscription
       .update({ where: { id: subscription.id }, data: { lastUsedAt: nowDate() } })
@@ -116,6 +118,12 @@ export const sendWebPush = async (
       .catch(() => undefined)
     return 'ok'
   } catch (error) {
+    if (isPrivateAddressError(error)) {
+      // 内部を指す購読は、送る先が無いのと同じ扱いにして行ごと消す
+      logger.warn({ subscriptionId: subscription.id }, 'web push endpoint resolves to a private address')
+      await deleteWebPushSubscription(subscription.id)
+      return 'unlinked'
+    }
     const outcome = error instanceof WebPushError ? classifyWebPushStatus(error.statusCode) : 'failed'
     logger.warn(
       { outcome, statusCode: error instanceof WebPushError ? error.statusCode : undefined },
