@@ -37,6 +37,7 @@ import {
 } from '@mdxeditor/editor'
 import '@mdxeditor/editor/style.css'
 import { FC, ReactElement, useEffect, useMemo, useRef, useState } from 'react'
+import { alertToMarkdownPlugin } from './mdx-alert-plugin'
 import { decoratorClickPlugin } from './mdx-decorator-click-plugin'
 import { FileUploadProvider, InsertFile } from './mdx-file-dialog'
 import { footnotePlugin } from './mdx-footnote-plugin'
@@ -61,6 +62,8 @@ const CODE_BLOCK_LANGUAGES = {
   css: 'CSS',
   html: 'HTML',
   md: 'Markdown',
+  // 編集面では色付けしないテキストとして扱い、表示面で図にする
+  mermaid: 'Mermaid',
 }
 
 /** rich-text と source のみ(diff は差分の元テキストを持たないため出さない) */
@@ -206,6 +209,8 @@ const MdxEditorInner: FC<MdxEditorCoreProps & { isDark: boolean }> = ({
       decoratorClickPlugin(),
       headingsPlugin(),
       quotePlugin(),
+      // 注意書き(`> [!NOTE]`)は引用のまま編集させ、書き出しで目印が崩れないようにする
+      alertToMarkdownPlugin(),
       listsPlugin(),
       linkPlugin(),
       // 型は要素を必ず返す関数を要求するが、閉じている間は null を返す実装で問題ない

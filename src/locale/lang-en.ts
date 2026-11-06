@@ -774,6 +774,7 @@ Please copy and use the connection information above.
   msg_mention_hint: 'Type @ followed by a name or email address to pick someone to mention.',
   msg_merge_criteria_check:
     'Tickets with unmet acceptance criteria are not completed on merge; the hold is recorded in the history and notified. Complete held tickets manually.',
+  msg_mermaid_render_failed: 'Could not render the diagram.',
   msg_no_access: 'You do not have permission to view this content.',
   msg_no_agent_approvals: 'No tickets awaiting approval.',
   msg_no_agent_runs: 'No runs yet.',

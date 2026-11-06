@@ -720,6 +720,7 @@ export type LocaleItemBase =
   | 'msg_mcp_token_limit'
   | 'msg_mention_hint'
   | 'msg_merge_criteria_check'
+  | 'msg_mermaid_render_failed'
   | 'msg_no_access'
   | 'msg_no_agent_approvals'
   | 'msg_no_agent_runs'

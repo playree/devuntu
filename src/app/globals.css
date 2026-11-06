@@ -184,6 +184,109 @@
     @apply border px-3 py-1;
   }
 
+  /* GitHub 形式の注意書き(表示面だけ。mdx-view-plugins.tsx の readOnlyAlertPlugin) */
+  .markdown .markdown-alert {
+    @apply border-l-4 py-1 pr-4 pl-4;
+  }
+
+  .markdown .markdown-alert > * + * {
+    @apply mt-2;
+  }
+
+  .markdown .markdown-alert-title {
+    @apply flex items-center gap-2 font-semibold;
+  }
+
+  .markdown .markdown-alert-note {
+    @apply border-[#0969da] dark:border-[#4493f8];
+  }
+  .markdown .markdown-alert-note .markdown-alert-title {
+    @apply text-[#0969da] dark:text-[#4493f8];
+  }
+  .markdown .markdown-alert-tip {
+    @apply border-[#1a7f37] dark:border-[#3fb950];
+  }
+  .markdown .markdown-alert-tip .markdown-alert-title {
+    @apply text-[#1a7f37] dark:text-[#3fb950];
+  }
+  .markdown .markdown-alert-important {
+    @apply border-[#8250df] dark:border-[#ab7df8];
+  }
+  .markdown .markdown-alert-important .markdown-alert-title {
+    @apply text-[#8250df] dark:text-[#ab7df8];
+  }
+  .markdown .markdown-alert-warning {
+    @apply border-[#9a6700] dark:border-[#d29922];
+  }
+  .markdown .markdown-alert-warning .markdown-alert-title {
+    @apply text-[#9a6700] dark:text-[#d29922];
+  }
+  .markdown .markdown-alert-caution {
+    @apply border-[#d1242f] dark:border-[#f85149];
+  }
+  .markdown .markdown-alert-caution .markdown-alert-title {
+    @apply text-[#d1242f] dark:text-[#f85149];
+  }
+
+  /* mermaid の図(mermaid-diagram.tsx)。mermaid は既定で幅に合わせて縮めるが、幅を固定した図は枠の中で横スクロールさせる */
+  .markdown .markdown-mermaid {
+    @apply overflow-x-auto;
+  }
+
+  .markdown .markdown-mermaid svg {
+    @apply mx-auto h-auto;
+  }
+
+  /* 表示面のコードの色付け(readonly-code-block.tsx)。@lezer/highlight の classHighlighter が付けるクラス */
+  .markdown .tok-keyword,
+  .markdown .tok-operator {
+    @apply text-[#cf222e] dark:text-[#ff7b72];
+  }
+  .markdown .tok-string,
+  .markdown .tok-string2,
+  .markdown .tok-url {
+    @apply text-[#0a3069] dark:text-[#a5d6ff];
+  }
+  .markdown .tok-comment {
+    @apply text-[#6e7781] italic dark:text-[#8b949e];
+  }
+  .markdown .tok-number,
+  .markdown .tok-bool,
+  .markdown .tok-atom,
+  .markdown .tok-literal,
+  .markdown .tok-propertyName,
+  .markdown .tok-labelName,
+  .markdown .tok-variableName2 {
+    @apply text-[#0550ae] dark:text-[#79c0ff];
+  }
+  .markdown .tok-definition,
+  .markdown .tok-macroName,
+  .markdown .tok-meta {
+    @apply text-[#8250df] dark:text-[#d2a8ff];
+  }
+  .markdown .tok-typeName,
+  .markdown .tok-className,
+  .markdown .tok-namespace {
+    @apply text-[#953800] dark:text-[#ffa657];
+  }
+  .markdown .tok-heading,
+  .markdown .tok-strong {
+    @apply font-semibold text-[#0550ae] dark:text-[#79c0ff];
+  }
+  .markdown .tok-emphasis {
+    @apply italic;
+  }
+  .markdown .tok-link {
+    @apply underline;
+  }
+  .markdown .tok-inserted {
+    @apply text-[#116329] dark:text-[#7ee787];
+  }
+  .markdown .tok-deleted,
+  .markdown .tok-invalid {
+    @apply text-[#82071e] dark:text-[#ffa198];
+  }
+
   /* Override pygments style background color. */
   .markdown .highlight pre {
     @apply bg-gray-200/60! dark:bg-gray-800!;
