@@ -147,7 +147,7 @@ revise で再開したエージェントには、`get_agent_task` の `task.deci
 ボード設定の「GitHub連携」/「GitLab連携」で自動差し戻しを有効にすると(provider ごとの設定。`BoardGitSetting`)、紐付いた PR / MR の CI の失敗やレビュー指摘を
 その provider の Webhook で受けたときに、報告済み(`agentState=done`)のエージェント担当チケットを `planned` へ戻し、
 revise で拾わせる。人が report を差し戻すのと同じ流れを、Webhook のきっかけで行う。実装は `src/lib/agent/agent-auto-revise.ts`。
-対象のチケットは紐付いたリンクから探す。フォークからの PR / MR はブランチ名では自動で紐付けないので、第三者のフォークの CI やレビューでは差し戻らない。
+対象のチケットは紐付いたリンクから探す。フォークからの PR / MR はブランチ名では自動で紐付けないので、手動で紐付けない限り、フォークの CI やレビューでは差し戻らない。
 
 **きっかけ。** 受けたイベントを `AgentAutoReviseTrigger` に1件ずつ記録する。
 
