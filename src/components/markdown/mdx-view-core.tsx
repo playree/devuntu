@@ -22,7 +22,12 @@ import { footnotePlugin } from './mdx-footnote-plugin'
 import { mentionPlugin } from './mdx-mention-plugin'
 import { referencePlugin } from './mdx-reference-plugin'
 import { sanitizeHtmlPlugin } from './mdx-sanitize-plugin'
-import { readOnlyCodeBlockDescriptor, readOnlyTablePlugin } from './mdx-view-plugins'
+import {
+  mermaidCodeBlockDescriptor,
+  readOnlyAlertPlugin,
+  readOnlyCodeBlockDescriptor,
+  readOnlyTablePlugin,
+} from './mdx-view-plugins'
 import { MentionUser, MentionUsersProvider } from './mention-node'
 
 export type MdxViewCoreProps = {
@@ -114,7 +119,8 @@ const MdxViewCore: FC<MdxViewCoreProps> = ({ markdown, onError, mentionUsers }) 
         // 画像の読み込み中は <img> が DOM に出ないため、印刷用ページが待つ目印を付けた枠を出す(useWhenRendered)
         imagePlaceholder: () => <Skeleton data-markdown-loading className='h-24 w-40 rounded-lg' />,
       }),
-      codeBlockPlugin({ codeBlockEditorDescriptors: [readOnlyCodeBlockDescriptor] }),
+      codeBlockPlugin({ codeBlockEditorDescriptors: [mermaidCodeBlockDescriptor, readOnlyCodeBlockDescriptor] }),
+      readOnlyAlertPlugin(),
       // 表示専用なので候補の入力補助は付けない(記法の解釈と描画だけ)
       mentionPlugin(),
       referencePlugin(),

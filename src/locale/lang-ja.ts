@@ -773,6 +773,7 @@ export const ja: DefaultLocaleItems = {
   msg_mention_hint: '@ に続けて名前かメールアドレスを入力すると、候補からメンションできます。',
   msg_merge_criteria_check:
     '未達の受け入れ条件が残るチケットは、マージされても完了にせず、変更履歴と通知で知らせます。保留したチケットは手動で完了にしてください。',
+  msg_mermaid_render_failed: '図を描画できませんでした。',
   msg_no_access: 'この内容にアクセスする権限がありません。',
   msg_no_agent_approvals: '承認待ちのチケットはありません。',
   msg_no_agent_runs: '実行履歴はありません。',
