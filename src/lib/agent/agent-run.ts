@@ -32,6 +32,12 @@ import type { AgentRunnerRow } from './agent-runner'
 import { findAgentTicket } from './agent-task'
 import { type AgentRunMetrics, lockAgentRunner, recordAgentRunMetrics } from './agent-usage'
 
+/**
+ * 時間切れで閉じた後も、遅れて届いた報告で `failed` を上書きさせない期間の下限(分)。
+ * `AGENT_RUN_TIMEOUT_MIN` を短くしても、閉じた直後に CLI が動き続けている間の保護は短くしない。
+ */
+const LATE_REPORT_GUARD_MIN = 60
+
 /** 時間切れで閉じた実行の要約。ランナーが何も報告せずに消えたことを履歴と通知で示す */
 const TIMEOUT_SUMMARY = 'timeout'
 
@@ -379,7 +385,7 @@ const findTimedOutAgentState = async (
     latest?.status === 'failed' &&
     latest.summary === TIMEOUT_SUMMARY &&
     !!latest.finishedAt &&
-    latest.finishedAt > msBefore(now, envu.server.AGENT_RUN_TIMEOUT_MIN * MINUTE_MS)
+    latest.finishedAt > msBefore(now, Math.max(envu.server.AGENT_RUN_TIMEOUT_MIN, LATE_REPORT_GUARD_MIN) * MINUTE_MS)
   return closedByTimeout && ticket?.agentState === 'failed' ? 'failed' : null
 }
 

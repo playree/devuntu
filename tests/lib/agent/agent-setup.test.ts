@@ -5,6 +5,7 @@
  * 取り違えて実行されてしまう。ここでは「選んだ側だけが残ること」を両方向から確かめる。
  */
 
+import { AGENT_CLI_KINDS } from '@/lib/agent/agent'
 import { agentSetupCliPrompt, agentSetupGuide } from '@/lib/agent/agent-setup'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -28,7 +29,11 @@ describe('agentSetupGuide', () => {
   })
 
   it('ランナーの timeout_sec はサーバーの時間切れ(既定60分)より短い値で書く', () => {
-    ;[claude, codex, opencode].forEach((guide) => {
+    vi.stubEnv('AGENT_RUN_TIMEOUT_MIN', undefined)
+    const guides = AGENT_CLI_KINDS.map((cli) => agentSetupGuide(cli))
+    vi.unstubAllEnvs()
+
+    guides.forEach((guide) => {
       expect(guide).toContain('"timeout_sec": 3300')
       expect(guide).toContain('records a run as failed after 60 minutes')
     })
