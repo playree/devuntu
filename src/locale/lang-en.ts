@@ -405,7 +405,7 @@ export const en: DefaultLocaleItems = {
   msg_board_note_too_long_to_move:
     'The content exceeds the limit of the destination (${max} characters). Shorten it first.',
   msg_board_notes_desc:
-    "Knowledge of this board shared with AI. Knowledge is curated by users (AI updates it only when a user instructs or agrees), and memory is what AI records on its own while working. For both, only an index (name and description) is included in the MCP get_ticket / get_board / get_agent_task responses, and AI reads the content it needs. Write premises that should always be passed in full in the board settings' AI Context. Every change is kept in the history and can be restored here.",
+    "Share this board's knowledge among board members and AI agents.\n・Knowledge: curated by users. AI updates it only when a user instructs or agrees\n・Memory: recorded by AI on its own while working\nVia MCP, AI receives only a list of names and descriptions, and reads the content it needs. Write premises that should always be passed in full in the board settings' AI Context.\nEvery change is kept in the history and can be restored here.",
   msg_confirm_approve_proposal:
     'Approve the proposal and create ${count} child tickets. The agent stops processing this ticket itself.',
   msg_confirm_restore_board_note: 'Restores ${target} to this version.',
