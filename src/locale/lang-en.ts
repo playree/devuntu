@@ -568,6 +568,7 @@ export const en: DefaultLocaleItems = {
   status_done_recent: 'Done (Last 7 Days)',
   status_todo: 'To Do',
   table_empty: 'No data',
+  table_of_contents: 'Contents',
   tag_color: 'Color',
   tag_manage: 'Tag Management',
   tags: 'Tags',

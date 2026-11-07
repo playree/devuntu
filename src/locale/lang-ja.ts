@@ -567,6 +567,7 @@ export const ja: DefaultLocaleItems = {
   status_done_recent: '完了(直近7日)',
   status_todo: '対応予定',
   table_empty: 'データがありません',
+  table_of_contents: '目次',
   tag_color: '色',
   tag_manage: 'タグ管理',
   tags: 'タグ',

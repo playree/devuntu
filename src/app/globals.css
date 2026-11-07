@@ -45,6 +45,13 @@
   }
 }
 
+/**
+ * 目次(markdown-toc.tsx)が開いている間。[data-toc] 自身とその子孫に当てる。
+ * :focus-within ではなく :has(:focus-visible) にして、クリック後にマウスが離れたら閉じるようにする。
+ * [data-open] はタッチ端末のポップオーバー内で常に開いた見た目にするためのもの
+ */
+@custom-variant toc-open (&:is([data-toc]:is(:hover, :has(:focus-visible), [data-open]), [data-toc]:is(:hover, :has(:focus-visible), [data-open]) *));
+
 @theme {
   --font-noto:
     var(--font-noto-sans-jp), BlinkMacSystemFont, Roboto, Segoe UI, Helvetica Neue, HelveticaNeue, 游ゴシック体,
