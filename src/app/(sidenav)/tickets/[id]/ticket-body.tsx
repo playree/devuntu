@@ -4,12 +4,13 @@ import { MultiButton, SubmitButtons } from '@/components/general/button'
 import { getFieldConstraints } from '@/components/general/field-constraints'
 import { CheckIcon, PencilSquareIcon } from '@/components/icon'
 import { MarkdownField } from '@/components/markdown/markdown-editor'
+import { MarkdownToc } from '@/components/markdown/markdown-toc'
 import { notify } from '@/components/notify'
 import { MentionChips } from '@/components/ticket/mention-chips'
 import { parseAction } from '@/lib/action/action-client'
 import { scPatchTicket } from '@/lib/schema/schema-ticket'
 import { useLocale } from '@/locale/client'
-import { FC, useState } from 'react'
+import { FC, useRef, useState } from 'react'
 import { type BoardAssignee } from '../use-ticket-form'
 import { GetTicketReturnType, patchTicket } from './server'
 
@@ -29,6 +30,7 @@ export const TicketBody: FC<{
   const [isEditingContent, setEditingContent] = useState(false)
   const [contentDraft, setContentDraft] = useState('')
   const [isSavingContent, setSavingContent] = useState(false)
+  const contentRef = useRef<HTMLDivElement>(null)
 
   const saveContent = async () => {
     setSavingContent(true)
@@ -49,58 +51,61 @@ export const TicketBody: FC<{
   const isContentSubmittable = MAX_CONTENT_LENGTH === undefined || contentDraft.length <= MAX_CONTENT_LENGTH
 
   return (
-    <div className='py-4'>
-      <MarkdownField
-        allowImages
-        body={ticket.content ?? ''}
-        isEditing={isEditingContent}
-        // 編集中に変わらない値を渡す(MDXEditor は編集モードのマウント時にこの値を取り込む)
-        defaultValue={ticket.content ?? ''}
-        onChange={setContentDraft}
-        length={contentDraft.length}
-        maxLength={MAX_CONTENT_LENGTH}
-        label={t('content')}
-        uploadBoardId={ticket.boardId}
-        // メンション候補は担当者候補と同じボードメンバー(取得を 1 本にまとめている)
-        mentionCandidates={boardAssignees}
-        // ツールバー + 2 行が MarkdownField の最小高に収まるので、短い本文でも高さが動かない
-        minRows={2}
-        action={
-          !isEditingContent &&
-          canEdit && (
-            <MultiButton
-              isIconOnly
-              size='sm'
-              variant='outline'
-              tooltip={t('update')}
-              icon={<PencilSquareIcon width={16} />}
-              onPress={() => {
-                setContentDraft(ticket.content ?? '')
-                setEditingContent(true)
-              }}
-            />
-          )
-        }
-        footer={
-          isEditingContent && (
-            <SubmitButtons
-              size='sm'
-              label={t('save')}
-              icon={<CheckIcon width={16} />}
-              isPending={isSavingContent}
-              isDisabled={!isContentSubmittable}
-              onPress={saveContent}
-              onCancel={() => setEditingContent(false)}
-            />
-          )
-        }
-      />
-      {!isEditingContent && (
-        <MentionChips // 誰へ届いたのかは本文の外に出す(本文中の @名前 は素のテキストのまま)
-          names={ticket.mentionedNames}
-          className='mt-1'
+    <>
+      <div ref={contentRef} className='py-4'>
+        <MarkdownField
+          allowImages
+          body={ticket.content ?? ''}
+          isEditing={isEditingContent}
+          // 編集中に変わらない値を渡す(MDXEditor は編集モードのマウント時にこの値を取り込む)
+          defaultValue={ticket.content ?? ''}
+          onChange={setContentDraft}
+          length={contentDraft.length}
+          maxLength={MAX_CONTENT_LENGTH}
+          label={t('content')}
+          uploadBoardId={ticket.boardId}
+          // メンション候補は担当者候補と同じボードメンバー(取得を 1 本にまとめている)
+          mentionCandidates={boardAssignees}
+          // ツールバー + 2 行が MarkdownField の最小高に収まるので、短い本文でも高さが動かない
+          minRows={2}
+          action={
+            !isEditingContent &&
+            canEdit && (
+              <MultiButton
+                isIconOnly
+                size='sm'
+                variant='outline'
+                tooltip={t('update')}
+                icon={<PencilSquareIcon width={16} />}
+                onPress={() => {
+                  setContentDraft(ticket.content ?? '')
+                  setEditingContent(true)
+                }}
+              />
+            )
+          }
+          footer={
+            isEditingContent && (
+              <SubmitButtons
+                size='sm'
+                label={t('save')}
+                icon={<CheckIcon width={16} />}
+                isPending={isSavingContent}
+                isDisabled={!isContentSubmittable}
+                onPress={saveContent}
+                onCancel={() => setEditingContent(false)}
+              />
+            )
+          }
         />
-      )}
-    </div>
+        {!isEditingContent && (
+          <MentionChips // 誰へ届いたのかは本文の外に出す(本文中の @名前 は素のテキストのまま)
+            names={ticket.mentionedNames}
+            className='mt-1'
+          />
+        )}
+      </div>
+      {!isEditingContent && <MarkdownToc targetRef={contentRef} />}
+    </>
   )
 }
