@@ -71,6 +71,7 @@ docker compose up -d --wait
 - Kanban boards and tickets (boards, tags, assignees, priorities, due dates, comments, mentions)
   - Parent/child and related tickets, acceptance criteria, per-board ticket templates and change history
   - Attach files to descriptions and comments, with a list of attachments per ticket
+  - Write descriptions and comments in Markdown, including mermaid diagrams, syntax-highlighted code, GitHub-style alerts and footnotes
   - Filter the board and the ticket list down to the children or related tickets of a given ticket
   - Export a ticket or a plan / report as PDF or HTML
 - Google Calendar integration, and sharing your free/busy time through a public URL that needs no sign-in
