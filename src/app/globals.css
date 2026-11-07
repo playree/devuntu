@@ -316,8 +316,10 @@
     @apply rounded-xl border-2;
     /* 本文が伸び続けてモーダルや画面をはみ出さないよう、エディタ内でスクロールさせる。
        ツールバーは MDXEditor 側で position: sticky / top: 0 なので上端に残る。
-       ポップアップは overlayContainer(Modal.Dialog / body)側に出るためクリップされない */
-    @apply max-h-[50vh] overflow-y-auto overscroll-contain;
+       ポップアップは overlayContainer(Modal.Dialog / body)側に出るためクリップされない。
+       overscroll-contain は付けない。中身が収まっていてスクロールの余地が無いときもホイールを外へ渡さず、
+       エディタの上ではページやモーダルがスクロールしなくなる(max-height の無い mdxeditor-flat では常に) */
+    @apply max-h-[50vh] overflow-y-auto;
   }
 
   /* MDXEditor に行数指定の prop が無いため、最小行数は編集面の min-height で表現する。
