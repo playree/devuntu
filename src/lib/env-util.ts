@@ -375,6 +375,16 @@ const server = {
     return getEnvInt('ATTACHMENT_MAX_SIZE_MB', { default: 10, min: 1, max: 100 })
   },
 
+  /**
+   * 応答が返らないまま放置されたエージェントの実行を、失敗として回収するまでの時間(分)。
+   *
+   * ランナーごと落ちた実行はこの経路でしか `running` が解けない。ランナーの `timeout_sec` が
+   * これより長いと、まだ動いている実行をサーバーが先に失敗扱いにしてしまう。
+   */
+  get AGENT_RUN_TIMEOUT_MIN() {
+    return getEnvInt('AGENT_RUN_TIMEOUT_MIN', { default: 60, min: 10, max: 24 * 60 })
+  },
+
   /** エージェントの実行履歴を残す期間(日) */
   get AGENT_RUN_RETENTION_DAYS() {
     return getEnvInt('AGENT_RUN_RETENTION_DAYS', { default: 90, min: 1, max: MAX_RETENTION_DAYS })

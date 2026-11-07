@@ -375,6 +375,21 @@ describe('failStaleAgentRuns', () => {
     expect(prisma.$transaction).not.toHaveBeenCalled()
   })
 
+  it.each([
+    [undefined, '2026-08-25T00:00:00.000Z'],
+    ['210', '2026-08-24T21:30:00.000Z'],
+  ])('AGENT_RUN_TIMEOUT_MIN(%s)より前に始まった実行を時間切れとみなす', async (value, deadline) => {
+    vi.stubEnv('AGENT_RUN_TIMEOUT_MIN', value)
+    agentRun.findMany.mockResolvedValueOnce([] as never)
+
+    await failStaleAgentRuns('r1', new Date('2026-08-25T01:00:00Z'))
+    vi.unstubAllEnvs()
+
+    expect(agentRun.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { runnerId: 'r1', status: 'running', startedAt: { lt: new Date(deadline) } } }),
+    )
+  })
+
   it('時間切れの実行を失敗にし、処理中のチケットも解除する', async () => {
     agentRun.findMany.mockResolvedValueOnce([staleRun()] as never)
 
@@ -829,6 +844,32 @@ describe('finishAgentTask', () => {
     expect(ticket.update).not.toHaveBeenCalled()
     expect(notifyMock).not.toHaveBeenCalled()
   })
+
+  it.each([
+    ['10', 59, 'failed'],
+    ['10', 61, 'done'],
+    ['210', 209, 'failed'],
+    ['210', 211, 'done'],
+  ])(
+    'AGENT_RUN_TIMEOUT_MIN=%s で時間切れから %s 分後の報告は %s になる(保護は最低60分)',
+    async (value, minutesAgo, state) => {
+      vi.stubEnv('AGENT_RUN_TIMEOUT_MIN', value)
+      const now = new Date('2026-08-25T12:00:00Z')
+      agentRun.findFirst.mockResolvedValueOnce(null as never).mockResolvedValueOnce({
+        status: 'failed',
+        summary: 'timeout',
+        finishedAt: new Date(now.getTime() - minutesAgo * 60_000),
+      } as never)
+      ticket.findUnique.mockResolvedValueOnce({ agentState: 'failed' } as never)
+      vi.useFakeTimers({ now, toFake: ['Date'] })
+
+      const result = await finishAgentTask(runner(), 't1', 'completed')
+      vi.useRealTimers()
+      vi.unstubAllEnvs()
+
+      expect(result).toEqual({ state })
+    },
+  )
 
   it('時間切れの後に人が待ち行列へ戻していれば、MCP だけの報告として状態を更新する', async () => {
     agentRun.findFirst
