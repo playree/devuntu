@@ -239,6 +239,25 @@ describe('AGENT_RUN_RETENTION_DAYS / COMMAND_RUN_RETENTION_DAYS', () => {
   })
 })
 
+describe('AGENT_RUN_TIMEOUT_MIN', () => {
+  restoreEnv('AGENT_RUN_TIMEOUT_MIN')
+
+  it('未設定なら60分', () => {
+    delete process.env.AGENT_RUN_TIMEOUT_MIN
+    expect(envu.server.AGENT_RUN_TIMEOUT_MIN).toBe(60)
+  })
+
+  it.each(['10', '210', '1440'])('10分から24時間までは設定できる (%s)', (value) => {
+    process.env.AGENT_RUN_TIMEOUT_MIN = value
+    expect(envu.server.AGENT_RUN_TIMEOUT_MIN).toBe(Number(value))
+  })
+
+  it.each(['9', '1441', '60.5', 'long'])('範囲外や整数でなければ起動時に弾く (%s)', (value) => {
+    process.env.AGENT_RUN_TIMEOUT_MIN = value
+    expect(() => envu.server.AGENT_RUN_TIMEOUT_MIN).toThrow()
+  })
+})
+
 describe('AGENT_RUN_KEEP', () => {
   restoreEnv('AGENT_RUN_KEEP')
 

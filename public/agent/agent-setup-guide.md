@@ -235,7 +235,7 @@ cat > ~/devuntu-agent-work/.devuntu-agent/config.json <<'JSON'
     "path": [],
     "env": {}
   },
-  "timeout_sec": 3600
+  "timeout_sec": {{timeoutSec}}
 }
 JSON
 chmod 600 ~/devuntu-agent-work/.devuntu-agent/config.json
@@ -328,7 +328,8 @@ chmod 600 ~/devuntu-agent-work/.devuntu-agent/config.json
 - `cli.env`: extra environment variables passed to the CLI (e.g. `{"GH_TOKEN": "..."}`). Under cron,
   variables exported in the shell are not inherited, so write the ones you need here.
   `DEVUNTU_AGENT_TOKEN`, referenced by the MCP configuration, is passed automatically by the runner from `token`, so you do not need to write it
-- `timeout_sec`: a CLI running longer than this is stopped and the run is recorded as failed
+- `timeout_sec`: a CLI running longer than this is stopped and the run is recorded as failed.
+  This server records a run as failed after {{runTimeoutMinutes}} minutes, so keep `timeout_sec` shorter than that
 
 After creating the configuration, import the PATH of your current shell into it as is.
 
@@ -512,7 +513,7 @@ and repeat steps 2 to 8.
 | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | Automation stays "Offline" in the admin screen | Whether cron is running (`crontab -l`), `.devuntu-agent/agent.log`                                                                 |
 | The run history is full of "Failed"            | The run's content contains the exit code and the tail of stderr                                                                    |
-| A run stays "Running"                          | The agent could not call `finish_agent_task`. It automatically becomes failed after 60 minutes                                     |
+| A run stays "Running"                          | The agent could not call `finish_agent_task`. It automatically becomes failed after {{runTimeoutMinutes}} minutes                  |
 | Tickets are not picked up                      | Whether the ticket is assigned to the agent, and whether the ticket's agent mode is still pending selection                        |
 | Fails with `... not found`                     | Run `devuntu_agent.py save-path` again in a shell where that CLI works. If that does not help, write an absolute path to `cli.bin` |
 

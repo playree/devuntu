@@ -6,7 +6,7 @@
  */
 
 import { agentSetupCliPrompt, agentSetupGuide } from '@/lib/agent/agent-setup'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 const claude = agentSetupGuide('claude')
 const codex = agentSetupGuide('codex')
@@ -25,6 +25,23 @@ describe('agentSetupGuide', () => {
       expect(guide).not.toContain('<!-- /cli -->')
       expect(guide).not.toMatch(/\n{3}/)
     })
+  })
+
+  it('ランナーの timeout_sec はサーバーの時間切れ(既定60分)より短い値で書く', () => {
+    ;[claude, codex, opencode].forEach((guide) => {
+      expect(guide).toContain('"timeout_sec": 3300')
+      expect(guide).toContain('records a run as failed after 60 minutes')
+    })
+  })
+
+  it('AGENT_RUN_TIMEOUT_MIN を変えると timeout_sec も追従する', () => {
+    vi.stubEnv('AGENT_RUN_TIMEOUT_MIN', '210')
+    const guide = agentSetupGuide('opencode')
+    vi.unstubAllEnvs()
+
+    expect(guide).toContain('"timeout_sec": 12300')
+    expect(guide).toContain('records a run as failed after 210 minutes')
+    expect(guide).toContain('automatically becomes failed after 210 minutes')
   })
 
   it('手順と CLI 未指定時の応答は英語で返す', () => {

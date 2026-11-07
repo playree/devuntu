@@ -12,6 +12,7 @@ import { type AgentCriterionReport, assertAgentCriteria, writeAgentCriteria } fr
 import { ticketDisplayId } from '../board/ticket-id'
 import { lockKanbanLane, moveTicketToLane } from '../board/ticket-write'
 import { MINUTE_MS, msBefore, nowDate } from '../day'
+import { envu } from '../env-util'
 import { logger } from '../logger'
 import { MAX_NOTIFY_RECIPIENTS } from '../notify/notify'
 import type { AgentRunNotifyState } from '../notify/notify-payload'
@@ -30,13 +31,6 @@ import { awaitsPlanReply, errAgentPlanOnly, findAwaitsPlanReply } from './agent-
 import type { AgentRunnerRow } from './agent-runner'
 import { findAgentTicket } from './agent-task'
 import { type AgentRunMetrics, lockAgentRunner, recordAgentRunMetrics } from './agent-usage'
-
-/**
- * 応答が返らないまま放置された実行を失敗として回収するまでの時間(分)。
- * Claude が落ちてもランナーが `PATCH /api/agent/runs/[id]` を送るが、
- * ランナーごと落ちた場合はこの経路でしか `running` が解けない。
- */
-export const AGENT_RUN_TIMEOUT_MIN = 60
 
 /** 時間切れで閉じた実行の要約。ランナーが何も報告せずに消えたことを履歴と通知で示す */
 const TIMEOUT_SUMMARY = 'timeout'
@@ -88,11 +82,13 @@ const buildAgentRunNotification = (param: {
 }
 
 /**
- * 応答が返らないまま時間切れになった実行を失敗として閉じる。
- * チケットが `running` のまま残ると二度と拾えなくなるので、ポーリングのたびに掃除する。
+ * 応答が返らないまま時間切れ(`AGENT_RUN_TIMEOUT_MIN`)になった実行を失敗として閉じる。
+ * CLI が落ちてもランナーが `PATCH /api/agent/runs/[id]` を送るが、ランナーごと落ちた場合は
+ * この経路でしか `running` が解けない。チケットが `running` のまま残ると二度と拾えなくなるので、
+ * ポーリングのたびに掃除する。
  */
 export const failStaleAgentRuns = async (runnerId: string, now: Date = nowDate()): Promise<number> => {
-  const deadline = msBefore(now, AGENT_RUN_TIMEOUT_MIN * MINUTE_MS)
+  const deadline = msBefore(now, envu.server.AGENT_RUN_TIMEOUT_MIN * MINUTE_MS)
   const stale = await prisma.agentRun.findMany({
     where: { runnerId, status: 'running', startedAt: { lt: deadline } },
     select: {
@@ -383,7 +379,7 @@ const findTimedOutAgentState = async (
     latest?.status === 'failed' &&
     latest.summary === TIMEOUT_SUMMARY &&
     !!latest.finishedAt &&
-    latest.finishedAt > msBefore(now, AGENT_RUN_TIMEOUT_MIN * MINUTE_MS)
+    latest.finishedAt > msBefore(now, envu.server.AGENT_RUN_TIMEOUT_MIN * MINUTE_MS)
   return closedByTimeout && ticket?.agentState === 'failed' ? 'failed' : null
 }
 

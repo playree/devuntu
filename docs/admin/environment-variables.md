@@ -1,7 +1,7 @@
 ---
 type: design_doc
 title: 環境変数
-updated: 2026-11-03
+updated: 2026-11-07
 ---
 
 # 環境変数
@@ -34,6 +34,7 @@ updated: 2026-11-03
 | GitLab 連携                           | `GITLAB_URLS`                                                                                                  | ボード設定で対応付け([手順](git-integration.md))                                                                          |
 | GitHub 連携                           | 不要                                                                                                           | ボード設定で対応付け([手順](git-integration.md))                                                                          |
 | MCP クライアントのブラウザ認可(DCR)   | `OIDC_DCR_ENABLED=true`(claude.ai から使うなら `OIDC_DCR_ALLOWED_REDIRECT_URIS` も)                            | トークンでの接続だけなら不要([mcp-server.md](mcp-server.md))                                                              |
+| AIエージェントの処理に時間がかかる    | `AGENT_RUN_TIMEOUT_MIN`                                                                                        | ランナーの `timeout_sec` も延ばす([手順](agent-runner.md#configjson))                                                     |
 | リモート実行                          | `COMMAND_EXEC_ENABLED=true`                                                                                    | 定義ファイル・SSH 鍵の配置とアサイン([command-exec.md](command-exec.md))                                                  |
 | 別の Devuntu のアカウントでサインイン | `MAIN_DEVUNTU_URL` / `MAIN_DEVUNTU_CLIENT_ID` / `MAIN_DEVUNTU_CLIENT_SECRET`                                   | 連携元の Devuntu の `/admin/oidc-clients` でクライアントを登録                                                            |
 | ダッシュボードに転送量を出す(Linode)  | `LINODE_ID` / `LINODE_PERSONAL_ACCESS_TOKEN`                                                                   | -                                                                                                                         |
@@ -173,6 +174,22 @@ updated: 2026-11-03
 - 既定のままなら `tools maintenance on|off` と同じファイルを指す。置き場を変える場合は切り替え側の `--file` も合わせる
 
 切り替え方とフラグの置き場は [メンテナンスモード](operations.md#メンテナンスモード)を参照。
+
+## AIエージェント
+
+| 変数名                  | 説明                                                           | 必須 | デフォルト |
+| ----------------------- | -------------------------------------------------------------- | ---- | ---------- |
+| `AGENT_RUN_TIMEOUT_MIN` | 応答が返らないエージェントの実行を失敗として扱うまでの時間(分) |      | `60`       |
+
+- 10〜1440 の整数のみ受け付ける。それ以外はランナーのポーリング時にエラーになり、エージェントが動かなくなる
+- 終了の報告が届かないまま「実行中」で残った実行(ランナーが CLI ごと落ちた場合など)は、そのエージェントの次のポーリングで、
+  開始からこの時間を過ぎていれば失敗になる(履歴の内容は `timeout`)
+- ランナーの `timeout_sec` より**長く**する。短いと、ランナーだけが再起動して CLI が動き続けている場合などに、
+  まだ動いている実行が失敗になる(例: ランナー180分(`timeout_sec: 10800`)→ `AGENT_RUN_TIMEOUT_MIN=210`)。
+  セットアップ手順(`get_agent_setup_guide`)は、この値の5分前を `timeout_sec` として書く
+- 長くするほど、落ちた実行に気付くのも遅れる
+
+ランナーの設定は [agent-runner.md](agent-runner.md#configjson) を参照。
 
 ## ボードノート
 

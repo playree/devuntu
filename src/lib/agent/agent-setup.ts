@@ -11,6 +11,7 @@
 
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { envu } from '../env-util'
 import { makeUrl } from '../server-utils'
 import {
   AGENT_CLI_KINDS,
@@ -25,6 +26,12 @@ export const AGENT_SCRIPT_PATH = '/agent/devuntu_agent.py'
 
 /** セットアップ手順の Markdown 本文。`public/` 配下なので standalone ビルドでも確実に配置される */
 const GUIDE_TEMPLATE_PATH = join(process.cwd(), 'public/agent/agent-setup-guide.md')
+
+/**
+ * 手順に書くランナーの `timeout_sec` を、サーバーの時間切れ(`AGENT_RUN_TIMEOUT_MIN`)より短くする幅(分)。
+ * ランナーが CLI を止めて終了を報告する前に、サーバーが実行を失敗として回収しないようにする。
+ */
+const RUNNER_TIMEOUT_MARGIN_MIN = 5
 
 /** CLI 別の記述を囲むマーカー。HTML コメントなので素の Markdown を読むときには目に入らない */
 const CLI_BLOCK_START = /^<!-- cli:(.+) -->$/
@@ -78,6 +85,8 @@ export const agentSetupGuide = (cli: AgentCliKind): string => {
   const mcpUrl = makeUrl('/api/mcp').toString()
   const intervalMinutes = String(DEFAULT_POLL_INTERVAL_SEC / 60)
   const pollIntervalOptions = AGENT_POLL_INTERVAL_OPTIONS.map((sec) => `${sec / 60} min`).join(' / ')
+  const runTimeoutMin = envu.server.AGENT_RUN_TIMEOUT_MIN
+  const timeoutSec = String((runTimeoutMin - RUNNER_TIMEOUT_MARGIN_MIN) * 60)
 
   return pickCliBlocks(readFileSync(GUIDE_TEMPLATE_PATH, 'utf-8'), cli)
     .replaceAll('{{baseUrl}}', baseUrl)
@@ -85,6 +94,8 @@ export const agentSetupGuide = (cli: AgentCliKind): string => {
     .replaceAll('{{mcpUrl}}', mcpUrl)
     .replaceAll('{{intervalMinutes}}', intervalMinutes)
     .replaceAll('{{pollIntervalOptions}}', pollIntervalOptions)
+    .replaceAll('{{runTimeoutMinutes}}', String(runTimeoutMin))
+    .replaceAll('{{timeoutSec}}', timeoutSec)
     .replaceAll('{{cliKind}}', cli)
     .replaceAll('{{cliLabel}}', AGENT_CLI_LABEL[cli])
 }

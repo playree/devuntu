@@ -375,6 +375,21 @@ describe('failStaleAgentRuns', () => {
     expect(prisma.$transaction).not.toHaveBeenCalled()
   })
 
+  it.each([
+    [undefined, '2026-08-25T00:00:00.000Z'],
+    ['210', '2026-08-24T21:30:00.000Z'],
+  ])('AGENT_RUN_TIMEOUT_MIN(%s)より前に始まった実行を時間切れとみなす', async (value, deadline) => {
+    vi.stubEnv('AGENT_RUN_TIMEOUT_MIN', value)
+    agentRun.findMany.mockResolvedValueOnce([] as never)
+
+    await failStaleAgentRuns('r1', new Date('2026-08-25T01:00:00Z'))
+    vi.unstubAllEnvs()
+
+    expect(agentRun.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { runnerId: 'r1', status: 'running', startedAt: { lt: new Date(deadline) } } }),
+    )
+  })
+
   it('時間切れの実行を失敗にし、処理中のチケットも解除する', async () => {
     agentRun.findMany.mockResolvedValueOnce([staleRun()] as never)
 
