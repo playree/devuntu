@@ -89,6 +89,7 @@ model Ticket {
   activities TicketActivity[]
 
   boardNoteRevisions BoardNoteRevision[]
+  wikiPageRevisions  WikiPageRevision[]
 
   autoReviseTriggers AgentAutoReviseTrigger[]
 

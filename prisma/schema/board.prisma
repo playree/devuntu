@@ -83,6 +83,7 @@ model Board {
   gitSettings    BoardGitSetting[]
   notes          BoardNote[]
   noteRevisions  BoardNoteRevision[]
+  wikiSpaces     WikiSpaceBoard[]
 
   @@map("board")
 }

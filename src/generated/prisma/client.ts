@@ -404,3 +404,47 @@ export type Group = Prisma.GroupModel
  * ユーザーとグループの所属を表す中間テーブル。
  */
 export type UserGroup = Prisma.UserGroupModel
+/**
+ * Model WikiSpace
+ * 階層構造の文書を置く単位。権限はスペース単位で持つ。
+ * ページは `<key>/<number>` で指定する(改名・移動で変わらない)
+ */
+export type WikiSpace = Prisma.WikiSpaceModel
+/**
+ * Model WikiSpaceMember
+ * Wiki スペースへのユーザーの直接割り当て
+ */
+export type WikiSpaceMember = Prisma.WikiSpaceMemberModel
+/**
+ * Model WikiSpaceGroup
+ * Wiki スペースへのグループ割り当て。グループの所属ユーザーがこの権限を持つ
+ */
+export type WikiSpaceGroup = Prisma.WikiSpaceGroupModel
+/**
+ * Model WikiSpaceBoard
+ * Wiki スペースへのボード割り当て。ボードのメンバー(直接・グループ経由)がこの権限を持つ
+ */
+export type WikiSpaceBoard = Prisma.WikiSpaceBoardModel
+/**
+ * Model WikiPage
+ * Wiki のページ。parentId で階層を持つ(深さの上限は MAX_WIKI_DEPTH)
+ */
+export type WikiPage = Prisma.WikiPageModel
+/**
+ * Model WikiTag
+ * Wiki スペース内で使うページのタグ
+ */
+export type WikiTag = Prisma.WikiTagModel
+/**
+ * Model WikiPageTag
+ * Wiki ページとタグの紐づけ
+ */
+export type WikiPageTag = Prisma.WikiPageTagModel
+/**
+ * Model WikiPageRevision
+ * Wiki ページの版。変更後(deleted は削除直前)の全文を持つ。
+ * 削除後も復元に使うため pageId に外部キーを張らない。
+ * 同じ人が続けて保存した分は WIKI_REVISION_MERGE_MINUTES 以内なら最新の版へまとめ(updatedAt を進める)、
+ * 1ページあたり WIKI_REVISION_MAX_PER_PAGE を超えた分は書き込み時に消す
+ */
+export type WikiPageRevision = Prisma.WikiPageRevisionModel

@@ -310,3 +310,47 @@ export const TicketActivitySource = {
 } as const
 
 export type TicketActivitySource = (typeof TicketActivitySource)[keyof typeof TicketActivitySource]
+
+
+export const WikiVisibility = {
+  restricted: 'restricted',
+  everyone: 'everyone'
+} as const
+
+export type WikiVisibility = (typeof WikiVisibility)[keyof typeof WikiVisibility]
+
+
+export const WikiSpaceRole = {
+  viewer: 'viewer',
+  editor: 'editor',
+  owner: 'owner'
+} as const
+
+export type WikiSpaceRole = (typeof WikiSpaceRole)[keyof typeof WikiSpaceRole]
+
+
+export const WikiAssignRole = {
+  viewer: 'viewer',
+  editor: 'editor'
+} as const
+
+export type WikiAssignRole = (typeof WikiAssignRole)[keyof typeof WikiAssignRole]
+
+
+export const WikiVia = {
+  web: 'web',
+  mcp: 'mcp'
+} as const
+
+export type WikiVia = (typeof WikiVia)[keyof typeof WikiVia]
+
+
+export const WikiPageRevisionAction = {
+  created: 'created',
+  updated: 'updated',
+  moved: 'moved',
+  deleted: 'deleted',
+  restored: 'restored'
+} as const
+
+export type WikiPageRevisionAction = (typeof WikiPageRevisionAction)[keyof typeof WikiPageRevisionAction]

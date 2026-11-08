@@ -110,7 +110,15 @@ export const ModelName = {
   TicketActivity: 'TicketActivity',
   User: 'User',
   Group: 'Group',
-  UserGroup: 'UserGroup'
+  UserGroup: 'UserGroup',
+  WikiSpace: 'WikiSpace',
+  WikiSpaceMember: 'WikiSpaceMember',
+  WikiSpaceGroup: 'WikiSpaceGroup',
+  WikiSpaceBoard: 'WikiSpaceBoard',
+  WikiPage: 'WikiPage',
+  WikiTag: 'WikiTag',
+  WikiPageTag: 'WikiPageTag',
+  WikiPageRevision: 'WikiPageRevision'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1058,6 +1066,117 @@ export const UserGroupScalarFieldEnum = {
 } as const
 
 export type UserGroupScalarFieldEnum = (typeof UserGroupScalarFieldEnum)[keyof typeof UserGroupScalarFieldEnum]
+
+
+export const WikiSpaceScalarFieldEnum = {
+  id: 'id',
+  key: 'key',
+  name: 'name',
+  description: 'description',
+  visibility: 'visibility',
+  pageSeq: 'pageSeq',
+  archived: 'archived',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WikiSpaceScalarFieldEnum = (typeof WikiSpaceScalarFieldEnum)[keyof typeof WikiSpaceScalarFieldEnum]
+
+
+export const WikiSpaceMemberScalarFieldEnum = {
+  id: 'id',
+  spaceId: 'spaceId',
+  userId: 'userId',
+  role: 'role',
+  createdAt: 'createdAt'
+} as const
+
+export type WikiSpaceMemberScalarFieldEnum = (typeof WikiSpaceMemberScalarFieldEnum)[keyof typeof WikiSpaceMemberScalarFieldEnum]
+
+
+export const WikiSpaceGroupScalarFieldEnum = {
+  id: 'id',
+  spaceId: 'spaceId',
+  groupId: 'groupId',
+  role: 'role',
+  createdAt: 'createdAt'
+} as const
+
+export type WikiSpaceGroupScalarFieldEnum = (typeof WikiSpaceGroupScalarFieldEnum)[keyof typeof WikiSpaceGroupScalarFieldEnum]
+
+
+export const WikiSpaceBoardScalarFieldEnum = {
+  id: 'id',
+  spaceId: 'spaceId',
+  boardId: 'boardId',
+  role: 'role',
+  createdAt: 'createdAt'
+} as const
+
+export type WikiSpaceBoardScalarFieldEnum = (typeof WikiSpaceBoardScalarFieldEnum)[keyof typeof WikiSpaceBoardScalarFieldEnum]
+
+
+export const WikiPageScalarFieldEnum = {
+  id: 'id',
+  spaceId: 'spaceId',
+  parentId: 'parentId',
+  number: 'number',
+  title: 'title',
+  content: 'content',
+  order: 'order',
+  createdById: 'createdById',
+  updatedById: 'updatedById',
+  updatedVia: 'updatedVia',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WikiPageScalarFieldEnum = (typeof WikiPageScalarFieldEnum)[keyof typeof WikiPageScalarFieldEnum]
+
+
+export const WikiTagScalarFieldEnum = {
+  id: 'id',
+  spaceId: 'spaceId',
+  name: 'name',
+  color: 'color',
+  order: 'order',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WikiTagScalarFieldEnum = (typeof WikiTagScalarFieldEnum)[keyof typeof WikiTagScalarFieldEnum]
+
+
+export const WikiPageTagScalarFieldEnum = {
+  id: 'id',
+  pageId: 'pageId',
+  tagId: 'tagId',
+  createdAt: 'createdAt'
+} as const
+
+export type WikiPageTagScalarFieldEnum = (typeof WikiPageTagScalarFieldEnum)[keyof typeof WikiPageTagScalarFieldEnum]
+
+
+export const WikiPageRevisionScalarFieldEnum = {
+  id: 'id',
+  spaceId: 'spaceId',
+  pageId: 'pageId',
+  pageNumber: 'pageNumber',
+  action: 'action',
+  parentId: 'parentId',
+  order: 'order',
+  title: 'title',
+  content: 'content',
+  tagNames: 'tagNames',
+  actorId: 'actorId',
+  via: 'via',
+  ticketId: 'ticketId',
+  restoredFromId: 'restoredFromId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WikiPageRevisionScalarFieldEnum = (typeof WikiPageRevisionScalarFieldEnum)[keyof typeof WikiPageRevisionScalarFieldEnum]
 
 
 export const SortOrder = {
