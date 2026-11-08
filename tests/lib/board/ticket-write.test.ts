@@ -57,6 +57,8 @@ describe('reassignContentAttachments', () => {
       template?: object
       note?: object
       revision?: object
+      wikiPage?: object
+      wikiRevision?: object
     } = {},
   ) => {
     const tx = {
@@ -69,6 +71,8 @@ describe('reassignContentAttachments', () => {
       ticketTemplate: { findFirst: vi.fn().mockResolvedValue(options.template ?? null) },
       boardNote: { findFirst: vi.fn().mockResolvedValue(options.note ?? null) },
       boardNoteRevision: { findFirst: vi.fn().mockResolvedValue(options.revision ?? null) },
+      wikiPage: { findFirst: vi.fn().mockResolvedValue(options.wikiPage ?? null) },
+      wikiPageRevision: { findFirst: vi.fn().mockResolvedValue(options.wikiRevision ?? null) },
     }
     return tx
   }
@@ -81,12 +85,12 @@ describe('reassignContentAttachments', () => {
     expect(tx.attachment.updateMany).not.toHaveBeenCalled()
   })
 
-  it('別ボードの自分の添付で未使用なら付け替える', async () => {
+  it('別ボードの自分の添付で未使用なら付け替える(Wiki スペースの添付は候補にしない)', async () => {
     const tx = fakeAttachmentTx()
     await reassignContentAttachments(tx as never, content, BOARD_ID, actor)
 
     expect(tx.attachment.findMany).toHaveBeenCalledWith({
-      where: { key: { in: [KEY] }, createdById: 'u1', boardId: { not: BOARD_ID } },
+      where: { key: { in: [KEY] }, createdById: 'u1', boardId: { not: BOARD_ID }, wikiSpaceId: null },
       select: { key: true },
     })
     expect(tx.attachment.updateMany).toHaveBeenCalledWith({
@@ -127,6 +131,8 @@ describe('reassignContentAttachments', () => {
   it.each([
     ['ボードノート', { note: { id: 'note-1' } }],
     ['ボードノートの版', { revision: { id: 'revision-1' } }],
+    ['Wiki ページ', { wikiPage: { id: 'page-1' } }],
+    ['Wiki ページの版', { wikiRevision: { id: 'wiki-revision-1' } }],
   ])('%sの本文から使われていれば付け替えない', async (_name, options) => {
     const tx = fakeAttachmentTx(options)
     await reassignContentAttachments(tx as never, content, BOARD_ID, actor)

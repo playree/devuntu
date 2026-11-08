@@ -104,6 +104,30 @@ describe('saveContentFile', () => {
     })
   })
 
+  it('Wiki スペースを添付先にすると wikiSpaceId を記録し、ボードには紐付けない', async () => {
+    vi.mocked(prisma.attachment.create).mockImplementation(
+      (async ({ data }: { data: { key: string; size: number } }) => data) as never,
+    )
+
+    await saveContentFile(new File(['x'], 'spec.pdf'), { boardId: null, wikiSpaceId: 's1', userId: 'u1' })
+
+    expect(prisma.attachment.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ boardId: null, wikiSpaceId: 's1', createdById: 'u1' }),
+    })
+  })
+
+  it('添付先を指定しなければ wikiSpaceId は null', async () => {
+    vi.mocked(prisma.attachment.create).mockImplementation(
+      (async ({ data }: { data: { key: string; size: number } }) => data) as never,
+    )
+
+    await saveContentFile(new File(['x'], 'a.txt'), { boardId: 'b1', userId: 'u1' })
+
+    expect(prisma.attachment.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ boardId: 'b1', wikiSpaceId: null }),
+    })
+  })
+
   it('長すぎるファイル名は拡張子の側を残して切る', async () => {
     vi.mocked(prisma.attachment.create).mockImplementation(
       (async ({ data }: { data: { key: string; size: number } }) => data) as never,

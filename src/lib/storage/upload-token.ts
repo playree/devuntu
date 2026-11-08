@@ -20,6 +20,7 @@ import { logger } from '../logger'
 import { parseBearerToken } from '../oauth/oauth-resource'
 import { isUniqueViolation, prisma } from '../prisma'
 import { makeUrl } from '../server-utils'
+import type { AttachmentOwner } from './attachment'
 import { toUploadUrl, UPLOAD_URL_PREFIX } from './upload'
 
 /**
@@ -83,7 +84,8 @@ const consumeUploadNonce = async (jti: string, expiresAt: Date): Promise<boolean
   return true
 }
 
-export type UploadActor = { userId: string; boardId: string | null }
+/** アップロードの実行者と添付先 */
+export type UploadActor = AttachmentOwner
 
 /**
  * 短命トークンを検証し、アップロードの実行者と添付先ボードを返す。

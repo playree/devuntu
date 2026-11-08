@@ -57,7 +57,7 @@ export const lockKanbanLane = async (
 }
 
 /**
- * その添付が、指定チケット以外の本文(チケット・コメント・チケットテンプレート・ボードノート)から使われているかを調べる。
+ * その添付が、指定チケット以外の本文(チケット・コメント・チケットテンプレート・ボードノート・Wiki ページ)から使われているかを調べる。
  *
  * 同じチケット(とそのコメント)からの参照は保存先ボードと同じボードなので、
  * 付け替えを止める理由にならない。`excludeTicketId` はそれを除くためのもの。
@@ -92,7 +92,19 @@ const isAttachmentInUse = async (
     return true
   }
   const revision = await tx.boardNoteRevision.findFirst({ where: { content: { contains: url } }, select: { id: true } })
-  return revision !== null
+  if (revision) {
+    return true
+  }
+  // Wiki ページにはボードの添付の URL も貼れる。付け替えると Wiki の閲覧者から見えなくなる
+  const wikiPage = await tx.wikiPage.findFirst({ where: { content: { contains: url } }, select: { id: true } })
+  if (wikiPage) {
+    return true
+  }
+  const wikiRevision = await tx.wikiPageRevision.findFirst({
+    where: { content: { contains: url } },
+    select: { id: true },
+  })
+  return wikiRevision !== null
 }
 
 /**
@@ -124,9 +136,9 @@ export const reassignContentAttachments = async (
     return
   }
 
-  // 保存先と同じボードの添付・他人の添付は対象外。通常はここが0件で終わる
+  // 保存先と同じボードの添付・他人の添付・Wiki スペースの添付は対象外。通常はここが0件で終わる
   const candidates = await tx.attachment.findMany({
-    where: { key: { in: keys }, createdById: actor.id, boardId: { not: boardId } },
+    where: { key: { in: keys }, createdById: actor.id, boardId: { not: boardId }, wikiSpaceId: null },
     select: { key: true },
   })
   if (candidates.length === 0) {

@@ -2,7 +2,7 @@
  * 添付キーの参照元検索の単体テスト
  *
  * 「参照されている」の判断を誤ると実データを消してしまうので、
- * 8つの参照元(子チケットの起票案を含む)それぞれを拾えること、本文のページ送りが取りこぼさないことを確認する。
+ * 各参照元(子チケットの起票案・Wiki ページとその版を含む)それぞれを拾えること、本文のページ送りが取りこぼさないことを確認する。
  */
 
 import { ATTACHMENT_SCAN_BATCH } from '@/lib/maintenance/maintenance'
@@ -18,6 +18,8 @@ vi.mock('@/lib/prisma', async () =>
     ticketTemplate: ['findMany', 'findFirst'],
     boardNote: ['findMany', 'findFirst'],
     boardNoteRevision: ['findMany', 'findFirst'],
+    wikiPage: ['findMany', 'findFirst'],
+    wikiPageRevision: ['findMany', 'findFirst'],
     user: ['findMany', 'findFirst'],
     linkWidget: ['findMany', 'findFirst'],
   }),
@@ -39,6 +41,8 @@ beforeEach(() => {
   vi.mocked(prisma.ticketTemplate.findMany).mockResolvedValue([] as never)
   vi.mocked(prisma.boardNote.findMany).mockResolvedValue([] as never)
   vi.mocked(prisma.boardNoteRevision.findMany).mockResolvedValue([] as never)
+  vi.mocked(prisma.wikiPage.findMany).mockResolvedValue([] as never)
+  vi.mocked(prisma.wikiPageRevision.findMany).mockResolvedValue([] as never)
   vi.mocked(prisma.user.findMany).mockResolvedValue([] as never)
   vi.mocked(prisma.linkWidget.findMany).mockResolvedValue([] as never)
   for (const model of [
@@ -47,6 +51,8 @@ beforeEach(() => {
     prisma.ticketTemplate,
     prisma.boardNote,
     prisma.boardNoteRevision,
+    prisma.wikiPage,
+    prisma.wikiPageRevision,
     prisma.user,
     prisma.linkWidget,
   ]) {
@@ -91,6 +97,17 @@ describe('collectReferencedUploadKeys', () => {
     ] as never)
     vi.mocked(prisma.boardNoteRevision.findMany).mockResolvedValue([
       { id: 'r1', content: `![](${toUploadUrl(keyB)})` },
+    ] as never)
+
+    const keys = await collectReferencedUploadKeys()
+
+    expect([...keys].sort()).toEqual([keyA, keyB].sort())
+  })
+
+  it('Wiki ページとその版の本文からも集める(版は復元に使うので保持期間の掃除まで残す)', async () => {
+    vi.mocked(prisma.wikiPage.findMany).mockResolvedValue([{ id: 'p1', content: `![](${toUploadUrl(keyA)})` }] as never)
+    vi.mocked(prisma.wikiPageRevision.findMany).mockResolvedValue([
+      { id: 'r1', content: `[spec.pdf](${toUploadUrl(keyB)})` },
     ] as never)
 
     const keys = await collectReferencedUploadKeys()
@@ -184,6 +201,16 @@ describe('findAttachmentReference', () => {
   it('ボードノートの版の参照を見つける', async () => {
     vi.mocked(prisma.boardNoteRevision.findFirst).mockResolvedValue({ id: 'r1' } as never)
     expect(await findAttachmentReference(keyA)).toBe('boardNote')
+  })
+
+  it('Wiki ページ本文の参照を見つける', async () => {
+    vi.mocked(prisma.wikiPage.findFirst).mockResolvedValue({ id: 'p1' } as never)
+    expect(await findAttachmentReference(keyA)).toBe('wikiPage')
+  })
+
+  it('Wiki ページの版の参照を見つける(削除済みページの版を含む)', async () => {
+    vi.mocked(prisma.wikiPageRevision.findFirst).mockResolvedValue({ id: 'r1' } as never)
+    expect(await findAttachmentReference(keyA)).toBe('wikiPage')
   })
 
   it('アバターの参照を見つける', async () => {

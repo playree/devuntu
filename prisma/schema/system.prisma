@@ -55,10 +55,14 @@ model Attachment {
   originalName String
 
   /// 添付先のボード。値がある場合は配信時にそのボードの可視判定を通す。
-  /// null は全ログインユーザーへ配信してよいもの(お知らせ / リンクウィジェットのアイコン)。
+  /// boardId / wikiSpaceId がともに null のものは全ログインユーザーへ配信してよいもの(お知らせ / リンクウィジェットのアイコン)。
   /// ボード削除で紐付けを外した添付も、掃除が回収するまでの間だけこの状態を通る
   boardId String?
   board   Board?  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  /// 添付先の Wiki スペース。値がある場合は配信時にそのスペースの閲覧判定を通す。boardId とは同時に持たない
+  wikiSpaceId String?
+  wikiSpace   WikiSpace? @relation(fields: [wikiSpaceId], references: [id], onDelete: Cascade)
 
   /// アップロードしたユーザー。ユーザー削除時は SetNull でファイルの記録だけ残す
   createdById String?
@@ -71,6 +75,7 @@ model Attachment {
   createdAt DateTime @default(now())
 
   @@index([boardId])
+  @@index([wikiSpaceId])
   @@map("attachment")
 }
 

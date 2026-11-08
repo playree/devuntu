@@ -2,7 +2,7 @@
 
 import { codeMirrorDark } from '@/components/code/codemirror-dark'
 import { notify } from '@/components/notify'
-import { uploadFile, uploadImage } from '@/lib/storage/upload'
+import { uploadFile, uploadImage, type UploadTarget } from '@/lib/storage/upload'
 import { useResolvedTheme } from '@/lib/use-resolved-theme'
 import { useLocale } from '@/locale/client'
 import { cn } from '@heroui/react'
@@ -119,6 +119,8 @@ export type MdxEditorCoreProps = {
    * 省略すると全ログインユーザーが参照できる添付になるので、ボードに属する本文では必ず渡すこと
    */
   uploadBoardId?: string | null
+  /** 挿入した画像の添付先 Wiki スペース。配信時にそのスペースの閲覧判定が使われる。`uploadBoardId` とは同時に渡さない */
+  uploadWikiSpaceId?: string | null
   /**
    * true で画像とファイルを挿入できるようにする(既定 false)。false の間はツールバーの画像・ファイルのボタンを出さず、
    * 貼り付け / ドロップでもアップロードしない。既存の画像記法の表示は残る。マウント時の値で固定される。
@@ -149,6 +151,7 @@ const MdxEditorInner: FC<MdxEditorCoreProps & { isDark: boolean }> = ({
   onBlur,
   overlayContainer,
   uploadBoardId,
+  uploadWikiSpaceId,
   allowImages = false,
   mentionCandidates,
   placeholder,
@@ -165,10 +168,10 @@ const MdxEditorInner: FC<MdxEditorCoreProps & { isDark: boolean }> = ({
    * plugins を作り直すと編集中の内容が失われるため、ハンドラの参照は固定したまま
    * ref 越しに最新値を読む。
    */
-  const boardIdRef = useRef(uploadBoardId)
+  const targetRef = useRef<UploadTarget>({ boardId: uploadBoardId, wikiSpaceId: uploadWikiSpaceId })
   useEffect(() => {
-    boardIdRef.current = uploadBoardId
-  }, [uploadBoardId])
+    targetRef.current = { boardId: uploadBoardId, wikiSpaceId: uploadWikiSpaceId }
+  }, [uploadBoardId, uploadWikiSpaceId])
 
   /**
    * 失敗通知の文言。`t` はロケール切替で参照が変わるため、ハンドラの参照を固定したまま
@@ -183,7 +186,7 @@ const MdxEditorInner: FC<MdxEditorCoreProps & { isDark: boolean }> = ({
   // useState の遅延初期化で初回マウント時の関数を固定する(ref を render 中に読まないため)
   const [uploadHandler] = useState(() => async (file: File) => {
     try {
-      return await uploadImage(file, boardIdRef.current)
+      return await uploadImage(file, targetRef.current)
     } catch (e) {
       /**
        * imagePlugin はツールバー / 貼り付け / ドラッグ&ドロップ / 差し替えのどの経路でも
@@ -196,7 +199,7 @@ const MdxEditorInner: FC<MdxEditorCoreProps & { isDark: boolean }> = ({
   })
 
   // ファイルの失敗通知はダイアログ側(mdx-file-dialog.tsx)が出す
-  const [fileUploadHandler] = useState(() => (file: File) => uploadFile(file, boardIdRef.current))
+  const [fileUploadHandler] = useState(() => (file: File) => uploadFile(file, targetRef.current))
 
   const plugins = useMemo(() => {
     // source モードとコードブロックの CodeMirror は basicLight がハードコードされているため、

@@ -23,7 +23,7 @@ import { extractUploadKeys, isUploadUrl, toUploadKey, toUploadUrl, UPLOAD_URL_PR
  * 画像を挿入できるエディタ(`allowImages`)の保存先は、`tests/components/markdown/image-editors.test.ts` の一覧と対で保つ
  */
 export type AttachmentRefSource =
-  'ticket' | 'comment' | 'ticketTemplate' | 'boardNote' | 'user' | 'linkWidget' | 'announcement'
+  'ticket' | 'comment' | 'ticketTemplate' | 'boardNote' | 'wikiPage' | 'user' | 'linkWidget' | 'announcement'
 
 /** 本文にアップロードURLを含む行だけを対象にする条件 */
 const hasUploadUrl = { content: { contains: UPLOAD_URL_PREFIX } }
@@ -106,6 +106,9 @@ export const collectReferencedUploadKeys = async (): Promise<Set<string>> => {
   // ボードノートは画面のエディタでは画像を貼れないが、MCP では upload_image の URL を本文に書ける
   await collectFromContent((args) => prisma.boardNote.findMany(args), keys)
   await collectFromContent((args) => prisma.boardNoteRevision.findMany(args), keys)
+  // Wiki の版は復元に使うので、保持期間の掃除で消えるまでは参照として扱う
+  await collectFromContent((args) => prisma.wikiPage.findMany(args), keys)
+  await collectFromContent((args) => prisma.wikiPageRevision.findMany(args), keys)
 
   const [users, widgets, announcement] = await Promise.all([
     prisma.user.findMany({ where: { image: { startsWith: `${UPLOAD_URL_PREFIX}/` } }, select: { image: true } }),
@@ -161,6 +164,12 @@ export const findAttachmentReference = async (key: string): Promise<AttachmentRe
     (await prisma.boardNoteRevision.findFirst({ where: { content: { contains: url } }, select: { id: true } }))
   ) {
     return 'boardNote'
+  }
+  if (
+    (await prisma.wikiPage.findFirst({ where: { content: { contains: url } }, select: { id: true } })) ||
+    (await prisma.wikiPageRevision.findFirst({ where: { content: { contains: url } }, select: { id: true } }))
+  ) {
+    return 'wikiPage'
   }
   if (await prisma.user.findFirst({ where: { image: url }, select: { id: true } })) {
     return 'user'

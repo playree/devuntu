@@ -54,6 +54,8 @@ const MdxEditorHost = memo<{
   onBlur?: () => void
   /** 挿入した画像の添付先ボード({@link MarkdownInput} 参照) */
   uploadBoardId?: string | null
+  /** 挿入した画像の添付先 Wiki スペース({@link MarkdownInput} 参照) */
+  uploadWikiSpaceId?: string | null
   /** 画像の挿入を許可する({@link MarkdownInput} 参照) */
   allowImages?: boolean
   /** `@` 入力時のメンション候補({@link MarkdownInput} 参照) */
@@ -67,6 +69,7 @@ const MdxEditorHost = memo<{
   onChange,
   onBlur,
   uploadBoardId,
+  uploadWikiSpaceId,
   allowImages,
   mentionCandidates,
   minRows = DEFAULT_MIN_ROWS,
@@ -93,6 +96,7 @@ const MdxEditorHost = memo<{
           onBlur={onBlur}
           overlayContainer={container}
           uploadBoardId={uploadBoardId}
+          uploadWikiSpaceId={uploadWikiSpaceId}
           allowImages={allowImages}
           mentionCandidates={mentionCandidates}
           className={className}
@@ -119,6 +123,8 @@ export const MarkdownInput: FC<{
    * 省略すると全ログインユーザーが参照できる添付になるため、ボードに属する本文では必ず渡すこと
    */
   uploadBoardId?: string | null
+  /** 挿入した画像の添付先 Wiki スペース。配信時にこのスペースの閲覧判定が掛かる。Wiki の本文では必ず渡すこと */
+  uploadWikiSpaceId?: string | null
   /**
    * true で画像を挿入できるようにする(既定 false。ツールバーの画像ボタン / 貼り付け / ドロップ)。
    * true にする本文は、保存先を添付の掃除の参照元(`src/lib/storage/attachment-ref.ts`)に加え、
@@ -140,6 +146,7 @@ export const MarkdownInput: FC<{
   maxLength,
   errorMessage,
   uploadBoardId,
+  uploadWikiSpaceId,
   allowImages,
   mentionCandidates,
   minRows,
@@ -154,6 +161,7 @@ export const MarkdownInput: FC<{
         initialMarkdown={initialMarkdown}
         onChange={onChange}
         uploadBoardId={uploadBoardId}
+        uploadWikiSpaceId={uploadWikiSpaceId}
         allowImages={allowImages}
         mentionCandidates={mentionCandidates}
         minRows={minRows}
@@ -182,6 +190,8 @@ export const MarkdownField: FC<{
   maxLength?: number
   /** 挿入した画像の添付先ボード({@link MarkdownInput} 参照) */
   uploadBoardId?: string | null
+  /** 挿入した画像の添付先 Wiki スペース({@link MarkdownInput} 参照) */
+  uploadWikiSpaceId?: string | null
   /** 画像の挿入を許可する({@link MarkdownInput} 参照) */
   allowImages?: boolean
   /** `@` 入力時のメンション候補({@link MarkdownInput} 参照) */
@@ -201,6 +211,7 @@ export const MarkdownField: FC<{
   label,
   maxLength,
   uploadBoardId,
+  uploadWikiSpaceId,
   allowImages,
   mentionCandidates,
   minRows,
@@ -233,6 +244,7 @@ export const MarkdownField: FC<{
             initialMarkdown={defaultValue}
             onChange={onChange}
             uploadBoardId={uploadBoardId}
+            uploadWikiSpaceId={uploadWikiSpaceId}
             allowImages={allowImages}
             mentionCandidates={mentionCandidates}
             minRows={minRows}
@@ -261,6 +273,7 @@ export const MarkdownCtrl = <
   label,
   errorMessage,
   uploadBoardId,
+  uploadWikiSpaceId,
   allowImages,
   mentionCandidates,
   minRows,
@@ -272,6 +285,8 @@ export const MarkdownCtrl = <
   errorMessage?: string
   /** 挿入した画像の添付先ボード({@link MarkdownInput} 参照) */
   uploadBoardId?: string | null
+  /** 挿入した画像の添付先 Wiki スペース({@link MarkdownInput} 参照) */
+  uploadWikiSpaceId?: string | null
   /** 画像の挿入を許可する({@link MarkdownInput} 参照) */
   allowImages?: boolean
   /** `@` 入力時のメンション候補({@link MarkdownInput} 参照) */
@@ -300,6 +315,7 @@ export const MarkdownCtrl = <
         onChange={field.onChange}
         onBlur={field.onBlur}
         uploadBoardId={uploadBoardId}
+        uploadWikiSpaceId={uploadWikiSpaceId}
         allowImages={allowImages}
         mentionCandidates={mentionCandidates}
         minRows={minRows}

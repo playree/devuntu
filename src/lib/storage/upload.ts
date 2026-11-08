@@ -104,6 +104,12 @@ export const newUploadKey = (ext: string) => `${uuidv7()}.${ext}`
 /** アップロード時に添付先ボードを伝えるフォームフィールド名。配信時の可視判定に使う */
 export const UPLOAD_BOARD_ID_FIELD = 'boardId'
 
+/** アップロード時に添付先の Wiki スペースを伝えるフォームフィールド名。{@link UPLOAD_BOARD_ID_FIELD} とは同時に送らない */
+export const UPLOAD_WIKI_SPACE_ID_FIELD = 'wikiSpaceId'
+
+/** 添付先。配信時の可視判定に使う。両方とも省略すると全ログインユーザーが参照できる添付になる */
+export type UploadTarget = { boardId?: string | null; wikiSpaceId?: string | null }
+
 /**
  * アップロードの種類を伝えるクエリパラメータ名(`?kind=file`)。省略時は画像として扱う。
  * サーバーがボディを読む前に上限を決められるよう、フォームではなくクエリで渡す
@@ -112,11 +118,15 @@ export const UPLOAD_KIND_PARAM = 'kind'
 
 export type UploadKind = 'image' | 'file'
 
-const upload = async (file: File, kind: UploadKind, boardId?: string | null) => {
+const upload = async (file: File, kind: UploadKind, { boardId, wikiSpaceId }: UploadTarget = {}) => {
   const form = new FormData()
   form.append('file', file)
+  // 両方あればそのまま送り、サーバーの 400 で誤った渡し方に気づけるようにする
   if (boardId) {
     form.append(UPLOAD_BOARD_ID_FIELD, boardId)
+  }
+  if (wikiSpaceId) {
+    form.append(UPLOAD_WIKI_SPACE_ID_FIELD, wikiSpaceId)
   }
   const url = kind === 'file' ? `${UPLOAD_URL_PREFIX}?${UPLOAD_KIND_PARAM}=file` : UPLOAD_URL_PREFIX
   const res = await fetch(url, { method: 'POST', body: form })
@@ -131,10 +141,10 @@ const upload = async (file: File, kind: UploadKind, boardId?: string | null) => 
  * 画像をアップロードして公開URLを返す(MDXEditor の imageUploadHandler 用)。
  * 失敗時は throw して MDXEditor 側にエラーを表示させる。
  *
- * `boardId` を渡すとその添付はボードのメンバーにしか配信されない。
- * 省略した場合は全ログインユーザーが参照できる(お知らせなどボードに属さない本文向け)。
+ * `boardId` を渡すとその添付はボードのメンバーに、`wikiSpaceId` を渡すとそのスペースを閲覧できる人にしか配信されない。
+ * どちらも省略した場合は全ログインユーザーが参照できる(お知らせなどボードに属さない本文向け)。
  */
-export const uploadImage = (file: File, boardId?: string | null) => upload(file, 'image', boardId)
+export const uploadImage = (file: File, target?: UploadTarget) => upload(file, 'image', target)
 
-/** ファイルを変換せずにアップロードして公開URLを返す。`boardId` の扱いは {@link uploadImage} と同じ */
-export const uploadFile = (file: File, boardId?: string | null) => upload(file, 'file', boardId)
+/** ファイルを変換せずにアップロードして公開URLを返す。添付先の扱いは {@link uploadImage} と同じ */
+export const uploadFile = (file: File, target?: UploadTarget) => upload(file, 'file', target)

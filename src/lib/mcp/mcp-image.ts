@@ -14,7 +14,7 @@ import { LocaleItem } from '@/locale'
 import { t } from '@/locale/server'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { assertBoardAccess, assertTicketAccess, canViewAttachment } from '../board/board-access'
+import { assertBoardAccess, assertTicketAccess } from '../board/board-access'
 import { errInvalidOperation, errValidation } from '../error'
 import { logger } from '../logger'
 import type { ResourceAuth } from '../oauth/oauth-resource'
@@ -23,6 +23,7 @@ import { assertRateLimit } from '../rate-limit'
 import { ACCEPTED_IMAGE_TYPES, zImageFile } from '../schema/schema'
 import { makeUrl } from '../server-utils'
 import { saveContentImage } from '../storage/attachment'
+import { canViewAttachment } from '../storage/attachment-access'
 import { resizeWebp, WEBP_MIME } from '../storage/image'
 import { getObject } from '../storage/storage'
 import { isValidUploadKey, toUploadKey, UPLOAD_URL_PREFIX } from '../storage/upload'
@@ -157,10 +158,13 @@ const getImageForMcp = async (auth: ResourceAuth, input: { image: string; maxSiz
 
   const attachment = await prisma.attachment.findUnique({
     where: { key },
-    select: { boardId: true, originalName: true, size: true, mimeType: true },
+    select: { boardId: true, wikiSpaceId: true, originalName: true, size: true, mimeType: true },
   })
   // アクセス不可は未存在と区別せず、キーの当たり判定を返さない(配信APIと同じ扱い)
-  if (!attachment || !(await canViewAttachment(auth.user, { key, boardId: attachment.boardId }))) {
+  if (
+    !attachment ||
+    !(await canViewAttachment(auth.user, { key, boardId: attachment.boardId, wikiSpaceId: attachment.wikiSpaceId }))
+  ) {
     throw errInvalidOperation()
   }
   // 添付ファイル(最大 ATTACHMENT_MAX_SIZE_MB)を丸ごと読んで sharp に渡さないよう、画像以外はここで返す

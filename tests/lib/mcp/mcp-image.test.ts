@@ -5,12 +5,13 @@
  * ストレージとDBはモックし、添付先ボードの決め方・入力の正規化・認可の落とし方を検証する。
  */
 
-import { assertBoardAccess, assertTicketAccess, canViewAttachment } from '@/lib/board/board-access'
+import { assertBoardAccess, assertTicketAccess } from '@/lib/board/board-access'
 import { errInvalidOperation } from '@/lib/error'
 import { registerImageTools } from '@/lib/mcp/mcp-image'
 import { resolveTicketId } from '@/lib/mcp/mcp-ticket'
 import { prisma } from '@/lib/prisma'
 import { saveContentImage } from '@/lib/storage/attachment'
+import { canViewAttachment } from '@/lib/storage/attachment-access'
 import { resizeWebp } from '@/lib/storage/image'
 import { getObject } from '@/lib/storage/storage'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
@@ -25,11 +26,11 @@ vi.mock('@/lib/prisma', async () =>
 vi.mock('@/lib/board/board-access', () => ({
   assertBoardAccess: vi.fn(),
   assertTicketAccess: vi.fn(),
-  canViewAttachment: vi.fn(),
 }))
 
 vi.mock('@/lib/mcp/mcp-ticket', () => ({ resolveTicketId: vi.fn() }))
 vi.mock('@/lib/storage/attachment', () => ({ saveContentImage: vi.fn() }))
+vi.mock('@/lib/storage/attachment-access', () => ({ canViewAttachment: vi.fn() }))
 vi.mock('@/lib/storage/storage', () => ({ getObject: vi.fn() }))
 vi.mock('@/lib/storage/image', () => ({ resizeWebp: vi.fn(), WEBP_MIME: 'image/webp' }))
 
@@ -242,9 +243,10 @@ describe('get_image', () => {
     expect(denied.content).toEqual(missing.content)
   })
 
-  it('閲覧の可否は配信APIと同じ判定(キーと添付先ボード)に委ねる', async () => {
+  it('閲覧の可否は配信APIと同じ判定(キーと添付先)に委ねる', async () => {
     findAttachment.mockResolvedValue({
       boardId: null,
+      wikiSpaceId: 'w1',
       originalName: 'icon.png',
       size: 10,
       mimeType: 'image/webp',
@@ -255,6 +257,7 @@ describe('get_image', () => {
     expect(canViewAttachment).toHaveBeenCalledWith(expect.objectContaining({ id: expect.any(String) }), {
       key: KEY,
       boardId: null,
+      wikiSpaceId: 'w1',
     })
     expect(result.isError).toBeFalsy()
   })
