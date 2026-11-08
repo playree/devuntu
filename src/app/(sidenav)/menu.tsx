@@ -2,6 +2,8 @@
 import { AccordionSection } from '@/components/general/accordion'
 import { UserAvatar } from '@/components/general/avatar'
 import { MultiButton } from '@/components/general/button'
+import { SideNavSlot, useSideNav } from '@/components/general/side-nav-slot'
+import { TabsBox } from '@/components/general/tabs'
 import { ThemeSwitchList } from '@/components/general/theme-switch'
 import {
   ArrowLeftStartOnRectangleIcon,
@@ -27,7 +29,7 @@ import { Accordion, Button, Card, cn } from '@heroui/react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { createContext, FC, ReactNode, useContext } from 'react'
+import { createContext, FC, ReactNode, useContext, useState } from 'react'
 
 /**
  * Google連携が利用可能かどうか(既定はfalse)。
@@ -103,7 +105,13 @@ const SignOutButton: FC = () => {
   )
 }
 
-const defaultExpandedKeys = new Set(['group_task', 'group_admin'])
+/** Accordion(react-aria)のキー */
+type AccordionKey = string | number
+
+const defaultExpandedKeys = new Set<AccordionKey>(['group_task', 'group_admin'])
+
+const MENU_TAB = 'menu'
+const CONTENT_TAB = 'content'
 
 export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
   const { data: session } = authClient.useSession()
@@ -112,9 +120,134 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
   const googleAvailable = useContext(GoogleAvailableContext)
   // アサインされたターゲットを持つユーザーのみリモート実行を表示する
   const commandAvailable = useContext(CommandAvailableContext)
+  // ページがメニューへ内容を差し込んでいる間は、中段を「メニュー / 差し込み」のタブにする
+  const { hasContent, contentLabel } = useSideNav()
+  const [tab, setTab] = useState<string>(CONTENT_TAB)
+  const [prevHasContent, setPrevHasContent] = useState(hasContent)
+  if (prevHasContent !== hasContent) {
+    // 差し込みが始まったら(Wiki スペースに入ったら)差し込み側を見せる。スペース内の遷移では選択を保つ
+    setPrevHasContent(hasContent)
+    if (hasContent) {
+      setTab(CONTENT_TAB)
+    }
+  }
+
+  // タブの有無で Accordion が作り直されても、開閉の状態を保つ
+  const [expandedKeys, setExpandedKeys] = useState<Set<AccordionKey>>(defaultExpandedKeys)
+
+  const items = (
+    <Accordion allowsMultipleExpanded hideSeparator expandedKeys={expandedKeys} onExpandedChange={setExpandedKeys}>
+      <MenuButton // ダッシュボード
+        to='/'
+        text={t('dashboard')}
+        icon={<Squares2X2Icon />}
+        closeMenu={closeMenu}
+      />
+      {googleAvailable && (
+        <MenuButton // カレンダー
+          to='/cal'
+          text={t('calendar')}
+          icon={<CalendarDaysIcon />}
+          closeMenu={closeMenu}
+        />
+      )}
+      <MenuButton // アカウント
+        to='/account'
+        text={t('account')}
+        icon={<UserCircleIcon />}
+        closeMenu={closeMenu}
+      />
+
+      <AccordionSection // タスク管理メニュー
+        id='group_task'
+        title={t('task_management')}
+        bodyClassName='grid grid-cols-1 px-2'
+      >
+        <MenuButton // ボード
+          to='/boards'
+          text={t('board')}
+          icon={<ViewColumnsIcon />}
+          closeMenu={closeMenu}
+        />
+        <MenuButton // チケット
+          to='/tickets'
+          text={t('ticket')}
+          icon={<TicketIcon />}
+          closeMenu={closeMenu}
+        />
+        <MenuButton // エージェント(承認)
+          to='/agents'
+          text={t('agent')}
+          icon={<RocketLaunchIcon />}
+          closeMenu={closeMenu}
+        />
+      </AccordionSection>
+
+      {commandAvailable && (
+        <MenuButton // リモート実行
+          to='/commands'
+          text={t('command_exec')}
+          icon={<CommandLineIcon />}
+          closeMenu={closeMenu}
+        />
+      )}
+
+      <AccordionSection // 管理者メニュー
+        id='group_admin'
+        hidden={session?.user.role !== 'admin'}
+        title={t('admin')}
+        bodyClassName='grid grid-cols-1 px-2'
+      >
+        <MenuButton // ユーザー管理
+          to='/admin/users'
+          text={t('user_manage')}
+          icon={<UsersIcon />}
+          closeMenu={closeMenu}
+        />
+        <MenuButton // グループ管理
+          to='/admin/groups'
+          text={t('group_manage')}
+          icon={<UserGroupIcon />}
+          closeMenu={closeMenu}
+        />
+        <MenuButton // ダッシュボード管理
+          to='/admin/dashboard'
+          text={t('dashboard_manage')}
+          icon={<Squares2X2Icon />}
+          closeMenu={closeMenu}
+        />
+        <MenuButton // OIDC Client管理
+          to='/admin/oidc-clients'
+          text={t('oidc_clients')}
+          icon={<ServerStackIcon />}
+          closeMenu={closeMenu}
+        />
+        <MenuButton // エージェント管理
+          to='/admin/agents'
+          text={t('agent_manage')}
+          icon={<RocketLaunchIcon />}
+          closeMenu={closeMenu}
+        />
+        <MenuButton // リモート管理
+          to='/admin/commands'
+          text={t('command_manage')}
+          icon={<CommandLineIcon />}
+          closeMenu={closeMenu}
+        />
+        <MenuButton // 設定
+          to='/admin/settings'
+          text={t('integration_settings')}
+          icon={<Cog6ToothIcon />}
+          closeMenu={closeMenu}
+        />
+      </AccordionSection>
+    </Accordion>
+  )
 
   return (
-    <div>
+    <div // 上段(アカウント)・中段(スクロールする本体)・下段(ロゴ)の 3 段。中身が長くても上下は常に見せる
+      className='flex h-full flex-col'
+    >
       <div
         className={cn(
           'absolute inset-0 bg-size-[20px_20px]',
@@ -127,7 +260,7 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
         <Card.Content>
           <div className='flex items-center gap-2'>
             <UserAvatar name={session?.user?.name ?? ''} image={session?.user.image} />
-            <div>{session?.user?.name}</div>
+            <div className='truncate'>{session?.user?.name}</div>
           </div>
         </Card.Content>
       </Card>
@@ -145,116 +278,28 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
         <SignOutButton />
       </div>
 
-      <div className='mt-4'>
-        <Accordion allowsMultipleExpanded hideSeparator defaultExpandedKeys={defaultExpandedKeys}>
-          <MenuButton // ダッシュボード
-            to='/'
-            text={t('dashboard')}
-            icon={<Squares2X2Icon />}
-            closeMenu={closeMenu}
+      <div className='relative mt-4 flex min-h-0 flex-1 flex-col'>
+        {hasContent ? (
+          <TabsBox
+            variant='secondary'
+            aria-label={t('side_nav_tabs')}
+            className='flex min-h-0 flex-1 flex-col'
+            panelClassName='min-h-0 flex-1 overflow-y-auto pt-2'
+            selectedKey={tab}
+            onSelectionChange={setTab}
+            // 差し込み側(ツリーの展開状態など)をタブの切り替えで失わせない
+            forceMount
+            items={[
+              { id: MENU_TAB, label: t('side_nav_menu'), content: items },
+              { id: CONTENT_TAB, label: contentLabel, content: <SideNavSlot /> },
+            ]}
           />
-          {googleAvailable && (
-            <MenuButton // カレンダー
-              to='/cal'
-              text={t('calendar')}
-              icon={<CalendarDaysIcon />}
-              closeMenu={closeMenu}
-            />
-          )}
-          <MenuButton // アカウント
-            to='/account'
-            text={t('account')}
-            icon={<UserCircleIcon />}
-            closeMenu={closeMenu}
-          />
-
-          <AccordionSection // タスク管理メニュー
-            id='group_task'
-            title={t('task_management')}
-            bodyClassName='grid grid-cols-1 px-2'
-          >
-            <MenuButton // ボード
-              to='/boards'
-              text={t('board')}
-              icon={<ViewColumnsIcon />}
-              closeMenu={closeMenu}
-            />
-            <MenuButton // チケット
-              to='/tickets'
-              text={t('ticket')}
-              icon={<TicketIcon />}
-              closeMenu={closeMenu}
-            />
-            <MenuButton // エージェント(承認)
-              to='/agents'
-              text={t('agent')}
-              icon={<RocketLaunchIcon />}
-              closeMenu={closeMenu}
-            />
-          </AccordionSection>
-
-          {commandAvailable && (
-            <MenuButton // リモート実行
-              to='/commands'
-              text={t('command_exec')}
-              icon={<CommandLineIcon />}
-              closeMenu={closeMenu}
-            />
-          )}
-
-          <AccordionSection // 管理者メニュー
-            id='group_admin'
-            hidden={session?.user.role !== 'admin'}
-            title={t('admin')}
-            bodyClassName='grid grid-cols-1 px-2'
-          >
-            <MenuButton // ユーザー管理
-              to='/admin/users'
-              text={t('user_manage')}
-              icon={<UsersIcon />}
-              closeMenu={closeMenu}
-            />
-            <MenuButton // グループ管理
-              to='/admin/groups'
-              text={t('group_manage')}
-              icon={<UserGroupIcon />}
-              closeMenu={closeMenu}
-            />
-            <MenuButton // ダッシュボード管理
-              to='/admin/dashboard'
-              text={t('dashboard_manage')}
-              icon={<Squares2X2Icon />}
-              closeMenu={closeMenu}
-            />
-            <MenuButton // OIDC Client管理
-              to='/admin/oidc-clients'
-              text={t('oidc_clients')}
-              icon={<ServerStackIcon />}
-              closeMenu={closeMenu}
-            />
-            <MenuButton // エージェント管理
-              to='/admin/agents'
-              text={t('agent_manage')}
-              icon={<RocketLaunchIcon />}
-              closeMenu={closeMenu}
-            />
-            <MenuButton // リモート管理
-              to='/admin/commands'
-              text={t('command_manage')}
-              icon={<CommandLineIcon />}
-              closeMenu={closeMenu}
-            />
-            <MenuButton // 設定
-              to='/admin/settings'
-              text={t('integration_settings')}
-              icon={<Cog6ToothIcon />}
-              closeMenu={closeMenu}
-            />
-          </AccordionSection>
-        </Accordion>
+        ) : (
+          <div className='min-h-0 flex-1 overflow-y-auto'>{items}</div>
+        )}
       </div>
 
-      <div className='absolute inset-x-4 bottom-2 mt-8 flex items-end gap-2'>
+      <div className='relative mt-4 flex shrink-0 items-end gap-2 px-1'>
         <Link href='https://playree.github.io/devuntu/' target='_blank' rel='noopener noreferrer'>
           <Image
             /**

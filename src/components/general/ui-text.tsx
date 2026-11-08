@@ -29,6 +29,8 @@ export type GeneralUiText = {
   tableEmpty: string
   resultRange: (start: number, end: number, total: number) => string
   waitSeconds: (sec: number) => string
+  /** サイドメニューの幅を変えるハンドルの読み上げ名 */
+  sideNavResize: string
 }
 
 /** Provider の外で使われたときの既定値 */
@@ -55,6 +57,7 @@ const DEFAULT_UI_TEXT: GeneralUiText = {
   tableEmpty: 'No data',
   resultRange: (start, end, total) => `${start} to ${end} of ${total} results`,
   waitSeconds: (sec) => `wait ${sec}s`,
+  sideNavResize: 'Side menu width',
 }
 
 const GeneralUiTextContext = createContext<GeneralUiText>(DEFAULT_UI_TEXT)
