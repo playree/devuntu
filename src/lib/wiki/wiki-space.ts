@@ -10,7 +10,13 @@ import { isAdminActor, type Actor } from '../board/board-access'
 import { ClientError, errInvalidOperation, errValidation } from '../error'
 import { logger } from '../logger'
 import { isUniqueViolation, prisma } from '../prisma'
-import { assertWikiSpaceAccess, roleOfWikiRow, wikiRoleSelect, wikiSpaceListWhere } from './wiki-access'
+import {
+  assertWikiSpaceAccess,
+  getWikiSpaceAccess,
+  roleOfWikiRow,
+  wikiRoleSelect,
+  wikiSpaceListWhere,
+} from './wiki-access'
 import {
   DUPLICATED_WIKI_SPACE_KEY,
   evaluateWikiAccess,
@@ -129,5 +135,18 @@ export const getWikiSpaceByKey = async (actor: Actor, key: string) => {
     throw errInvalidOperation()
   }
   const access = await assertWikiSpaceAccess(actor, space.id, 'view')
+  return { space, access }
+}
+
+/**
+ * キーでスペースを引く(閲覧も管理もできなければ errInvalidOperation)。
+ * 割り当ての無い管理者は管理だけができ本文は読めないので、本文やツリーを返す前に呼び出し側で canView を見ること
+ */
+export const getWikiSpaceByKeyForManage = async (actor: Actor, key: string) => {
+  const space = await prisma.wikiSpace.findUnique({ where: { key: key.toUpperCase() }, select: SPACE_SELECT })
+  const access = space && (await getWikiSpaceAccess(actor, space.id))
+  if (!space || !access || (!access.canView && !access.canManage)) {
+    throw errInvalidOperation()
+  }
   return { space, access }
 }

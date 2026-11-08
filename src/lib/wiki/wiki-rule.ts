@@ -30,6 +30,8 @@ export const WIKI_PAGE_HAS_CHILDREN = 'WIKI_PAGE_HAS_CHILDREN'
 export const WIKI_PAGE_TOO_DEEP = 'WIKI_PAGE_TOO_DEEP'
 /** 親に指定できないページ(自分自身・自分の子孫・別スペース・存在しない) */
 export const WIKI_PAGE_INVALID_PARENT = 'WIKI_PAGE_INVALID_PARENT'
+/** 直接割り当ての owner が 0 人になる変更(管理者は除く) */
+export const WIKI_SPACE_NO_OWNER = 'WIKI_SPACE_NO_OWNER'
 
 export type WikiRole = WikiSpaceRole
 

@@ -7,6 +7,7 @@ import { TabsBox } from '@/components/general/tabs'
 import { ThemeSwitchList } from '@/components/general/theme-switch'
 import {
   ArrowLeftStartOnRectangleIcon,
+  BookOpenIcon,
   CalendarDaysIcon,
   Cog6ToothIcon,
   CommandLineIcon,
@@ -173,6 +174,12 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
           to='/tickets'
           text={t('ticket')}
           icon={<TicketIcon />}
+          closeMenu={closeMenu}
+        />
+        <MenuButton // Wiki
+          to='/wiki'
+          text={t('wiki')}
+          icon={<BookOpenIcon />}
           closeMenu={closeMenu}
         />
         <MenuButton // エージェント(承認)
