@@ -117,6 +117,8 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
           maxLength={MAX_WIKI_CONTENT}
           label={t('content')}
           minRows={6}
+          allowImages
+          uploadWikiSpaceId={page.spaceId}
           action={
             !isEditing &&
             canWrite && (

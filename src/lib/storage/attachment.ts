@@ -6,7 +6,10 @@ import { fetchRemoteImage } from './remote-image'
 import { deleteObject, putObject } from './storage'
 import { isUploadUrl, newUploadKey, toUploadExt, toUploadKey, toUploadUrl } from './upload'
 
-type AttachmentMeta = { originalName: string; boardId: string | null; userId: string }
+/** 添付先。`boardId` / `wikiSpaceId` は同時に持たない。どちらも null なら全ログインユーザーへ配信する */
+export type AttachmentOwner = { boardId: string | null; wikiSpaceId?: string | null; userId: string }
+
+type AttachmentMeta = AttachmentOwner & { originalName: string }
 
 /**
  * オブジェクトストレージへ保存し、Attachment を作る。
@@ -26,6 +29,7 @@ const storeAttachment = async (
         size: bytes.byteLength,
         originalName: meta.originalName,
         boardId: meta.boardId,
+        wikiSpaceId: meta.wikiSpaceId ?? null,
         createdById: meta.userId,
       },
     })
@@ -87,13 +91,14 @@ export const saveImageAttachmentFromUrl = async (url: string, userId: string): P
  *
  * アイコン用途と違い縦横比は保ったまま長辺だけ上限を掛ける。
  * `boardId` を渡した添付は配信時にそのボードの可視判定を通すので、ボードのメンバーしか読めない。
- * null は全ログインユーザーへ配信してよいもの(お知らせなどボードに属さない本文)。
+ * `wikiSpaceId` を渡した添付は、そのスペースを閲覧できる人しか読めない。
+ * どちらも null は全ログインユーザーへ配信してよいもの(お知らせなどボードに属さない本文)。
  */
-export const saveContentImage = async (file: File, { boardId, userId }: { boardId: string | null; userId: string }) => {
+export const saveContentImage = async (file: File, owner: AttachmentOwner) => {
   // 保存形式はwebpに統一する。長辺のみ上限を掛けて縦横比は保つ
   const webp = await toWebp(file, { size: 2000, fit: 'inside' })
-  const attachment = await storeWebp(webp, { originalName: file.name, boardId, userId })
-  logger.info({ key: attachment.key, size: attachment.size, boardId, userId }, 'attachment uploaded')
+  const attachment = await storeWebp(webp, { ...owner, originalName: file.name })
+  logger.info({ key: attachment.key, size: attachment.size, ...owner }, 'attachment uploaded')
   return { url: toUploadUrl(attachment.key), key: attachment.key, size: attachment.size }
 }
 
@@ -141,32 +146,31 @@ export const toStoredMimeType = (type: string) => {
 
 /**
  * 本文(チケット/コメント/お知らせ)へリンクとして貼るファイルを、変換せずに保存して公開URLを返す。
- * `boardId` の扱いは {@link saveContentImage} と同じ。
+ * 添付先の扱いは {@link saveContentImage} と同じ。
  */
-export const saveContentFile = async (file: File, { boardId, userId }: { boardId: string | null; userId: string }) => {
+export const saveContentFile = async (file: File, owner: AttachmentOwner) => {
   const attachment = await storeAttachment(new Uint8Array(await file.arrayBuffer()), {
+    ...owner,
     ext: toUploadExt(file.name),
     mimeType: toStoredMimeType(file.type),
     originalName: [...file.name].slice(-MAX_ORIGINAL_NAME_LENGTH).join(''),
-    boardId,
-    userId,
   })
-  logger.info({ key: attachment.key, size: attachment.size, boardId, userId }, 'file attachment uploaded')
+  logger.info({ key: attachment.key, size: attachment.size, ...owner }, 'file attachment uploaded')
   return { url: toUploadUrl(attachment.key), key: attachment.key, size: attachment.size }
 }
 
 /**
  * 本文から参照されている添付の一覧(チケット詳細・MCP の get_ticket 用)。並びは `keys` の順。
  *
- * 本文には他ボードの添付URLも書けてしまうため、そのボードとボードに属さないものだけに絞り、
- * 見られない添付の名前やサイズを出さない。
+ * 本文には他ボードや Wiki スペースの添付URLも書けてしまうため、そのボードの添付と
+ * どこにも属さないもの(全ログインユーザー向け)だけに絞り、見られない添付の名前やサイズを出さない。
  */
 export const listContentAttachments = async (keys: string[], boardId: string) => {
   if (keys.length === 0) {
     return []
   }
   const rows = await prisma.attachment.findMany({
-    where: { key: { in: keys }, OR: [{ boardId }, { boardId: null }] },
+    where: { key: { in: keys }, OR: [{ boardId }, { boardId: null, wikiSpaceId: null }] },
     select: { key: true, originalName: true, size: true, mimeType: true, createdAt: true },
   })
   const byKey = new Map(rows.map((row) => [row.key, row]))
@@ -209,9 +213,9 @@ export const removeImageAttachment = async (url: string): Promise<void> => {
 }
 
 /**
- * 本人がアップロードした、ボードに属さない画像だけを削除する。
+ * 本人がアップロードした、ボードにも Wiki スペースにも属さない画像だけを削除する。
  *
- * `user.image` のように参照先を利用者が指せる値から消すときに使い、他人の添付を巻き込まない。
+ * `user.image` のように参照先を利用者が指せる値から消すときに使い、他人の添付や本文で使う添付を巻き込まない。
  */
 export const removeOwnedImageAttachment = async (url: string, userId: string): Promise<void> => {
   if (!isUploadUrl(url)) {
@@ -219,10 +223,12 @@ export const removeOwnedImageAttachment = async (url: string, userId: string): P
   }
   const key = toUploadKey(url)
   // 削除はベストエフォート(removeAttachmentByKey と同じ)。確認に失敗したら消さずに戻る
-  const owned = await prisma.attachment.count({ where: { key, createdById: userId, boardId: null } }).catch((err) => {
-    logger.error({ err, key, userId }, 'failed to check attachment owner')
-    return 0
-  })
+  const owned = await prisma.attachment
+    .count({ where: { key, createdById: userId, boardId: null, wikiSpaceId: null } })
+    .catch((err) => {
+      logger.error({ err, key, userId }, 'failed to check attachment owner')
+      return 0
+    })
   if (owned === 0) {
     logger.warn({ key, userId }, 'skip removing attachment not owned by user')
     return

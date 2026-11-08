@@ -23,6 +23,7 @@ const IMAGE_EDITORS: Record<string, AttachmentRefSource> = {
   'src/app/(sidenav)/tickets/[id]/decision-buttons.tsx': 'comment',
   'src/app/(sidenav)/boards/[id]/settings/board-ticket-templates.tsx': 'ticketTemplate',
   'src/app/(sidenav)/admin/dashboard/announcement-edit.tsx': 'announcement',
+  'src/app/(sidenav)/wiki/[key]/[number]/page-body.tsx': 'wikiPage',
 }
 
 const rootDir = fileURLToPath(new URL('../../../', import.meta.url))

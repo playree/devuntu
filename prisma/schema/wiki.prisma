@@ -67,12 +67,13 @@ model WikiSpace {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  members   WikiSpaceMember[]
-  groups    WikiSpaceGroup[]
-  boards    WikiSpaceBoard[]
-  pages     WikiPage[]
-  tags      WikiTag[]
-  revisions WikiPageRevision[]
+  members     WikiSpaceMember[]
+  groups      WikiSpaceGroup[]
+  boards      WikiSpaceBoard[]
+  pages       WikiPage[]
+  tags        WikiTag[]
+  revisions   WikiPageRevision[]
+  attachments Attachment[]
 
   @@map("wiki_space")
 }

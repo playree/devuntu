@@ -8,7 +8,6 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { canViewAttachment } from '../board/board-access'
 import { envu } from '../env-util'
 import { errInvalidOperation } from '../error'
 import { logger } from '../logger'
@@ -16,6 +15,7 @@ import type { ResourceAuth } from '../oauth/oauth-resource'
 import { prisma } from '../prisma'
 import { assertRateLimit } from '../rate-limit'
 import { makeUrl } from '../server-utils'
+import { canViewAttachment } from '../storage/attachment-access'
 import { getObject } from '../storage/storage'
 import { toUploadUrl, UPLOAD_KIND_PARAM, UPLOAD_URL_PREFIX } from '../storage/upload'
 import { DOWNLOAD_TOKEN_TTL_SECONDS, signDownloadToken, UPLOAD_TOKEN_TTL_SECONDS } from '../storage/upload-token'
@@ -65,10 +65,13 @@ const getFileForMcp = async (auth: ResourceAuth, input: { file: string }) => {
 
   const attachment = await prisma.attachment.findUnique({
     where: { key },
-    select: { boardId: true, originalName: true, size: true, mimeType: true },
+    select: { boardId: true, wikiSpaceId: true, originalName: true, size: true, mimeType: true },
   })
   // アクセス不可は未存在と区別せず、キーの当たり判定を返さない(配信APIと同じ扱い)
-  if (!attachment || !(await canViewAttachment(auth.user, { key, boardId: attachment.boardId }))) {
+  if (
+    !attachment ||
+    !(await canViewAttachment(auth.user, { key, boardId: attachment.boardId, wikiSpaceId: attachment.wikiSpaceId }))
+  ) {
     throw errInvalidOperation()
   }
   const meta = { key, name: attachment.originalName, size: attachment.size, mimeType: attachment.mimeType }

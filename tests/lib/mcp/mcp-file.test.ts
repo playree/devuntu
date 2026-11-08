@@ -5,9 +5,10 @@
  * ストレージとDBはモックし、テキストとして返すかダウンロードさせるかの振り分けと認可の落とし方を検証する。
  */
 
-import { assertBoardAccess, canViewAttachment } from '@/lib/board/board-access'
+import { assertBoardAccess } from '@/lib/board/board-access'
 import { decodeText, MAX_INLINE_TEXT_SIZE, registerFileTools } from '@/lib/mcp/mcp-file'
 import { prisma } from '@/lib/prisma'
+import { canViewAttachment } from '@/lib/storage/attachment-access'
 import { getObject } from '@/lib/storage/storage'
 import { verifyDownloadToken, verifyUploadToken } from '@/lib/storage/upload-token'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
@@ -25,12 +26,12 @@ vi.mock('@/lib/prisma', async () =>
 vi.mock('@/lib/board/board-access', () => ({
   assertBoardAccess: vi.fn(),
   assertTicketAccess: vi.fn(),
-  canViewAttachment: vi.fn(),
   getBoardAccess: vi.fn(async () => ({ boardId: '019eef64-6cc1-78f1-8f50-1ef869860002', archived: false })),
 }))
 
 vi.mock('@/lib/mcp/mcp-ticket', () => ({ resolveTicketId: vi.fn() }))
 vi.mock('@/lib/storage/attachment', () => ({ saveContentImage: vi.fn() }))
+vi.mock('@/lib/storage/attachment-access', () => ({ canViewAttachment: vi.fn() }))
 vi.mock('@/lib/storage/storage', () => ({ getObject: vi.fn() }))
 vi.mock('@/lib/storage/image', () => ({ resizeWebp: vi.fn(), WEBP_MIME: 'image/webp' }))
 

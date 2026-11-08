@@ -158,13 +158,14 @@ clone した環境(`pnpm dev` / `pnpm maintenance`)では、どちらもリポ�
 ### 添付の掃除
 
 添付は `attachment` テーブルと実体の両方を消す。参照は外部キーではなく本文中のURLなので、
-次の8箇所を見て「どこからも参照されていない」ことを確かめてから消す。
+次の9箇所を見て「どこからも参照されていない」ことを確かめてから消す。
 
 - チケット本文の Markdown
 - コメント本文の Markdown
 - 子チケットの起票案(`ticket_comment.proposal`)
 - チケットテンプレート本文の Markdown(`ticket_template.content`)
 - ボードノートとその版の本文(`board_note.content` / `board_note_revision.content`)
+- Wiki ページとその版の本文(`wiki_page.content` / `wiki_page_revision.content`)
 - ユーザーのアバター(`user.image`)
 - リンクウィジェットのアイコン(`link_widget.iconPath`)
 - お知らせ本文(`key_value_store` の `DASHBOARD_ANNOUNCEMENT`)
@@ -174,6 +175,9 @@ JSON 列なので項目を問わず JSON の文字列全体から探す(形が�
 
 ボードノートは画面のエディタからは画像を挿入できないが、MCP では `upload_image` で得た URL を本文に書けて、
 画面でも画像として表示されるため参照元に含める。
+
+Wiki ページの版は、削除したページを含めて復元に使うため参照元に含める。本文から外した添付も、
+版の保持期間(`WIKI_REVISION_RETENTION_DAYS`)の掃除で版が消えるまでは残り、その後の掃除で回収される。
 
 ボードの AI 向けコンテキスト(`board.aiContext`)とエージェントのカスタム指示(`agent_runner.rule`)は
 AI に渡す文字列なので参照元に含めない。エディタからは画像を挿入できないようにしている。

@@ -255,6 +255,7 @@ export type WikiSpaceWhereInput = {
   pages?: Prisma.WikiPageListRelationFilter
   tags?: Prisma.WikiTagListRelationFilter
   revisions?: Prisma.WikiPageRevisionListRelationFilter
+  attachments?: Prisma.AttachmentListRelationFilter
 }
 
 export type WikiSpaceOrderByWithRelationInput = {
@@ -273,6 +274,7 @@ export type WikiSpaceOrderByWithRelationInput = {
   pages?: Prisma.WikiPageOrderByRelationAggregateInput
   tags?: Prisma.WikiTagOrderByRelationAggregateInput
   revisions?: Prisma.WikiPageRevisionOrderByRelationAggregateInput
+  attachments?: Prisma.AttachmentOrderByRelationAggregateInput
 }
 
 export type WikiSpaceWhereUniqueInput = Prisma.AtLeast<{
@@ -294,6 +296,7 @@ export type WikiSpaceWhereUniqueInput = Prisma.AtLeast<{
   pages?: Prisma.WikiPageListRelationFilter
   tags?: Prisma.WikiTagListRelationFilter
   revisions?: Prisma.WikiPageRevisionListRelationFilter
+  attachments?: Prisma.AttachmentListRelationFilter
 }, "id" | "key">
 
 export type WikiSpaceOrderByWithAggregationInput = {
@@ -344,6 +347,7 @@ export type WikiSpaceCreateInput = {
   pages?: Prisma.WikiPageCreateNestedManyWithoutSpaceInput
   tags?: Prisma.WikiTagCreateNestedManyWithoutSpaceInput
   revisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutSpaceInput
+  attachments?: Prisma.AttachmentCreateNestedManyWithoutWikiSpaceInput
 }
 
 export type WikiSpaceUncheckedCreateInput = {
@@ -362,6 +366,7 @@ export type WikiSpaceUncheckedCreateInput = {
   pages?: Prisma.WikiPageUncheckedCreateNestedManyWithoutSpaceInput
   tags?: Prisma.WikiTagUncheckedCreateNestedManyWithoutSpaceInput
   revisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutSpaceInput
+  attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutWikiSpaceInput
 }
 
 export type WikiSpaceUpdateInput = {
@@ -380,6 +385,7 @@ export type WikiSpaceUpdateInput = {
   pages?: Prisma.WikiPageUpdateManyWithoutSpaceNestedInput
   tags?: Prisma.WikiTagUpdateManyWithoutSpaceNestedInput
   revisions?: Prisma.WikiPageRevisionUpdateManyWithoutSpaceNestedInput
+  attachments?: Prisma.AttachmentUpdateManyWithoutWikiSpaceNestedInput
 }
 
 export type WikiSpaceUncheckedUpdateInput = {
@@ -398,6 +404,7 @@ export type WikiSpaceUncheckedUpdateInput = {
   pages?: Prisma.WikiPageUncheckedUpdateManyWithoutSpaceNestedInput
   tags?: Prisma.WikiTagUncheckedUpdateManyWithoutSpaceNestedInput
   revisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutSpaceNestedInput
+  attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutWikiSpaceNestedInput
 }
 
 export type WikiSpaceCreateManyInput = {
@@ -434,6 +441,11 @@ export type WikiSpaceUncheckedUpdateManyInput = {
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type WikiSpaceNullableScalarRelationFilter = {
+  is?: Prisma.WikiSpaceWhereInput | null
+  isNot?: Prisma.WikiSpaceWhereInput | null
 }
 
 export type WikiSpaceCountOrderByAggregateInput = {
@@ -483,6 +495,22 @@ export type WikiSpaceSumOrderByAggregateInput = {
 export type WikiSpaceScalarRelationFilter = {
   is?: Prisma.WikiSpaceWhereInput
   isNot?: Prisma.WikiSpaceWhereInput
+}
+
+export type WikiSpaceCreateNestedOneWithoutAttachmentsInput = {
+  create?: Prisma.XOR<Prisma.WikiSpaceCreateWithoutAttachmentsInput, Prisma.WikiSpaceUncheckedCreateWithoutAttachmentsInput>
+  connectOrCreate?: Prisma.WikiSpaceCreateOrConnectWithoutAttachmentsInput
+  connect?: Prisma.WikiSpaceWhereUniqueInput
+}
+
+export type WikiSpaceUpdateOneWithoutAttachmentsNestedInput = {
+  create?: Prisma.XOR<Prisma.WikiSpaceCreateWithoutAttachmentsInput, Prisma.WikiSpaceUncheckedCreateWithoutAttachmentsInput>
+  connectOrCreate?: Prisma.WikiSpaceCreateOrConnectWithoutAttachmentsInput
+  upsert?: Prisma.WikiSpaceUpsertWithoutAttachmentsInput
+  disconnect?: Prisma.WikiSpaceWhereInput | boolean
+  delete?: Prisma.WikiSpaceWhereInput | boolean
+  connect?: Prisma.WikiSpaceWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.WikiSpaceUpdateToOneWithWhereWithoutAttachmentsInput, Prisma.WikiSpaceUpdateWithoutAttachmentsInput>, Prisma.WikiSpaceUncheckedUpdateWithoutAttachmentsInput>
 }
 
 export type EnumWikiVisibilityFieldUpdateOperationsInput = {
@@ -573,6 +601,94 @@ export type WikiSpaceUpdateOneRequiredWithoutRevisionsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.WikiSpaceUpdateToOneWithWhereWithoutRevisionsInput, Prisma.WikiSpaceUpdateWithoutRevisionsInput>, Prisma.WikiSpaceUncheckedUpdateWithoutRevisionsInput>
 }
 
+export type WikiSpaceCreateWithoutAttachmentsInput = {
+  id?: string
+  key: string
+  name: string
+  description?: string | null
+  visibility?: $Enums.WikiVisibility
+  pageSeq?: number
+  archived?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  members?: Prisma.WikiSpaceMemberCreateNestedManyWithoutSpaceInput
+  groups?: Prisma.WikiSpaceGroupCreateNestedManyWithoutSpaceInput
+  boards?: Prisma.WikiSpaceBoardCreateNestedManyWithoutSpaceInput
+  pages?: Prisma.WikiPageCreateNestedManyWithoutSpaceInput
+  tags?: Prisma.WikiTagCreateNestedManyWithoutSpaceInput
+  revisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutSpaceInput
+}
+
+export type WikiSpaceUncheckedCreateWithoutAttachmentsInput = {
+  id?: string
+  key: string
+  name: string
+  description?: string | null
+  visibility?: $Enums.WikiVisibility
+  pageSeq?: number
+  archived?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  members?: Prisma.WikiSpaceMemberUncheckedCreateNestedManyWithoutSpaceInput
+  groups?: Prisma.WikiSpaceGroupUncheckedCreateNestedManyWithoutSpaceInput
+  boards?: Prisma.WikiSpaceBoardUncheckedCreateNestedManyWithoutSpaceInput
+  pages?: Prisma.WikiPageUncheckedCreateNestedManyWithoutSpaceInput
+  tags?: Prisma.WikiTagUncheckedCreateNestedManyWithoutSpaceInput
+  revisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutSpaceInput
+}
+
+export type WikiSpaceCreateOrConnectWithoutAttachmentsInput = {
+  where: Prisma.WikiSpaceWhereUniqueInput
+  create: Prisma.XOR<Prisma.WikiSpaceCreateWithoutAttachmentsInput, Prisma.WikiSpaceUncheckedCreateWithoutAttachmentsInput>
+}
+
+export type WikiSpaceUpsertWithoutAttachmentsInput = {
+  update: Prisma.XOR<Prisma.WikiSpaceUpdateWithoutAttachmentsInput, Prisma.WikiSpaceUncheckedUpdateWithoutAttachmentsInput>
+  create: Prisma.XOR<Prisma.WikiSpaceCreateWithoutAttachmentsInput, Prisma.WikiSpaceUncheckedCreateWithoutAttachmentsInput>
+  where?: Prisma.WikiSpaceWhereInput
+}
+
+export type WikiSpaceUpdateToOneWithWhereWithoutAttachmentsInput = {
+  where?: Prisma.WikiSpaceWhereInput
+  data: Prisma.XOR<Prisma.WikiSpaceUpdateWithoutAttachmentsInput, Prisma.WikiSpaceUncheckedUpdateWithoutAttachmentsInput>
+}
+
+export type WikiSpaceUpdateWithoutAttachmentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  visibility?: Prisma.EnumWikiVisibilityFieldUpdateOperationsInput | $Enums.WikiVisibility
+  pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
+  archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.WikiSpaceMemberUpdateManyWithoutSpaceNestedInput
+  groups?: Prisma.WikiSpaceGroupUpdateManyWithoutSpaceNestedInput
+  boards?: Prisma.WikiSpaceBoardUpdateManyWithoutSpaceNestedInput
+  pages?: Prisma.WikiPageUpdateManyWithoutSpaceNestedInput
+  tags?: Prisma.WikiTagUpdateManyWithoutSpaceNestedInput
+  revisions?: Prisma.WikiPageRevisionUpdateManyWithoutSpaceNestedInput
+}
+
+export type WikiSpaceUncheckedUpdateWithoutAttachmentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  visibility?: Prisma.EnumWikiVisibilityFieldUpdateOperationsInput | $Enums.WikiVisibility
+  pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
+  archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.WikiSpaceMemberUncheckedUpdateManyWithoutSpaceNestedInput
+  groups?: Prisma.WikiSpaceGroupUncheckedUpdateManyWithoutSpaceNestedInput
+  boards?: Prisma.WikiSpaceBoardUncheckedUpdateManyWithoutSpaceNestedInput
+  pages?: Prisma.WikiPageUncheckedUpdateManyWithoutSpaceNestedInput
+  tags?: Prisma.WikiTagUncheckedUpdateManyWithoutSpaceNestedInput
+  revisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutSpaceNestedInput
+}
+
 export type WikiSpaceCreateWithoutMembersInput = {
   id?: string
   key: string
@@ -588,6 +704,7 @@ export type WikiSpaceCreateWithoutMembersInput = {
   pages?: Prisma.WikiPageCreateNestedManyWithoutSpaceInput
   tags?: Prisma.WikiTagCreateNestedManyWithoutSpaceInput
   revisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutSpaceInput
+  attachments?: Prisma.AttachmentCreateNestedManyWithoutWikiSpaceInput
 }
 
 export type WikiSpaceUncheckedCreateWithoutMembersInput = {
@@ -605,6 +722,7 @@ export type WikiSpaceUncheckedCreateWithoutMembersInput = {
   pages?: Prisma.WikiPageUncheckedCreateNestedManyWithoutSpaceInput
   tags?: Prisma.WikiTagUncheckedCreateNestedManyWithoutSpaceInput
   revisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutSpaceInput
+  attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutWikiSpaceInput
 }
 
 export type WikiSpaceCreateOrConnectWithoutMembersInput = {
@@ -638,6 +756,7 @@ export type WikiSpaceUpdateWithoutMembersInput = {
   pages?: Prisma.WikiPageUpdateManyWithoutSpaceNestedInput
   tags?: Prisma.WikiTagUpdateManyWithoutSpaceNestedInput
   revisions?: Prisma.WikiPageRevisionUpdateManyWithoutSpaceNestedInput
+  attachments?: Prisma.AttachmentUpdateManyWithoutWikiSpaceNestedInput
 }
 
 export type WikiSpaceUncheckedUpdateWithoutMembersInput = {
@@ -655,6 +774,7 @@ export type WikiSpaceUncheckedUpdateWithoutMembersInput = {
   pages?: Prisma.WikiPageUncheckedUpdateManyWithoutSpaceNestedInput
   tags?: Prisma.WikiTagUncheckedUpdateManyWithoutSpaceNestedInput
   revisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutSpaceNestedInput
+  attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutWikiSpaceNestedInput
 }
 
 export type WikiSpaceCreateWithoutGroupsInput = {
@@ -672,6 +792,7 @@ export type WikiSpaceCreateWithoutGroupsInput = {
   pages?: Prisma.WikiPageCreateNestedManyWithoutSpaceInput
   tags?: Prisma.WikiTagCreateNestedManyWithoutSpaceInput
   revisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutSpaceInput
+  attachments?: Prisma.AttachmentCreateNestedManyWithoutWikiSpaceInput
 }
 
 export type WikiSpaceUncheckedCreateWithoutGroupsInput = {
@@ -689,6 +810,7 @@ export type WikiSpaceUncheckedCreateWithoutGroupsInput = {
   pages?: Prisma.WikiPageUncheckedCreateNestedManyWithoutSpaceInput
   tags?: Prisma.WikiTagUncheckedCreateNestedManyWithoutSpaceInput
   revisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutSpaceInput
+  attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutWikiSpaceInput
 }
 
 export type WikiSpaceCreateOrConnectWithoutGroupsInput = {
@@ -722,6 +844,7 @@ export type WikiSpaceUpdateWithoutGroupsInput = {
   pages?: Prisma.WikiPageUpdateManyWithoutSpaceNestedInput
   tags?: Prisma.WikiTagUpdateManyWithoutSpaceNestedInput
   revisions?: Prisma.WikiPageRevisionUpdateManyWithoutSpaceNestedInput
+  attachments?: Prisma.AttachmentUpdateManyWithoutWikiSpaceNestedInput
 }
 
 export type WikiSpaceUncheckedUpdateWithoutGroupsInput = {
@@ -739,6 +862,7 @@ export type WikiSpaceUncheckedUpdateWithoutGroupsInput = {
   pages?: Prisma.WikiPageUncheckedUpdateManyWithoutSpaceNestedInput
   tags?: Prisma.WikiTagUncheckedUpdateManyWithoutSpaceNestedInput
   revisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutSpaceNestedInput
+  attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutWikiSpaceNestedInput
 }
 
 export type WikiSpaceCreateWithoutBoardsInput = {
@@ -756,6 +880,7 @@ export type WikiSpaceCreateWithoutBoardsInput = {
   pages?: Prisma.WikiPageCreateNestedManyWithoutSpaceInput
   tags?: Prisma.WikiTagCreateNestedManyWithoutSpaceInput
   revisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutSpaceInput
+  attachments?: Prisma.AttachmentCreateNestedManyWithoutWikiSpaceInput
 }
 
 export type WikiSpaceUncheckedCreateWithoutBoardsInput = {
@@ -773,6 +898,7 @@ export type WikiSpaceUncheckedCreateWithoutBoardsInput = {
   pages?: Prisma.WikiPageUncheckedCreateNestedManyWithoutSpaceInput
   tags?: Prisma.WikiTagUncheckedCreateNestedManyWithoutSpaceInput
   revisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutSpaceInput
+  attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutWikiSpaceInput
 }
 
 export type WikiSpaceCreateOrConnectWithoutBoardsInput = {
@@ -806,6 +932,7 @@ export type WikiSpaceUpdateWithoutBoardsInput = {
   pages?: Prisma.WikiPageUpdateManyWithoutSpaceNestedInput
   tags?: Prisma.WikiTagUpdateManyWithoutSpaceNestedInput
   revisions?: Prisma.WikiPageRevisionUpdateManyWithoutSpaceNestedInput
+  attachments?: Prisma.AttachmentUpdateManyWithoutWikiSpaceNestedInput
 }
 
 export type WikiSpaceUncheckedUpdateWithoutBoardsInput = {
@@ -823,6 +950,7 @@ export type WikiSpaceUncheckedUpdateWithoutBoardsInput = {
   pages?: Prisma.WikiPageUncheckedUpdateManyWithoutSpaceNestedInput
   tags?: Prisma.WikiTagUncheckedUpdateManyWithoutSpaceNestedInput
   revisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutSpaceNestedInput
+  attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutWikiSpaceNestedInput
 }
 
 export type WikiSpaceCreateWithoutPagesInput = {
@@ -840,6 +968,7 @@ export type WikiSpaceCreateWithoutPagesInput = {
   boards?: Prisma.WikiSpaceBoardCreateNestedManyWithoutSpaceInput
   tags?: Prisma.WikiTagCreateNestedManyWithoutSpaceInput
   revisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutSpaceInput
+  attachments?: Prisma.AttachmentCreateNestedManyWithoutWikiSpaceInput
 }
 
 export type WikiSpaceUncheckedCreateWithoutPagesInput = {
@@ -857,6 +986,7 @@ export type WikiSpaceUncheckedCreateWithoutPagesInput = {
   boards?: Prisma.WikiSpaceBoardUncheckedCreateNestedManyWithoutSpaceInput
   tags?: Prisma.WikiTagUncheckedCreateNestedManyWithoutSpaceInput
   revisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutSpaceInput
+  attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutWikiSpaceInput
 }
 
 export type WikiSpaceCreateOrConnectWithoutPagesInput = {
@@ -890,6 +1020,7 @@ export type WikiSpaceUpdateWithoutPagesInput = {
   boards?: Prisma.WikiSpaceBoardUpdateManyWithoutSpaceNestedInput
   tags?: Prisma.WikiTagUpdateManyWithoutSpaceNestedInput
   revisions?: Prisma.WikiPageRevisionUpdateManyWithoutSpaceNestedInput
+  attachments?: Prisma.AttachmentUpdateManyWithoutWikiSpaceNestedInput
 }
 
 export type WikiSpaceUncheckedUpdateWithoutPagesInput = {
@@ -907,6 +1038,7 @@ export type WikiSpaceUncheckedUpdateWithoutPagesInput = {
   boards?: Prisma.WikiSpaceBoardUncheckedUpdateManyWithoutSpaceNestedInput
   tags?: Prisma.WikiTagUncheckedUpdateManyWithoutSpaceNestedInput
   revisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutSpaceNestedInput
+  attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutWikiSpaceNestedInput
 }
 
 export type WikiSpaceCreateWithoutTagsInput = {
@@ -924,6 +1056,7 @@ export type WikiSpaceCreateWithoutTagsInput = {
   boards?: Prisma.WikiSpaceBoardCreateNestedManyWithoutSpaceInput
   pages?: Prisma.WikiPageCreateNestedManyWithoutSpaceInput
   revisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutSpaceInput
+  attachments?: Prisma.AttachmentCreateNestedManyWithoutWikiSpaceInput
 }
 
 export type WikiSpaceUncheckedCreateWithoutTagsInput = {
@@ -941,6 +1074,7 @@ export type WikiSpaceUncheckedCreateWithoutTagsInput = {
   boards?: Prisma.WikiSpaceBoardUncheckedCreateNestedManyWithoutSpaceInput
   pages?: Prisma.WikiPageUncheckedCreateNestedManyWithoutSpaceInput
   revisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutSpaceInput
+  attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutWikiSpaceInput
 }
 
 export type WikiSpaceCreateOrConnectWithoutTagsInput = {
@@ -974,6 +1108,7 @@ export type WikiSpaceUpdateWithoutTagsInput = {
   boards?: Prisma.WikiSpaceBoardUpdateManyWithoutSpaceNestedInput
   pages?: Prisma.WikiPageUpdateManyWithoutSpaceNestedInput
   revisions?: Prisma.WikiPageRevisionUpdateManyWithoutSpaceNestedInput
+  attachments?: Prisma.AttachmentUpdateManyWithoutWikiSpaceNestedInput
 }
 
 export type WikiSpaceUncheckedUpdateWithoutTagsInput = {
@@ -991,6 +1126,7 @@ export type WikiSpaceUncheckedUpdateWithoutTagsInput = {
   boards?: Prisma.WikiSpaceBoardUncheckedUpdateManyWithoutSpaceNestedInput
   pages?: Prisma.WikiPageUncheckedUpdateManyWithoutSpaceNestedInput
   revisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutSpaceNestedInput
+  attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutWikiSpaceNestedInput
 }
 
 export type WikiSpaceCreateWithoutRevisionsInput = {
@@ -1008,6 +1144,7 @@ export type WikiSpaceCreateWithoutRevisionsInput = {
   boards?: Prisma.WikiSpaceBoardCreateNestedManyWithoutSpaceInput
   pages?: Prisma.WikiPageCreateNestedManyWithoutSpaceInput
   tags?: Prisma.WikiTagCreateNestedManyWithoutSpaceInput
+  attachments?: Prisma.AttachmentCreateNestedManyWithoutWikiSpaceInput
 }
 
 export type WikiSpaceUncheckedCreateWithoutRevisionsInput = {
@@ -1025,6 +1162,7 @@ export type WikiSpaceUncheckedCreateWithoutRevisionsInput = {
   boards?: Prisma.WikiSpaceBoardUncheckedCreateNestedManyWithoutSpaceInput
   pages?: Prisma.WikiPageUncheckedCreateNestedManyWithoutSpaceInput
   tags?: Prisma.WikiTagUncheckedCreateNestedManyWithoutSpaceInput
+  attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutWikiSpaceInput
 }
 
 export type WikiSpaceCreateOrConnectWithoutRevisionsInput = {
@@ -1058,6 +1196,7 @@ export type WikiSpaceUpdateWithoutRevisionsInput = {
   boards?: Prisma.WikiSpaceBoardUpdateManyWithoutSpaceNestedInput
   pages?: Prisma.WikiPageUpdateManyWithoutSpaceNestedInput
   tags?: Prisma.WikiTagUpdateManyWithoutSpaceNestedInput
+  attachments?: Prisma.AttachmentUpdateManyWithoutWikiSpaceNestedInput
 }
 
 export type WikiSpaceUncheckedUpdateWithoutRevisionsInput = {
@@ -1075,6 +1214,7 @@ export type WikiSpaceUncheckedUpdateWithoutRevisionsInput = {
   boards?: Prisma.WikiSpaceBoardUncheckedUpdateManyWithoutSpaceNestedInput
   pages?: Prisma.WikiPageUncheckedUpdateManyWithoutSpaceNestedInput
   tags?: Prisma.WikiTagUncheckedUpdateManyWithoutSpaceNestedInput
+  attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutWikiSpaceNestedInput
 }
 
 
@@ -1089,6 +1229,7 @@ export type WikiSpaceCountOutputType = {
   pages: number
   tags: number
   revisions: number
+  attachments: number
 }
 
 export type WikiSpaceCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1098,6 +1239,7 @@ export type WikiSpaceCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensi
   pages?: boolean | WikiSpaceCountOutputTypeCountPagesArgs
   tags?: boolean | WikiSpaceCountOutputTypeCountTagsArgs
   revisions?: boolean | WikiSpaceCountOutputTypeCountRevisionsArgs
+  attachments?: boolean | WikiSpaceCountOutputTypeCountAttachmentsArgs
 }
 
 /**
@@ -1152,6 +1294,13 @@ export type WikiSpaceCountOutputTypeCountRevisionsArgs<ExtArgs extends runtime.T
   where?: Prisma.WikiPageRevisionWhereInput
 }
 
+/**
+ * WikiSpaceCountOutputType without action
+ */
+export type WikiSpaceCountOutputTypeCountAttachmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AttachmentWhereInput
+}
+
 
 export type WikiSpaceSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1169,6 +1318,7 @@ export type WikiSpaceSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   pages?: boolean | Prisma.WikiSpace$pagesArgs<ExtArgs>
   tags?: boolean | Prisma.WikiSpace$tagsArgs<ExtArgs>
   revisions?: boolean | Prisma.WikiSpace$revisionsArgs<ExtArgs>
+  attachments?: boolean | Prisma.WikiSpace$attachmentsArgs<ExtArgs>
   _count?: boolean | Prisma.WikiSpaceCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["wikiSpace"]>
 
@@ -1216,6 +1366,7 @@ export type WikiSpaceInclude<ExtArgs extends runtime.Types.Extensions.InternalAr
   pages?: boolean | Prisma.WikiSpace$pagesArgs<ExtArgs>
   tags?: boolean | Prisma.WikiSpace$tagsArgs<ExtArgs>
   revisions?: boolean | Prisma.WikiSpace$revisionsArgs<ExtArgs>
+  attachments?: boolean | Prisma.WikiSpace$attachmentsArgs<ExtArgs>
   _count?: boolean | Prisma.WikiSpaceCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type WikiSpaceIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1230,6 +1381,7 @@ export type $WikiSpacePayload<ExtArgs extends runtime.Types.Extensions.InternalA
     pages: Prisma.$WikiPagePayload<ExtArgs>[]
     tags: Prisma.$WikiTagPayload<ExtArgs>[]
     revisions: Prisma.$WikiPageRevisionPayload<ExtArgs>[]
+    attachments: Prisma.$AttachmentPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1660,6 +1812,7 @@ export interface Prisma__WikiSpaceClient<T, Null = never, ExtArgs extends runtim
   pages<T extends Prisma.WikiSpace$pagesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WikiSpace$pagesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WikiPagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   tags<T extends Prisma.WikiSpace$tagsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WikiSpace$tagsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WikiTagPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   revisions<T extends Prisma.WikiSpace$revisionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WikiSpace$revisionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WikiPageRevisionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  attachments<T extends Prisma.WikiSpace$attachmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WikiSpace$attachmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AttachmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2232,6 +2385,30 @@ export type WikiSpace$revisionsArgs<ExtArgs extends runtime.Types.Extensions.Int
   take?: number
   skip?: number
   distinct?: Prisma.WikiPageRevisionScalarFieldEnum | Prisma.WikiPageRevisionScalarFieldEnum[]
+}
+
+/**
+ * WikiSpace.attachments
+ */
+export type WikiSpace$attachmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Attachment
+   */
+  select?: Prisma.AttachmentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Attachment
+   */
+  omit?: Prisma.AttachmentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AttachmentInclude<ExtArgs> | null
+  where?: Prisma.AttachmentWhereInput
+  orderBy?: Prisma.AttachmentOrderByWithRelationInput | Prisma.AttachmentOrderByWithRelationInput[]
+  cursor?: Prisma.AttachmentWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AttachmentScalarFieldEnum | Prisma.AttachmentScalarFieldEnum[]
 }
 
 /**
