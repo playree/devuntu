@@ -74,6 +74,8 @@ const MyGeneralUiTextProvider: FC<{ children: ReactNode }> = ({ children }) => {
       resultRange: (start, end, total) => t('results_range', { start, end, total }),
       waitSeconds: (sec) => t('wait_seconds', { sec }),
       sideNavResize: t('side_nav_resize'),
+      treeExpand: (label) => t('tree_expand', { label }),
+      treeCollapse: (label) => t('tree_collapse', { label }),
     }),
     [t],
   )

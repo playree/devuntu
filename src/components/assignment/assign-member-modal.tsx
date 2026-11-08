@@ -5,17 +5,38 @@ import { FormModal, ModalBaseProps } from '@/components/general/modal'
 import { SingleSelectCtrl } from '@/components/general/select'
 import { PencilSquareIcon, UserPlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
-import { type AssignRole, useRoleOptions } from '@/components/role-chip'
+import { type AssignRole, RoleChip, useRoleOptions } from '@/components/role-chip'
 import { UserSelectCtrl, type UserSelectOption } from '@/components/user-select'
 import { parseAction } from '@/lib/action/action-client'
-import { type AssignMember, scAssignMember } from '@/lib/schema/schema-board'
+import { scAssignMember } from '@/lib/schema/schema-board'
+import { el } from '@/locale'
 import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FC } from 'react'
 import { useForm } from 'react-hook-form'
+import { z } from 'zod'
 
 /** 保存に使う Server Action の戻り値。parseAction に渡せる形 */
 export type ActionResult = Parameters<typeof parseAction>[0]
+
+/** 追加 / ロール変更の入力 */
+export type AssignMemberRequest<R extends string = AssignRole> = { userId: string; role: R }
+
+/** ロールの種類(選択肢・Chip・追加時の既定値)。ドメインごとにロールが違うため差し替えられるようにする */
+export type AssignRoles<R extends string> = {
+  options: Record<R, string>
+  Chip: FC<{ value: R }>
+  defaultRole: R
+}
+
+/** 渡されたロールを使い、無ければボードのロール(owner / member)にする */
+export const useAssignRoles = <R extends string>(roles: AssignRoles<R> | undefined): AssignRoles<R> => {
+  const boardOptions = useRoleOptions()
+  return roles ?? ({ options: boardOptions, Chip: RoleChip, defaultRole: 'member' } as unknown as AssignRoles<R>)
+}
+
+// ロールの値はドメインごとに違うので、ここでは選択済みかだけを見る(値の妥当性は Server Action のスキーマで検証する)
+const scAssignMemberForm = scAssignMember.extend({ role: z.string().min(1, el('@required_field')) })
 
 /**
  * メンバーの追加 / ロール変更モーダル。
@@ -25,35 +46,43 @@ export type ActionResult = Parameters<typeof parseAction>[0]
  *
  * hasRole が false のときはロールの選択欄を出さない(承認者のようにロールの概念が無いアサイン向け)。
  */
-export const AssignMemberModal: FC<
-  ModalBaseProps & {
-    title: string
-    candidates: UserSelectOption[]
-    target?: { id: string; name: string; role?: AssignRole | null }
-    hasRole: boolean
-    /** ロール欄の下に出す補足 */
-    roleNote?: string
-    onSave: (req: AssignMember) => ActionResult
-  }
-> = ({ state, reload, title, candidates, target, hasRole, roleNote, onSave }) => {
+export const AssignMemberModal = <R extends string>({
+  state,
+  reload,
+  title,
+  candidates,
+  target,
+  hasRole,
+  roles,
+  roleNote,
+  onSave,
+}: ModalBaseProps & {
+  title: string
+  candidates: UserSelectOption[]
+  target?: { id: string; name: string; role?: R | null }
+  hasRole: boolean
+  roles: AssignRoles<R>
+  /** ロール欄の下に出す補足 */
+  roleNote?: string
+  onSave: (req: AssignMemberRequest<R>) => ActionResult
+}) => {
   const { t, fet } = useLocale()
-  const roleOptions = useRoleOptions()
 
   const {
     control,
     handleSubmit,
     formState: { isSubmitting, errors },
-  } = useForm<AssignMember>({
-    resolver: zodResolver(scAssignMember),
+  } = useForm<z.infer<typeof scAssignMemberForm>>({
+    resolver: zodResolver(scAssignMemberForm),
     mode: 'onChange',
-    defaultValues: { userId: target?.id ?? '', role: target?.role ?? 'member' },
+    defaultValues: { userId: target?.id ?? '', role: target?.role ?? roles.defaultRole },
   })
 
   return (
     <FormModal
       state={state}
       onSubmit={handleSubmit(async (req) => {
-        await parseAction(onSave(req))
+        await parseAction(onSave({ userId: req.userId, role: req.role as R }))
         if (target) {
           notify.success(t('msg_updated_target', { target: target.name }))
         } else {
@@ -94,7 +123,7 @@ export const AssignMemberModal: FC<
             <SingleSelectCtrl
               control={control}
               name='role'
-              groupOptions={roleOptions}
+              groupOptions={roles.options}
               label={t('role')}
               errorMessage={fet(errors.role)}
             />
