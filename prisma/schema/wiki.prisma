@@ -1,0 +1,284 @@
+/// Wiki スペースの公開範囲
+enum WikiVisibility {
+  /// 割り当てられたユーザー(直接・グループ・ボード経由)だけが閲覧できる
+  restricted
+  /// ログインできる全ユーザーが閲覧できる。編集は割り当てられた editor 以上
+  everyone
+}
+
+/// Wiki スペースでのユーザーの権限。宣言順に強くなる
+enum WikiSpaceRole {
+  /// 閲覧のみ
+  viewer
+  /// ページの作成・編集・移動・削除
+  editor
+  /// スペースの設定(公開範囲・割り当て・アーカイブ)
+  owner
+}
+
+/// グループ・ボード経由の割り当ての権限。owner はユーザーの直接割り当てに限る
+enum WikiAssignRole {
+  viewer
+  editor
+}
+
+/// Wiki を書いた経路
+enum WikiVia {
+  /// 画面
+  web
+  /// MCP(人の経路・エージェントの両方)
+  mcp
+}
+
+/// Wiki ページの版の操作
+enum WikiPageRevisionAction {
+  created
+  updated
+  moved
+  deleted
+  restored
+}
+
+/// 階層構造の文書を置く単位。権限はスペース単位で持つ。
+/// ページは `<key>/<number>` で指定する(改名・移動で変わらない)
+model WikiSpace {
+  id String @id @default(uuid(7))
+
+  /// ページ指定(`KEY/番号`)と URL に使う。大文字英数(WIKI_SPACE_KEY_PATTERN)で一意。
+  /// 共有済みの指定が別のページを指さないよう、作成後は変更しない
+  key String @unique
+
+  /// スペース名
+  name String
+
+  /// スペースの説明
+  description String?
+
+  /// 公開範囲
+  visibility WikiVisibility @default(restricted)
+
+  /// 採番済みページ番号の最大値。UPDATE の行ロックで採番を直列化する
+  pageSeq Int @default(0)
+
+  /// アーカイブ済み。閲覧のみになる
+  archived Boolean @default(false)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members   WikiSpaceMember[]
+  groups    WikiSpaceGroup[]
+  boards    WikiSpaceBoard[]
+  pages     WikiPage[]
+  tags      WikiTag[]
+  revisions WikiPageRevision[]
+
+  @@map("wiki_space")
+}
+
+/// Wiki スペースへのユーザーの直接割り当て
+model WikiSpaceMember {
+  id String @id @default(uuid(7))
+
+  spaceId String
+  space   WikiSpace @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  role WikiSpaceRole @default(editor)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+
+  // @@unique が (spaceId, ...) の先頭索引を兼ねる
+  @@unique([spaceId, userId])
+  @@index([userId])
+  @@map("wiki_space_member")
+}
+
+/// Wiki スペースへのグループ割り当て。グループの所属ユーザーがこの権限を持つ
+model WikiSpaceGroup {
+  id String @id @default(uuid(7))
+
+  spaceId String
+  space   WikiSpace @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  groupId String
+  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  role WikiAssignRole @default(viewer)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+
+  @@unique([spaceId, groupId])
+  @@index([groupId])
+  @@map("wiki_space_group")
+}
+
+/// Wiki スペースへのボード割り当て。ボードのメンバー(直接・グループ経由)がこの権限を持つ
+model WikiSpaceBoard {
+  id String @id @default(uuid(7))
+
+  spaceId String
+  space   WikiSpace @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  boardId String
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  role WikiAssignRole @default(viewer)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+
+  @@unique([spaceId, boardId])
+  @@index([boardId])
+  @@map("wiki_space_board")
+}
+
+/// Wiki のページ。parentId で階層を持つ(深さの上限は MAX_WIKI_DEPTH)
+model WikiPage {
+  id String @id @default(uuid(7))
+
+  spaceId String
+  space   WikiSpace @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  /// 親ページ。null はスペース直下。
+  /// 配下ごとの削除はアプリ側で版を残してから行うが、取りこぼしても孤児を作らないよう Cascade にする
+  parentId String?
+  parent   WikiPage?  @relation("WikiPageTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children WikiPage[] @relation("WikiPageTree")
+
+  /// スペース内の連番。`KEY/番号` の番号
+  number Int
+
+  /// タイトル
+  title String
+
+  /// 本文(Markdown)
+  content String @default("")
+
+  /// 兄弟内の表示順。昇順。同値は number 昇順で安定させる
+  order Int @default(0)
+
+  createdById String?
+  createdBy   User?   @relation("WikiPageCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedById String?
+  updatedBy   User?   @relation("WikiPageUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  /// 最後に書いた経路
+  updatedVia WikiVia @default(web)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tags WikiPageTag[]
+
+  @@unique([spaceId, number])
+  @@index([spaceId, parentId, order])
+  @@index([parentId])
+  // 部分一致検索(ILIKE)を pg_trgm の GIN 索引で引く。拡張はマイグレーションで作る
+  @@index([title(ops: raw("gin_trgm_ops"))], type: Gin, map: "wiki_page_title_trgm_idx")
+  @@index([content(ops: raw("gin_trgm_ops"))], type: Gin, map: "wiki_page_content_trgm_idx")
+  @@map("wiki_page")
+}
+
+/// Wiki スペース内で使うページのタグ
+model WikiTag {
+  id String @id @default(uuid(7))
+
+  spaceId String
+  space   WikiSpace @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  /// タグ名。スペース内で一意
+  name String
+
+  /// 表示色
+  color TagColor @default(gray)
+
+  /// スペース内の表示順。昇順。同値は name 昇順で安定させる
+  order Int @default(0)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  pages WikiPageTag[]
+
+  // @@unique が (spaceId, ...) の先頭索引を兼ねる
+  @@unique([spaceId, name])
+  @@map("wiki_tag")
+}
+
+/// Wiki ページとタグの紐づけ
+model WikiPageTag {
+  id String @id @default(uuid(7))
+
+  pageId String
+  page   WikiPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  tagId String
+  tag   WikiTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+
+  @@unique([pageId, tagId])
+  @@index([tagId])
+  @@map("wiki_page_tag")
+}
+
+/// Wiki ページの版。変更後(deleted は削除直前)の全文を持つ。
+/// 削除後も復元に使うため pageId に外部キーを張らない。
+/// 同じ人が続けて保存した分は WIKI_REVISION_MERGE_MINUTES 以内なら最新の版へまとめ(updatedAt を進める)、
+/// 1ページあたり WIKI_REVISION_MAX_PER_PAGE を超えた分は書き込み時に消す
+model WikiPageRevision {
+  id String @id @default(uuid(7))
+
+  spaceId String
+  space   WikiSpace @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  /// 対象の WikiPage.id。復元すると同じ id で作り直す
+  pageId String
+
+  /// 対象ページの番号(削除後も `KEY/番号` を出せるように持つ)
+  pageNumber Int
+
+  action WikiPageRevisionAction
+
+  // スナップショット
+  parentId String?
+  order    Int
+  title    String
+  content  String
+  /// タグは削除されうるので名前で持つ
+  tagNames String[] @default([])
+
+  /// 変更者。退会しても変更の事実は残すので SetNull
+  actorId String?
+  actor   User?   @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  via WikiVia
+
+  /// 書いたときに対応していたチケット(MCP で指定されたとき)
+  ticketId String?
+  ticket   Ticket? @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+
+  /// action=restored のときの戻し元の版
+  restoredFromId String?
+
+  /// 版の始まり。連続保存のまとめはここから数える
+  createdAt DateTime @default(now())
+  /// 最後に保存した時刻。まとめると進む。表示と保持期間の判定に使う
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([pageId, createdAt])
+  @@index([spaceId, createdAt])
+  // 保持期間の掃除で古い順に引く
+  @@index([updatedAt])
+  @@index([ticketId])
+  @@map("wiki_page_revision")
+}

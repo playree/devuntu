@@ -472,3 +472,36 @@ describe('ボードノートの上限と保持期間', () => {
     })
   })
 })
+
+describe('Wiki の版の保持期間・上限・まとめる時間', () => {
+  const KEYS = ['WIKI_REVISION_RETENTION_DAYS', 'WIKI_REVISION_MAX_PER_PAGE', 'WIKI_REVISION_MERGE_MINUTES'] as const
+  KEYS.forEach(restoreEnv)
+
+  it('未設定なら既定値', () => {
+    KEYS.forEach((key) => delete process.env[key])
+    expect(envu.server.WIKI_REVISION_RETENTION_DAYS).toBe(7)
+    expect(envu.server.WIKI_REVISION_MAX_PER_PAGE).toBe(50)
+    expect(envu.server.WIKI_REVISION_MERGE_MINUTES).toBe(10)
+  })
+
+  it('設定した値を返す', () => {
+    KEYS.forEach((key) => (process.env[key] = '3'))
+    KEYS.forEach((key) => expect(envu.server[key]).toBe(3))
+  })
+
+  it('まとめる時間だけは 0(まとめない)を許す', () => {
+    process.env.WIKI_REVISION_MERGE_MINUTES = '0'
+    expect(envu.server.WIKI_REVISION_MERGE_MINUTES).toBe(0)
+    process.env.WIKI_REVISION_RETENTION_DAYS = '0'
+    expect(() => envu.server.WIKI_REVISION_RETENTION_DAYS).toThrow()
+    process.env.WIKI_REVISION_MAX_PER_PAGE = '0'
+    expect(() => envu.server.WIKI_REVISION_MAX_PER_PAGE).toThrow()
+  })
+
+  it.each(['-1', '1.5', 'abc'])('負の値や整数でない値は起動時に弾く (%s)', (value) => {
+    KEYS.forEach((key) => {
+      process.env[key] = value
+      expect(() => envu.server[key]).toThrow()
+    })
+  })
+})

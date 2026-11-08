@@ -416,6 +416,24 @@ const server = {
   },
 
   /**
+   * Wiki ページの版を残す期間(日)。削除したページを復元できるのもこの期間。
+   * 残っているページは、期限より前の最新の1版を残すので、常に期限時点の状態までは戻せる
+   */
+  get WIKI_REVISION_RETENTION_DAYS() {
+    return getEnvInt('WIKI_REVISION_RETENTION_DAYS', { default: 7, min: 1, max: MAX_RETENTION_DAYS })
+  },
+
+  /** Wiki ページ1件あたりに残す版の数。超えた分は書き込み時に古い順に消す */
+  get WIKI_REVISION_MAX_PER_PAGE() {
+    return getEnvInt('WIKI_REVISION_MAX_PER_PAGE', { default: 50, min: 1 })
+  },
+
+  /** 同じ人が続けて保存した Wiki ページを1つの版にまとめる時間(分)。0 ならまとめない */
+  get WIKI_REVISION_MERGE_MINUTES() {
+    return getEnvInt('WIKI_REVISION_MERGE_MINUTES', { default: 10, min: 0 })
+  },
+
+  /**
    * ランナー1台あたりに残す実行履歴の上限。期間内に積み上がった分への歯止め。
    *
    * 画面が出せる件数(`AGENT_RUN_HISTORY_LIMIT`)を下回ると「一覧に出ているのに実体が無い」
