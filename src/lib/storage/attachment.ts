@@ -162,15 +162,15 @@ export const saveContentFile = async (file: File, owner: AttachmentOwner) => {
 /**
  * 本文から参照されている添付の一覧(チケット詳細・MCP の get_ticket 用)。並びは `keys` の順。
  *
- * 本文には他ボードの添付URLも書けてしまうため、そのボードとボードに属さないものだけに絞り、
- * 見られない添付の名前やサイズを出さない。
+ * 本文には他ボードや Wiki スペースの添付URLも書けてしまうため、そのボードの添付と
+ * どこにも属さないもの(全ログインユーザー向け)だけに絞り、見られない添付の名前やサイズを出さない。
  */
 export const listContentAttachments = async (keys: string[], boardId: string) => {
   if (keys.length === 0) {
     return []
   }
   const rows = await prisma.attachment.findMany({
-    where: { key: { in: keys }, OR: [{ boardId }, { boardId: null }] },
+    where: { key: { in: keys }, OR: [{ boardId }, { boardId: null, wikiSpaceId: null }] },
     select: { key: true, originalName: true, size: true, mimeType: true, createdAt: true },
   })
   const byKey = new Map(rows.map((row) => [row.key, row]))
@@ -213,9 +213,9 @@ export const removeImageAttachment = async (url: string): Promise<void> => {
 }
 
 /**
- * 本人がアップロードした、ボードに属さない画像だけを削除する。
+ * 本人がアップロードした、ボードにも Wiki スペースにも属さない画像だけを削除する。
  *
- * `user.image` のように参照先を利用者が指せる値から消すときに使い、他人の添付を巻き込まない。
+ * `user.image` のように参照先を利用者が指せる値から消すときに使い、他人の添付や本文で使う添付を巻き込まない。
  */
 export const removeOwnedImageAttachment = async (url: string, userId: string): Promise<void> => {
   if (!isUploadUrl(url)) {
@@ -223,10 +223,12 @@ export const removeOwnedImageAttachment = async (url: string, userId: string): P
   }
   const key = toUploadKey(url)
   // 削除はベストエフォート(removeAttachmentByKey と同じ)。確認に失敗したら消さずに戻る
-  const owned = await prisma.attachment.count({ where: { key, createdById: userId, boardId: null } }).catch((err) => {
-    logger.error({ err, key, userId }, 'failed to check attachment owner')
-    return 0
-  })
+  const owned = await prisma.attachment
+    .count({ where: { key, createdById: userId, boardId: null, wikiSpaceId: null } })
+    .catch((err) => {
+      logger.error({ err, key, userId }, 'failed to check attachment owner')
+      return 0
+    })
   if (owned === 0) {
     logger.warn({ key, userId }, 'skip removing attachment not owned by user')
     return
