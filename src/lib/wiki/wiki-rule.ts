@@ -6,7 +6,7 @@
  */
 
 import type { WikiPageRevisionAction, WikiSpaceRole, WikiVia } from '@/generated/prisma/enums'
-import { MAX_TICKET_TAGS } from '../board/tag-rule'
+import { MAX_TAG_NAME, MAX_TICKET_TAGS } from '../board/tag-rule'
 import { BOARD_KEY_PATTERN, MAX_BOARD_KEY } from '../board/ticket-id'
 
 /** スペースキーの形式。ボードキーと同じ(大文字英字始まりの大文字英数 2〜8 字) */
@@ -154,3 +154,25 @@ export const wikiSearchHref = ({ spaceKey, q, tags }: { spaceKey?: string; q?: s
   const path = spaceKey ? `/wiki/${spaceKey}/search` : '/wiki'
   return query ? `${path}?${query}` : path
 }
+
+/** 検索語の最大長(入力欄・URL の両方で揃える) */
+export const MAX_WIKI_SEARCH_KEYWORD = 100
+
+/**
+ * URL のクエリ(`?q=` / `?tags=`)を検索の条件に読む。手で書き換えた URL でも検証で弾かれないよう、
+ * 語は最大長で切り、タグは空と長すぎるものを除いて上限の数までにする
+ */
+export const parseWikiSearchParams = (params: {
+  q?: string | string[]
+  tags?: string | string[]
+}): { keyword: string; tags: string[] } => ({
+  keyword: ([params.q ?? []].flat()[0] ?? '').trim().slice(0, MAX_WIKI_SEARCH_KEYWORD),
+  tags: [
+    ...new Set(
+      [params.tags ?? []]
+        .flat()
+        .map((tag) => tag.trim())
+        .filter((tag) => tag.length > 0 && tag.length <= MAX_TAG_NAME),
+    ),
+  ].slice(0, MAX_WIKI_PAGE_TAGS),
+})

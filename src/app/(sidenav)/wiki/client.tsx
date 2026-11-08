@@ -14,7 +14,7 @@ import { BookOpenIcon, Cog6ToothIcon, PlusIcon } from '@/components/icon'
 import { ReloadButton } from '@/components/reload-button'
 import { WikiRoleChip, WikiVisibilityChip } from '@/components/wiki-chip'
 import { parseAction, useActionData } from '@/lib/action/action-client'
-import { wikiSearchHref } from '@/lib/wiki/wiki-rule'
+import { MAX_WIKI_SEARCH_KEYWORD, wikiSearchHref } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { Table } from '@heroui/react'
 import Link from 'next/link'
@@ -51,15 +51,12 @@ export const WikiSpacesClient: FC<{ keyword: string }> = ({ keyword }) => {
         icon={<BookOpenIcon />}
         title={t('wiki')}
         extra={
-          // 検索結果を出している間は一覧の絞り込みが効かないので出さない
-          !keyword && (
-            <SwitchField
-              id='show-archived'
-              label={t('show_archived')}
-              isSmart
-              onChange={(isSelected) => list.setFilter({ showArchived: isSelected ? '1' : '' })}
-            />
-          )
+          <SwitchField
+            id='show-archived'
+            label={t('show_archived')}
+            isSmart
+            onChange={(isSelected) => list.setFilter({ showArchived: isSelected ? '1' : '' })}
+          />
         }
       >
         <MultiButton
@@ -77,7 +74,7 @@ export const WikiSpacesClient: FC<{ keyword: string }> = ({ keyword }) => {
         aria-label={t('wiki_search')}
         placeholder={t('wiki_search_placeholder')}
         defaultValue={keyword}
-        maxLength={100}
+        maxLength={MAX_WIKI_SEARCH_KEYWORD}
         onSubmit={(value) => router.replace(wikiSearchHref({ q: value.trim() }))}
         onClear={() => router.replace(wikiSearchHref({}))}
       />

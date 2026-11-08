@@ -8,7 +8,7 @@ import { ContentHeader } from '@/components/header'
 import { ArrowLeftCircleIcon, MagnifyingGlassIcon } from '@/components/icon'
 import { TagNameSelectField } from '@/components/ticket/tag-name-select'
 import { useActionData } from '@/lib/action/action-client'
-import { MAX_WIKI_PAGE_TAGS, wikiSearchHref } from '@/lib/wiki/wiki-rule'
+import { MAX_WIKI_PAGE_TAGS, MAX_WIKI_SEARCH_KEYWORD, wikiSearchHref } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
@@ -55,7 +55,7 @@ export const WikiSpaceSearchClient: FC<{ keyword: string; tags: string[] }> = ({
                 aria-label={t('wiki_search')}
                 placeholder={t('wiki_search_placeholder')}
                 defaultValue={keyword}
-                maxLength={100}
+                maxLength={MAX_WIKI_SEARCH_KEYWORD}
                 onSubmit={(value) => search({ q: value.trim() })}
                 onClear={() => search({ q: '' })}
               />

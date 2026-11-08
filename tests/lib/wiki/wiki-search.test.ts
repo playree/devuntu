@@ -16,7 +16,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('@/lib/prisma', async () =>
   (await import('../../helpers/prisma')).mockPrisma({
     wikiSpace: ['findMany'],
-    wikiPage: ['findMany'],
     wikiPageTag: ['findMany'],
   }),
 )
@@ -114,6 +113,11 @@ describe('formatWikiSnippet', () => {
     expect(formatWikiSnippet({ snippet: '短い本文', snippetStart: 1, contentLength: 4 })).toBe('短い本文')
   })
 
+  it('末尾の … の判定は、サロゲートペアを1文字として数える', () => {
+    expect(formatWikiSnippet({ snippet: '😀😀', snippetStart: 1, contentLength: 3 })).toBe('😀😀…')
+    expect(formatWikiSnippet({ snippet: '😀😀', snippetStart: 1, contentLength: 2 })).toBe('😀😀')
+  })
+
   it('記号しか無ければ空文字', () => {
     expect(formatWikiSnippet({ snippet: '***', snippetStart: 1, contentLength: 3 })).toBe('')
   })
@@ -134,15 +138,18 @@ describe('searchWikiPages', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    // 使われずに残った mockResolvedValueOnce が次のテストへ持ち越されないようにする
+    vi.mocked(prisma.$queryRaw).mockReset()
     vi.mocked(getAccessibleWikiSpaceIds).mockResolvedValue(['s1', 's2'])
     vi.mocked(getWikiSpaceByKey).mockResolvedValue({ space: { id: 's9' } } as never)
-    vi.mocked(prisma.$queryRaw).mockResolvedValue([ROW] as never)
+    // 1回目は検索、2回目はパンくず(先祖を近い順に depth 1, 2, …)
+    vi.mocked(prisma.$queryRaw)
+      .mockResolvedValueOnce([ROW] as never)
+      .mockResolvedValueOnce([
+        { pageId: 'p3', title: '設計書', depth: 1 },
+        { pageId: 'p3', title: '開発', depth: 2 },
+      ] as never)
     vi.mocked(prisma.wikiSpace.findMany).mockResolvedValue([{ id: 's1', key: 'DOCS', name: 'ドキュメント' }] as never)
-    vi.mocked(prisma.wikiPage.findMany).mockResolvedValue([
-      { id: 'p1', parentId: null, title: '開発' },
-      { id: 'p2', parentId: 'p1', title: '設計書' },
-      { id: 'p3', parentId: 'p2', title: 'API 設計' },
-    ] as never)
     vi.mocked(prisma.wikiPageTag.findMany).mockResolvedValue([
       { pageId: 'p3', tag: { id: 't1', name: '設計', color: 'blue' } },
     ] as never)
@@ -194,6 +201,13 @@ describe('searchWikiPages', () => {
   it('件数は上限に丸める', async () => {
     await searchWikiPages(actor, { keyword: '設計', limit: 1000 })
     expect(executedSql().values).toContain(MAX_WIKI_SEARCH_LIMIT)
+  })
+
+  it('パンくずは見つかったページの先祖だけを再帰でたどる', async () => {
+    await searchWikiPages(actor, { keyword: '設計' })
+    const sql = vi.mocked(prisma.$queryRaw).mock.calls[1]
+    expect((sql[0] as unknown as TemplateStringsArray).join('')).toContain('WITH RECURSIVE')
+    expect(sql.slice(1).flatMap((v) => (v as { values?: unknown[] }).values ?? [v])).toContain('p3')
   })
 
   it('ページの指定・パンくず・タグ・snippet を添えて返す', async () => {

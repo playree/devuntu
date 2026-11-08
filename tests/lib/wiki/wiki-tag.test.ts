@@ -90,7 +90,7 @@ describe('createWikiTag', () => {
 describe('updateWikiTag / deleteWikiTag', () => {
   it('更新はタグのスペースで manage を要する', async () => {
     await updateWikiTag(actor, { id: 't1', name: '運用', color: 'green', order: 1 })
-    expect(assertWikiSpaceAccess).toHaveBeenCalledWith(actor, SPACE_ID, 'manage')
+    expect(assertWikiSpaceAccess).toHaveBeenCalledWith(actor, SPACE_ID, 'manage', expect.anything())
     expect(prisma.wikiTag.update).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: 't1' }, data: { name: '運用', color: 'green', order: 1 } }),
     )
@@ -107,6 +107,16 @@ describe('updateWikiTag / deleteWikiTag', () => {
     vi.mocked(assertWikiSpaceAccess).mockRejectedValue(new Error('denied'))
     await expect(deleteWikiTag(actor, 't1')).rejects.toThrow('denied')
     expect(assertWikiSpaceAccess).toHaveBeenCalledWith(actor, SPACE_ID, 'manage', expect.anything())
+    expect(prisma.wikiTag.delete).not.toHaveBeenCalled()
+  })
+
+  it('アーカイブ済みのスペースでは更新も削除もできない(ページのタグが変わるため)', async () => {
+    vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ archived: true } as never)
+    expect(await errorTypeOf(updateWikiTag(actor, { id: 't1', name: '運用', color: 'green', order: 1 }))).toBe(
+      INVALID_OPERATION,
+    )
+    expect(await errorTypeOf(deleteWikiTag(actor, 't1'))).toBe(INVALID_OPERATION)
+    expect(prisma.wikiTag.update).not.toHaveBeenCalled()
     expect(prisma.wikiTag.delete).not.toHaveBeenCalled()
   })
 

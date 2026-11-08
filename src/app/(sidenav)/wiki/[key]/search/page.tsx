@@ -1,3 +1,4 @@
+import { parseWikiSearchParams } from '@/lib/wiki/wiki-rule'
 import { en } from '@/locale/lang-en'
 import { type Metadata } from 'next'
 import { FC } from 'react'
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 const WikiSpaceSearchPage: FC<{ searchParams: Promise<{ q?: string | string[]; tags?: string | string[] }> }> = async ({
   searchParams,
 }) => {
-  const { q, tags } = await searchParams
-  return <WikiSpaceSearchClient keyword={[q ?? []].flat()[0]?.trim() ?? ''} tags={[tags ?? []].flat()} />
+  const { keyword, tags } = parseWikiSearchParams(await searchParams)
+  return <WikiSpaceSearchClient keyword={keyword} tags={tags} />
 }
 export default WikiSpaceSearchPage

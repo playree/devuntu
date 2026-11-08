@@ -185,24 +185,28 @@ export const WikiSpaceSettingsClient: FC = () => {
         </AccordionSection>
 
         <AccordionSection id='wiki_space_tags' icon={<TagIcon />} title={t('tag_manage')}>
-          <TagEditor
-            tags={tags ?? []}
-            canManage={canManage}
-            onCreate={async (req) => {
-              await parseAction(createWikiTag({ spaceId: space.id, ...req }))
-              notify.success(t('msg_added_target', { target: req.name }))
-              reloadTags()
-            }}
-            onUpdate={async (req) => {
-              await parseAction(updateWikiTag(req))
-              notify.success(t('msg_updated_target', { target: req.name }))
-              reloadTags()
-            }}
-            onDelete={async (tag) => {
-              await parseAction(deleteWikiTag({ id: tag.id }))
-              reloadTags()
-            }}
-          />
+          {space.archived ? (
+            <p className='text-muted text-sm'>{t('msg_wiki_space_archived')}</p>
+          ) : (
+            <TagEditor
+              tags={tags ?? []}
+              canManage={canManage}
+              onCreate={async (req) => {
+                await parseAction(createWikiTag({ spaceId: space.id, ...req }))
+                notify.success(t('msg_added_target', { target: req.name }))
+                reloadTags()
+              }}
+              onUpdate={async (req) => {
+                await parseAction(updateWikiTag(req))
+                notify.success(t('msg_updated_target', { target: req.name }))
+                reloadTags()
+              }}
+              onDelete={async (tag) => {
+                await parseAction(deleteWikiTag({ id: tag.id }))
+                reloadTags()
+              }}
+            />
+          )}
         </AccordionSection>
 
         <AccordionSection id='wiki_space_archive' icon={<ArchiveBoxIcon />} title={t('archived')}>

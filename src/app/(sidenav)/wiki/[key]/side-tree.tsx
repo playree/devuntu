@@ -17,7 +17,7 @@ import {
 import { WikiTagDots } from '@/components/wiki-tag'
 import { parseAction } from '@/lib/action/action-client'
 import { ClientError } from '@/lib/error'
-import { wikiSearchHref } from '@/lib/wiki/wiki-rule'
+import { MAX_WIKI_SEARCH_KEYWORD, wikiSearchHref } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { cn } from '@heroui/react'
 import Link from 'next/link'
@@ -33,7 +33,7 @@ import { useWikiSpace } from './space-context'
  */
 export const WikiSideTree: FC = () => {
   const { t } = useLocale()
-  const { space, access, tree, tags, reloadSpace } = useWikiSpace()
+  const { space, access, tree, tagsOf, reloadSpace } = useWikiSpace()
   const { closeMenu } = useSideNav()
   const params = useParams<{ number?: string }>()
   const pathname = usePathname()
@@ -43,16 +43,17 @@ export const WikiSideTree: FC = () => {
   const createModalState = useModalState()
   const moveModalState = useModalState<{ id: string; title: string; parentId: string | null }>()
 
-  const items = useMemo<TreeViewItem[]>(() => {
-    const tagById = new Map(tags.map((tag) => [tag.id, tag]))
-    return tree.map((page) => ({
-      id: page.id,
-      parentId: page.parentId,
-      label: page.title,
-      href: `/wiki/${space.key}/${page.number}`,
-      suffix: <WikiTagDots tags={page.tagIds.map((id) => tagById.get(id)).filter((tag) => tag !== undefined)} />,
-    }))
-  }, [space.key, tree, tags])
+  const items = useMemo<TreeViewItem[]>(
+    () =>
+      tree.map((page) => ({
+        id: page.id,
+        parentId: page.parentId,
+        label: page.title,
+        href: `/wiki/${space.key}/${page.number}`,
+        suffix: <WikiTagDots tags={tagsOf(page.tagIds)} />,
+      })),
+    [space.key, tree, tagsOf],
+  )
   const selectedId = tree.find((page) => String(page.number) === params.number)?.id ?? null
   const topHref = `/wiki/${space.key}`
   const canEdit = access.canWrite && isEditMode
@@ -130,7 +131,7 @@ export const WikiSideTree: FC = () => {
           isSmart
           aria-label={t('wiki_search')}
           placeholder={t('wiki_search')}
-          maxLength={100}
+          maxLength={MAX_WIKI_SEARCH_KEYWORD}
           onSubmit={(value) => {
             if (value.trim()) {
               router.push(wikiSearchHref({ spaceKey: space.key, q: value.trim() }))

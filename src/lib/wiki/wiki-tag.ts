@@ -2,6 +2,7 @@
  * Wiki のタグ(サーバー専用)。スペースごとに持ち、ボードのタグ(`board/tag.ts`)と同じ規則で扱う
  *
  * - 作成は editor 以上(ページの編集中に新しいタグが要る)、更新・削除は manage
+ * - アーカイブ済みのスペースは読み取り専用なので、どれもできない(更新・削除もページのタグを変えるため)
  * - ページへの付与は、同じスペースのタグだけに限る(DB 制約では防げないので `assertWikiTagIdsInSpace` を必ず通す)
  */
 
@@ -117,20 +118,28 @@ export const createWikiTag = async (
   return tag
 }
 
-const findTagSpace = async (id: string) => {
-  const tag = await prisma.wikiTag.findUnique({ where: { id }, select: { spaceId: true } })
+const findTagSpace = async (id: string, tx: Db = prisma) => {
+  const tag = await tx.wikiTag.findUnique({ where: { id }, select: { spaceId: true } })
   if (!tag) {
     throw errInvalidOperation()
   }
   return tag.spaceId
 }
 
-/** タグの更新(名前・色・表示順)。manage が必要 */
+/** 更新・削除の権限。manage に加えて、アーカイブされていないこと */
+const assertTagManageable = async (actor: Actor, spaceId: string, tx: Db = prisma) => {
+  const access = await assertWikiSpaceAccess(actor, spaceId, 'manage', tx)
+  if (access.archived) {
+    throw errInvalidOperation()
+  }
+}
+
+/** タグの更新(名前・色・表示順)。manage が必要で、アーカイブ済みのスペースでは不可 */
 export const updateWikiTag = async (
   actor: Actor,
   { id, name, color, order }: WikiTagInput & { id: string; order: number },
 ): Promise<WikiTagOption> => {
-  await assertWikiSpaceAccess(actor, await findTagSpace(id), 'manage')
+  await assertTagManageable(actor, await findTagSpace(id))
   const tag = await prisma.wikiTag
     .update({ where: { id }, data: { name, color, order }, select: WIKI_TAG_SELECT })
     .catch(rethrowDuplicatedTagName)
@@ -139,14 +148,10 @@ export const updateWikiTag = async (
   return tag
 }
 
-/** タグの削除。manage が必要。ページとの紐付けは Cascade で消える */
+/** タグの削除。manage が必要で、アーカイブ済みのスペースでは不可。ページとの紐付けは Cascade で消える */
 export const deleteWikiTag = async (actor: Actor, id: string): Promise<void> => {
   await prisma.$transaction(async (tx) => {
-    const target = await tx.wikiTag.findUnique({ where: { id }, select: { spaceId: true } })
-    if (!target) {
-      throw errInvalidOperation()
-    }
-    await assertWikiSpaceAccess(actor, target.spaceId, 'manage', tx)
+    await assertTagManageable(actor, await findTagSpace(id, tx), tx)
     await tx.wikiTag.delete({ where: { id } })
   })
 

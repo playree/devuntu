@@ -8,6 +8,7 @@ import { MAX_TAG_NAME } from '../board/tag-rule'
 import {
   MAX_WIKI_CONTENT,
   MAX_WIKI_PAGE_TAGS,
+  MAX_WIKI_SEARCH_KEYWORD,
   MAX_WIKI_SEARCH_LIMIT,
   MAX_WIKI_SPACE_DESCRIPTION,
   MAX_WIKI_SPACE_KEY,
@@ -147,7 +148,7 @@ export const scUpdateWikiTag = z.object({
 
 /** `space` を省略すると、閲覧できる全スペース(アーカイブ済みを除く)を探す */
 export const scWikiSearch = z.object({
-  keyword: z.string().trim().max(100).default(''),
+  keyword: z.string().trim().max(MAX_WIKI_SEARCH_KEYWORD).default(''),
   space: zWikiSpaceKey.optional(),
   tags: z.array(z.string().trim().max(MAX_TAG_NAME)).max(MAX_WIKI_PAGE_TAGS).default([]),
   limit: z.number().int().min(1).max(MAX_WIKI_SEARCH_LIMIT).optional(),

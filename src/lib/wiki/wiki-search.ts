@@ -15,10 +15,9 @@ import { dedupeTagNames } from '../board/tag-rule'
 import { splitKeywords } from '../board/ticket-search'
 import { prisma } from '../prisma'
 import { getAccessibleWikiSpaceIds } from './wiki-access'
-import { DEFAULT_WIKI_SEARCH_LIMIT, MAX_WIKI_SEARCH_LIMIT, wikiPageRef } from './wiki-rule'
+import { DEFAULT_WIKI_SEARCH_LIMIT, MAX_WIKI_DEPTH, MAX_WIKI_SEARCH_LIMIT, wikiPageRef } from './wiki-rule'
 import { getWikiSpaceByKey } from './wiki-space'
 import { WIKI_TAG_ORDER_BY } from './wiki-tag'
-import { ancestorIds, indexWikiTree } from './wiki-tree'
 
 /** snippet の切り出し幅。一致した位置の前を SNIPPET_BEFORE 文字、全体で SNIPPET_LENGTH 文字 */
 export const SNIPPET_BEFORE = 60
@@ -142,8 +141,35 @@ export const formatWikiSnippet = ({
     return ''
   }
   const head = snippetStart > 1 ? '…' : ''
-  const tail = snippetStart - 1 + snippet.length < contentLength ? '…' : ''
+  // DB の文字数はコードポイントで数えるので、サロゲートペアを 1 文字として数える
+  const tail = snippetStart - 1 + [...snippet].length < contentLength ? '…' : ''
   return `${head}${text}${tail}`
+}
+
+/**
+ * 各ページの先祖のタイトル(スペース直下から順)。先祖だけを再帰でたどり、スペースの木全体は読まない
+ */
+const loadBreadcrumbs = async (pageIds: readonly string[]): Promise<Map<string, string[]>> => {
+  const rows = await prisma.$queryRaw<{ pageId: string; title: string; depth: number }[]>`
+    WITH RECURSIVE anc("pageId", "ancestorId", depth) AS (
+      SELECT "id", "parentId", 1 FROM "wiki_page" WHERE "id" IN (${Prisma.join(pageIds)}) AND "parentId" IS NOT NULL
+      UNION ALL
+      SELECT a."pageId", p."parentId", a.depth + 1
+      FROM anc a JOIN "wiki_page" p ON p."id" = a."ancestorId"
+      WHERE p."parentId" IS NOT NULL AND a.depth < ${MAX_WIKI_DEPTH}
+    )
+    SELECT a."pageId", p."title", a.depth FROM anc a JOIN "wiki_page" p ON p."id" = a."ancestorId"
+  `
+  const byPage = new Map<string, { title: string; depth: number }[]>()
+  for (const { pageId, title, depth } of rows) {
+    byPage.set(pageId, [...(byPage.get(pageId) ?? []), { title, depth }])
+  }
+  return new Map(
+    [...byPage].map(([pageId, ancestors]) => [
+      pageId,
+      ancestors.toSorted((a, b) => b.depth - a.depth).map(({ title }) => title),
+    ]),
+  )
 }
 
 export type WikiSearchParams = {
@@ -190,21 +216,17 @@ export const searchWikiPages = async (actor: Actor, params: WikiSearchParams): P
   }
 
   const hitSpaceIds = [...new Set(rows.map(({ spaceId }) => spaceId))]
-  const [spaces, trees, pageTags] = await Promise.all([
+  const pageIds = rows.map(({ id }) => id)
+  const [spaces, breadcrumbs, pageTags] = await Promise.all([
     prisma.wikiSpace.findMany({ where: { id: { in: hitSpaceIds } }, select: { id: true, key: true, name: true } }),
-    prisma.wikiPage.findMany({
-      where: { spaceId: { in: hitSpaceIds } },
-      select: { id: true, parentId: true, title: true },
-    }),
+    loadBreadcrumbs(pageIds),
     prisma.wikiPageTag.findMany({
-      where: { pageId: { in: rows.map(({ id }) => id) } },
+      where: { pageId: { in: pageIds } },
       select: { pageId: true, tag: { select: { id: true, name: true, color: true } } },
       orderBy: WIKI_TAG_ORDER_BY.map((order) => ({ tag: order })),
     }),
   ])
   const spaceById = new Map(spaces.map((space) => [space.id, space]))
-  const titleById = new Map(trees.map(({ id, title }) => [id, title]))
-  const index = indexWikiTree(trees)
 
   return rows.flatMap((row) => {
     const space = spaceById.get(row.spaceId)
@@ -220,9 +242,7 @@ export const searchWikiPages = async (actor: Actor, params: WikiSearchParams): P
         title: row.title,
         updatedAt: row.updatedAt,
         tags: pageTags.filter(({ pageId }) => pageId === row.id).map(({ tag }) => tag),
-        breadcrumbs: ancestorIds(index, row.id)
-          .reverse()
-          .map((id) => titleById.get(id) ?? ''),
+        breadcrumbs: breadcrumbs.get(row.id) ?? [],
         snippet: formatWikiSnippet(row),
       },
     ]
