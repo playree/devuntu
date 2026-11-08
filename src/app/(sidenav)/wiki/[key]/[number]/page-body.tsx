@@ -6,6 +6,8 @@ import { CheckIcon, PencilSquareIcon } from '@/components/icon'
 import { MarkdownField } from '@/components/markdown/markdown-editor'
 import { MarkdownToc } from '@/components/markdown/markdown-toc'
 import { notify } from '@/components/notify'
+import { TagIdSelectField } from '@/components/ticket/tag-id-select'
+import { WikiTagLinks } from '@/components/wiki-tag'
 import { parseAction } from '@/lib/action/action-client'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { dayformat } from '@/lib/day'
@@ -15,12 +17,14 @@ import { useLocale } from '@/locale/client'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { FC, useEffect, useRef, useState } from 'react'
 import { EDIT_QUERY } from '../page-modals'
+import { createWikiTag } from '../server'
+import { useWikiSpace } from '../space-context'
 import { GetWikiPageReturnType, updateWikiPage } from './server'
 
 type Page = NonNullable<GetWikiPageReturnType>['page']
 
 /**
- * ページのタイトルと本文。表示と編集を切り替え、保存したらサーバー値を取り直す。
+ * ページのタイトル・タグ・本文。表示と編集を切り替え、保存したらサーバー値を取り直す。
  * 作成直後(`?edit=1`)は編集から始める
  */
 export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Promise<void> }> = ({
@@ -30,6 +34,7 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
 }) => {
   const { t } = useLocale()
   const tz = useUserTimezone()
+  const { space, tags: spaceTags } = useWikiSpace()
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -38,6 +43,8 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
   const [isEditing, setEditing] = useState(() => canWrite && hasEditQuery)
   const [titleDraft, setTitleDraft] = useState(page.title)
   const [contentDraft, setContentDraft] = useState(page.content)
+  const pageTagIds = () => page.tags.map(({ tag }) => tag.id)
+  const [tagIdsDraft, setTagIdsDraft] = useState(pageTagIds)
   // 競合の判定の基準。編集中にページを取り直しても(移動など)、編集を始めた時点の値で比べる
   const [baseUpdatedAt, setBaseUpdatedAt] = useState(page.updatedAt)
   const [isSaving, setSaving] = useState(false)
@@ -53,6 +60,7 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
   const startEditing = () => {
     setTitleDraft(page.title)
     setContentDraft(page.content)
+    setTagIdsDraft(pageTagIds())
     setBaseUpdatedAt(page.updatedAt)
     setEditing(true)
   }
@@ -66,6 +74,7 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
           id: page.id,
           title: titleDraft,
           content: contentDraft,
+          tagIds: tagIdsDraft,
           expectedUpdatedAt: baseUpdatedAt.toISOString(),
         }),
       )
@@ -100,6 +109,16 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
           />
         ) : (
           <h1 className='text-2xl font-bold wrap-break-word'>{page.title}</h1>
+        )}
+        {isEditing ? (
+          <TagIdSelectField
+            options={spaceTags}
+            value={tagIdsDraft}
+            onChange={setTagIdsDraft}
+            onCreate={async (name) => parseAction(createWikiTag({ spaceId: space.id, name }))}
+          />
+        ) : (
+          <WikiTagLinks spaceKey={space.key} tags={page.tags.map(({ tag }) => tag)} />
         )}
         <p className='text-muted text-xs'>
           {t('wiki_updated_by', { name: updatedBy ?? '-', at: dayformat(page.updatedAt, 'tz-minute', tz) })}

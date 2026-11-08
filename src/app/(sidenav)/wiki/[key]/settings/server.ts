@@ -7,6 +7,7 @@ import {
   scRemoveWikiSpaceTarget,
   scSetWikiSpaceArchived,
   scUpdateWikiSpace,
+  scUpdateWikiTag,
   scUpsertWikiSpaceMember,
   scUpsertWikiSpaceTarget,
 } from '@/lib/schema/schema-wiki'
@@ -24,6 +25,11 @@ import {
   setWikiSpaceArchived as setWikiSpaceArchivedCore,
   updateWikiSpace as updateWikiSpaceCore,
 } from '@/lib/wiki/wiki-space'
+import {
+  deleteWikiTag as deleteWikiTagCore,
+  listWikiTagsForManage,
+  updateWikiTag as updateWikiTagCore,
+} from '@/lib/wiki/wiki-tag'
 
 /**
  * スペース設定画面の Server Action。どれも manage(owner または管理者)を要求する。
@@ -103,5 +109,25 @@ export const removeWikiSpaceBoard = safeAuthAction
   .inputSchema(scRemoveWikiSpaceTarget)
   .action(async ({ ctx: { user }, parsedInput: { id, targetId } }) => {
     await removeWikiSpaceBoardCore(user, { spaceId: id, boardId: targetId })
+    return { id }
+  })
+
+/** タグ管理の一覧(付与しているページ数付き)。作成は `../server.ts` の createWikiTag */
+export const getWikiTags = safeAuthAction
+  .metadata({ actionName: 'getWikiTags', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => await listWikiTagsForManage(user, id))
+
+export const updateWikiTag = safeAuthAction
+  .metadata({ actionName: 'updateWikiTag', role: 'user' })
+  .inputSchema(scUpdateWikiTag)
+  .action(async ({ ctx: { user }, parsedInput }) => await updateWikiTagCore(user, parsedInput))
+
+/** タグの削除。ページとの紐付けも消える */
+export const deleteWikiTag = safeAuthAction
+  .metadata({ actionName: 'deleteWikiTag', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => {
+    await deleteWikiTagCore(user, id)
     return { id }
   })

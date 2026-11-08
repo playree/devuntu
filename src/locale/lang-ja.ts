@@ -663,6 +663,8 @@ export const ja: DefaultLocaleItems = {
   wiki_reorder_mode: '並べ替え',
   wiki_role_editor: '編集者',
   wiki_role_viewer: '閲覧者',
+  wiki_search: '検索',
+  wiki_search_placeholder: 'タイトル・本文・タグ名で検索',
   wiki_space_boards: 'ボード',
   wiki_space_groups: 'グループ',
   wiki_space_key: 'スペースキー',
@@ -847,6 +849,7 @@ export const ja: DefaultLocaleItems = {
   msg_no_wiki_boards: '割り当てられたボードはありません。',
   msg_no_wiki_groups: '割り当てられたグループはありません。',
   msg_no_wiki_pages: 'ページはまだありません。',
+  msg_no_wiki_search_results: '一致するページはありません。',
   msg_no_wiki_spaces: '閲覧できるスペースはありません。',
   msg_not_allowed_domain_in_google:
     'このアカウントでのGoogleサインインは許可されていません。\nEメール又はパスキーでのサインインをご利用ください。',
@@ -888,6 +891,10 @@ export const ja: DefaultLocaleItems = {
   msg_wiki_page_too_deep: '階層が深すぎます(10階層まで)。',
   msg_wiki_role_note:
     '閲覧者は読むだけ、編集者はページの作成・編集・移動・削除、owner は設定も変更できます。owner は1人以上必要です。',
+  msg_wiki_search_hint:
+    'キーワードを入力するか、タグを選んでください。2文字以下の語は検索に時間がかかることがあります。',
+  msg_wiki_search_limit:
+    '検索結果は最大${max}件まで表示します。見つからないときは語を増やすか、タグで絞り込んでください。',
   msg_wiki_space_archived: 'このスペースはアーカイブされているため、閲覧のみです。',
   msg_wiki_space_key: 'ページは「キー/番号」(例: DOCS/12)で指定します。キーは作成後に変更できません。',
   msg_wiki_space_no_owner: 'owner が1人もいなくなる変更はできません。先に別の owner を割り当ててください。',

@@ -13,11 +13,14 @@ import {
   ArrowLeftCircleIcon,
   Cog6ToothIcon,
   InformationCircleIcon,
+  TagIcon,
   UserGroupIcon,
   UsersIcon,
   ViewColumnsIcon,
 } from '@/components/icon'
 import { NoAccessView } from '@/components/no-access-view'
+import { notify } from '@/components/notify'
+import { TagEditor } from '@/components/ticket/tag-editor'
 import { useWikiAssignRoleOptions, useWikiRoleOptions, WikiRoleChip } from '@/components/wiki-chip'
 import type { WikiAssignRole, WikiSpaceRole } from '@/generated/prisma/enums'
 import { parseAction, useActionData } from '@/lib/action/action-client'
@@ -25,13 +28,17 @@ import { useLocale } from '@/locale/client'
 import { Accordion } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
+import { createWikiTag } from '../server'
 import { useWikiSpace } from '../space-context'
 import {
+  deleteWikiTag,
   getWikiSpaceAssignments,
   getWikiSpaceAssignOptions,
+  getWikiTags,
   removeWikiSpaceBoard,
   removeWikiSpaceGroup,
   removeWikiSpaceMember,
+  updateWikiTag,
   upsertWikiSpaceBoard,
   upsertWikiSpaceGroup,
   upsertWikiSpaceMember,
@@ -61,6 +68,10 @@ export const WikiSpaceSettingsClient: FC = () => {
     () => getWikiSpaceAssignments({ id: space.id }),
     { skip: !canManage, key: space.id },
   )
+  const { data: tags, refresh: refreshTags } = useActionData(() => getWikiTags({ id: space.id }), {
+    skip: !canManage,
+    key: space.id,
+  })
   const { data: options } = useActionData(() => getWikiSpaceAssignOptions({ id: space.id }), {
     skip: !canManage,
     key: space.id,
@@ -84,6 +95,11 @@ export const WikiSpaceSettingsClient: FC = () => {
   const reloadAll = () => {
     refreshAssignments()
     memberList.reload()
+    reloadSpace()
+  }
+  // ツリーとページのタグの表示はスペースの情報から引くので、タグを変えたらスペースも取り直す
+  const reloadTags = () => {
+    refreshTags()
     reloadSpace()
   }
   // メンバー一覧(memberList)は AssignmentMembers が自分で取り直すので含めない
@@ -166,6 +182,27 @@ export const WikiSpaceSettingsClient: FC = () => {
               />
             </FlexCol>
           )}
+        </AccordionSection>
+
+        <AccordionSection id='wiki_space_tags' icon={<TagIcon />} title={t('tag_manage')}>
+          <TagEditor
+            tags={tags ?? []}
+            canManage={canManage}
+            onCreate={async (req) => {
+              await parseAction(createWikiTag({ spaceId: space.id, ...req }))
+              notify.success(t('msg_added_target', { target: req.name }))
+              reloadTags()
+            }}
+            onUpdate={async (req) => {
+              await parseAction(updateWikiTag(req))
+              notify.success(t('msg_updated_target', { target: req.name }))
+              reloadTags()
+            }}
+            onDelete={async (tag) => {
+              await parseAction(deleteWikiTag({ id: tag.id }))
+              reloadTags()
+            }}
+          />
         </AccordionSection>
 
         <AccordionSection id='wiki_space_archive' icon={<ArchiveBoxIcon />} title={t('archived')}>

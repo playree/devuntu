@@ -4,14 +4,18 @@
 
 import { el } from '@/locale'
 import { z } from 'zod'
+import { MAX_TAG_NAME } from '../board/tag-rule'
 import {
   MAX_WIKI_CONTENT,
+  MAX_WIKI_PAGE_TAGS,
+  MAX_WIKI_SEARCH_LIMIT,
   MAX_WIKI_SPACE_DESCRIPTION,
   MAX_WIKI_SPACE_KEY,
   MAX_WIKI_SPACE_NAME,
   MAX_WIKI_TITLE,
   WIKI_SPACE_KEY_PATTERN,
 } from '../wiki/wiki-rule'
+import { zTagColor, zTagName, zTagOrder } from './schema-ticket'
 
 /** スペースキー。形式はボードキーと同じなので、エラー文言も共有する */
 export const zWikiSpaceKey = z
@@ -83,6 +87,7 @@ export const scUpdateWikiPage = z.object({
   id: z.uuidv7(),
   title: zWikiTitle,
   content: z.string().max(MAX_WIKI_CONTENT, el('@invalid_content')),
+  tagIds: z.array(z.uuidv7()).max(MAX_WIKI_PAGE_TAGS, el('@invalid_tag')),
   expectedUpdatedAt: z.iso.datetime(),
 })
 export type UpdateWikiPage = z.infer<typeof scUpdateWikiPage>
@@ -124,3 +129,27 @@ export const scRemoveWikiSpaceTarget = z.object({
   id: z.uuidv7(),
   targetId: z.uuidv7(),
 })
+
+/** タグはスペースに属する。order を省略すると末尾へ採番する */
+export const scCreateWikiTag = z.object({
+  spaceId: z.uuidv7(),
+  name: zTagName,
+  color: zTagColor.default('gray'),
+  order: zTagOrder.optional(),
+})
+
+export const scUpdateWikiTag = z.object({
+  id: z.uuidv7(),
+  name: zTagName,
+  color: zTagColor,
+  order: zTagOrder,
+})
+
+/** `space` を省略すると、閲覧できる全スペース(アーカイブ済みを除く)を探す */
+export const scWikiSearch = z.object({
+  keyword: z.string().trim().max(100).default(''),
+  space: zWikiSpaceKey.optional(),
+  tags: z.array(z.string().trim().max(MAX_TAG_NAME)).max(MAX_WIKI_PAGE_TAGS).default([]),
+  limit: z.number().int().min(1).max(MAX_WIKI_SEARCH_LIMIT).optional(),
+})
+export type WikiSearch = z.input<typeof scWikiSearch>

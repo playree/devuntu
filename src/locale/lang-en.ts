@@ -664,6 +664,8 @@ export const en: DefaultLocaleItems = {
   wiki_reorder_mode: 'Reorder',
   wiki_role_editor: 'Editor',
   wiki_role_viewer: 'Viewer',
+  wiki_search: 'Search',
+  wiki_search_placeholder: 'Search titles, content and tags',
   wiki_space_boards: 'Boards',
   wiki_space_groups: 'Groups',
   wiki_space_key: 'Space Key',
@@ -847,6 +849,7 @@ Please copy and use the connection information above.
   msg_no_wiki_boards: 'No boards are assigned.',
   msg_no_wiki_groups: 'No groups are assigned.',
   msg_no_wiki_pages: 'No pages yet.',
+  msg_no_wiki_search_results: 'No matching pages.',
   msg_no_wiki_spaces: 'No spaces you can view.',
   msg_not_allowed_domain_in_google:
     'Google sign in is not allowed for this account.\nPlease sign in with your email or passkey instead.',
@@ -890,6 +893,8 @@ Please copy and use the connection information above.
   msg_wiki_page_too_deep: 'Pages can be nested at most 10 levels deep.',
   msg_wiki_role_note:
     'Viewers can read, editors can create, edit, move and delete pages, and owners can also change settings. At least one owner is required.',
+  msg_wiki_search_hint: 'Enter keywords or choose tags. Words of two characters or fewer may take longer to search.',
+  msg_wiki_search_limit: 'Up to ${max} results are shown. If you cannot find the page, add words or filter by tags.',
   msg_wiki_space_archived: 'This space is archived and read-only.',
   msg_wiki_space_key: 'Pages are referenced as KEY/number (e.g. DOCS/12). The key cannot be changed later.',
   msg_wiki_space_no_owner: 'A space needs at least one owner. Assign another owner first.',

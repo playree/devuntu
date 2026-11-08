@@ -127,3 +127,24 @@ const tagStyles = tv({
 
 /** タグ色のクラス。className を渡すと tailwind-merge でマージされる */
 export const tagColorClass = (color: TagColor, className?: string) => tagStyles({ color, className })
+
+/** タグ色の小さな印(Wiki のツリーなど、名前を出す幅が無いところ)。Chip より濃い色で背景と見分ける */
+const tagDotStyles = tv({
+  base: 'inline-block size-2 shrink-0 rounded-full',
+  variants: {
+    color: {
+      gray: 'bg-gray-400',
+      red: 'bg-red-500',
+      orange: 'bg-orange-500',
+      amber: 'bg-amber-500',
+      green: 'bg-green-500',
+      teal: 'bg-teal-500',
+      blue: 'bg-blue-500',
+      indigo: 'bg-indigo-500',
+      violet: 'bg-violet-500',
+      pink: 'bg-pink-500',
+    } satisfies Record<TagColor, string>,
+  },
+})
+
+export const tagDotClass = (color: TagColor, className?: string) => tagDotStyles({ color, className })

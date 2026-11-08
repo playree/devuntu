@@ -1,5 +1,6 @@
 'use client'
 
+import { TagChips } from '@/components/ticket/ticket-chip'
 import { useLocale } from '@/locale/client'
 import Link from 'next/link'
 import { FC } from 'react'
@@ -8,7 +9,8 @@ import { useWikiSpace } from './space-context'
 /** 直下のページの一覧(スペースのトップではスペース直下、ページ詳細では子ページ) */
 export const ChildPages: FC<{ parentId: string | null }> = ({ parentId }) => {
   const { t } = useLocale()
-  const { space, tree } = useWikiSpace()
+  const { space, tree, tags } = useWikiSpace()
+  const tagById = new Map(tags.map((tag) => [tag.id, tag]))
   const pages = tree.filter((page) => page.parentId === parentId)
   if (pages.length === 0) {
     return null
@@ -27,6 +29,9 @@ export const ChildPages: FC<{ parentId: string | null }> = ({ parentId }) => {
                 className='flex items-center gap-2 px-3 py-2 text-sm hover:bg-mist-100 dark:hover:bg-neutral-900'
               >
                 <span className='min-w-0 flex-1 truncate'>{page.title}</span>
+                <span className='hidden max-w-1/2 shrink-0 sm:block'>
+                  <TagChips tags={page.tagIds.map((id) => tagById.get(id)).filter((tag) => tag !== undefined)} />
+                </span>
                 {childCount > 0 && (
                   <span className='text-muted shrink-0 text-xs'>{t('wiki_child_count', { count: childCount })}</span>
                 )}

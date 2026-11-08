@@ -6,6 +6,7 @@
  */
 
 import type { WikiPageRevisionAction, WikiSpaceRole, WikiVia } from '@/generated/prisma/enums'
+import { MAX_TICKET_TAGS } from '../board/tag-rule'
 import { BOARD_KEY_PATTERN, MAX_BOARD_KEY } from '../board/ticket-id'
 
 /** スペースキーの形式。ボードキーと同じ(大文字英字始まりの大文字英数 2〜8 字) */
@@ -19,6 +20,12 @@ export const MAX_WIKI_TITLE = 200
 export const MAX_WIKI_CONTENT = 100_000
 /** 階層の深さの上限。スペース直下のページが 1 */
 export const MAX_WIKI_DEPTH = 10
+/** 1ページに付けられるタグ数(チケットと同じ) */
+export const MAX_WIKI_PAGE_TAGS = MAX_TICKET_TAGS
+
+/** 検索結果の件数。画面は上限まで取り、上限に達したら絞り込みを促す */
+export const DEFAULT_WIKI_SEARCH_LIMIT = 20
+export const MAX_WIKI_SEARCH_LIMIT = 50
 
 /** スペースキーの重複(DB の @unique 違反) */
 export const DUPLICATED_WIKI_SPACE_KEY = 'DUPLICATED_WIKI_SPACE_KEY'
@@ -132,4 +139,18 @@ const PAGE_REF_PATTERN = new RegExp(`^(${WIKI_SPACE_KEY_PATTERN.source.slice(1, 
 export const parseWikiPageRef = (raw: string): { key: string; number: number } | null => {
   const m = PAGE_REF_PATTERN.exec(raw.trim())
   return m ? { key: m[1].toUpperCase(), number: Number(m[2]) } : null
+}
+
+/** 検索画面の URL。`spaceKey` を渡すとスペース内検索、無ければ `/wiki` の横断検索 */
+export const wikiSearchHref = ({ spaceKey, q, tags }: { spaceKey?: string; q?: string; tags?: readonly string[] }) => {
+  const params = new URLSearchParams()
+  if (q) {
+    params.set('q', q)
+  }
+  for (const tag of tags ?? []) {
+    params.append('tags', tag)
+  }
+  const query = params.toString()
+  const path = spaceKey ? `/wiki/${spaceKey}/search` : '/wiki'
+  return query ? `${path}?${query}` : path
 }
