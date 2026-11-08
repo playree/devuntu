@@ -1,7 +1,7 @@
 'use client'
 
 import { Tabs } from '@heroui/react'
-import { FC, ReactNode } from 'react'
+import { FC, Key, ReactNode } from 'react'
 import { tv } from 'tailwind-variants'
 
 // 既定の左右パディングはタブ外に並ぶ要素と左端が揃わないので打ち消す
@@ -28,8 +28,30 @@ export const TabsBox: FC<{
   className?: string
   /** 中身の className(パディングやレイアウトの調整用) */
   panelClassName?: string
-}> = ({ items, 'aria-label': ariaLabel, variant, className, panelClassName }) => (
-  <Tabs variant={variant} className={className}>
+  /** 選択中のタブを外から制御するときに渡す */
+  selectedKey?: string
+  onSelectionChange?: (key: string) => void
+  /**
+   * 選んでいないタブの中身も描画したままにする(切り替えで状態を失わせたくないとき)。
+   * 選んでいないパネルには data-inert が付くので、その間は隠す(祖先が inert のとき(モーダル表示中など)は隠さない)
+   */
+  forceMount?: boolean
+}> = ({
+  items,
+  'aria-label': ariaLabel,
+  variant,
+  className,
+  panelClassName,
+  selectedKey,
+  onSelectionChange,
+  forceMount,
+}) => (
+  <Tabs
+    variant={variant}
+    className={className}
+    selectedKey={selectedKey}
+    onSelectionChange={onSelectionChange && ((key: Key) => onSelectionChange(String(key)))}
+  >
     <Tabs.ListContainer // variant のスタイルはこのコンテナに当たるので、省くと下線もインジケータも出ない
     >
       <Tabs.List aria-label={ariaLabel}>
@@ -43,7 +65,12 @@ export const TabsBox: FC<{
       </Tabs.List>
     </Tabs.ListContainer>
     {items.map((item) => (
-      <Tabs.Panel key={item.id} id={item.id} className={panelStyles({ className: panelClassName })}>
+      <Tabs.Panel
+        key={item.id}
+        id={item.id}
+        shouldForceMount={forceMount}
+        className={panelStyles({ className: [panelClassName, forceMount && 'data-inert:hidden'] })}
+      >
         {item.content}
       </Tabs.Panel>
     ))}

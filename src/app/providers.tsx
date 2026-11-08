@@ -73,6 +73,7 @@ const MyGeneralUiTextProvider: FC<{ children: ReactNode }> = ({ children }) => {
       tableEmpty: t('table_empty'),
       resultRange: (start, end, total) => t('results_range', { start, end, total }),
       waitSeconds: (sec) => t('wait_seconds', { sec }),
+      sideNavResize: t('side_nav_resize'),
     }),
     [t],
   )
