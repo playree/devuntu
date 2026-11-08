@@ -73,6 +73,7 @@ Proxy は通るリクエストのボディを既定 10MB まで複製して溜�
 | Wiki スペース一覧 | `/wiki`                | 認証必須(閲覧できるスペースのみ表示)。スペースの作成はログインユーザーなら誰でも可能で、作成者が `owner` になる                                                 |
 | スペースのトップ  | `/wiki/[key]`          | 認証必須 + スペースの閲覧権限(`viewer` 以上。`everyone` のスペースは全ログインユーザー)。割り当ての無い管理者は、ページ一覧を出さずに設定への導線だけを表示する |
 | ページ詳細        | `/wiki/[key]/[number]` | 認証必須 + スペースの閲覧権限。作成・編集・移動・削除は `editor` 以上かつ未アーカイブ                                                                           |
+| スペース内検索    | `/wiki/[key]/search`   | 認証必須 + スペースの閲覧権限。条件は `?q=` と `?tags=`(複数可)で持つ。`/wiki?q=` は閲覧できる全スペース(アーカイブ済みを除く)の横断検索                        |
 | スペース設定      | `/wiki/[key]/settings` | 認証必須 + `owner` または管理者                                                                                                                                 |
 
 権限はスペース単位で、直接割り当て(`WikiSpaceMember`)・グループ(`WikiSpaceGroup`)・ボード(`WikiSpaceBoard`。ボードのメンバーが対象)のうち最も強いロールを採る。
@@ -80,7 +81,14 @@ Proxy は通るリクエストのボディを既定 10MB まで複製して溜�
 
 - `owner` はユーザーの直接割り当てに限り、最後の `owner` を外す・降格する変更は拒む(管理者は除く)
 - 割り当てられるボードは、アーカイブしていないチームボードのうち操作者が参加しているもの(管理者はすべて)
-- スペース内の画面は `wiki/[key]/layout.tsx` でスペースとツリー(本文なし)を 1 度だけ取得し、`SideNavPortal` でサイドメニューへツリーを差し込む
+- スペース内の画面は `wiki/[key]/layout.tsx` でスペース・ツリー(本文なし。タグの ID 付き)・タグを 1 度だけ取得し、`SideNavPortal` でサイドメニューへツリーを差し込む
+- タグ(`src/lib/wiki/wiki-tag.ts`)はスペースごと。作成は `editor` 以上、更新・削除は `manage`。ページへの付与は `assertWikiTagIdsInSpace` で同じスペースのタグに限る
+- 検索(`src/lib/wiki/wiki-search.ts`)は `$queryRaw` で組む
+  - 語ごとに、3文字以上なら「title / content の ILIKE(`gin_trgm_ops` の GIN 索引で BitmapOr)とタグ名の完全一致の UNION」に `IN` で当てる。タグとの OR を EXISTS で書くと索引が使われなくなるため
+  - 2文字以下の語はトライグラムが作れず索引が効かないので、他の語で絞った行へのフィルタとして書く(すべての語が短いときだけ全件を走査する)
+  - 並べて `LIMIT` を掛けてから、本文の一致位置の前後だけを `substr` で返す(本文の全文は転送しない)
+  - 確かめ方: 開発 DB でダミーページを数万件入れ、`gin_clean_pending_list` で GIN の pending list を掃いて `ANALYZE` した後、`EXPLAIN ANALYZE` で `Bitmap Index Scan on wiki_page_*_trgm_idx` が出ることを見る。
+    同じトランザクションで入れた行は pending list に残り、索引のコストが高く見積もられて seq scan が選ばれるので、掃かずに比べない
 
 ## 管理者
 

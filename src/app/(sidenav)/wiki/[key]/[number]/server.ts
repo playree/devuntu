@@ -14,11 +14,11 @@ export const getWikiPage = safeAuthAction
   })
 export type GetWikiPageReturnType = Awaited<ReturnType<typeof getWikiPage>>['data']
 
-/** タイトルと本文の保存。読み込んだ後に他の人が保存していれば WIKI_PAGE_CONFLICT */
+/** タイトル・本文・タグの保存。読み込んだ後に他の人が保存していれば WIKI_PAGE_CONFLICT */
 export const updateWikiPage = safeAuthAction
   .metadata({ actionName: 'updateWikiPage', role: 'user' })
   .inputSchema(scUpdateWikiPage)
   .action(
-    async ({ ctx: { user }, parsedInput: { id, title, content, expectedUpdatedAt } }) =>
-      await updateWikiPageCore(user, { via: 'web' }, id, { title, content }, { expectedUpdatedAt }),
+    async ({ ctx: { user }, parsedInput: { id, title, content, tagIds, expectedUpdatedAt } }) =>
+      await updateWikiPageCore(user, { via: 'web' }, id, { title, content, tagIds }, { expectedUpdatedAt }),
   )

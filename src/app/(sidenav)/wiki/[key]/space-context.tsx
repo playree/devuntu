@@ -12,9 +12,13 @@ import { WikiSideTree } from './side-tree'
 
 type WikiSpaceData = NonNullable<GetWikiSpaceReturnType>
 
+type WikiTag = WikiSpaceData['tags'][number]
+
 export type WikiSpaceContextValue = WikiSpaceData & {
   /** ツリーと権限を取り直す。ページの作成・移動・削除・改名の後に呼ぶ */
   reloadSpace: () => Promise<void>
+  /** ツリーの項目が持つタグ ID を、表示順のタグに引き当てる */
+  tagsOf: (tagIds: readonly string[]) => WikiTag[]
 }
 
 const WikiSpaceContext = createContext<WikiSpaceContextValue | null>(null)
@@ -36,7 +40,13 @@ export const WikiSpaceShell: FC<{ spaceKey: string; children: ReactNode }> = ({ 
   const { t } = useLocale()
   const { data, refresh, isLoading } = useActionData(() => getWikiSpace({ key: spaceKey }), { key: spaceKey })
   // 利用者(ツリー・本文・設定)を、取り直したとき以外に描き直さない
-  const value = useMemo(() => (data ? { ...data, reloadSpace: refresh } : null), [data, refresh])
+  const value = useMemo(() => {
+    if (!data) {
+      return null
+    }
+    const tagsOf = (ids: readonly string[]) => data.tags.filter((tag) => ids.includes(tag.id))
+    return { ...data, reloadSpace: refresh, tagsOf }
+  }, [data, refresh])
 
   if (isLoading) {
     return <PanelSkeleton />

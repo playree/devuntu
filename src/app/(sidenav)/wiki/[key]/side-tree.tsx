@@ -1,6 +1,7 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
+import { InputSearchField } from '@/components/general/input'
 import { useModalState } from '@/components/general/modal'
 import { useSideNav } from '@/components/general/side-nav-slot'
 import { TreeView, type TreeViewItem, type TreeViewItemPlace } from '@/components/general/tree-view'
@@ -13,8 +14,10 @@ import {
   Cog6ToothIcon,
   DocumentPlusIcon,
 } from '@/components/icon'
+import { WikiTagDots } from '@/components/wiki-tag'
 import { parseAction } from '@/lib/action/action-client'
 import { ClientError } from '@/lib/error'
+import { MAX_WIKI_SEARCH_KEYWORD, wikiSearchHref } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { cn } from '@heroui/react'
 import Link from 'next/link'
@@ -30,7 +33,7 @@ import { useWikiSpace } from './space-context'
  */
 export const WikiSideTree: FC = () => {
   const { t } = useLocale()
-  const { space, access, tree, reloadSpace } = useWikiSpace()
+  const { space, access, tree, tagsOf, reloadSpace } = useWikiSpace()
   const { closeMenu } = useSideNav()
   const params = useParams<{ number?: string }>()
   const pathname = usePathname()
@@ -47,8 +50,9 @@ export const WikiSideTree: FC = () => {
         parentId: page.parentId,
         label: page.title,
         href: `/wiki/${space.key}/${page.number}`,
+        suffix: <WikiTagDots tags={tagsOf(page.tagIds)} />,
       })),
-    [space.key, tree],
+    [space.key, tree, tagsOf],
   )
   const selectedId = tree.find((page) => String(page.number) === params.number)?.id ?? null
   const topHref = `/wiki/${space.key}`
@@ -121,6 +125,21 @@ export const WikiSideTree: FC = () => {
           />
         )}
       </div>
+
+      {tree.length > 0 && (
+        <InputSearchField // 見出しのボタンを増やすとスペース名が読めなくなるので、ツリーの上に置く
+          isSmart
+          aria-label={t('wiki_search')}
+          placeholder={t('wiki_search')}
+          maxLength={MAX_WIKI_SEARCH_KEYWORD}
+          onSubmit={(value) => {
+            if (value.trim()) {
+              router.push(wikiSearchHref({ spaceKey: space.key, q: value.trim() }))
+              closeMenu()
+            }
+          }}
+        />
+      )}
 
       {tree.length === 0 ? (
         <p className='text-muted px-2 py-1 text-xs'>{t('msg_no_wiki_pages')}</p>

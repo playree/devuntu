@@ -14,6 +14,8 @@ export type TreeViewItem = {
   label: string
   /** 行のリンク先。無ければ文字だけを出す */
   href?: string
+  /** ラベルの後ろに添える小さな表示(タグの印など)。ラベルが省略されても残る */
+  suffix?: ReactNode
 }
 
 /** 行の操作(renderActions)に渡す、兄弟の中での位置 */
@@ -162,6 +164,7 @@ const TreeLevel: FC<{
                   {item.label}
                 </span>
               )}
+              {item.suffix}
               {renderActions?.(item, { index, siblingCount: siblings.length })}
             </div>
             {hasChildren && isExpanded && <TreeLevel {...props} parentId={item.id} depth={depth + 1} />}

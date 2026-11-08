@@ -1,7 +1,13 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action/action-server'
-import { scCreateWikiPage, scDeleteWikiPage, scMoveWikiPage, scWikiSpaceKey } from '@/lib/schema/schema-wiki'
+import {
+  scCreateWikiPage,
+  scCreateWikiTag,
+  scDeleteWikiPage,
+  scMoveWikiPage,
+  scWikiSpaceKey,
+} from '@/lib/schema/schema-wiki'
 import {
   createWikiPage as createWikiPageCore,
   deleteWikiPage as deleteWikiPageCore,
@@ -9,6 +15,7 @@ import {
   moveWikiPage as moveWikiPageCore,
 } from '@/lib/wiki/wiki-page'
 import { getWikiSpaceByKeyForManage } from '@/lib/wiki/wiki-space'
+import { createWikiTag as createWikiTagCore, listWikiTags } from '@/lib/wiki/wiki-tag'
 
 /**
  * スペース内の画面(トップ・ページ・設定)で共通に使う Server Action。
@@ -18,16 +25,18 @@ import { getWikiSpaceByKeyForManage } from '@/lib/wiki/wiki-space'
 const WEB = { via: 'web' } as const
 
 /**
- * スペースの情報と自分の権限、ツリー(本文なし)。サイドメニューのツリーとスペースのトップで使う。
- * 割り当ての無い管理者は設定だけを開けるよう、ツリーを空にして返す
+ * スペースの情報と自分の権限、ツリー(本文なし)、タグ。サイドメニューのツリーとスペース内の画面で使う。
+ * 割り当ての無い管理者は設定だけを開けるよう、ツリーとタグを空にして返す
  */
 export const getWikiSpace = safeAuthAction
   .metadata({ actionName: 'getWikiSpace', role: 'user' })
   .inputSchema(scWikiSpaceKey)
   .action(async ({ ctx: { user }, parsedInput: { key } }) => {
     const { space, access } = await getWikiSpaceByKeyForManage(user, key)
-    const tree = access.canView ? await getWikiTree(user, space.id) : []
-    return { space, access, tree }
+    const [tree, tags] = access.canView
+      ? await Promise.all([getWikiTree(user, space.id), listWikiTags(space.id)])
+      : [[], []]
+    return { space, access, tree, tags }
   })
 export type GetWikiSpaceReturnType = Awaited<ReturnType<typeof getWikiSpace>>['data']
 
@@ -55,4 +64,12 @@ export const deleteWikiPage = safeAuthAction
   .inputSchema(scDeleteWikiPage)
   .action(
     async ({ ctx: { user }, parsedInput: { id, recursive } }) => await deleteWikiPageCore(user, WEB, id, { recursive }),
+  )
+
+/** タグの作成(editor 以上)。ページの編集中とスペースの設定で使う */
+export const createWikiTag = safeAuthAction
+  .metadata({ actionName: 'createWikiTag', role: 'user' })
+  .inputSchema(scCreateWikiTag)
+  .action(
+    async ({ ctx: { user }, parsedInput: { spaceId, ...input } }) => await createWikiTagCore(user, spaceId, input),
   )

@@ -7,11 +7,15 @@
 import {
   evaluateWikiAccess,
   hasWikiRole,
+  MAX_WIKI_PAGE_TAGS,
+  MAX_WIKI_SEARCH_KEYWORD,
   parseWikiPageRef,
+  parseWikiSearchParams,
   resolveWikiRole,
   shouldMergeWikiRevision,
   strongestWikiRole,
   wikiPageRef,
+  wikiSearchHref,
   type WikiRevisionOrigin,
 } from '@/lib/wiki/wiki-rule'
 import { describe, expect, it } from 'vitest'
@@ -112,4 +116,31 @@ describe('wikiPageRef / parseWikiPageRef', () => {
       expect(parseWikiPageRef(raw)).toBeNull()
     },
   )
+})
+
+describe('wikiSearchHref', () => {
+  it('スペースがあればスペース内検索、無ければ /wiki の横断検索。タグは繰り返しで持つ', () => {
+    expect(wikiSearchHref({ spaceKey: 'DOCS', q: '設計 API', tags: ['仕様', '下書き'] })).toBe(
+      '/wiki/DOCS/search?q=%E8%A8%AD%E8%A8%88+API&tags=%E4%BB%95%E6%A7%98&tags=%E4%B8%8B%E6%9B%B8%E3%81%8D',
+    )
+    expect(wikiSearchHref({ q: '設計' })).toBe('/wiki?q=%E8%A8%AD%E8%A8%88')
+    expect(wikiSearchHref({ spaceKey: 'DOCS' })).toBe('/wiki/DOCS/search')
+  })
+})
+
+describe('parseWikiSearchParams', () => {
+  it('q は先頭の1つを使い、前後の空白を除いて最大長で切る', () => {
+    expect(parseWikiSearchParams({ q: ['  設計  ', '無視'] }).keyword).toBe('設計')
+    expect(parseWikiSearchParams({ q: 'a'.repeat(MAX_WIKI_SEARCH_KEYWORD + 10) }).keyword).toHaveLength(
+      MAX_WIKI_SEARCH_KEYWORD,
+    )
+    expect(parseWikiSearchParams({})).toEqual({ keyword: '', tags: [] })
+  })
+
+  it('タグは空・長すぎるもの・重複を除き、上限の数までにする', () => {
+    expect(parseWikiSearchParams({ tags: ' 仕様 ' }).tags).toEqual(['仕様'])
+    expect(parseWikiSearchParams({ tags: ['仕様', '', '仕様', 'x'.repeat(21)] }).tags).toEqual(['仕様'])
+    const many = Array.from({ length: MAX_WIKI_PAGE_TAGS + 3 }, (_, i) => `t${i}`)
+    expect(parseWikiSearchParams({ tags: many }).tags).toHaveLength(MAX_WIKI_PAGE_TAGS)
+  })
 })

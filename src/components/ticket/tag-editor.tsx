@@ -20,7 +20,7 @@ export type TagEditorItem = {
   name: string
   color: TagColor
   order: number
-  ticketCount: number
+  usageCount: number
 }
 
 /** 色見本の丸。選択中だけ枠に色を付ける(枠の幅は常に確保してレイアウトを動かさない) */
@@ -127,7 +127,7 @@ const TagRowForm: FC<{
  * タグ管理の表示部品。
  *
  * Server Action は props で注入する(CONTRIBUTING.md の「Server Actions は利用する Client と
- * 同じ階層の server.ts」を守りつつ、複数のボードで共有できるようにするため)。
+ * 同じ階層の server.ts」を守りつつ、ボードと Wiki スペースで共有できるようにするため)。
  * `canManage` が false のときは作成のみ許可する(member はチケット編集中に新タグが必要になる)。
  */
 export const TagEditor: FC<{
@@ -189,7 +189,7 @@ export const TagEditor: FC<{
                 <TagChip tag={tag} />
                 <span className='text-muted font-mono text-xs'>#{tag.order}</span>
                 <span className='text-muted text-xs'>
-                  {t('usage_count')}: {tag.ticketCount}
+                  {t('usage_count')}: {tag.usageCount}
                 </span>
                 {canManage && (
                   <div className='ml-auto flex items-center gap-0.5'>

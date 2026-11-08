@@ -19,6 +19,7 @@ import {
   type WikiWriter,
 } from '@/lib/wiki/wiki-rule'
 import { getWikiSpaceByKey } from '@/lib/wiki/wiki-space'
+import { assertWikiTagIdsInSpace, syncWikiPageTags } from '@/lib/wiki/wiki-tag'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/prisma', async () =>
@@ -30,6 +31,14 @@ vi.mock('@/lib/wiki/wiki-access', () => ({ assertWikiSpaceAccess: vi.fn() }))
 vi.mock('@/lib/wiki/wiki-revision', () => ({ writeWikiPageRevision: vi.fn() }))
 vi.mock('@/lib/wiki/wiki-space', () => ({ getWikiSpaceByKey: vi.fn() }))
 vi.mock('@/lib/board/board-access', () => ({ getTicketAccess: vi.fn() }))
+vi.mock('@/lib/wiki/wiki-tag', () => ({ assertWikiTagIdsInSpace: vi.fn(), syncWikiPageTags: vi.fn() }))
+
+/** スペースのタグ(表示順) */
+const TAGS = [
+  { id: 'tag-a', name: '設計' },
+  { id: 'tag-b', name: '運用' },
+  { id: 'tag-c', name: '下書き' },
+]
 
 const actor = { id: 'u1' }
 const WEB: WikiWriter = { via: 'web' }
@@ -111,6 +120,9 @@ beforeEach(() => {
   // ロックの SELECT は結果を使わず、採番の UPDATE ... RETURNING だけが pageSeq を読む
   vi.mocked(prisma.$queryRaw).mockResolvedValue([{ pageSeq: 11 }] as never)
   vi.mocked(getTicketAccess).mockResolvedValue({ canView: true } as never)
+  vi.mocked(assertWikiTagIdsInSpace).mockImplementation(async (_tx, _spaceId, ids) =>
+    TAGS.filter(({ id }) => ids.includes(id)),
+  )
 })
 
 describe('createWikiPage', () => {
@@ -169,6 +181,14 @@ describe('createWikiPage', () => {
     expect(prisma.wikiPage.create).toHaveBeenCalledTimes(1)
   })
 
+  it('タグを付けて作り、版の tagNames にタグの表示順で残す', async () => {
+    await createWikiPage(actor, WEB, SPACE_ID, { title: '新規', tagIds: ['tag-b', 'tag-a'] })
+
+    expect(assertWikiTagIdsInSpace).toHaveBeenCalledWith(expect.anything(), SPACE_ID, ['tag-b', 'tag-a'])
+    expect(syncWikiPageTags).toHaveBeenCalledWith(expect.anything(), 'new', [], ['tag-a', 'tag-b'])
+    expect(vi.mocked(writeWikiPageRevision).mock.calls[0][1].snapshot.tagNames).toEqual(['設計', '運用'])
+  })
+
   it('タイトルが空なら検証エラー', async () => {
     expect(await errorTypeOf(createWikiPage(actor, WEB, SPACE_ID, { title: '  ' }))).toBe(VALIDATION_ERROR)
   })
@@ -216,6 +236,49 @@ describe('updateWikiPage', () => {
     expect(result.result).toBe('unchanged')
     expect(prisma.wikiPage.update).not.toHaveBeenCalled()
     expect(writeWikiPageRevision).not.toHaveBeenCalled()
+  })
+
+  describe('タグ', () => {
+    const withTags = (ids: string[]) =>
+      vi
+        .mocked(prisma.wikiPage.findUnique)
+        .mockResolvedValue(
+          pageRow('b', { tags: TAGS.filter(({ id }) => ids.includes(id)).map((tag) => ({ tag })) }) as never,
+        )
+
+    it('タグだけを変えても保存し、差分を同期して版の tagNames を新しいタグにする', async () => {
+      withTags(['tag-a', 'tag-b'])
+      const result = await updateWikiPage(actor, WEB, 'b', { tagIds: ['tag-c', 'tag-a'] })
+
+      expect(result.result).toBe('updated')
+      expect(assertWikiTagIdsInSpace).toHaveBeenCalledWith(expect.anything(), SPACE_ID, ['tag-c', 'tag-a'])
+      expect(syncWikiPageTags).toHaveBeenCalledWith(expect.anything(), 'b', ['tag-a', 'tag-b'], ['tag-a', 'tag-c'])
+      expect(vi.mocked(writeWikiPageRevision).mock.calls[0][1].snapshot.tagNames).toEqual(['設計', '下書き'])
+    })
+
+    it('並びが違うだけなら変化なし', async () => {
+      withTags(['tag-a', 'tag-b'])
+      const result = await updateWikiPage(actor, WEB, 'b', { tagIds: ['tag-b', 'tag-a'] })
+
+      expect(result.result).toBe('unchanged')
+      expect(syncWikiPageTags).not.toHaveBeenCalled()
+      expect(writeWikiPageRevision).not.toHaveBeenCalled()
+    })
+
+    it('tagIds を渡さなければタグに触れず、版には今のタグを残す', async () => {
+      withTags(['tag-a'])
+      await updateWikiPage(actor, WEB, 'b', { content: '新しい本文' })
+
+      expect(assertWikiTagIdsInSpace).not.toHaveBeenCalled()
+      expect(syncWikiPageTags).not.toHaveBeenCalled()
+      expect(vi.mocked(writeWikiPageRevision).mock.calls[0][1].snapshot.tagNames).toEqual(['設計'])
+    })
+
+    it('別のスペースのタグは付けられない', async () => {
+      vi.mocked(assertWikiTagIdsInSpace).mockRejectedValueOnce(new Error('invalid'))
+      await expect(updateWikiPage(actor, WEB, 'b', { tagIds: ['other'] })).rejects.toThrow('invalid')
+      expect(prisma.wikiPage.update).not.toHaveBeenCalled()
+    })
   })
 
   it('読んだ後に更新されていれば WIKI_PAGE_CONFLICT', async () => {

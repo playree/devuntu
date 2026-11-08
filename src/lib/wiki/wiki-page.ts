@@ -30,6 +30,7 @@ import {
   type WikiWriter,
 } from './wiki-rule'
 import { getWikiSpaceByKey } from './wiki-space'
+import { assertWikiTagIdsInSpace, syncWikiPageTags } from './wiki-tag'
 import {
   ancestorIds,
   depthOf,
@@ -136,12 +137,21 @@ const resolveRevisionTicketId = async (tx: Db, actor: Actor, ticketId: string | 
   return ticketId
 }
 
+/** ページのタグの並び。タグ管理の表示順(同値なら名前順)にそろえる */
+const PAGE_TAG_ORDER: Prisma.WikiPageTagOrderByWithRelationInput[] = [
+  { tag: { order: 'asc' } },
+  { tag: { name: 'asc' } },
+]
+
 const SNAPSHOT_SELECT = {
   parentId: true,
   order: true,
   title: true,
   content: true,
-  tags: { select: { tag: { select: { name: true } } }, orderBy: { tag: { order: 'asc' } } },
+  tags: {
+    select: { tag: { select: { id: true, name: true } } },
+    orderBy: PAGE_TAG_ORDER,
+  },
 } as const
 
 type SnapshotRow = {
@@ -149,7 +159,7 @@ type SnapshotRow = {
   order: number
   title: string
   content: string
-  tags: { tag: { name: string } }[]
+  tags: { tag: { id: string; name: string } }[]
 }
 
 const snapshotOf = ({ parentId, order, title, content, tags }: SnapshotRow): WikiPageSnapshot => ({
@@ -197,6 +207,8 @@ export type CreateWikiPageInput = {
   parentId?: string | null
   /** 兄弟の中での位置(0 始まり)。省略で末尾 */
   position?: number
+  /** 付けるタグ(同じスペースのもの) */
+  tagIds?: string[]
 }
 
 export const createWikiPage = async (
@@ -226,6 +238,7 @@ export const createWikiPage = async (
       }
     }
     const ticketId = await resolveRevisionTicketId(tx, actor, opts.ticketId)
+    const tags = await assertWikiTagIdsInSpace(tx, spaceId, input.tagIds ?? [])
 
     const number = await nextPageNumber(tx, spaceId)
     // 新しいページの id はまだ無いので、空文字を目印に並びを決める
@@ -247,12 +260,18 @@ export const createWikiPage = async (
       },
       select: { id: true, number: true, updatedAt: true },
     })
+    await syncWikiPageTags(
+      tx,
+      created.id,
+      [],
+      tags.map(({ id }) => id),
+    )
     await writeWikiPageRevision(tx, {
       spaceId,
       pageId: created.id,
       pageNumber: number,
       action: 'created',
-      snapshot: { parentId, order, title, content, tagNames: [] },
+      snapshot: { parentId, order, title, content, tagNames: tags.map(({ name }) => name) },
       actorId: actor.id,
       via: writer.via,
       ticketId,
@@ -274,14 +293,14 @@ const findPageSpace = async (pageId: string) => {
 }
 
 /**
- * タイトル・本文の更新。`patch` の undefined の項目はそのまま残す。
+ * タイトル・本文・タグの更新。`patch` の undefined の項目はそのまま残す。`tagIds` は渡した集合に置き換える。
  * `expectedUpdatedAt`(ISO 8601)を渡すと、読んだ後に他の人が更新していれば WIKI_PAGE_CONFLICT で弾く
  */
 export const updateWikiPage = async (
   actor: Actor,
   writer: WikiWriter,
   pageId: string,
-  patch: { title?: string; content?: string },
+  patch: { title?: string; content?: string; tagIds?: string[] },
   opts: UpdateOpts = {},
 ): Promise<WikiPageWriteResult> => {
   const expected = parseExpectedUpdatedAt(opts.expectedUpdatedAt)
@@ -300,15 +319,21 @@ export const updateWikiPage = async (
     assertNotConflicted(expected, existing.updatedAt)
 
     const before = snapshotOf(existing)
+    const currentTagIds = existing.tags.map(({ tag }) => tag.id)
+    const nextTags = patch.tagIds && (await assertWikiTagIdsInSpace(tx, spaceId, patch.tagIds))
     const next: WikiPageSnapshot = {
       ...before,
       title: patch.title?.trim() ?? before.title,
       content: patch.content ?? before.content,
+      tagNames: nextTags ? nextTags.map(({ name }) => name) : before.tagNames,
     }
     assertTitle(next.title)
     assertContent(next.content)
     const ref = wikiPageRef({ key: access.key, number: existing.number })
-    if (next.title === before.title && next.content === before.content) {
+    const tagsChanged =
+      nextTags !== undefined &&
+      (nextTags.length !== currentTagIds.length || nextTags.some(({ id }) => !currentTagIds.includes(id)))
+    if (next.title === before.title && next.content === before.content && !tagsChanged) {
       return { result: 'unchanged' as const, id: pageId, ref, number: existing.number, updatedAt: existing.updatedAt }
     }
 
@@ -318,6 +343,14 @@ export const updateWikiPage = async (
       data: { title: next.title, content: next.content, updatedById: actor.id, updatedVia: writer.via },
       select: { updatedAt: true },
     })
+    if (nextTags && tagsChanged) {
+      await syncWikiPageTags(
+        tx,
+        pageId,
+        currentTagIds,
+        nextTags.map(({ id }) => id),
+      )
+    }
     await writeWikiPageRevision(tx, {
       spaceId,
       pageId,
@@ -462,10 +495,15 @@ export const deleteWikiPage = async (
   return { deleted }
 }
 
-/** スペースのツリー(本文なし)。兄弟の並び順で返す */
+/** スペースのツリー(本文なし)。兄弟の並び順で返す。表示用にタグの ID を添える */
 export const getWikiTree = async (actor: Actor, spaceId: string) => {
   await assertWikiSpaceAccess(actor, spaceId, 'view')
-  return loadTree(prisma, spaceId)
+  const rows = await prisma.wikiPage.findMany({
+    where: { spaceId },
+    select: { ...TREE_SELECT, tags: { select: { tagId: true } } },
+    orderBy: [...TREE_ORDER],
+  })
+  return rows.map(({ tags, ...row }) => ({ ...row, tagIds: tags.map(({ tagId }) => tagId) }))
 }
 
 export type WikiTreeItem = Awaited<ReturnType<typeof getWikiTree>>[number]
@@ -485,7 +523,7 @@ const PAGE_DETAIL_SELECT = {
   updatedBy: { select: { name: true, isAgent: true } },
   tags: {
     select: { tag: { select: { id: true, name: true, color: true } } },
-    orderBy: { tag: { order: 'asc' } },
+    orderBy: PAGE_TAG_ORDER,
   },
 } as const
 
