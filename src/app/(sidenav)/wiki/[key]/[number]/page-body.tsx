@@ -34,7 +34,7 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
 }) => {
   const { t } = useLocale()
   const tz = useUserTimezone()
-  const { space, tags: spaceTags } = useWikiSpace()
+  const { space, tags: spaceTags, reloadSpace } = useWikiSpace()
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -115,7 +115,12 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
             options={spaceTags}
             value={tagIdsDraft}
             onChange={setTagIdsDraft}
-            onCreate={async (name) => parseAction(createWikiTag({ spaceId: space.id, name }))}
+            onCreate={async (name) => {
+              const tag = await parseAction(createWikiTag({ spaceId: space.id, name }))
+              // 選択欄が覚えている作成済みのタグは編集を閉じると消えるので、スペースのタグ(選択肢・ツリー)も取り直す
+              await reloadSpace()
+              return tag
+            }}
           />
         ) : (
           <WikiTagLinks spaceKey={space.key} tags={page.tags.map(({ tag }) => tag)} />
