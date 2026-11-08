@@ -86,6 +86,11 @@ export const WikiSpaceSettingsClient: FC = () => {
     memberList.reload()
     reloadSpace()
   }
+  // メンバー一覧(memberList)は AssignmentMembers が自分で取り直すので含めない
+  const reloadMemberAssignments = () => {
+    refreshAssignments()
+    reloadSpace()
+  }
 
   return (
     <FlexCol>
@@ -109,7 +114,7 @@ export const WikiSpaceSettingsClient: FC = () => {
               aria-label='wiki space member list'
               hasRole
               roles={memberRoles}
-              reloadAssignments={reloadAll}
+              reloadAssignments={reloadMemberAssignments}
               pagingList={memberList}
               manage={{
                 addLabel: t('add_member'),
