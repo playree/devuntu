@@ -102,21 +102,22 @@ Tickets: put completion conditions (definition of done / checklist) in acceptanc
 In get_ticket / get_board / get_agent_task (only when set):
 - boardContext: premises for every ticket on the board (repository, conventions, terms). Read and follow it before working.
 - boardKnowledge / boardMemory: indexes ("name: description") of notes shared by all board members. Read relevant ones with get_board_notes.
+- wikiSpaces: the board's Wiki spaces. Look up related documents with search_wiki / get_wiki_page.
 
 Where to keep what you learn:
 - Personal preferences or facts about your own machine / environment: your own memory, not board notes.
 - Learnings any member can use in any environment: memory via save_board_note (update, do not duplicate).
 - Board-wide rules or procedures the user asks you to remember: knowledge (userApproved=true).
-- Confirmed memory or findings from checks / research worth keeping: propose making them knowledge. Change knowledge only with user consent.
+- Confirmed memory or findings worth keeping: propose making them knowledge. Change knowledge only with user consent.
 
 Default steps when working on a ticket (no need to confirm each time):
 1. Start: set status to doing with update_ticket (unless already doing / done)
 2. Plan: post it with add_ticket_comment type=plan. Questions for the user: comments without type
 3. Branch / PR / commit: link the URL with link_ticket_artifact (feature/<display ID> branches link automatically)
-4. Done: if the ticket has acceptance criteria, record whether each is met with evidence via report_acceptance_criteria (not in the report)
-5. Report: add_ticket_comment type=report with what you did, how you verified it, and remaining issues (screenshots via create_image_upload_token, other files via create_file_upload_token)
+4. Done: record whether each acceptance criterion is met, with evidence, via report_acceptance_criteria (not in the report)
+5. Report: add_ticket_comment type=report with what you did, how you verified it, and remaining issues (attach via create_image_upload_token / create_file_upload_token)
 
-Precedence: user instructions > the ticket > project rules (CLAUDE.md / AGENTS.md, etc.) and boardContext > boardKnowledge > boardMemory > these default steps. When only asked to read a ticket or answer a question, do not comment or change the status.
+Precedence: user instructions > the ticket > project rules (CLAUDE.md / AGENTS.md) and boardContext > boardKnowledge > boardMemory > these default steps. If only asked to read or answer, do not comment or change the status.
 ```
 
 「ボードの前提 / 情報の残し先 / 手順 / 優先順位」の節に分け、同じ案内を2か所に書かない。
@@ -126,19 +127,21 @@ Precedence: user instructions > the ticket > project rules (CLAUDE.md / AGENTS.m
 2. ボードの前提(get_ticket / get_board / get_agent_task に、設定時のみ載る)
    - boardContext: ボードのすべてのチケットに共通する前提(対象リポジトリ・規約・用語)。着手する前に読んで従う
    - boardKnowledge / boardMemory: ボードのメンバー全員で共有するノートの索引(`name: description`)。関係するものを get_board_notes で読む
+   - wikiSpaces: ボードに割り当てられた Wiki スペース。関係する文書を search_wiki / get_wiki_page で探して読む。
+     参照の案内だけを載せ、書き込みの作法(読んだ updatedAt で楽観ロック・edits での部分更新など)は `save_wiki_page` の description に持たせる
 3. 得た情報の残し先
    - 個人の好みや、自分のマシン・環境に固有のこと: クライアント自身のメモリ。ボードノートには入れない
    - メンバーの誰もが、どの環境でも使える知見: save_board_note でメモリへ(重複させず更新する)
    - 利用者に覚えておくよう頼まれた、ボード全体の決めごと・手順: ナレッジへ(`userApproved=true`)
-   - 確かめられたメモリや、確認・調査で得た残しておくべき情報: ナレッジにするかを提案する。ナレッジは利用者の同意があるときだけ変える
+   - 確かめられたメモリや、残しておくべき情報: ナレッジにするかを提案する。ナレッジは利用者の同意があるときだけ変える
 4. チケットに対応するときの既定の手順(都度の確認は不要)
    1. 着手: update_ticket で status を doing にする(既に doing / done なら変えない)
    2. プラン: add_ticket_comment で type=plan として投稿する。利用者への質問は type を付けない通常コメントで
    3. ブランチ / PR / コミット: link_ticket_artifact で URL を紐付ける(ブランチ名を feature/<表示ID> にすると自動で紐付く)
-   4. 完了: 受け入れ条件があれば、それぞれ満たしたかを根拠付きで report_acceptance_criteria に記録する(report には書かない)
-   5. 報告: add_ticket_comment で type=report として、やったこと・確認方法・残課題を報告する(スクリーンショットは create_image_upload_token で添付)
+   4. 完了: 受け入れ条件のそれぞれを満たしたかを、根拠付きで report_acceptance_criteria に記録する(report には書かない)
+   5. 報告: add_ticket_comment で type=report として、やったこと・確認方法・残課題を報告する(添付は create_image_upload_token / create_file_upload_token で)
 5. 優先順位: 利用者の指示 > チケット > プロジェクトのルール(CLAUDE.md / AGENTS.md など)と boardContext > boardKnowledge > boardMemory > この既定の手順。
-   チケットを読む・質問に答えるだけを頼まれたときは、コメントもステータス変更もしない
+   読む・答えるだけを頼まれたときは、コメントもステータス変更もしない
 
 `instructions` は 2000 文字未満に保つ(`tests/lib/mcp/mcp-instructions.test.ts`)。MCP の仕様に上限は無いが、
 Claude Code は instructions とツールの description をそれぞれ約 2KB で黙って切り詰めるという報告があり、
@@ -159,6 +162,7 @@ Tickets: put completion conditions (definition of done / checklist) in acceptanc
 In get_ticket / get_board / get_agent_task (only when set):
 - boardContext: premises for every ticket on the board (repository, conventions, terms). Read and follow it before working.
 - boardKnowledge / boardMemory: indexes ("name: description") of notes shared by all board members. Read relevant ones with get_board_notes.
+- wikiSpaces: the board's Wiki spaces. Look up related documents with search_wiki / get_wiki_page.
 
 Where to keep what you learn:
 - Personal preferences or facts about your own machine / environment: your own memory, not board notes.

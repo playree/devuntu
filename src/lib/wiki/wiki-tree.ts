@@ -83,3 +83,38 @@ export const placeInSiblings = (siblingIds: readonly string[], id: string, posit
   const at = position === undefined ? rest.length : Math.min(Math.max(position, 0), rest.length)
   return [...rest.slice(0, at), id, ...rest.slice(at)]
 }
+
+export type NestedWikiNode<U> = U & { children?: NestedWikiNode<U>[]; childCount?: number }
+
+/**
+ * 平らな木(兄弟の並び順)を入れ子にする。`rootId` の子孫を返し(null ならスペース直下から)、`rootId` 自身は含めない。
+ * `depth` 段より深い子は持たせず、子の数(`childCount`)だけを添える
+ */
+export const nestWikiTree = <T extends WikiTreeNode, U extends object>(
+  rows: readonly T[],
+  toNode: (row: T) => U,
+  opts: { rootId: string | null; depth?: number },
+): NestedWikiNode<U>[] => {
+  const index = indexWikiTree(rows)
+  const byId = new Map(rows.map((row) => [row.id, row]))
+  const seen = new Set<string>(opts.rootId === null ? [] : [opts.rootId])
+  const build = (parentId: string | null, level: number): NestedWikiNode<U>[] =>
+    (index.children.get(parentId) ?? []).flatMap((id) => {
+      const row = byId.get(id)
+      // 壊れた木で無限に回らないよう、一度通った id は飛ばす
+      if (!row || seen.has(id)) {
+        return []
+      }
+      seen.add(id)
+      const node = toNode(row)
+      const childCount = index.children.get(id)?.length ?? 0
+      if (childCount === 0) {
+        return [node]
+      }
+      if (opts.depth !== undefined && level >= opts.depth) {
+        return [{ ...node, childCount }]
+      }
+      return [{ ...node, children: build(id, level + 1) }]
+    })
+  return build(opts.rootId, 1)
+}

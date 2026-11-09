@@ -15,6 +15,7 @@ import {
   verifyDownloadToken,
   verifyUploadToken,
 } from '@/lib/storage/upload-token'
+import { getWikiSpaceAccess } from '@/lib/wiki/wiki-access'
 import { generateKeyPair, SignJWT } from 'jose'
 import { uuidv7 } from 'uuidv7'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -34,12 +35,17 @@ vi.mock('@/lib/board/board-access', () => ({
   getBoardAccess: vi.fn(),
 }))
 
+vi.mock('@/lib/wiki/wiki-access', () => ({
+  getWikiSpaceAccess: vi.fn(),
+}))
+
 const findUser = vi.mocked(prisma.user.findUnique)
 const createNonce = vi.mocked(prisma.uploadNonce.create)
 const deleteNonces = vi.mocked(prisma.uploadNonce.deleteMany)
 
 const USER_ID = '019eef64-6cc1-78f1-8f50-1ef869860001'
 const BOARD_ID = '019eef64-6cc1-78f1-8f50-1ef869860002'
+const SPACE_ID = '019eef64-6cc1-78f1-8f50-1ef869860003'
 
 const SECRET = new TextEncoder().encode(process.env.BETTER_AUTH_SECRET)
 const ISSUER = 'http://localhost:3000'
@@ -161,6 +167,38 @@ describe('signUploadToken / verifyUploadToken', () => {
     const token = await signUploadToken({ userId: USER_ID, boardId: BOARD_ID })
 
     expect(await verifyUploadToken(token)).toBeNull()
+  })
+
+  it('Wiki スペースを添付先にしたトークンは、利用時点で書き込めれば添付先を復元する', async () => {
+    vi.mocked(getWikiSpaceAccess).mockResolvedValue({ canWrite: true } as never)
+    const token = await signUploadToken({ userId: USER_ID, wikiSpaceId: SPACE_ID })
+
+    expect(await verifyUploadToken(token)).toEqual({ userId: USER_ID, boardId: null, wikiSpaceId: SPACE_ID })
+    expect(getWikiSpaceAccess).toHaveBeenCalledWith(expect.objectContaining({ id: USER_ID }), SPACE_ID)
+    expect(getBoardAccess).not.toHaveBeenCalled()
+  })
+
+  it('発行後に Wiki スペースへ書き込めなくなった(外された・アーカイブされた)場合を拒否する', async () => {
+    vi.mocked(getWikiSpaceAccess).mockResolvedValue({ canWrite: false } as never)
+    const token = await signUploadToken({ userId: USER_ID, wikiSpaceId: SPACE_ID })
+
+    expect(await verifyUploadToken(token)).toBeNull()
+  })
+
+  it('添付先がボードと Wiki スペースの両方・どちらも無いトークンを拒否する', async () => {
+    const forge = (claims: Record<string, string>) =>
+      new SignJWT(claims)
+        .setProtectedHeader({ alg: 'HS256' })
+        .setSubject(USER_ID)
+        .setIssuer(ISSUER)
+        .setAudience(AUDIENCE)
+        .setJti(uuidv7())
+        .setIssuedAt()
+        .setExpirationTime(`${UPLOAD_TOKEN_TTL_SECONDS}s`)
+        .sign(SECRET)
+
+    expect(await verifyUploadToken(await forge({ boardId: BOARD_ID, wikiSpaceId: SPACE_ID }))).toBeNull()
+    expect(await verifyUploadToken(await forge({}))).toBeNull()
   })
 })
 

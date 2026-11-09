@@ -284,6 +284,17 @@ export const createWikiPage = async (
   return { result: 'created', ...page }
 }
 
+/** スペース内の番号でページを引く(権限は見ない。呼び出し側で assertWikiSpaceAccess を通すこと)。無ければ null */
+export const findWikiPageByNumber = async (spaceId: string, number: number) =>
+  prisma.wikiPage.findUnique({
+    where: { spaceId_number: { spaceId, number } },
+    select: { id: true, parentId: true, updatedAt: true },
+  })
+
+/** 本文と更新日時(部分更新の組み立て用。権限は見ない)。無ければ null */
+export const readWikiPageContent = async (pageId: string) =>
+  prisma.wikiPage.findUnique({ where: { id: pageId }, select: { content: true, updatedAt: true } })
+
 /** 対象ページのスペースを引く(ロックを取る前に要る)。無ければ errInvalidOperation */
 const findPageSpace = async (pageId: string) => {
   const page = await prisma.wikiPage.findUnique({ where: { id: pageId }, select: { spaceId: true } })

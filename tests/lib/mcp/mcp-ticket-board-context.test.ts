@@ -8,6 +8,7 @@ import { assertTicketAccess, type TicketAccess } from '@/lib/board/board-access'
 import { getTicketForMcp } from '@/lib/mcp/mcp-ticket'
 import { isChannelNotifyEnabled } from '@/lib/notify/notify-board-setting'
 import { prisma } from '@/lib/prisma'
+import { findBoardWikiSpaceIndex } from '@/lib/wiki/wiki-space'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { agentAuth, oauthAuth } from '../../helpers/resource-auth'
 
@@ -27,6 +28,7 @@ vi.mock('@/lib/board/ticket-relation', async (importOriginal) => {
 })
 vi.mock('@/lib/board/ticket-sequence', () => ({ findWaitingTicketIds: vi.fn(async () => new Set()) }))
 vi.mock('@/lib/board-note/board-note', () => ({ findBoardNoteIndex: vi.fn(async () => ({})) }))
+vi.mock('@/lib/wiki/wiki-space', () => ({ findBoardWikiSpaceIndex: vi.fn(async () => ({})) }))
 vi.mock('@/lib/notify/notify-board-setting', () => ({ isChannelNotifyEnabled: vi.fn(async () => false) }))
 
 const auth = oauthAuth()
@@ -139,6 +141,27 @@ describe('getTicketForMcp のボードノートの索引', () => {
     expect(result).not.toHaveProperty('boardKnowledge')
     expect(result).not.toHaveProperty('boardMemory')
     expect(findBoardNoteIndex).not.toHaveBeenCalled()
+  })
+})
+
+describe('getTicketForMcp の Wiki スペースの索引', () => {
+  const INDEX = { wikiSpaces: [{ key: 'DOCS', name: '開発ドキュメント', canWrite: true }] }
+
+  it('ボードのメンバーには、ボードに割り当てられたスペースを返す', async () => {
+    vi.mocked(findBoardWikiSpaceIndex).mockResolvedValue(INDEX)
+    vi.mocked(prisma.ticket.findUnique).mockResolvedValue(ticketRow(null) as never)
+
+    expect(await getTicketForMcp(auth, TICKET_ID)).toMatchObject(INDEX)
+    expect(findBoardWikiSpaceIndex).toHaveBeenCalledWith(auth.user, 'board-1')
+  })
+
+  it('ボードのメンバーでない利用者(承認者)には返さない', async () => {
+    vi.mocked(findBoardWikiSpaceIndex).mockResolvedValue(INDEX)
+    vi.mocked(assertTicketAccess).mockResolvedValue(access({ boardRole: null, canEdit: false, canDelete: false }))
+    vi.mocked(prisma.ticket.findUnique).mockResolvedValue(ticketRow(null) as never)
+
+    expect(await getTicketForMcp(auth, TICKET_ID)).not.toHaveProperty('wikiSpaces')
+    expect(findBoardWikiSpaceIndex).not.toHaveBeenCalled()
   })
 })
 

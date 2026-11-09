@@ -9,6 +9,7 @@ import { assertBoardAccess, assertTicketAccess } from '@/lib/board/board-access'
 import { errInvalidOperation } from '@/lib/error'
 import { registerImageTools } from '@/lib/mcp/mcp-image'
 import { resolveTicketId } from '@/lib/mcp/mcp-ticket'
+import { resolveWikiPageRef } from '@/lib/mcp/mcp-wiki'
 import { prisma } from '@/lib/prisma'
 import { saveContentImage } from '@/lib/storage/attachment'
 import { canViewAttachment } from '@/lib/storage/attachment-access'
@@ -29,6 +30,10 @@ vi.mock('@/lib/board/board-access', () => ({
 }))
 
 vi.mock('@/lib/mcp/mcp-ticket', () => ({ resolveTicketId: vi.fn() }))
+vi.mock('@/lib/mcp/mcp-wiki', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/mcp/mcp-wiki')>()),
+  resolveWikiPageRef: vi.fn(),
+}))
 vi.mock('@/lib/storage/attachment', () => ({ saveContentImage: vi.fn() }))
 vi.mock('@/lib/storage/attachment-access', () => ({ canViewAttachment: vi.fn() }))
 vi.mock('@/lib/storage/storage', () => ({ getObject: vi.fn() }))
@@ -36,6 +41,7 @@ vi.mock('@/lib/storage/image', () => ({ resizeWebp: vi.fn(), WEBP_MIME: 'image/w
 
 const BOARD_ID = '019eef64-6cc1-78f1-8f50-1ef869860002'
 const TICKET_BOARD_ID = '019eef64-6cc1-78f1-8f50-1ef869860003'
+const SPACE_ID = '019eef64-6cc1-78f1-8f50-1ef869860004'
 const KEY = '019eef64-6cc1-78f1-8f50-1ef86986289a.webp'
 
 const auth = oauthAuth()
@@ -116,6 +122,38 @@ describe('create_image_upload_token', () => {
     expect(result.isError).toBe(true)
   })
 
+  it('wikiPage 指定ではスペースの書き込み権限を通し、添付先を Wiki スペースにする', async () => {
+    vi.mocked(resolveWikiPageRef).mockResolvedValue({
+      access: { spaceId: SPACE_ID },
+      ref: 'DOCS/12',
+      page: { id: 'p1' },
+    } as never)
+
+    const result = await (
+      await connectClient()
+    ).callTool({ name: 'create_image_upload_token', arguments: { wikiPage: 'DOCS/12' } })
+
+    expect(resolveWikiPageRef).toHaveBeenCalledWith(auth, 'DOCS/12', 'write')
+    const json = jsonOf(result)
+    expect(json.wikiSpaceId).toBe(SPACE_ID)
+    expect(json).not.toHaveProperty('boardId')
+    expect(assertBoardAccess).not.toHaveBeenCalled()
+  })
+
+  it('存在しない Wiki ページへの添付を拒否する', async () => {
+    vi.mocked(resolveWikiPageRef).mockResolvedValue({
+      access: { spaceId: SPACE_ID },
+      ref: 'DOCS/99',
+      page: null,
+    } as never)
+
+    const result = await (
+      await connectClient()
+    ).callTool({ name: 'create_image_upload_token', arguments: { wikiPage: 'DOCS/99' } })
+
+    expect(result.isError).toBe(true)
+  })
+
   it('boardId と ticketId の同時指定・両方省略を拒否する', async () => {
     const client = await connectClient()
 
@@ -124,9 +162,14 @@ describe('create_image_upload_token', () => {
       arguments: { boardId: BOARD_ID, ticketId: 'ABC-42' },
     })
     const neither = await client.callTool({ name: 'create_image_upload_token', arguments: {} })
+    const withWiki = await client.callTool({
+      name: 'create_image_upload_token',
+      arguments: { boardId: BOARD_ID, wikiPage: 'DOCS/12' },
+    })
 
     expect(both.isError).toBe(true)
     expect(neither.isError).toBe(true)
+    expect(withWiki.isError).toBe(true)
   })
 })
 
@@ -139,10 +182,31 @@ describe('upload_image', () => {
     ).callTool({ name: 'upload_image', arguments: { ...args, data: pngBase64 } })
 
     const [file, target] = vi.mocked(saveContentImage).mock.calls[0] ?? []
-    expect(target).toEqual({ boardId: BOARD_ID, userId: 'u1' })
+    expect(target).toEqual({ boardId: BOARD_ID, wikiSpaceId: null, userId: 'u1' })
     expect(file?.name).toBe('shot.png')
     expect(await file?.text()).toBe('dummy-png-bytes')
     expect(jsonOf(result)).toEqual({ url: `/api/upload/${KEY}`, markdown: `![shot.png](/api/upload/${KEY})` })
+  })
+
+  it('Wiki ページを添付先にすると、Wiki スペースの添付として保存する', async () => {
+    vi.mocked(resolveWikiPageRef).mockResolvedValue({
+      access: { spaceId: SPACE_ID },
+      ref: 'DOCS/12',
+      page: { id: 'p1' },
+    } as never)
+
+    await (
+      await connectClient()
+    ).callTool({
+      name: 'upload_image',
+      arguments: { wikiPage: 'DOCS/12', filename: 'shot.png', mimeType: 'image/png', data: pngBase64 },
+    })
+
+    expect(vi.mocked(saveContentImage).mock.calls[0]?.[1]).toEqual({
+      boardId: null,
+      wikiSpaceId: SPACE_ID,
+      userId: 'u1',
+    })
   })
 
   it('data URL 形式の接頭辞を取り除く', async () => {

@@ -17,8 +17,8 @@ export const TICKET_WORKFLOW = [
   'Start: set status to doing with update_ticket (unless already doing / done)',
   'Plan: post it with add_ticket_comment type=plan. Questions for the user: comments without type',
   'Branch / PR / commit: link the URL with link_ticket_artifact (feature/<display ID> branches link automatically)',
-  'Done: if the ticket has acceptance criteria, record whether each is met with evidence via report_acceptance_criteria (not in the report)',
-  'Report: add_ticket_comment type=report with what you did, how you verified it, and remaining issues (screenshots via create_image_upload_token, other files via create_file_upload_token)',
+  'Done: record whether each acceptance criterion is met, with evidence, via report_acceptance_criteria (not in the report)',
+  'Report: add_ticket_comment type=report with what you did, how you verified it, and remaining issues (attach via create_image_upload_token / create_file_upload_token)',
 ] as const
 
 /**
@@ -50,11 +50,15 @@ export const ACCEPTANCE_CRITERIA_GUIDE =
 const TICKET_GUIDE =
   'Tickets: put completion conditions (definition of done / checklist) in acceptanceCriteria, one verifiable sentence each, not in content.'
 
-/** get_ticket / get_board / get_agent_task に載るボードの前提(boardContext)と、ボードノートの索引の読み方 */
+/**
+ * get_ticket / get_board / get_agent_task に載るボードの前提(boardContext)と、ボードノート・Wiki スペースの索引の読み方。
+ * Wiki は参照の案内だけにし、書き込みの作法は save_wiki_page の description に持たせる
+ */
 const BOARD_PREMISES = [
   'In get_ticket / get_board / get_agent_task (only when set):',
   '- boardContext: premises for every ticket on the board (repository, conventions, terms). Read and follow it before working.',
   '- boardKnowledge / boardMemory: indexes ("name: description") of notes shared by all board members. Read relevant ones with get_board_notes.',
+  "- wikiSpaces: the board's Wiki spaces. Look up related documents with search_wiki / get_wiki_page.",
 ]
 
 /**
@@ -70,7 +74,7 @@ const NOTE_PLACEMENT = [
 /** ナレッジは利用者が管理するので、人の経路では依頼・同意があるときだけ書かせ、それ以外は提案させる */
 const KNOWLEDGE_PLACEMENT = [
   '- Board-wide rules or procedures the user asks you to remember: knowledge (userApproved=true).',
-  '- Confirmed memory or findings from checks / research worth keeping: propose making them knowledge. Change knowledge only with user consent.',
+  '- Confirmed memory or findings worth keeping: propose making them knowledge. Change knowledge only with user consent.',
 ]
 
 /** エージェントの経路はナレッジを変更できない(knowledgeDenial)ので、報告で提案させる */
@@ -79,8 +83,8 @@ const AGENT_KNOWLEDGE_PLACEMENT =
 
 /** 指示の優先順位。手順が既定値であることを必ず添える */
 const PRECEDENCE =
-  'Precedence: user instructions > the ticket > project rules (CLAUDE.md / AGENTS.md, etc.) and boardContext > boardKnowledge > boardMemory > these default steps. ' +
-  'When only asked to read a ticket or answer a question, do not comment or change the status.'
+  'Precedence: user instructions > the ticket > project rules (CLAUDE.md / AGENTS.md) and boardContext > boardKnowledge > boardMemory > these default steps. ' +
+  'If only asked to read or answer, do not comment or change the status.'
 
 /**
  * エージェントの経路の優先順位とコメントの種別。人の経路は PRECEDENCE と手順(TICKET_WORKFLOW)で伝わるが、

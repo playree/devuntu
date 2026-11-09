@@ -150,3 +150,39 @@ export const getWikiSpaceByKeyForManage = async (actor: Actor, key: string) => {
   }
   return { space, access }
 }
+
+/** キーからスペースの id を引く(権限は見ない。呼び出し側で assertWikiSpaceAccess を通すこと)。無ければ null */
+export const findWikiSpaceIdByKey = async (key: string): Promise<string | null> =>
+  (await prisma.wikiSpace.findUnique({ where: { key: key.toUpperCase() }, select: { id: true } }))?.id ?? null
+
+export type BoardWikiSpace = { key: string; name: string; description?: string; canWrite: boolean }
+
+/**
+ * ボードに割り当てられたスペースのうち、閲覧できてアーカイブされていないもの(名前順)の索引。
+ * MCP の get_ticket / get_board / get_agent_task に展開して載せるので、0 件なら項目ごと返さない
+ */
+export const findBoardWikiSpaceIndex = async (
+  actor: Actor,
+  boardId: string,
+): Promise<{ wikiSpaces?: BoardWikiSpace[] }> => {
+  const spaces = await prisma.wikiSpace.findMany({
+    where: { AND: [wikiSpaceListWhere(actor.id), { boards: { some: { boardId } } }] },
+    select: { key: true, name: true, description: true, archived: true, ...wikiRoleSelect(actor.id) },
+    orderBy: [{ name: 'asc' }, { key: 'asc' }],
+  })
+  if (spaces.length === 0) {
+    return {}
+  }
+  return {
+    wikiSpaces: spaces.map(({ members, groups, boards, ...space }) => {
+      const role = roleOfWikiRow({ visibility: space.visibility, members, groups, boards })
+      const { canWrite } = evaluateWikiAccess({ role, archived: space.archived, isAdmin: isAdminActor(actor) })
+      return {
+        key: space.key,
+        name: space.name,
+        ...(space.description ? { description: space.description } : {}),
+        canWrite,
+      }
+    }),
+  }
+}

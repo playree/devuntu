@@ -6,7 +6,13 @@ import { VALIDATION_ERROR } from '@/lib/error'
 import { prisma } from '@/lib/prisma'
 import { assertWikiSpaceAccess } from '@/lib/wiki/wiki-access'
 import { DUPLICATED_WIKI_SPACE_KEY } from '@/lib/wiki/wiki-rule'
-import { createWikiSpace, listWikiSpaces, setWikiSpaceArchived, updateWikiSpace } from '@/lib/wiki/wiki-space'
+import {
+  createWikiSpace,
+  findBoardWikiSpaceIndex,
+  listWikiSpaces,
+  setWikiSpaceArchived,
+  updateWikiSpace,
+} from '@/lib/wiki/wiki-space'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/prisma', async () =>
@@ -99,5 +105,44 @@ describe('listWikiSpaces', () => {
       { id: 's3', role: 'owner', canWrite: false, canManage: true },
     ])
     expect(spaces[0]).not.toHaveProperty('members')
+  })
+})
+
+describe('findBoardWikiSpaceIndex', () => {
+  const base = { description: null, archived: false, members: [], groups: [], boards: [] }
+
+  it('ボードに割り当てられ、閲覧できるアーカイブ前のスペースに絞って引く', async () => {
+    vi.mocked(prisma.wikiSpace.findMany).mockResolvedValue([])
+
+    await findBoardWikiSpaceIndex(actor, 'b1')
+
+    const where = vi.mocked(prisma.wikiSpace.findMany).mock.calls[0][0]?.where
+    expect(where?.AND).toEqual(
+      expect.arrayContaining([expect.objectContaining({ archived: false }), { boards: { some: { boardId: 'b1' } } }]),
+    )
+  })
+
+  it('キー・名前・説明(あれば)と書き込めるかを返し、0 件なら項目ごと返さない', async () => {
+    vi.mocked(prisma.wikiSpace.findMany).mockResolvedValue([
+      {
+        ...base,
+        key: 'DOCS',
+        name: '開発',
+        description: '設計と手順',
+        visibility: 'restricted',
+        boards: [{ role: 'editor' }],
+      },
+      { ...base, key: 'PUB', name: '公開', visibility: 'everyone' },
+    ] as never)
+
+    expect(await findBoardWikiSpaceIndex(actor, 'b1')).toEqual({
+      wikiSpaces: [
+        { key: 'DOCS', name: '開発', description: '設計と手順', canWrite: true },
+        { key: 'PUB', name: '公開', canWrite: false },
+      ],
+    })
+
+    vi.mocked(prisma.wikiSpace.findMany).mockResolvedValue([])
+    expect(await findBoardWikiSpaceIndex(actor, 'b1')).toEqual({})
   })
 })

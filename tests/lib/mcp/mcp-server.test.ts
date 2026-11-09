@@ -153,6 +153,10 @@ describe('createDevuntuMcpServer', () => {
       get_agent_setup_guide: 'readOnly',
       get_agent_task: 'readOnly',
       get_board_notes: 'readOnly',
+      list_wiki_spaces: 'readOnly',
+      get_wiki_tree: 'readOnly',
+      search_wiki: 'readOnly',
+      get_wiki_page: 'readOnly',
       create_ticket: 'additive',
       add_ticket_comment: 'additive',
       create_image_upload_token: 'additive',
@@ -164,6 +168,7 @@ describe('createDevuntuMcpServer', () => {
       update_ticket: 'destructive',
       finish_agent_task: 'destructive',
       save_board_note: 'destructive',
+      save_wiki_page: 'destructive',
       update_ticket_comment: 'destructiveIdempotent',
       report_acceptance_criteria: 'destructiveIdempotent',
       delete_ticket: 'destructiveIdempotent',
@@ -171,6 +176,7 @@ describe('createDevuntuMcpServer', () => {
       unlink_ticket_artifact: 'destructiveIdempotent',
       unlink_ticket_relation: 'destructiveIdempotent',
       delete_board_note: 'destructiveIdempotent',
+      delete_wiki_page: 'destructiveIdempotent',
     }
     for (const authKind of [auth, patAuth, agentAuth]) {
       const { tools } = await (await connectDevuntuMcp(authKind)).listTools()

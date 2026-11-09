@@ -35,6 +35,10 @@ vi.mock('@/lib/board-note/board-note', () => ({
   findBoardNoteIndex: vi.fn().mockResolvedValue({}),
 }))
 
+vi.mock('@/lib/wiki/wiki-space', () => ({
+  findBoardWikiSpaceIndex: vi.fn().mockResolvedValue({}),
+}))
+
 vi.mock('@/lib/notify/notify-board-setting', () => ({
   isChannelNotifyEnabled: vi.fn().mockResolvedValue(false),
 }))
@@ -45,6 +49,7 @@ const { getBoardMemberUsers } = await import('@/lib/board/board-member')
 const { listBoardTags } = await import('@/lib/board/tag')
 const { listTicketTemplates } = await import('@/lib/board/ticket-template')
 const { findBoardNoteIndex } = await import('@/lib/board-note/board-note')
+const { findBoardWikiSpaceIndex } = await import('@/lib/wiki/wiki-space')
 const { isChannelNotifyEnabled } = await import('@/lib/notify/notify-board-setting')
 
 const auth = oauthAuth()
@@ -242,6 +247,31 @@ describe('getBoardForMcp', () => {
       boardMemoryOmitted: 3,
     })
     expect(findBoardNoteIndex).toHaveBeenCalledWith(boardId)
+  })
+
+  it('ボードに割り当てられた Wiki スペースがあれば wikiSpaces として返す', async () => {
+    vi.mocked(prisma.board.findUnique).mockResolvedValueOnce({
+      key: 'ABC',
+      name: 'テストボード',
+      description: null,
+      aiContext: null,
+      gitSettings: [],
+    } as never)
+    vi.mocked(assertBoardAccess).mockResolvedValueOnce({
+      boardId,
+      kind: 'team',
+      role: 'member',
+      via: 'member',
+      archived: false,
+    })
+    vi.mocked(getBoardMemberUsers).mockResolvedValueOnce([])
+    vi.mocked(listBoardTags).mockResolvedValueOnce([])
+    vi.mocked(countTicketsByBoard).mockResolvedValueOnce({})
+    const wikiSpaces = [{ key: 'DOCS', name: '開発ドキュメント', description: '設計と手順', canWrite: false }]
+    vi.mocked(findBoardWikiSpaceIndex).mockResolvedValueOnce({ wikiSpaces })
+
+    expect(await getBoardForMcp(auth, boardId)).toMatchObject({ wikiSpaces })
+    expect(findBoardWikiSpaceIndex).toHaveBeenCalledWith(auth.user, boardId)
   })
 
   it('テンプレートがあれば templates として返し、受け入れ条件は acceptanceCriteria の名前にする', async () => {
