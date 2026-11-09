@@ -5,18 +5,18 @@
  * ページは `KEY/番号`(ref)で指定する。改名や移動で変わらないので、チケットの本文などに書いておける。
  * 本文はトークンを食うので、読むときは section で節だけ、書くときは edits で差分だけを渡せるようにする。
  *
- * 権限は画面と同じ関数(assertWikiSpaceAccess と wiki-page.ts の書き込み)に委ねる。
+ * 権限は画面と同じ関数(getWikiSpaceByKey と wiki-page.ts の書き込み)に委ねる。
  * スペースの作成・設定・割り当て、版の復元は画面で行う。
  */
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 import { MAX_TAG_NAME } from '../board/tag-rule'
-import { ClientError, errInvalidOperation, errValidation } from '../error'
+import { ClientError, errValidation } from '../error'
 import type { ResourceAuth } from '../oauth/oauth-resource'
 import { makeUrl } from '../server-utils'
 import { extractUploadKeys } from '../storage/upload'
-import { assertWikiSpaceAccess, type WikiSpaceAccess } from '../wiki/wiki-access'
+import { type WikiSpaceAccess } from '../wiki/wiki-access'
 import { applyTextEdits, extractMarkdownSection, listMarkdownHeadings, type TextEdit } from '../wiki/wiki-markdown'
 import {
   createWikiPage,
@@ -45,7 +45,7 @@ import {
   type WikiWriter,
 } from '../wiki/wiki-rule'
 import { searchWikiPages } from '../wiki/wiki-search'
-import { findWikiSpaceIdByKey, getWikiSpaceByKey, listWikiSpaces } from '../wiki/wiki-space'
+import { getWikiSpaceByKey, listWikiSpaces } from '../wiki/wiki-space'
 import { listWikiTags, resolveWikiTagIdsByName } from '../wiki/wiki-tag'
 import { nestWikiTree } from '../wiki/wiki-tree'
 import { jsonResult, TOOL_ANNOTATIONS } from './mcp'
@@ -55,6 +55,8 @@ const WRITER: WikiWriter = { via: 'mcp' }
 
 /** 部分更新の件数の上限 */
 const MAX_WIKI_EDITS = 50
+/** section に渡せる見出しの長さ。本文の見出しには上限が無いので、タイトルより長めに取る */
+const MAX_SECTION_HEADING = 1000
 /** 見出しが見つからないときにエラーへ並べる見出しの数 */
 const MAX_LISTED_HEADINGS = 50
 
@@ -70,14 +72,9 @@ const parseRef = (ref: string, field = 'ref') => {
 
 const errNoPage = (ref: string) => errValidation(`No page ${ref} exists. Find pages with search_wiki or get_wiki_tree`)
 
-/** スペースキーから id を引き、権限を確かめる。無い・権限が無いは区別しない */
-const resolveSpace = async (auth: ResourceAuth, key: string, need: 'view' | 'write') => {
-  const spaceId = await findWikiSpaceIdByKey(key)
-  if (!spaceId) {
-    throw errInvalidOperation()
-  }
-  return assertWikiSpaceAccess(auth.user, spaceId, need)
-}
+/** スペースキーから権限を引く。無い・権限が無いは区別しない */
+const resolveSpace = async (auth: ResourceAuth, key: string, need: 'view' | 'write') =>
+  (await getWikiSpaceByKey(auth.user, key, need)).access
 
 /**
  * ref のページを引く。スペースの権限を先に確かめてからページの有無を見る(他のスペースのページの有無を探らせない)。
@@ -86,7 +83,8 @@ const resolveSpace = async (auth: ResourceAuth, key: string, need: 'view' | 'wri
 export const resolveWikiPageRef = async (auth: ResourceAuth, ref: string, need: 'view' | 'write') => {
   const parsed = parseRef(ref)
   const access = await resolveSpace(auth, parsed.key, need)
-  const page = await findWikiPageByNumber(access.spaceId, parsed.number)
+  const found = await findWikiPageByNumber(access.spaceId, parsed.number)
+  const page = found && { ...found, number: parsed.number }
   return { access, ref: wikiPageRef({ key: access.key, number: parsed.number }), page }
 }
 
@@ -298,9 +296,20 @@ const updateWikiPageForMcp = async (
     expectedUpdatedAt = current.updatedAt.toISOString()
   }
   const tagIds = input.tags ? await resolveWikiTagIdsByName(access.spaceId, input.tags) : undefined
+  // 親は書き込む前に解決する(無い親で内容だけ保存されないように)。undefined は今の親のまま
+  const parentId =
+    input.parent === undefined ? undefined : input.parent === null ? null : await resolveParentId(access, input.parent)
   const wantsUpdate = input.title !== undefined || content !== undefined || tagIds !== undefined
-  const wantsMove = input.parent !== undefined || input.position !== undefined
+  // 位置を省いた移動は末尾へ送るので、今と同じ親を位置なしで渡されたときは動かさない
+  const wantsMove = input.position !== undefined || (parentId !== undefined && parentId !== page.parentId)
   if (!wantsUpdate && !wantsMove) {
+    if (input.parent !== undefined) {
+      return writeResult(
+        'unchanged',
+        { result: 'unchanged', id: page.id, ref: pageRef, number: page.number, updatedAt: page.updatedAt },
+        access.key,
+      )
+    }
     throw errValidation('Nothing to save. Pass title, content, edits, tags, parent or position')
   }
 
@@ -318,12 +327,6 @@ const updateWikiPageForMcp = async (
   }
 
   try {
-    const parentId =
-      input.parent === undefined
-        ? page.parentId
-        : input.parent === null
-          ? null
-          : await resolveParentId(access, input.parent)
     const moved = await moveWikiPage(
       auth.user,
       WRITER,
@@ -455,7 +458,7 @@ export const registerWikiTools = (server: McpServer, auth: ResourceAuth) => {
         'an unknown heading returns the list of headings. Images and files in the content can be read with get_image / get_file',
       inputSchema: z.strictObject({
         ref: zWikiPageRef.describe('Page ref KEY/number (e.g. DOCS/12)'),
-        section: z.string().min(1).max(MAX_WIKI_TITLE).optional().describe('Heading text, without the leading #'),
+        section: z.string().min(1).max(MAX_SECTION_HEADING).optional().describe('Heading text, without the leading #'),
       }),
     },
     async (input) => jsonResult(await getWikiPageForMcp(auth, input)),

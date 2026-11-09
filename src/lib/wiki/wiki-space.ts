@@ -128,13 +128,13 @@ export const listWikiSpaces = async (actor: Actor, opts?: { includeArchived?: bo
 
 export type WikiSpaceSummary = Awaited<ReturnType<typeof listWikiSpaces>>[number]
 
-/** キーでスペースを引く(閲覧できなければ errInvalidOperation) */
-export const getWikiSpaceByKey = async (actor: Actor, key: string) => {
+/** キーでスペースを引く(`need` の権限が無ければ errInvalidOperation。既定は閲覧) */
+export const getWikiSpaceByKey = async (actor: Actor, key: string, need: 'view' | 'write' = 'view') => {
   const space = await prisma.wikiSpace.findUnique({ where: { key: key.toUpperCase() }, select: SPACE_SELECT })
   if (!space) {
     throw errInvalidOperation()
   }
-  const access = await assertWikiSpaceAccess(actor, space.id, 'view')
+  const access = await assertWikiSpaceAccess(actor, space.id, need)
   return { space, access }
 }
 
@@ -150,10 +150,6 @@ export const getWikiSpaceByKeyForManage = async (actor: Actor, key: string) => {
   }
   return { space, access }
 }
-
-/** キーからスペースの id を引く(権限は見ない。呼び出し側で assertWikiSpaceAccess を通すこと)。無ければ null */
-export const findWikiSpaceIdByKey = async (key: string): Promise<string | null> =>
-  (await prisma.wikiSpace.findUnique({ where: { key: key.toUpperCase() }, select: { id: true } }))?.id ?? null
 
 export type BoardWikiSpace = { key: string; name: string; description?: string; canWrite: boolean }
 

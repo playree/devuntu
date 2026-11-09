@@ -11,7 +11,6 @@ import {
   saveWikiPageForMcp,
   searchWikiForMcp,
 } from '@/lib/mcp/mcp-wiki'
-import { assertWikiSpaceAccess } from '@/lib/wiki/wiki-access'
 import {
   createWikiPage,
   deleteWikiPage,
@@ -24,7 +23,7 @@ import {
 } from '@/lib/wiki/wiki-page'
 import { WIKI_PAGE_CONFLICT, WIKI_PAGE_TOO_DEEP } from '@/lib/wiki/wiki-rule'
 import { searchWikiPages } from '@/lib/wiki/wiki-search'
-import { findWikiSpaceIdByKey, getWikiSpaceByKey } from '@/lib/wiki/wiki-space'
+import { getWikiSpaceByKey } from '@/lib/wiki/wiki-space'
 import { listWikiTags, resolveWikiTagIdsByName } from '@/lib/wiki/wiki-tag'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -33,7 +32,6 @@ import { agentAuth, oauthAuth } from '../../helpers/resource-auth'
 
 vi.mock('@/lib/prisma', async () => (await import('../../helpers/prisma')).mockPrisma({}))
 vi.mock('@/lib/mcp/mcp-ticket', () => ({ resolveTicketId: vi.fn() }))
-vi.mock('@/lib/wiki/wiki-access', () => ({ assertWikiSpaceAccess: vi.fn() }))
 vi.mock('@/lib/wiki/wiki-page', async (importOriginal) => ({
   errWikiPageConflict: (await importOriginal<typeof import('@/lib/wiki/wiki-page')>()).errWikiPageConflict,
   createWikiPage: vi.fn(),
@@ -46,7 +44,6 @@ vi.mock('@/lib/wiki/wiki-page', async (importOriginal) => ({
   updateWikiPage: vi.fn(),
 }))
 vi.mock('@/lib/wiki/wiki-space', () => ({
-  findWikiSpaceIdByKey: vi.fn(),
   getWikiSpaceByKey: vi.fn(),
   listWikiSpaces: vi.fn(),
 }))
@@ -79,14 +76,18 @@ const errorOf = async (promise: Promise<unknown>) => {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  vi.mocked(findWikiSpaceIdByKey).mockResolvedValue(SPACE_ID)
-  vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ spaceId: SPACE_ID, key: 'DOCS', canWrite: true } as never)
+  vi.mocked(getWikiSpaceByKey).mockResolvedValue({
+    space: { id: SPACE_ID, key: 'DOCS', name: '開発ドキュメント' },
+    access: { spaceId: SPACE_ID, key: 'DOCS', canWrite: true },
+  } as never)
   vi.mocked(findWikiPageByNumber).mockImplementation(async (_spaceId, number) =>
     number === 12
       ? { id: PAGE_ID, parentId: 'page-1', updatedAt: READ_AT }
       : number === 3
         ? { id: 'page-3', parentId: null, updatedAt: READ_AT }
-        : null,
+        : number === 1
+          ? { id: 'page-1', parentId: null, updatedAt: READ_AT }
+          : null,
   )
   vi.mocked(readWikiPageContent).mockResolvedValue({ content: '# 手順\n古い手順\n', updatedAt: READ_AT })
   vi.mocked(resolveWikiTagIdsByName).mockResolvedValue(['tag-1'])
@@ -109,8 +110,7 @@ describe('saveWikiPageForMcp: 作成', () => {
       ticketId: 'ABC-42',
     })
 
-    expect(findWikiSpaceIdByKey).toHaveBeenCalledWith('docs')
-    expect(assertWikiSpaceAccess).toHaveBeenCalledWith(agentAuth().user, SPACE_ID, 'write')
+    expect(getWikiSpaceByKey).toHaveBeenCalledWith(agentAuth().user, 'docs', 'write')
     expect(resolveWikiTagIdsByName).toHaveBeenCalledWith(SPACE_ID, ['設計'])
     expect(createWikiPage).toHaveBeenCalledWith(
       agentAuth().user,
@@ -146,7 +146,7 @@ describe('saveWikiPageForMcp: 作成', () => {
   })
 
   it('書き込めないスペースでは、親やタグを引く前に弾く', async () => {
-    vi.mocked(assertWikiSpaceAccess).mockRejectedValue(errInvalidOperation())
+    vi.mocked(getWikiSpaceByKey).mockRejectedValue(errInvalidOperation())
 
     await errorOf(saveWikiPageForMcp(human, { space: 'DOCS', title: 't', parent: 'DOCS/3', tags: ['x'] }))
     expect(findWikiPageByNumber).not.toHaveBeenCalled()
@@ -211,7 +211,7 @@ describe('saveWikiPageForMcp: 更新', () => {
     expect((await errorOf(saveWikiPageForMcp(human, { ref: 'DOCS-12', title: 't' }))).message).toContain('KEY/number')
   })
 
-  it('position だけなら、今の親のまま 0 始まりの位置へ移す', async () => {
+  it('position だけなら、親を渡さず(今の親のまま)0 始まりの位置へ移す', async () => {
     const result = await saveWikiPageForMcp(human, { ref: 'DOCS/12', position: 1 })
 
     expect(updateWikiPage).not.toHaveBeenCalled()
@@ -219,10 +219,26 @@ describe('saveWikiPageForMcp: 更新', () => {
       human.user,
       { via: 'mcp' },
       PAGE_ID,
-      { parentId: 'page-1', position: 0 },
+      { parentId: undefined, position: 0 },
       { expectedUpdatedAt: undefined, ticketId: null },
     )
     expect(result.result).toBe('moved')
+  })
+
+  it('今と同じ親を位置なしで渡しても動かさない(末尾へ送らない)', async () => {
+    const result = await saveWikiPageForMcp(human, { ref: 'DOCS/12', title: '改名', parent: 'DOCS/1' })
+
+    expect(moveWikiPage).not.toHaveBeenCalled()
+    expect(result.result).toBe('updated')
+    expect((await saveWikiPageForMcp(human, { ref: 'DOCS/12', parent: 'DOCS/1' })).result).toBe('unchanged')
+    expect(updateWikiPage).toHaveBeenCalledTimes(1)
+  })
+
+  it('無い親は、内容を書く前にエラーにする', async () => {
+    const error = await errorOf(saveWikiPageForMcp(human, { ref: 'DOCS/12', title: '改名', parent: 'DOCS/99' }))
+
+    expect(error.message).toContain('No page DOCS/99')
+    expect(updateWikiPage).not.toHaveBeenCalled()
   })
 
   it('parent: null はスペース直下への移動', async () => {
@@ -257,7 +273,7 @@ describe('deleteWikiPageForMcp', () => {
     expect(await deleteWikiPageForMcp(human, { ref: 'DOCS/12', recursive: true, ticketId: 'ABC-42' })).toEqual({
       deleted: 1,
     })
-    expect(assertWikiSpaceAccess).toHaveBeenCalledWith(human.user, SPACE_ID, 'write')
+    expect(getWikiSpaceByKey).toHaveBeenCalledWith(human.user, 'DOCS', 'write')
     expect(deleteWikiPage).toHaveBeenCalledWith(human.user, { via: 'mcp' }, PAGE_ID, {
       recursive: true,
       ticketId: 'ticket-1',

@@ -105,3 +105,17 @@ describe('applyTextEdits', () => {
     expect(errorTypeOf(() => applyTextEdits('abc', [{ oldText: '', newText: 'x' }])).type).toBe(VALIDATION_ERROR)
   })
 })
+
+describe('境界のケース', () => {
+  it('CRLF の本文でも見出しを拾う', () => {
+    expect(extractMarkdownSection('## Setup\r\nbody\r\n## Next\r\n', 'setup')).toBe('## Setup\r\nbody')
+  })
+
+  it('info string を持つ行はフェンスを閉じない', () => {
+    expect(listMarkdownHeadings('````\n```js\n# 中\n````\n# 外').map(({ text }) => text)).toEqual(['外'])
+  })
+
+  it('重なって現れる oldText も複数として数える', () => {
+    expect(() => applyTextEdits('aaa', [{ oldText: 'aa', newText: 'b' }])).toThrow('matches 2 places')
+  })
+})

@@ -11,20 +11,25 @@ export type MarkdownHeading = { level: number; text: string; line: number }
 
 const HEADING_PATTERN = /^ {0,3}(#{1,6})(?:[ \t]+(.*?))?(?:[ \t]+#+)?[ \t]*$/
 const FENCE_PATTERN = /^ {0,3}(`{3,}|~{3,})/
+/** 閉じるフェンスは記号だけの行(info string を持たない) */
+const CLOSING_FENCE_PATTERN = /^ {0,3}(`{3,}|~{3,})[ \t]*$/
 
 /** 本文の見出し(出現順)。`line` は 0 始まりの行番号 */
 export const listMarkdownHeadings = (content: string): MarkdownHeading[] => {
   const headings: MarkdownHeading[] = []
   let fence: string | null = null
-  for (const [line, text] of content.split('\n').entries()) {
-    const fenceMatch = FENCE_PATTERN.exec(text)
+  for (const [line, raw] of content.split('\n').entries()) {
+    // CRLF の本文でも見出しを拾えるよう、行末の \r は見ない
+    const text = raw.replace(/\r$/, '')
     if (fence) {
       // 閉じるフェンスは開いたものと同じ記号で、長さが同じか長いもの
-      if (fenceMatch && fenceMatch[1][0] === fence[0] && fenceMatch[1].length >= fence.length) {
+      const closing = CLOSING_FENCE_PATTERN.exec(text)
+      if (closing && closing[1][0] === fence[0] && closing[1].length >= fence.length) {
         fence = null
       }
       continue
     }
+    const fenceMatch = FENCE_PATTERN.exec(text)
     if (fenceMatch) {
       fence = fenceMatch[1]
       continue
@@ -67,9 +72,10 @@ export const extractMarkdownSection = (content: string, heading: string): string
 
 export type TextEdit = { oldText: string; newText: string }
 
+/** 出現数。重なる出現も数える(`aaa` の中の `aa` は2回) */
 const countOccurrences = (text: string, search: string): number => {
   let count = 0
-  for (let at = text.indexOf(search); at >= 0; at = text.indexOf(search, at + search.length)) {
+  for (let at = text.indexOf(search); at >= 0; at = text.indexOf(search, at + 1)) {
     count++
   }
   return count
