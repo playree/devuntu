@@ -370,9 +370,10 @@
 }
 
 .mdxeditor.mdxeditor-flat .markdown {
-  padding: 0;
-  /* @layer 内の `.mdxeditor .markdown` は contentEditable の padding 込みの式なので、padding 抜きで再定義する */
-  min-height: calc(var(--mdx-min-rows, 6) * 1.5em);
+  /* 左右・下は表示モードと揃えて 0。上だけ、ツールバーに本文が詰まって見えないよう空ける */
+  padding: var(--spacing-2) 0 0;
+  /* @layer 内の `.mdxeditor .markdown` は contentEditable の上下 padding 込みの式なので、上の padding だけを足して再定義する */
+  min-height: calc(var(--mdx-min-rows, 6) * 1.5em + var(--spacing-2));
 }
 
 /* MDXEditor の表示専用バリアント(MarkdownView)。
