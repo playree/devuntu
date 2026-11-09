@@ -153,7 +153,7 @@ export const MovePageModal: FC<ModalBaseProps & { page: { id: string; title: str
       title={{ text: t('wiki_move_page'), icon: <ArrowRightCircleIcon /> }}
       submit={{ label: t('wiki_move'), isPending, onPress: submit }}
     >
-      <GridBox>
+      <GridBox isSmart>
         <p className='col-span-12 truncate text-sm font-semibold'>{page.title}</p>
         <div className='col-span-12'>
           <SingleSelectField
