@@ -102,6 +102,7 @@ export const WikiPageClient: FC<{ spaceKey: string; number: number }> = ({ space
   return (
     <FlexCol>
       <ContentHeader
+        isTitleWide
         title={
           <>
             <WikiBreadcrumbs detail={data} />
