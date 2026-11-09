@@ -84,6 +84,7 @@ const REVISION_SUMMARY_SELECT = {
   pageNumber: true,
   action: true,
   parentId: true,
+  order: true,
   title: true,
   tagNames: true,
   via: true,

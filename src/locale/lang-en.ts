@@ -912,6 +912,7 @@ Please copy and use the connection information above.
   msg_wiki_page_has_children: 'The page has child pages. Delete it together with its descendants.',
   msg_wiki_page_invalid_parent: 'The page cannot be moved there (not under itself, its descendants, or another space).',
   msg_wiki_page_too_deep: 'Pages can be nested at most 10 levels deep.',
+  msg_wiki_restore_unchanged: 'No changes. The content is the same as the current one.',
   msg_wiki_revision_retention:
     'Versions are kept for ${days} days after the last save. Of older versions, only the latest one is kept as the state before the retention period. Consecutive saves are combined into one version.',
   msg_wiki_role_note:

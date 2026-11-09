@@ -851,6 +851,7 @@ export type LocaleItemBase =
   | 'msg_wiki_page_has_children'
   | 'msg_wiki_page_invalid_parent'
   | 'msg_wiki_page_too_deep'
+  | 'msg_wiki_restore_unchanged'
   | 'msg_wiki_revision_retention'
   | 'msg_wiki_role_note'
   | 'msg_wiki_search_hint'

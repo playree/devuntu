@@ -5,6 +5,7 @@ import { DialogModal, useModalState } from '@/components/general/modal'
 import { PanelSkeleton } from '@/components/general/panel'
 import { ArrowUturnLeftIcon, ClockIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
+import { RevisionContentView, RevisionFieldChange } from '@/components/revision-diff'
 import { TextDiffView } from '@/components/text-diff-view'
 import { UpdatedBy } from '@/components/updated-by'
 import { parseAction, useActionData } from '@/lib/action/action-client'
@@ -14,7 +15,7 @@ import type { WikiPageWriteResult } from '@/lib/wiki/wiki-page'
 import { useLocale } from '@/locale/client'
 import { Chip, cn } from '@heroui/react'
 import Link from 'next/link'
-import { FC, ReactNode, useState } from 'react'
+import { FC, useState } from 'react'
 import {
   getWikiPageRevisionDiff,
   getWikiPageRevisions,
@@ -27,23 +28,6 @@ export type WikiHistoryTarget = { pageId: string; title: string }
 
 type Revision = NonNullable<GetWikiPageRevisionsReturnType>['revisions'][number]
 
-const FieldChange: FC<{ label: string; before: ReactNode; after: ReactNode }> = ({ label, before, after }) => (
-  <div className='flex flex-wrap items-center gap-x-2 gap-y-1 text-sm'>
-    <span className='text-muted w-full text-xs sm:w-24'>{label}</span>
-    <span className='text-muted break-all line-through'>{before}</span>
-    <span className='text-muted'>→</span>
-    <span className='break-all'>{after}</span>
-  </div>
-)
-
-/** 版の本文をそのまま出す。空の本文は枠ごと出さない */
-const ContentView: FC<{ content: string }> = ({ content }) =>
-  content && (
-    <pre className='border-border rounded-lg border px-2 py-1 font-mono text-xs break-all whitespace-pre-wrap'>
-      {content}
-    </pre>
-  )
-
 /** 親ページの表示名。いまのツリーで引けなければ削除済み */
 const useParentLabel = () => {
   const { t } = useLocale()
@@ -54,8 +38,15 @@ const useParentLabel = () => {
       : (tree.find(({ id }) => id === parentId)?.title ?? t('wiki_revision_parent_missing'))
 }
 
-/** 1つ前(古い側)の版との違い。本文は選んだときに引く。最初の版は本文をそのまま出す */
-const RevisionDiff: FC<{ revision: Revision; previous: Revision | undefined }> = ({ revision, previous }) => {
+/**
+ * 1つ前(古い側)の版との違い。本文は選んだときに引く。最初の版は本文をそのまま出す。
+ * `isDeletion` は、いまページを消している削除の版(戻すと作り直す)
+ */
+const RevisionDiff: FC<{ revision: Revision; previous: Revision | undefined; isDeletion: boolean }> = ({
+  revision,
+  previous,
+  isDeletion,
+}) => {
   const { t } = useLocale()
   const parentLabel = useParentLabel()
   const { data, isLoading } = useActionData(() => getWikiPageRevisionDiff({ id: revision.id }), { key: revision.id })
@@ -66,33 +57,41 @@ const RevisionDiff: FC<{ revision: Revision; previous: Revision | undefined }> =
   if (!data) {
     return null
   }
-  if (revision.action === 'deleted') {
+  if (isDeletion) {
     return (
       <div className='space-y-2'>
         <div className='text-muted text-sm'>{t('msg_wiki_deleted_revision')}</div>
-        <ContentView content={data.content} />
+        <RevisionContentView content={data.content} />
       </div>
     )
   }
   if (!previous || data.previousContent === null) {
-    return <ContentView content={data.content} />
+    return <RevisionContentView content={data.content} />
   }
 
   const beforeTags = previous.tagNames.join(', ')
   const afterTags = revision.tagNames.join(', ')
   const changes = [
     previous.title !== revision.title && (
-      <FieldChange key='title' label={t('wiki_page_title')} before={previous.title} after={revision.title} />
+      <RevisionFieldChange key='title' label={t('wiki_page_title')} before={previous.title} after={revision.title} />
     ),
     beforeTags !== afterTags && (
-      <FieldChange key='tags' label={t('tags')} before={beforeTags || '-'} after={afterTags || '-'} />
+      <RevisionFieldChange key='tags' label={t('tags')} before={beforeTags || '-'} after={afterTags || '-'} />
     ),
     previous.parentId !== revision.parentId && (
-      <FieldChange
+      <RevisionFieldChange
         key='parent'
         label={t('wiki_revision_parent')}
         before={parentLabel(previous.parentId)}
         after={parentLabel(revision.parentId)}
+      />
+    ),
+    previous.parentId === revision.parentId && previous.order !== revision.order && (
+      <RevisionFieldChange
+        key='order'
+        label={t('wiki_position')}
+        before={previous.order + 1}
+        after={revision.order + 1}
       />
     ),
   ].filter(Boolean)
@@ -143,6 +142,10 @@ export const WikiPageHistoryModal: FC<{
       },
       async () => {
         const result = await parseAction(restoreWikiPageRevision({ id: rev.id }))
+        if (result.result === 'unchanged') {
+          notify.info(t('msg_wiki_restore_unchanged'))
+          return
+        }
         notify.success(t('msg_restored_target', { target: rev.title }))
         setSelected(0)
         await Promise.all([refresh(), onRestored(result)])
@@ -208,7 +211,12 @@ export const WikiPageHistoryModal: FC<{
                   </MultiButton>
                 )}
               </div>
-              <RevisionDiff key={revision.id} revision={revision} previous={revisions.at(selected + 1)} />
+              <RevisionDiff
+                key={revision.id}
+                revision={revision}
+                previous={revisions.at(selected + 1)}
+                isDeletion={isDeletedPage && selected === 0}
+              />
             </div>
           </div>
         </div>

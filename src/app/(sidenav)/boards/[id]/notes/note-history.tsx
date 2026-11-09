@@ -6,6 +6,7 @@ import { DialogModal, useModalState } from '@/components/general/modal'
 import { PanelSkeleton } from '@/components/general/panel'
 import { ArrowUturnLeftIcon, ClockIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
+import { RevisionContentView, RevisionFieldChange } from '@/components/revision-diff'
 import { TextDiffView } from '@/components/text-diff-view'
 import { UpdatedBy } from '@/components/updated-by'
 import { parseAction, useActionData } from '@/lib/action/action-client'
@@ -14,21 +15,12 @@ import { useConfirmAction } from '@/lib/use-confirm-action'
 import { useLocale } from '@/locale/client'
 import { cn } from '@heroui/react'
 import Link from 'next/link'
-import { FC, ReactNode, useState } from 'react'
+import { FC, useState } from 'react'
 import { getBoardNoteRevisions, type GetBoardNoteRevisionsReturnType, restoreBoardNoteRevision } from './server'
 
 export type HistoryTarget = { noteId: string; name: string }
 
 type Revision = NonNullable<GetBoardNoteRevisionsReturnType>[number]
-
-const FieldChange: FC<{ label: string; before: ReactNode; after: ReactNode }> = ({ label, before, after }) => (
-  <div className='flex flex-wrap items-center gap-x-2 gap-y-1 text-sm'>
-    <span className='text-muted w-full text-xs sm:w-24'>{label}</span>
-    <span className='text-muted line-through'>{before}</span>
-    <span className='text-muted'>→</span>
-    <span>{after}</span>
-  </div>
-)
 
 /** 1つ前(古い側)の版との違い。最初の版は本文をそのまま出す */
 const RevisionDiff: FC<{ revision: Revision; previous: Revision | undefined }> = ({ revision, previous }) => {
@@ -37,15 +29,11 @@ const RevisionDiff: FC<{ revision: Revision; previous: Revision | undefined }> =
     return <div className='text-muted text-sm'>{t('msg_board_note_deleted_revision')}</div>
   }
   if (!previous) {
-    return (
-      <pre className='border-border rounded-lg border px-2 py-1 font-mono text-xs break-all whitespace-pre-wrap'>
-        {revision.content}
-      </pre>
-    )
+    return <RevisionContentView content={revision.content} />
   }
   const changes = [
     previous.kind !== revision.kind && (
-      <FieldChange
+      <RevisionFieldChange
         key='kind'
         label={t('board_note_kind')}
         before={<BoardNoteKindChip value={previous.kind} />}
@@ -53,10 +41,10 @@ const RevisionDiff: FC<{ revision: Revision; previous: Revision | undefined }> =
       />
     ),
     previous.name !== revision.name && (
-      <FieldChange key='name' label={t('board_note_name')} before={previous.name} after={revision.name} />
+      <RevisionFieldChange key='name' label={t('board_note_name')} before={previous.name} after={revision.name} />
     ),
     previous.description !== revision.description && (
-      <FieldChange
+      <RevisionFieldChange
         key='description'
         label={t('board_note_description')}
         before={previous.description}

@@ -53,7 +53,7 @@ export const WikiSpaceTopClient: FC = () => {
             icon={<Cog6ToothIcon />}
             onPress={() => router.push(`/wiki/${space.key}/settings`)}
           >
-            {(access.canWrite || access.canView) && <ButtonGroup.Separator />}
+            {access.canView && <ButtonGroup.Separator />}
           </MultiButton>
         )}
         <ReloadButton onReload={reloadSpace} hasSeparator={access.canView || access.canManage} />

@@ -908,6 +908,7 @@ export const ja: DefaultLocaleItems = {
   msg_wiki_page_has_children: '子ページがあるため削除できません。配下ごと削除してください。',
   msg_wiki_page_invalid_parent: 'そのページの下には移動できません(自分自身・子孫・別のスペースは選べません)。',
   msg_wiki_page_too_deep: '階層が深すぎます(10階層まで)。',
+  msg_wiki_restore_unchanged: 'いまの内容と同じため、変更はありません。',
   msg_wiki_revision_retention:
     '版は最後の保存から ${days} 日残ります。それより古い版は、保持期間より前の状態として最新の1版だけが残ります。続けて保存した分は1つの版にまとまります。',
   msg_wiki_role_note:
