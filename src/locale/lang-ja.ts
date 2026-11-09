@@ -682,7 +682,7 @@ export const ja: DefaultLocaleItems = {
   wiki_space_profile: 'スペース情報',
   wiki_space_root: '${name}(スペース直下)',
   wiki_space_settings: 'スペース設定',
-  wiki_tree: 'ツリー',
+  wiki_tree: 'Wikiツリー',
   wiki_updated_by: '${name} が ${at} に更新',
   wiki_visibility: '公開範囲',
   wiki_visibility_everyone: '全員',

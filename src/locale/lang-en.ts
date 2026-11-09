@@ -683,7 +683,7 @@ export const en: DefaultLocaleItems = {
   wiki_space_profile: 'Space Profile',
   wiki_space_root: '${name} (top level)',
   wiki_space_settings: 'Space Settings',
-  wiki_tree: 'Tree',
+  wiki_tree: 'Wiki Tree',
   wiki_updated_by: 'Updated by ${name} at ${at}',
   wiki_visibility: 'Visibility',
   wiki_visibility_everyone: 'Everyone',

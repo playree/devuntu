@@ -176,12 +176,6 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
           icon={<TicketIcon />}
           closeMenu={closeMenu}
         />
-        <MenuButton // Wiki
-          to='/wiki'
-          text={t('wiki')}
-          icon={<BookOpenIcon />}
-          closeMenu={closeMenu}
-        />
         <MenuButton // エージェント(承認)
           to='/agents'
           text={t('agent')}
@@ -189,6 +183,13 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
           closeMenu={closeMenu}
         />
       </AccordionSection>
+
+      <MenuButton // Wiki
+        to='/wiki'
+        text={t('wiki')}
+        icon={<BookOpenIcon />}
+        closeMenu={closeMenu}
+      />
 
       {commandAvailable && (
         <MenuButton // リモート実行
