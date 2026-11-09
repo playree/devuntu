@@ -132,6 +132,12 @@ describe('境界のケース', () => {
     expect(Date.now() - started).toBeLessThan(500)
   })
 
+  it.each(['\u2028', '\u2029', '\r'])('行の途中に %j があっても時間がかからない', (c) => {
+    const started = Date.now()
+    expect(listMarkdownHeadings('#' + ' '.repeat(99_990) + c + 'x')).toHaveLength(1)
+    expect(Date.now() - started).toBeLessThan(500)
+  })
+
   it('重なって現れる oldText も複数として数える', () => {
     expect(() => applyTextEdits('aaa', [{ oldText: 'aa', newText: 'b' }])).toThrow('matches 2 places')
   })

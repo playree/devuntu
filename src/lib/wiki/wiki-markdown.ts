@@ -9,8 +9,11 @@ import { errValidation } from '../error'
 
 export type MarkdownHeading = { level: number; text: string; line: number }
 
-/** 閉じの `#` 列は正規表現に含めない(遅延量指定子の後戻りで、空白の長い行が二乗時間になる) */
-const HEADING_PATTERN = /^ {0,3}(#{1,6})(?:[ \t]+(.*))?$/
+/**
+ * 閉じの `#` 列は正規表現に含めない(遅延量指定子の後戻りで、空白の長い行が二乗時間になる)。
+ * `.` は行中の \r や U+2028 / U+2029 で止まって後戻りするので、`[\s\S]` で行末まで取る
+ */
+const HEADING_PATTERN = /^ {0,3}(#{1,6})(?:[ \t]+([\s\S]*))?$/
 const FENCE_PATTERN = /^ {0,3}(`{3,}|~{3,})/
 /** 閉じるフェンスは記号だけの行(info string を持たない) */
 const CLOSING_FENCE_PATTERN = /^ {0,3}(`{3,}|~{3,})[ \t]*$/
