@@ -115,6 +115,23 @@ describe('境界のケース', () => {
     expect(listMarkdownHeadings('````\n```js\n# 中\n````\n# 外').map(({ text }) => text)).toEqual(['外'])
   })
 
+  it('閉じの # 列は空白で区切られたときだけ取り除く', () => {
+    expect(listMarkdownHeadings('# a #\n# b#\n# c ##  \n# #\n# C#  #').map(({ text }) => text)).toEqual([
+      'a',
+      'b#',
+      'c',
+      '',
+      'C#',
+    ])
+  })
+
+  it('空白の長い見出し行でも時間がかからない', () => {
+    const line = '# a' + ' '.repeat(99_990) + 'b'
+    const started = Date.now()
+    expect(listMarkdownHeadings(line)[0].text).toBe('a' + ' '.repeat(99_990) + 'b')
+    expect(Date.now() - started).toBeLessThan(500)
+  })
+
   it('重なって現れる oldText も複数として数える', () => {
     expect(() => applyTextEdits('aaa', [{ oldText: 'aa', newText: 'b' }])).toThrow('matches 2 places')
   })

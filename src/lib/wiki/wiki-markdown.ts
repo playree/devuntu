@@ -9,10 +9,24 @@ import { errValidation } from '../error'
 
 export type MarkdownHeading = { level: number; text: string; line: number }
 
-const HEADING_PATTERN = /^ {0,3}(#{1,6})(?:[ \t]+(.*?))?(?:[ \t]+#+)?[ \t]*$/
+/** 閉じの `#` 列は正規表現に含めない(遅延量指定子の後戻りで、空白の長い行が二乗時間になる) */
+const HEADING_PATTERN = /^ {0,3}(#{1,6})(?:[ \t]+(.*))?$/
 const FENCE_PATTERN = /^ {0,3}(`{3,}|~{3,})/
 /** 閉じるフェンスは記号だけの行(info string を持たない) */
 const CLOSING_FENCE_PATTERN = /^ {0,3}(`{3,}|~{3,})[ \t]*$/
+
+/** 見出しの文字列から、末尾の空白と、空白で区切られた閉じの `#` 列を取り除く(`# a#` の `#` は本文) */
+const stripClosingSequence = (raw: string): string => {
+  const body = raw.trimEnd()
+  let end = body.length
+  while (end > 0 && body[end - 1] === '#') {
+    end--
+  }
+  if (end === body.length) {
+    return body
+  }
+  return end === 0 || body[end - 1] === ' ' || body[end - 1] === '\t' ? body.slice(0, end).trimEnd() : body
+}
 
 /** 本文の見出し(出現順)。`line` は 0 始まりの行番号 */
 export const listMarkdownHeadings = (content: string): MarkdownHeading[] => {
@@ -36,7 +50,7 @@ export const listMarkdownHeadings = (content: string): MarkdownHeading[] => {
     }
     const heading = HEADING_PATTERN.exec(text)
     if (heading) {
-      headings.push({ level: heading[1].length, text: (heading[2] ?? '').trim(), line })
+      headings.push({ level: heading[1].length, text: stripClosingSequence(heading[2] ?? ''), line })
     }
   }
   return headings
