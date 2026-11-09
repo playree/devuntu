@@ -14,6 +14,7 @@ import {
   createWikiTag,
   deleteWikiTag,
   listWikiTagsForManage,
+  resolveWikiTagIdsByName,
   syncWikiPageTags,
   updateWikiTag,
 } from '@/lib/wiki/wiki-tag'
@@ -200,5 +201,33 @@ describe('syncWikiPageTags', () => {
     await syncWikiPageTags(prisma as never, 'p1', ['a'], ['a'])
     expect(prisma.wikiPageTag.deleteMany).not.toHaveBeenCalled()
     expect(prisma.wikiPageTag.createMany).not.toHaveBeenCalled()
+  })
+})
+
+describe('resolveWikiTagIdsByName', () => {
+  beforeEach(() => {
+    vi.mocked(prisma.wikiTag.findMany).mockResolvedValue([
+      { id: 't1', name: '設計', color: 'red', order: 1 },
+      { id: 't2', name: '手順', color: 'blue', order: 2 },
+    ] as never)
+  })
+
+  it('名前の並びのまま id に引き当て、重複と前後の空白を除く', async () => {
+    expect(await resolveWikiTagIdsByName(SPACE_ID, [' 手順 ', '設計', '手順'])).toEqual(['t2', 't1'])
+    expect(vi.mocked(prisma.wikiTag.findMany).mock.calls[0][0]?.where).toEqual({ spaceId: SPACE_ID })
+  })
+
+  it('空なら引かずに空を返す', async () => {
+    expect(await resolveWikiTagIdsByName(SPACE_ID, [])).toEqual([])
+    expect(prisma.wikiTag.findMany).not.toHaveBeenCalled()
+  })
+
+  it('スペースに無い名前は作らず、既存のタグ名を添えたエラーにする', async () => {
+    const error = (await resolveWikiTagIdsByName(SPACE_ID, ['設計', '未登録']).catch((e: unknown) => e)) as Error
+
+    expect((error as { errorType?: string }).errorType).toBe(VALIDATION_ERROR)
+    expect(error.message).toContain('Unknown tag(s) in this space: 未登録')
+    expect(error.message).toContain('Existing tags: 設計, 手順')
+    expect(prisma.wikiTag.create).not.toHaveBeenCalled()
   })
 })

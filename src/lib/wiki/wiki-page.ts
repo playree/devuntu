@@ -284,6 +284,17 @@ export const createWikiPage = async (
   return { result: 'created', ...page }
 }
 
+/** スペース内の番号でページを引く(権限は見ない。呼び出し側で assertWikiSpaceAccess を通すこと)。無ければ null */
+export const findWikiPageByNumber = async (spaceId: string, number: number) =>
+  prisma.wikiPage.findUnique({
+    where: { spaceId_number: { spaceId, number } },
+    select: { id: true, parentId: true, updatedAt: true },
+  })
+
+/** 本文と更新日時(部分更新の組み立て用。権限は見ない)。無ければ null */
+export const readWikiPageContent = async (pageId: string) =>
+  prisma.wikiPage.findUnique({ where: { id: pageId }, select: { content: true, updatedAt: true } })
+
 /** 対象ページのスペースを引く(ロックを取る前に要る)。無ければ errInvalidOperation */
 const findPageSpace = async (pageId: string) => {
   const page = await prisma.wikiPage.findUnique({ where: { id: pageId }, select: { spaceId: true } })
@@ -373,13 +384,13 @@ export const updateWikiPage = async (
 
 /**
  * 親・兄弟内の位置の変更。自分自身や子孫の下へは移せず、移した後の部分木が深さの上限を超えるなら弾く。
- * 同じ親の中での並べ替えもこれで行う
+ * 同じ親の中での並べ替えもこれで行う。`parentId` を省略すると、ロックを取った後に読んだ今の親のまま並べ替える
  */
 export const moveWikiPage = async (
   actor: Actor,
   writer: WikiWriter,
   pageId: string,
-  target: { parentId: string | null; position?: number },
+  target: { parentId?: string | null; position?: number },
   opts: UpdateOpts = {},
 ): Promise<WikiPageWriteResult> => {
   const expected = parseExpectedUpdatedAt(opts.expectedUpdatedAt)
@@ -392,7 +403,7 @@ export const moveWikiPage = async (
     if (!index.byId.has(pageId)) {
       throw errInvalidOperation()
     }
-    const parentId = target.parentId
+    const parentId = target.parentId === undefined ? (index.byId.get(pageId)?.parentId ?? null) : target.parentId
     if (parentId !== null) {
       if (!index.byId.has(parentId) || isSelfOrDescendant(index, pageId, parentId)) {
         throw errInvalidParent()

@@ -11,7 +11,7 @@
  * `UploadNonce` に記録して一意制約で担保する。
  */
 
-import { jwtVerify, SignJWT } from 'jose'
+import { jwtVerify, SignJWT, type JWTPayload } from 'jose'
 import { uuidv7 } from 'uuidv7'
 import { getBoardAccess } from '../board/board-access'
 import { nowDate, withinMinutes } from '../day'
@@ -20,6 +20,7 @@ import { logger } from '../logger'
 import { parseBearerToken } from '../oauth/oauth-resource'
 import { isUniqueViolation, prisma } from '../prisma'
 import { makeUrl } from '../server-utils'
+import { getWikiSpaceAccess } from '../wiki/wiki-access'
 import type { AttachmentOwner } from './attachment'
 import { toUploadUrl, UPLOAD_URL_PREFIX } from './upload'
 
@@ -36,9 +37,12 @@ const secret = () => new TextEncoder().encode(envu.server.BETTER_AUTH_SECRET)
 const issuer = () => envu.server.BETTER_AUTH_URL
 const audience = () => makeUrl(UPLOAD_URL_PREFIX).toString()
 
+/** 添付先。ボードか Wiki スペースのどちらか一方 */
+export type UploadTokenTarget = { boardId: string; wikiSpaceId?: never } | { wikiSpaceId: string; boardId?: never }
+
 /** 戻り値の平文は発行時にしか取得できない(保存もしない) */
-export const signUploadToken = async ({ userId, boardId }: { userId: string; boardId: string }): Promise<string> =>
-  new SignJWT({ boardId })
+export const signUploadToken = async ({ userId, ...target }: { userId: string } & UploadTokenTarget): Promise<string> =>
+  new SignJWT(target.boardId ? { boardId: target.boardId } : { wikiSpaceId: target.wikiSpaceId })
     .setProtectedHeader({ alg: ALGORITHM })
     .setSubject(userId)
     .setIssuer(issuer())
@@ -84,14 +88,25 @@ const consumeUploadNonce = async (jti: string, expiresAt: Date): Promise<boolean
   return true
 }
 
+/** トークンが主張する添付先。ボードか Wiki スペースのちょうど一方でなければ null */
+const targetOf = ({ boardId, wikiSpaceId }: JWTPayload): UploadTokenTarget | null => {
+  if (typeof boardId === 'string' && wikiSpaceId === undefined) {
+    return { boardId }
+  }
+  if (typeof wikiSpaceId === 'string' && boardId === undefined) {
+    return { wikiSpaceId }
+  }
+  return null
+}
+
 /** アップロードの実行者と添付先 */
 export type UploadActor = AttachmentOwner
 
 /**
- * 短命トークンを検証し、アップロードの実行者と添付先ボードを返す。
+ * 短命トークンを検証し、アップロードの実行者と添付先(ボード / Wiki スペース)を返す。
  *
- * トークンが主張する `boardId` は信用せず、利用時点でBAN・ボードの所属とアーカイブを引き直す
- * (発行後にBANされた/ボードから外れた/ボードがアーカイブされたケースを塞ぐ)。
+ * トークンが主張する添付先は信用せず、利用時点でBAN・所属(書き込み権限)とアーカイブを引き直す
+ * (発行後にBANされた/ボード・スペースから外れた/アーカイブされたケースを塞ぐ)。
  */
 export const verifyUploadToken = async (token: string): Promise<UploadActor | null> => {
   let payload
@@ -102,8 +117,9 @@ export const verifyUploadToken = async (token: string): Promise<UploadActor | nu
     return null
   }
 
-  const { sub, jti, exp, boardId } = payload
-  if (!sub || !jti || typeof boardId !== 'string') {
+  const { sub, jti, exp } = payload
+  const target = targetOf(payload)
+  if (!sub || !jti || !target) {
     return null
   }
 
@@ -116,7 +132,17 @@ export const verifyUploadToken = async (token: string): Promise<UploadActor | nu
   if (!user || user.banned) {
     return null
   }
+  if (target.wikiSpaceId !== undefined) {
+    const { wikiSpaceId } = target
+    // canWrite は editor 以上かつ未アーカイブ
+    if (!(await getWikiSpaceAccess(user, wikiSpaceId))?.canWrite) {
+      logger.info({ userId: user.id, wikiSpaceId }, 'upload token wiki space unavailable')
+      return null
+    }
+    return { userId: user.id, boardId: null, wikiSpaceId }
+  }
   // アーカイブ済みボードは本文の編集自体が禁止されるので、添付だけ増やせないようにする
+  const { boardId } = target
   const access = await getBoardAccess(user, boardId)
   if (!access || access.archived) {
     logger.info({ userId: user.id, boardId }, 'upload token board unavailable')

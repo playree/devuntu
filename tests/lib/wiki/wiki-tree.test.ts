@@ -8,6 +8,7 @@ import {
   descendantIds,
   indexWikiTree,
   isSelfOrDescendant,
+  nestWikiTree,
   placeInSiblings,
   subtreeHeight,
 } from '@/lib/wiki/wiki-tree'
@@ -79,5 +80,47 @@ describe('placeInSiblings', () => {
   it('既に兄弟にいれば一度外してから入れる(並べ替え)', () => {
     expect(placeInSiblings(['a', 'b', 'c'], 'a', 2)).toEqual(['b', 'c', 'a'])
     expect(placeInSiblings(['a', 'b', 'c'], 'c', 0)).toEqual(['c', 'a', 'b'])
+  })
+})
+
+describe('nestWikiTree', () => {
+  const rows = [
+    { id: 'a', parentId: null, title: 'A' },
+    { id: 'b', parentId: 'a', title: 'B' },
+    { id: 'c', parentId: 'b', title: 'C' },
+    { id: 'd', parentId: 'c', title: 'D' },
+    { id: 'e', parentId: 'a', title: 'E' },
+    { id: 'f', parentId: null, title: 'F' },
+  ]
+  const toNode = ({ title }: { title: string }) => ({ title })
+
+  it('スペース直下から兄弟の並び順のまま入れ子にし、子の無い節には children を付けない', () => {
+    expect(nestWikiTree(rows, toNode, { rootId: null })).toEqual([
+      {
+        title: 'A',
+        children: [{ title: 'B', children: [{ title: 'C', children: [{ title: 'D' }] }] }, { title: 'E' }],
+      },
+      { title: 'F' },
+    ])
+  })
+
+  it('depth より深い子は childCount だけを返す', () => {
+    expect(nestWikiTree(rows, toNode, { rootId: null, depth: 2 })).toEqual([
+      { title: 'A', children: [{ title: 'B', childCount: 1 }, { title: 'E' }] },
+      { title: 'F' },
+    ])
+  })
+
+  it('rootId の子孫だけを返し、rootId 自身は含めない', () => {
+    expect(nestWikiTree(rows, toNode, { rootId: 'b', depth: 1 })).toEqual([{ title: 'C', childCount: 1 }])
+  })
+
+  it('循環した木でも止まる', () => {
+    const broken = [
+      { id: 'x', parentId: null, title: 'X' },
+      { id: 'y', parentId: 'z', title: 'Y' },
+      { id: 'z', parentId: 'y', title: 'Z' },
+    ]
+    expect(nestWikiTree(broken, toNode, { rootId: 'y' })).toEqual([{ title: 'Z', children: [] }])
   })
 })

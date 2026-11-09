@@ -128,13 +128,13 @@ export const listWikiSpaces = async (actor: Actor, opts?: { includeArchived?: bo
 
 export type WikiSpaceSummary = Awaited<ReturnType<typeof listWikiSpaces>>[number]
 
-/** キーでスペースを引く(閲覧できなければ errInvalidOperation) */
-export const getWikiSpaceByKey = async (actor: Actor, key: string) => {
+/** キーでスペースを引く(`need` の権限が無ければ errInvalidOperation。既定は閲覧) */
+export const getWikiSpaceByKey = async (actor: Actor, key: string, need: 'view' | 'write' = 'view') => {
   const space = await prisma.wikiSpace.findUnique({ where: { key: key.toUpperCase() }, select: SPACE_SELECT })
   if (!space) {
     throw errInvalidOperation()
   }
-  const access = await assertWikiSpaceAccess(actor, space.id, 'view')
+  const access = await assertWikiSpaceAccess(actor, space.id, need)
   return { space, access }
 }
 
@@ -149,4 +149,36 @@ export const getWikiSpaceByKeyForManage = async (actor: Actor, key: string) => {
     throw errInvalidOperation()
   }
   return { space, access }
+}
+
+export type BoardWikiSpace = { key: string; name: string; description?: string; canWrite: boolean }
+
+/**
+ * ボードに割り当てられたスペースのうち、閲覧できてアーカイブされていないもの(名前順)の索引。
+ * MCP の get_ticket / get_board / get_agent_task に展開して載せるので、0 件なら項目ごと返さない
+ */
+export const findBoardWikiSpaceIndex = async (
+  actor: Actor,
+  boardId: string,
+): Promise<{ wikiSpaces?: BoardWikiSpace[] }> => {
+  const spaces = await prisma.wikiSpace.findMany({
+    where: { AND: [wikiSpaceListWhere(actor.id), { boards: { some: { boardId } } }] },
+    select: { key: true, name: true, description: true, archived: true, ...wikiRoleSelect(actor.id) },
+    orderBy: [{ name: 'asc' }, { key: 'asc' }],
+  })
+  if (spaces.length === 0) {
+    return {}
+  }
+  return {
+    wikiSpaces: spaces.map(({ members, groups, boards, ...space }) => {
+      const role = roleOfWikiRow({ visibility: space.visibility, members, groups, boards })
+      const { canWrite } = evaluateWikiAccess({ role, archived: space.archived, isAdmin: isAdminActor(actor) })
+      return {
+        key: space.key,
+        name: space.name,
+        ...(space.description ? { description: space.description } : {}),
+        canWrite,
+      }
+    }),
+  }
 }

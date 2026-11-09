@@ -312,6 +312,13 @@ describe('moveWikiPage', () => {
     expect(vi.mocked(prisma.wikiPage.update).mock.calls.at(-1)?.[0].data).toMatchObject({ parentId: 'a', order: 0 })
   })
 
+  it('parentId を省くと、ロックを取った後に読んだ今の親のまま並べ替える', async () => {
+    await moveWikiPage(actor, WEB, 'd', { position: 0 })
+
+    expect(orderUpdates()).toEqual([['b', 1]])
+    expect(vi.mocked(prisma.wikiPage.update).mock.calls.at(-1)?.[0].data).toMatchObject({ parentId: 'a', order: 0 })
+  })
+
   it('親も位置も変わらなければ書かない', async () => {
     const result = await moveWikiPage(actor, WEB, 'b', { parentId: 'a', position: 0 })
     expect(result.result).toBe('unchanged')

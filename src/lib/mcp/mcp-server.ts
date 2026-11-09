@@ -29,6 +29,7 @@ import {
   updateTicketForMcp,
 } from '@/lib/mcp/mcp-ticket'
 import { guardMcpToolErrors } from '@/lib/mcp/mcp-tool-error'
+import { registerWikiTools } from '@/lib/mcp/mcp-wiki'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
 import {
   MAX_TICKET_CRITERIA,
@@ -213,6 +214,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
       description:
         'Returns board details (members, tags, ticket counts per status, and boardContext / templates / mergeCompletion / announcementEnabled if set). ' +
         'boardKnowledge / boardMemory (only when set) index shared notes: read the relevant ones with get_board_notes. ' +
+        "wikiSpaces (only when set) lists the board's Wiki spaces: find related documents with search_wiki. " +
         'Use the IDs returned here for assigneeId and tagIds in create_ticket / update_ticket. ' +
         'When a template fits the ticket, pass it as templateId in create_ticket',
       inputSchema: z.strictObject({ boardId: z.string().min(1).describe('Board ID or board key (e.g. ABC)') }),
@@ -230,6 +232,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
         'parent/children, related tickets, and recent change history (activities, newest first). ' +
         'boardContext (only when set) holds premises shared by every ticket on the board, such as the target repository and conventions: read it before working. ' +
         'boardKnowledge / boardMemory (only when set) index shared notes: read the relevant ones with get_board_notes. ' +
+        "wikiSpaces (only when set) lists the board's Wiki spaces: find related documents with search_wiki. " +
         'mergeCompletion (only when set) lists the git providers whose merges complete the ticket; ' +
         'with criteriaCheck checked / checkedOrReported, unmet acceptance criteria hold it back (none does not check them). ' +
         "announcementEnabled (only when set) means type=announcement comments are also sent to the board's Slack channel. " +
@@ -412,6 +415,9 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
 
   // ボードノートも両方の経路で使う(ナレッジの変更可否は経路で判定する)
   registerBoardNoteTools(server, auth)
+
+  // Wiki は人の経路もエージェントも読み書きできる(権限はスペースの割り当てで決まる)
+  registerWikiTools(server, auth)
 
   // セットアップ手順は人が読むものなので接続の種類を問わない
   registerAgentSetupTool(server)

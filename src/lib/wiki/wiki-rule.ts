@@ -154,6 +154,9 @@ export const pickExpiredWikiRevisionIds = (
 /** ページの指定(`KEY/番号`) */
 export const wikiPageRef = ({ key, number }: { key: string; number: number }): string => `${key}/${number}`
 
+/** ページの画面のパス */
+export const wikiPagePath = ({ key, number }: { key: string; number: number }): string => `/wiki/${key}/${number}`
+
 // キー部分は WIKI_SPACE_KEY_PATTERN を大文字小文字を問わない形にしたもの。番号は Int に収めるため 9 桁まで
 const PAGE_REF_PATTERN = new RegExp(`^(${WIKI_SPACE_KEY_PATTERN.source.slice(1, -1)})/([1-9][0-9]{0,8})$`, 'i')
 

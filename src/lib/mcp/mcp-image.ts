@@ -27,10 +27,11 @@ import { canViewAttachment } from '../storage/attachment-access'
 import { resizeWebp, WEBP_MIME } from '../storage/image'
 import { getObject } from '../storage/storage'
 import { isValidUploadKey, toUploadKey, UPLOAD_URL_PREFIX } from '../storage/upload'
-import { signUploadToken, UPLOAD_TOKEN_TTL_SECONDS } from '../storage/upload-token'
+import { signUploadToken, UPLOAD_TOKEN_TTL_SECONDS, type UploadTokenTarget } from '../storage/upload-token'
 import { jsonResult, TOOL_ANNOTATIONS } from './mcp'
 import { resolveBoardId } from './mcp-board'
 import { resolveTicketId } from './mcp-ticket'
+import { resolveWikiPageRef, zWikiPageRef } from './mcp-wiki'
 
 /**
  * base64 で受け取れる文字列長の上限。
@@ -53,43 +54,60 @@ const UPLOAD_TOKEN_RATE_LIMIT = { limit: 20, windowMs: 10 * 60 * 1000 }
 /** sharp の変換で CPU を使うため、読み取りは書き込みより短い窓で絞る */
 const READ_RATE_LIMIT = { limit: 30, windowMs: 60 * 1000 }
 
-/** 添付先ボードの指定。新規作成前は ticketId が無いので boardId も受ける */
+/** 添付先の指定。新規作成前は ticketId が無いので boardId も受ける。Wiki ページは ref で受ける */
 export const targetSchema = {
   ticketId: z
     .string()
     .min(1)
     .optional()
-    .describe('Display ID (e.g. ABC-42) or ticket ID of the ticket to attach to. Specify either this or boardId'),
+    .describe(
+      'Display ID (e.g. ABC-42) or ticket ID of the ticket to attach to. Specify exactly one of ticketId, boardId or wikiPage',
+    ),
   boardId: z
     .string()
     .min(1)
     .optional()
-    .describe(
-      'Board ID or board key (e.g. ABC) to attach to. For tickets not created yet. Mutually exclusive with ticketId',
-    ),
+    .describe('Board ID or board key (e.g. ABC) to attach to. For tickets not created yet'),
+  wikiPage: zWikiPageRef
+    .optional()
+    .describe('ref KEY/number (e.g. DOCS/12) of the Wiki page to attach to. To create a page, create it first'),
 }
 
+export type UploadTargetInput = { ticketId?: string; boardId?: string; wikiPage?: string }
+
 /**
- * 添付先ボードを決める。
+ * 添付先(ボード / Wiki スペース)を決める。
  *
- * 画像・ファイルは本文へ貼る前提なので、チケット指定の場合は閲覧ではなく編集できることを要求する。
- * ボードに属さない添付(全ログインユーザーが読める)は MCP からは作らせない。
+ * 画像・ファイルは本文へ貼る前提なので、閲覧ではなく編集できることを要求する。
+ * どこにも属さない添付(全ログインユーザーが読める)は MCP からは作らせない。
  */
 const resolveUploadTarget = async (
   auth: ResourceAuth,
-  { ticketId, boardId }: { ticketId?: string; boardId?: string },
-): Promise<string> => {
-  if ((ticketId ? 1 : 0) + (boardId ? 1 : 0) !== 1) {
-    throw errValidation('Specify exactly one of ticketId or boardId')
+  { ticketId, boardId, wikiPage }: UploadTargetInput,
+): Promise<UploadTokenTarget> => {
+  if ([ticketId, boardId, wikiPage].filter(Boolean).length !== 1) {
+    throw errValidation('Specify exactly one of ticketId, boardId or wikiPage')
   }
   if (ticketId) {
     // 'edit' は canEdit(= メンバー かつ 未アーカイブ)なので、アーカイブ済みボードはここで弾かれる
     const access = await assertTicketAccess(auth.user, await resolveTicketId(auth, ticketId), 'edit')
-    return access.boardId
+    return { boardId: access.boardId }
+  }
+  if (wikiPage) {
+    // 'write' は editor 以上 かつ 未アーカイブ。添付はスペースに属する(ページ単位では持たない)
+    const { access, page, ref } = await resolveWikiPageRef(auth, wikiPage, 'write')
+    if (!page) {
+      throw errValidation(`No page ${ref} exists`)
+    }
+    return { wikiSpaceId: access.spaceId }
   }
   const board = await assertBoardAccess(auth.user, await resolveBoardId(boardId as string), 'write')
-  return board.boardId
+  return { boardId: board.boardId }
 }
+
+/** 応答とログに載せる添付先(boardId か wikiSpaceId のどちらか) */
+const targetFields = (target: UploadTokenTarget) =>
+  target.boardId ? { boardId: target.boardId } : { wikiSpaceId: target.wikiSpaceId }
 
 /** `data:image/png;base64,...` 形式で渡されることが多いので接頭辞を許容する */
 const stripDataUrl = (data: string) => data.replace(/^data:[^;,]*;base64,/, '').trim()
@@ -105,9 +123,9 @@ export const parseUploadKey = (value: string): string => {
 
 const uploadImageForMcp = async (
   auth: ResourceAuth,
-  input: { ticketId?: string; boardId?: string; filename: string; mimeType: string; data: string },
+  input: UploadTargetInput & { filename: string; mimeType: string; data: string },
 ) => {
-  const boardId = await resolveUploadTarget(auth, input)
+  const target = await resolveUploadTarget(auth, input)
   assertRateLimit(`upload-image:${auth.user.id}`, UPLOAD_TOKEN_RATE_LIMIT)
 
   const bytes = Buffer.from(stripDataUrl(input.data), 'base64')
@@ -117,38 +135,43 @@ const uploadImageForMcp = async (
     throw errValidation(t('en', (parsed.error.issues[0]?.message ?? '@invalid_image_type') as LocaleItem))
   }
 
-  const { url } = await saveContentImage(parsed.data, { boardId, userId: auth.user.id })
-  logger.info({ userId: auth.user.id, boardId }, 'mcp image uploaded')
+  const { url } = await saveContentImage(parsed.data, {
+    boardId: target.boardId ?? null,
+    wikiSpaceId: target.wikiSpaceId ?? null,
+    userId: auth.user.id,
+  })
+  logger.info({ userId: auth.user.id, ...targetFields(target) }, 'mcp image uploaded')
   return { url, markdown: `![${input.filename}](${url})` }
 }
 
 /**
- * 添付先ボードを決めて、`/api/upload` 用の短命トークンを発行する(画像・ファイル共通)。
- * トークンは種類を問わず、種類はアップロード時のクエリ(`?kind=file`)で決まる
+ * 添付先を決めて、`/api/upload` 用の短命トークンを発行する(画像・ファイル共通)。
+ * トークンは種類を問わず、種類はアップロード時のクエリ(`?kind=file`)で決まる。
+ * 戻り値の target は応答にそのまま載せる形(boardId か wikiSpaceId)
  */
-export const issueUploadToken = async (auth: ResourceAuth, input: { ticketId?: string; boardId?: string }) => {
-  const boardId = await resolveUploadTarget(auth, input)
+export const issueUploadToken = async (auth: ResourceAuth, input: UploadTargetInput) => {
+  const target = await resolveUploadTarget(auth, input)
   assertRateLimit(`upload-token:user:${auth.user.id}`, UPLOAD_TOKEN_RATE_LIMIT)
 
-  const token = await signUploadToken({ userId: auth.user.id, boardId })
-  logger.info({ userId: auth.user.id, boardId }, 'mcp upload token issued')
-  return { boardId, token }
+  const token = await signUploadToken({ userId: auth.user.id, ...target })
+  logger.info({ userId: auth.user.id, ...targetFields(target) }, 'mcp upload token issued')
+  return { target: targetFields(target), token }
 }
 
-const createImageUploadTokenForMcp = async (auth: ResourceAuth, input: { ticketId?: string; boardId?: string }) => {
-  const { boardId, token } = await issueUploadToken(auth, input)
+const createImageUploadTokenForMcp = async (auth: ResourceAuth, input: UploadTargetInput) => {
+  const { target, token } = await issueUploadToken(auth, input)
   const uploadUrl = makeUrl(UPLOAD_URL_PREFIX).toString()
 
   return {
     uploadUrl,
     token,
     expiresIn: UPLOAD_TOKEN_TTL_SECONDS,
-    boardId,
+    ...target,
     curl: `curl -sS -X POST ${uploadUrl} -H "Authorization: Bearer ${token}" -F "file=@<path to image file>"`,
     note:
       `Running the command above returns {"url":"${UPLOAD_URL_PREFIX}/<key>.webp"}. ` +
       'Write that url as `![description](url)` in the content to display it as an image. ' +
-      'The token is single-use, and the target board is fixed when it is issued.',
+      'The token is single-use, and the target (board or Wiki space) is fixed when it is issued.',
   }
 }
 
@@ -200,7 +223,7 @@ export const registerImageTools = (server: McpServer, auth: ResourceAuth) => {
       title: 'Create image upload token',
       annotations: TOOL_ANNOTATIONS.additive,
       description:
-        'Issues a single-use upload URL and token for embedding images in ticket content or comments. ' +
+        'Issues a single-use upload URL and token for embedding images in ticket content, comments or Wiki pages. ' +
         `POST the image file directly with the returned curl command to get \`${UPLOAD_URL_PREFIX}/<key>.webp\`, ` +
         'then embed that URL in the content with Markdown `![description](URL)` (raw <img> tags are stripped when displayed). ' +
         'Always use this when the file is available locally (upload_image consumes a large number of tokens). ' +
@@ -240,7 +263,7 @@ export const registerImageTools = (server: McpServer, auth: ResourceAuth) => {
       title: 'Get image',
       annotations: TOOL_ANNOTATIONS.readOnly,
       description:
-        `Fetches an image embedded in ticket content or a comment (a \`${UPLOAD_URL_PREFIX}/<key>\` URL, or the key) and returns it as an image. ` +
+        `Fetches an image embedded in ticket content, a comment or a Wiki page (a \`${UPLOAD_URL_PREFIX}/<key>\` URL, or the key) and returns it as an image. ` +
         'Use it when you need to actually see a screenshot or diagram in the content',
       inputSchema: z.strictObject({
         image: z.string().min(1).describe(`A \`${UPLOAD_URL_PREFIX}/<key>.webp\` URL, or the key itself`),

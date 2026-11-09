@@ -10,7 +10,7 @@ import type { Prisma } from '@/generated/prisma/client'
 import type { TagColor } from '@/generated/prisma/enums'
 import type { Actor } from '../board/board-access'
 import { rethrowDuplicatedTagName } from '../board/tag'
-import { diffTagIds, MAX_TAGS_PER_SCOPE, nextOrder } from '../board/tag-rule'
+import { dedupeTagNames, diffTagIds, MAX_TAGS_PER_SCOPE, nextOrder } from '../board/tag-rule'
 import { errInvalidOperation, errValidation } from '../error'
 import { logger } from '../logger'
 import { prisma, type Db } from '../prisma'
@@ -90,6 +90,27 @@ export const findWikiTagsByNames = async (
         select: { id: true, name: true },
         orderBy: [...WIKI_TAG_ORDER_BY],
       })
+
+/**
+ * タグ名をスペースのタグの id に引き当てる(MCP 用。AI にタグを作らせないため、無い名前は作らずにエラーにする)。
+ * 無い名前があれば、既存のタグ名を添えて errValidation
+ */
+export const resolveWikiTagIdsByName = async (spaceId: string, names: readonly string[]): Promise<string[]> => {
+  const wanted = dedupeTagNames([...names])
+  if (wanted.length === 0) {
+    return []
+  }
+  const tags = await listWikiTags(spaceId)
+  const idByName = new Map(tags.map(({ id, name }) => [name, id]))
+  const unknown = wanted.filter((name) => !idByName.has(name))
+  if (unknown.length > 0) {
+    const existing = tags.length > 0 ? tags.map(({ name }) => name).join(', ') : '(none)'
+    throw errValidation(
+      `Unknown tag(s) in this space: ${unknown.join(', ')}. Existing tags: ${existing}. Ask a user to create new tags on the screen`,
+    )
+  }
+  return wanted.map((name) => idByName.get(name) as string)
+}
 
 /** ページのタグを総入れ替えする。変化しない tagId は触らない */
 export const syncWikiPageTags = async (

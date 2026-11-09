@@ -52,6 +52,7 @@ import { parseChildProposal } from '@/lib/schema/schema-ticket'
 import { makeUrl } from '@/lib/server-utils'
 import { listContentAttachments } from '@/lib/storage/attachment'
 import { extractUploadKeys } from '@/lib/storage/upload'
+import { findBoardWikiSpaceIndex } from '@/lib/wiki/wiki-space'
 
 /** 表示ID(ABC-42)でもチケットIDでも受け取れるようにする。エージェント向けツールからも使う */
 export const resolveTicketId = async (auth: ResourceAuth, ticketIdOrDisplayId: string): Promise<string> => {
@@ -108,7 +109,7 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
   const displayId = ticketDisplayId({ key: ticket.board.key, number: ticket.number })
   const attachmentKeys = extractUploadKeys([ticket.content ?? '', ...ticket.comments.map((c) => c.content)].join('\n'))
   const mergeCompletion = access.boardRole ? mergeCompletionOf(ticket.board.gitSettings) : undefined
-  const [links, criteria, activities, relations, waiting, noteIndex, announcementEnabled, attachments] =
+  const [links, criteria, activities, relations, waiting, noteIndex, wikiIndex, announcementEnabled, attachments] =
     await Promise.all([
       listTicketLinks(id),
       listTicketCriteria(id),
@@ -119,6 +120,8 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
       findWaitingTicketIds(access.boardRole ? [id] : []),
       // ボードノートも boardContext と同じくボード内の情報なので承認者には見せない
       access.boardRole ? findBoardNoteIndex(access.boardId) : {},
+      // ボードに割り当てられた Wiki スペースも同じくボード内の情報なので承認者には見せない
+      access.boardRole ? findBoardWikiSpaceIndex(auth.user, access.boardId) : {},
       // ボードの通知設定もボード内の情報なので承認者には見せない。アナウンスを投稿できないエージェントにも返さない
       access.boardRole && auth.kind !== 'agent' ? isChannelNotifyEnabled(access.boardId, 'announcement') : false,
       listContentAttachments(attachmentKeys, access.boardId),
@@ -149,6 +152,8 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
     ...(access.boardRole && ticket.board.aiContext ? { boardContext: ticket.board.aiContext } : {}),
     /** ボードノートの索引(boardKnowledge / boardMemory)。本文は get_board_notes で読む */
     ...noteIndex,
+    /** ボードに割り当てられた Wiki スペースの索引(wikiSpaces)。ページは search_wiki / get_wiki_page で読む */
+    ...wikiIndex,
     /** マージによる自動完了の設定。boardContext と同じくボード内の情報なので承認者には見せない */
     ...(mergeCompletion ? { mergeCompletion } : {}),
     /** アナウンス(type=announcement のコメント)がボードの Slack チャンネルへ投稿されるか。されないなら項目ごと載せない */
