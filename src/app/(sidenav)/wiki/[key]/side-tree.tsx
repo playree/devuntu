@@ -8,7 +8,6 @@ import { TreeView, type TreeViewItem, type TreeViewItemPlace } from '@/component
 import {
   ArrowRightCircleIcon,
   ArrowsUpDownIcon,
-  BookOpenIcon,
   ChevronDownIcon,
   ChevronUpIcon,
   Cog6ToothIcon,
@@ -19,13 +18,12 @@ import { parseAction } from '@/lib/action/action-client'
 import { ClientError } from '@/lib/error'
 import { MAX_WIKI_SEARCH_KEYWORD, wikiSearchHref } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
-import { cn } from '@heroui/react'
-import Link from 'next/link'
-import { useParams, usePathname, useRouter } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { FC, useMemo, useState } from 'react'
 import { CreatePageModal, MovePageModal } from './page-modals'
 import { moveWikiPage } from './server'
 import { useWikiSpace } from './space-context'
+import { WikiSpaceSwitcher } from './space-switcher'
 
 /**
  * サイドメニューに差し込むスペースのツリー。
@@ -36,7 +34,6 @@ export const WikiSideTree: FC = () => {
   const { space, access, tree, tagsOf, reloadSpace } = useWikiSpace()
   const { closeMenu } = useSideNav()
   const params = useParams<{ number?: string }>()
-  const pathname = usePathname()
   const router = useRouter()
   const [isEditMode, setEditMode] = useState(false)
   const [pendingId, setPendingId] = useState<string>()
@@ -55,7 +52,6 @@ export const WikiSideTree: FC = () => {
     [space.key, tree, tagsOf],
   )
   const selectedId = tree.find((page) => String(page.number) === params.number)?.id ?? null
-  const topHref = `/wiki/${space.key}`
   const canEdit = access.canWrite && isEditMode
 
   const reorder = async (item: TreeViewItem, { index }: TreeViewItemPlace, delta: -1 | 1) => {
@@ -75,55 +71,46 @@ export const WikiSideTree: FC = () => {
   return (
     <div className='flex flex-col gap-1 px-2 pb-2'>
       <div className='flex items-center gap-1'>
-        <Link
-          href={topHref}
-          title={space.name}
-          aria-current={pathname === topHref ? 'page' : undefined}
-          className={cn(
-            'flex min-w-0 flex-1 items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-semibold',
-            pathname === topHref
-              ? 'bg-accent-soft text-accent-soft-foreground'
-              : 'hover:bg-mist-100 dark:hover:bg-neutral-900',
+        <WikiSpaceSwitcher />
+        <span className='flex shrink-0 items-center'>
+          {access.canWrite && (
+            <>
+              <MultiButton
+                isIconOnly
+                size='sm'
+                variant='ghost'
+                className='size-7 min-w-7'
+                tooltip={t('wiki_add_page')}
+                icon={<DocumentPlusIcon width={16} />}
+                onPress={() => createModalState.open()}
+              />
+              <MultiButton
+                isIconOnly
+                size='sm'
+                variant={isEditMode ? 'primary' : 'ghost'}
+                className='size-7 min-w-7'
+                tooltip={t('wiki_reorder_mode')}
+                aria-pressed={isEditMode}
+                icon={<ArrowsUpDownIcon width={16} />}
+                onPress={() => setEditMode(!isEditMode)}
+              />
+            </>
           )}
-          onClick={closeMenu}
-        >
-          <BookOpenIcon width={16} className='shrink-0' />
-          <span className='truncate'>{space.name}</span>
-        </Link>
-        {access.canWrite && (
-          <>
+          {access.canManage && (
             <MultiButton
               isIconOnly
               size='sm'
               variant='ghost'
-              tooltip={t('wiki_add_page')}
-              icon={<DocumentPlusIcon width={16} />}
-              onPress={() => createModalState.open()}
+              className='size-7 min-w-7'
+              tooltip={t('settings')}
+              icon={<Cog6ToothIcon width={16} />}
+              onPress={() => {
+                router.push(`/wiki/${space.key}/settings`)
+                closeMenu()
+              }}
             />
-            <MultiButton
-              isIconOnly
-              size='sm'
-              variant={isEditMode ? 'primary' : 'ghost'}
-              tooltip={t('wiki_reorder_mode')}
-              aria-pressed={isEditMode}
-              icon={<ArrowsUpDownIcon width={16} />}
-              onPress={() => setEditMode(!isEditMode)}
-            />
-          </>
-        )}
-        {access.canManage && (
-          <MultiButton
-            isIconOnly
-            size='sm'
-            variant='ghost'
-            tooltip={t('settings')}
-            icon={<Cog6ToothIcon width={16} />}
-            onPress={() => {
-              router.push(`${topHref}/settings`)
-              closeMenu()
-            }}
-          />
-        )}
+          )}
+        </span>
       </div>
 
       {tree.length > 0 && (
