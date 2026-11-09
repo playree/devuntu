@@ -6,7 +6,7 @@ import { FlexCol } from '@/components/general/flex'
 import { useModalState } from '@/components/general/modal'
 import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
-import { ArrowRightCircleIcon, BookOpenIcon, ClockIcon, DocumentPlusIcon, TrashIcon } from '@/components/icon'
+import { BookOpenIcon, ClockIcon, DocumentPlusIcon, FolderArrowRightIcon, TrashIcon } from '@/components/icon'
 import { NoAccessView } from '@/components/no-access-view'
 import { ReloadButton } from '@/components/reload-button'
 import { useActionData } from '@/lib/action/action-client'
@@ -127,7 +127,7 @@ export const WikiPageClient: FC<{ spaceKey: string; number: number }> = ({ space
           <MultiButton
             isIconOnly
             tooltip={t('wiki_move_page')}
-            icon={<ArrowRightCircleIcon />}
+            icon={<FolderArrowRightIcon />}
             onPress={() => moveModalState.open()}
           >
             <ButtonGroup.Separator />

@@ -6,12 +6,12 @@ import { useModalState } from '@/components/general/modal'
 import { useSideNav } from '@/components/general/side-nav-slot'
 import { TreeView, type TreeViewItem, type TreeViewItemPlace } from '@/components/general/tree-view'
 import {
-  ArrowRightCircleIcon,
   ArrowsUpDownIcon,
   ChevronDownIcon,
   ChevronUpIcon,
   Cog6ToothIcon,
   DocumentPlusIcon,
+  FolderArrowRightIcon,
 } from '@/components/icon'
 import { WikiTagDots } from '@/components/wiki-tag'
 import { parseAction } from '@/lib/action/action-client'
@@ -166,7 +166,7 @@ export const WikiSideTree: FC = () => {
                       variant='ghost'
                       className='size-6 min-w-6'
                       tooltip={t('wiki_move')}
-                      icon={<ArrowRightCircleIcon width={14} />}
+                      icon={<FolderArrowRightIcon width={14} />}
                       isDisabled={!!pendingId}
                       onPress={() => moveModalState.open({ id: item.id, title: item.label, parentId: item.parentId })}
                     />
