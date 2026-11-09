@@ -4,7 +4,7 @@ import { useSideNav } from '@/components/general/side-nav-slot'
 import { BookOpenIcon } from '@/components/icon'
 import { useActionData } from '@/lib/action/action-client'
 import { useLocale } from '@/locale/client'
-import { Skeleton } from '@heroui/react'
+import { Spinner } from '@heroui/react'
 import { FC } from 'react'
 import { MenuButton } from '../menu'
 import { getWikiSpaces } from './server'
@@ -25,7 +25,9 @@ export const WikiSideSpaces: FC = () => {
       </div>
 
       {isLoading ? (
-        <Skeleton className='h-8 rounded-lg' />
+        <div className='flex justify-center py-4'>
+          <Spinner size='lg' />
+        </div>
       ) : !data?.length ? (
         <p className='text-muted px-2 py-1 text-xs'>{t('msg_no_wiki_spaces')}</p>
       ) : (
