@@ -13,6 +13,8 @@ import { DAY_MS, msBefore, nowDate } from '../day'
 import { envu } from '../env-util'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
+import { wikiRevisionCutoff } from '../wiki/wiki-revision'
+import { pickExpiredWikiRevisionIds } from '../wiki/wiki-rule'
 import {
   DUE_REMINDER_RETENTION_MS,
   GIT_CHECK_SUITE_RETENTION_MS,
@@ -184,6 +186,33 @@ export const sweepBoardNoteRevisions = async (now: Date): Promise<number> =>
     })
   ).count
 
+/**
+ * Wiki ページの版。最後の保存(updatedAt)が保持期間(`WIKI_REVISION_RETENTION_DAYS`)より古いものを消す。
+ * 存在するページは期限より古い版のうち最新の1版を基準版として残し、保持期間より前の時点へ常に戻せるようにする。
+ * 削除済みのページは期限より古い版をすべて消すので、削除したページを復元できるのは保持期間のあいだだけになる。
+ *
+ * 基準版は作成から保持期間以上たっているので、書き込み側の連続保存のまとめ(最新の版の上書き)の対象にならない
+ */
+export const sweepWikiPageRevisions = async (now: Date): Promise<number> => {
+  const expired = await prisma.wikiPageRevision.findMany({
+    where: { updatedAt: { lt: wikiRevisionCutoff(now) } },
+    select: { id: true, pageId: true },
+    orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
+  })
+  if (expired.length === 0) {
+    return 0
+  }
+  const alive = await prisma.wikiPage.findMany({
+    where: { id: { in: [...new Set(expired.map(({ pageId }) => pageId))] } },
+    select: { id: true },
+  })
+  const ids = pickExpiredWikiRevisionIds(expired, new Set(alive.map(({ id }) => id))).slice(0, MAINTENANCE_DELETE_BATCH)
+  if (ids.length === 0) {
+    return 0
+  }
+  return (await prisma.wikiPageRevision.deleteMany({ where: { id: { in: ids } } })).count
+}
+
 /** 更新が止まった CI の状態(GitHub の Check Suite / GitLab のパイプライン)。消えた後に表示される CI の結果は「無し」になる */
 export const sweepGitCheckSuites = async (now: Date): Promise<number> =>
   (await prisma.gitCheckSuite.deleteMany({ where: { updatedAt: { lt: msBefore(now, GIT_CHECK_SUITE_RETENTION_MS) } } }))
@@ -219,6 +248,7 @@ export const runMaintenanceSweep = async (now: Date = nowDate()): Promise<SweepC
   await runStep(counts, 'commandRun', () => sweepCommandRuns(now))
   await runStep(counts, 'ticketActivity', () => sweepTicketActivities(now))
   await runStep(counts, 'boardNoteRevision', () => sweepBoardNoteRevisions(now))
+  await runStep(counts, 'wikiPageRevision', () => sweepWikiPageRevisions(now))
   await runStep(counts, 'gitCheckSuite', () => sweepGitCheckSuites(now))
   await runStep(counts, 'dueReminder', () => sweepDueReminders(now))
   await runStep(counts, 'attachment', () => sweepOrphanAttachments(now))

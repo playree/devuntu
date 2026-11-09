@@ -9,6 +9,7 @@ import { DAY_MS, msBefore } from '@/lib/day'
 import {
   DUE_REMINDER_RETENTION_MS,
   GIT_CHECK_SUITE_RETENTION_MS,
+  MAINTENANCE_DELETE_BATCH,
   OAUTH_TOKEN_RETENTION_MS,
   SESSION_RETENTION_MS,
   VERIFICATION_RETENTION_MS,
@@ -27,6 +28,7 @@ import {
   sweepTicketActivities,
   sweepUploadNonces,
   sweepVerifications,
+  sweepWikiPageRevisions,
 } from '@/lib/maintenance/maintenance-sweep'
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -38,6 +40,8 @@ const COMMAND_RETENTION_DAYS = 10
 const COMMAND_KEEP = 50
 const TICKET_ACTIVITY_DAYS = 60
 const BOARD_NOTE_REVISION_DAYS = 90
+// 版の保持期間はテストごとに変える(既定値の 7 は env-util.test.ts で確かめている)
+const wiki = { retentionDays: 7 }
 
 vi.mock('@/lib/env-util', () => ({
   envu: {
@@ -60,6 +64,9 @@ vi.mock('@/lib/env-util', () => ({
       get BOARD_NOTE_REVISION_RETENTION_DAYS() {
         return BOARD_NOTE_REVISION_DAYS
       },
+      get WIKI_REVISION_RETENTION_DAYS() {
+        return wiki.retentionDays
+      },
     },
   },
 }))
@@ -78,6 +85,8 @@ vi.mock('@/lib/prisma', async () =>
     gitCheckSuite: ['deleteMany'],
     ticketActivity: ['deleteMany'],
     boardNoteRevision: ['deleteMany'],
+    wikiPageRevision: ['findMany', 'deleteMany'],
+    wikiPage: ['findMany'],
     ticketDueReminder: ['deleteMany'],
   }),
 )
@@ -103,10 +112,14 @@ beforeEach(() => {
     prisma.gitCheckSuite,
     prisma.ticketActivity,
     prisma.boardNoteRevision,
+    prisma.wikiPageRevision,
     prisma.ticketDueReminder,
   ]) {
     vi.mocked(model.deleteMany).mockResolvedValue({ count: 0 })
   }
+  wiki.retentionDays = 7
+  vi.mocked(prisma.wikiPageRevision.findMany).mockResolvedValue([] as never)
+  vi.mocked(prisma.wikiPage.findMany).mockResolvedValue([] as never)
   vi.mocked(prisma.agentRunner.findMany).mockResolvedValue([] as never)
   vi.mocked(prisma.agentRun.findMany).mockResolvedValue([] as never)
   vi.mocked(prisma.commandRun.findMany).mockResolvedValue([] as never)
@@ -293,6 +306,78 @@ describe('sweepCommandRuns', () => {
   })
 })
 
+describe('sweepWikiPageRevisions', () => {
+  /** 期限より古い版(新しい順)。p1 は存在するページ、p2 は削除済みのページ */
+  const EXPIRED = [
+    { id: 'p1-r3', pageId: 'p1' },
+    { id: 'p2-r2', pageId: 'p2' },
+    { id: 'p1-r2', pageId: 'p1' },
+    { id: 'p2-r1', pageId: 'p2' },
+    { id: 'p1-r1', pageId: 'p1' },
+  ]
+
+  const deletedIds = () =>
+    (vi.mocked(prisma.wikiPageRevision.deleteMany).mock.calls[0][0] as { where: { id: { in: string[] } } }).where.id.in
+
+  beforeEach(() => {
+    vi.mocked(prisma.wikiPageRevision.findMany).mockResolvedValue(EXPIRED as never)
+    vi.mocked(prisma.wikiPage.findMany).mockResolvedValue([{ id: 'p1' }] as never)
+    vi.mocked(prisma.wikiPageRevision.deleteMany).mockImplementation((async (args: {
+      where: { id: { in: string[] } }
+    }) => ({ count: args.where.id.in.length })) as never)
+  })
+
+  it('最後の保存が保持期間(既定7日)より前の版を、新しい順に引く', async () => {
+    await sweepWikiPageRevisions(now)
+    expect(vi.mocked(prisma.wikiPageRevision.findMany).mock.calls[0][0]).toEqual({
+      where: { updatedAt: { lt: msBefore(now, 7 * DAY_MS) } },
+      select: { id: true, pageId: true },
+      orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
+    })
+  })
+
+  it('WIKI_REVISION_RETENTION_DAYS で保持期間を変えられる', async () => {
+    wiki.retentionDays = 30
+    await sweepWikiPageRevisions(now)
+    expect(vi.mocked(prisma.wikiPageRevision.findMany).mock.calls[0][0]).toMatchObject({
+      where: { updatedAt: { lt: msBefore(now, 30 * DAY_MS) } },
+    })
+  })
+
+  it('存在するページは期限より古い版のうち最新の1版(基準版)を残し、削除済みのページは期限より古い版をすべて消す', async () => {
+    const count = await sweepWikiPageRevisions(now)
+
+    expect(vi.mocked(prisma.wikiPage.findMany).mock.calls[0][0]).toEqual({
+      where: { id: { in: ['p1', 'p2'] } },
+      select: { id: true },
+    })
+    expect(deletedIds()).toEqual(['p2-r2', 'p1-r2', 'p2-r1', 'p1-r1'])
+    expect(deletedIds(), '基準版は残す').not.toContain('p1-r3')
+    expect(count).toBe(4)
+  })
+
+  it('基準版しか無ければ何も消さない', async () => {
+    vi.mocked(prisma.wikiPageRevision.findMany).mockResolvedValue([{ id: 'p1-r3', pageId: 'p1' }] as never)
+    expect(await sweepWikiPageRevisions(now)).toBe(0)
+    expect(prisma.wikiPageRevision.deleteMany).not.toHaveBeenCalled()
+  })
+
+  it('期限より古い版が無ければページを引かない', async () => {
+    vi.mocked(prisma.wikiPageRevision.findMany).mockResolvedValue([] as never)
+    expect(await sweepWikiPageRevisions(now)).toBe(0)
+    expect(prisma.wikiPage.findMany).not.toHaveBeenCalled()
+  })
+
+  it('1回に消すのはバッチの上限まで', async () => {
+    vi.mocked(prisma.wikiPageRevision.findMany).mockResolvedValue(
+      Array.from({ length: MAINTENANCE_DELETE_BATCH + 5 }, (_, i) => ({ id: `r${i}`, pageId: 'gone' })) as never,
+    )
+    vi.mocked(prisma.wikiPage.findMany).mockResolvedValue([] as never)
+    expect(await sweepWikiPageRevisions(now)).toBe(MAINTENANCE_DELETE_BATCH)
+    expect(deletedIds()).toHaveLength(MAINTENANCE_DELETE_BATCH)
+  })
+})
+
 describe('runMaintenanceSweep', () => {
   it('リフレッシュトークンをアクセストークンより先に処理する', async () => {
     await runMaintenanceSweep(now)
@@ -313,5 +398,11 @@ describe('runMaintenanceSweep', () => {
     expect(vi.mocked(prisma.uploadNonce.deleteMany)).toHaveBeenCalled()
     expect(vi.mocked(prisma.commandRun.deleteMany)).toHaveBeenCalled()
     expect(counts.dueReminder).toBe(0)
+  })
+
+  it('Wiki の版の掃除を手順に含める', async () => {
+    const counts = await runMaintenanceSweep(now)
+    expect(counts.wikiPageRevision).toBe(0)
+    expect(prisma.wikiPageRevision.findMany).toHaveBeenCalled()
   })
 })

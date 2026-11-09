@@ -7,8 +7,8 @@ import { useLocale } from '@/locale/client'
 import { Chip } from '@heroui/react'
 import { FC } from 'react'
 
-/** 更新者と経路。AI が MCP で書いたものはそれと分かるようにする */
-export const NoteUpdatedBy: FC<{
+/** 更新者と経路(ボードノート・Wiki の版)。AI が MCP で書いたものはそれと分かるようにする */
+export const UpdatedBy: FC<{
   name: string | undefined
   isAgent?: boolean
   via: 'web' | 'mcp'

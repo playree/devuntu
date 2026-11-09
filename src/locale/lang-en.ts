@@ -650,6 +650,7 @@ export const en: DefaultLocaleItems = {
   wiki_add_space: 'Add Space',
   wiki_child_count: '${count} children',
   wiki_child_pages: 'Child Pages',
+  wiki_deleted_pages: 'Deleted pages',
   wiki_move: 'Move',
   wiki_move_page: 'Move Page',
   wiki_page_ref: 'Page reference',
@@ -662,6 +663,15 @@ export const en: DefaultLocaleItems = {
   wiki_position_first: 'First',
   wiki_position_last: 'Last',
   wiki_reorder_mode: 'Reorder',
+  wiki_restore_this: 'Restore this version',
+  wiki_revision_action_created: 'Created',
+  wiki_revision_action_deleted: 'Deleted',
+  wiki_revision_action_moved: 'Moved',
+  wiki_revision_action_restored: 'Restored',
+  wiki_revision_action_updated: 'Updated',
+  wiki_revision_before_retention: 'Before retention period',
+  wiki_revision_parent: 'Parent page',
+  wiki_revision_parent_missing: '(deleted page)',
   wiki_role_editor: 'Editor',
   wiki_role_viewer: 'Viewer',
   wiki_search: 'Search',
@@ -772,6 +782,10 @@ Please copy and use the connection information above.
   msg_confirm_delete_wiki_page_with_children: 'Delete ${target}. Its ${count} descendant page(s) will also be deleted.',
   msg_confirm_deletion: 'Delete ${target}.',
   msg_confirm_disable_share: 'Disabling sharing will invalidate the current share URL. Are you sure?',
+  msg_confirm_restore_deleted_wiki_page:
+    'Restores ${target}. If its original parent page no longer exists, it is restored to the top level.',
+  msg_confirm_restore_wiki_page:
+    'Restores the title, content and tags of ${target} to this version. The position of the page does not change.',
   msg_confirm_revoke_consent:
     'Revoking access also invalidates the issued tokens. The app needs your approval again to be used.',
   msg_confirm_rotate_token: 'Reissuing immediately stops any connection using the current token. Continue?',
@@ -830,6 +844,7 @@ Please copy and use the connection information above.
   msg_no_approvable_agent: 'You are not set as an approver for any agent.',
   msg_no_boards: 'You are not assigned to any board.',
   msg_no_command_runs: 'No remote runs yet.',
+  msg_no_deleted_wiki_pages: 'No deleted pages.',
   msg_no_due_soon_tickets: 'No overdue or upcoming tickets.',
   msg_no_mentions: 'No mentions.',
   msg_no_recent_activity: 'No recently updated tickets.',
@@ -849,6 +864,7 @@ Please copy and use the connection information above.
   msg_no_wiki_boards: 'No boards are assigned.',
   msg_no_wiki_groups: 'No groups are assigned.',
   msg_no_wiki_pages: 'No pages yet.',
+  msg_no_wiki_revisions: 'No history.',
   msg_no_wiki_search_results: 'No matching pages.',
   msg_no_wiki_spaces: 'No spaces you can view.',
   msg_not_allowed_domain_in_google:
@@ -885,12 +901,20 @@ Please copy and use the connection information above.
   msg_user_not_exist: 'User does not exist.',
   msg_wiki_board_assign:
     'Members of the board (direct or via groups) can use this space with the chosen role. You can assign boards you belong to.',
+  msg_wiki_deleted_pages_hint:
+    'Deleted pages can be restored only for ${days} days after deletion. Pages deleted together with their descendants are restored one page at a time.',
+  msg_wiki_deleted_revision:
+    'The page was deleted in this version. Restoring it recreates the page with the content before deletion.',
   msg_wiki_manage_only:
     'You are not assigned to this space, so you can only change its settings. Assign yourself to read its pages.',
+  msg_wiki_no_revision_change: 'No changes to the title, content or tags from the previous version.',
   msg_wiki_page_conflict: 'Someone else updated it first. Copy your changes, then reopen the page and edit again.',
   msg_wiki_page_has_children: 'The page has child pages. Delete it together with its descendants.',
   msg_wiki_page_invalid_parent: 'The page cannot be moved there (not under itself, its descendants, or another space).',
   msg_wiki_page_too_deep: 'Pages can be nested at most 10 levels deep.',
+  msg_wiki_restore_unchanged: 'No changes. The content is the same as the current one.',
+  msg_wiki_revision_retention:
+    'Versions are kept for ${days} days after the last save. Of older versions, only the latest one is kept as the state before the retention period. Consecutive saves are combined into one version.',
   msg_wiki_role_note:
     'Viewers can read, editors can create, edit, move and delete pages, and owners can also change settings. At least one owner is required.',
   msg_wiki_search_hint: 'Enter keywords or choose tags. Words of two characters or fewer may take longer to search.',

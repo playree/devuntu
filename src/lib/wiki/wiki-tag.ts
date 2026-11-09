@@ -77,6 +77,20 @@ export const assertWikiTagIdsInSpace = async (
   return tags
 }
 
+/** 版の復元用。版はタグを名前で持つので、スペースに残っているものだけを引き当てる(表示順) */
+export const findWikiTagsByNames = async (
+  tx: Db,
+  spaceId: string,
+  names: readonly string[],
+): Promise<{ id: string; name: string }[]> =>
+  names.length === 0
+    ? []
+    : tx.wikiTag.findMany({
+        where: { spaceId, name: { in: [...names] } },
+        select: { id: true, name: true },
+        orderBy: [...WIKI_TAG_ORDER_BY],
+      })
+
 /** ページのタグを総入れ替えする。変化しない tagId は触らない */
 export const syncWikiPageTags = async (
   tx: Prisma.TransactionClient,
