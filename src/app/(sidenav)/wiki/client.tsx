@@ -7,6 +7,7 @@ import { FlexCol } from '@/components/general/flex'
 import { InputSearchField } from '@/components/general/input'
 import { useModalState } from '@/components/general/modal'
 import { usePagingList } from '@/components/general/paging'
+import { SideNavPortal } from '@/components/general/side-nav-slot'
 import { SwitchField } from '@/components/general/switch'
 import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
@@ -23,6 +24,7 @@ import { FC } from 'react'
 import { AddSpaceModal } from './modals'
 import { WikiSearchResults } from './search-results'
 import { getWikiSpaces, searchWikiPages } from './server'
+import { WikiSideSpaces } from './side-spaces'
 
 /** スペースの一覧と、閲覧できる全スペースを対象にした検索 */
 export const WikiSpacesClient: FC<{ keyword: string }> = ({ keyword }) => {
@@ -47,6 +49,10 @@ export const WikiSpacesClient: FC<{ keyword: string }> = ({ keyword }) => {
 
   return (
     <FlexCol>
+      <SideNavPortal label={t('wiki')}>
+        <WikiSideSpaces />
+      </SideNavPortal>
+
       <ContentHeader
         icon={<BookOpenIcon />}
         title={t('wiki')}

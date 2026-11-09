@@ -30,7 +30,7 @@ import { Accordion, Button, Card, cn } from '@heroui/react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { createContext, FC, ReactNode, useContext, useState } from 'react'
+import { createContext, FC, ReactNode, useContext, useEffect, useState } from 'react'
 
 /**
  * Google連携が利用可能かどうか(既定はfalse)。
@@ -65,7 +65,9 @@ export const MenuButton: FC<{
   closeMenu?: () => void
   /** アイコン */
   icon?: ReactNode
-}> = ({ text, to, closeMenu, icon }) => {
+  /** 遷移と合わせて行う処理 */
+  onNavigate?: () => void
+}> = ({ text, to, closeMenu, icon, onNavigate }) => {
   const router = useRouter()
   return (
     <div>
@@ -76,6 +78,7 @@ export const MenuButton: FC<{
         variant='ghost'
         onPress={() => {
           router.push(to)
+          onNavigate?.()
           if (closeMenu) {
             closeMenu()
           }
@@ -124,14 +127,28 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
   // ページがメニューへ内容を差し込んでいる間は、中段を「メニュー / 差し込み」のタブにする
   const { hasContent, contentLabel } = useSideNav()
   const [tab, setTab] = useState<string>(CONTENT_TAB)
+  // 差し込みが始まったら(Wiki を開いたら)、メニューを選んだ状態でタブを出してから差し込み側へスライドさせる
+  const [isEntering, setEntering] = useState(false)
   const [prevHasContent, setPrevHasContent] = useState(hasContent)
   if (prevHasContent !== hasContent) {
-    // 差し込みが始まったら(Wiki スペースに入ったら)差し込み側を見せる。スペース内の遷移では選択を保つ
+    // Wiki 内の遷移では選択を保つ
     setPrevHasContent(hasContent)
     if (hasContent) {
-      setTab(CONTENT_TAB)
+      setTab(MENU_TAB)
+      setEntering(true)
     }
   }
+  useEffect(() => {
+    if (!isEntering) {
+      return
+    }
+    // メニュー側を 1 度描いてから切り替えないと、スライドせずに差し込み側が出る
+    const frame = requestAnimationFrame(() => {
+      setTab(CONTENT_TAB)
+      setEntering(false)
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [isEntering])
 
   // タブの有無で Accordion が作り直されても、開閉の状態を保つ
   const [expandedKeys, setExpandedKeys] = useState<Set<AccordionKey>>(defaultExpandedKeys)
@@ -189,6 +206,8 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
         text={t('wiki')}
         icon={<BookOpenIcon />}
         closeMenu={closeMenu}
+        // Wiki を開いたままメニュー側を見ているときも Wiki 側へ戻す
+        onNavigate={() => setTab(CONTENT_TAB)}
       />
 
       {commandAvailable && (
@@ -292,11 +311,11 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
             variant='secondary'
             aria-label={t('side_nav_tabs')}
             className='flex min-h-0 flex-1 flex-col'
-            panelClassName='min-h-0 flex-1 overflow-y-auto pt-2'
+            panelClassName='overflow-y-auto pt-2'
             selectedKey={tab}
             onSelectionChange={setTab}
-            // 差し込み側(ツリーの展開状態など)をタブの切り替えで失わせない
-            forceMount
+            // 差し込み側(ツリーの展開状態など)はタブを切り替えても描画したまま残る
+            slide
             items={[
               { id: MENU_TAB, label: t('side_nav_menu'), content: items },
               { id: CONTENT_TAB, label: contentLabel, content: <SideNavSlot /> },
