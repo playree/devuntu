@@ -1,6 +1,8 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action/action-server'
+import { envu } from '@/lib/env-util'
+import { scUUID } from '@/lib/schema/schema'
 import {
   scCreateWikiPage,
   scCreateWikiTag,
@@ -13,7 +15,9 @@ import {
   deleteWikiPage as deleteWikiPageCore,
   getWikiTree,
   moveWikiPage as moveWikiPageCore,
+  restoreWikiPageRevision as restoreWikiPageRevisionCore,
 } from '@/lib/wiki/wiki-page'
+import { getWikiPageRevisionContents, listDeletedWikiPages, listWikiPageRevisions } from '@/lib/wiki/wiki-revision'
 import { getWikiSpaceByKeyForManage } from '@/lib/wiki/wiki-space'
 import { createWikiTag as createWikiTagCore, listWikiTags } from '@/lib/wiki/wiki-tag'
 
@@ -73,3 +77,35 @@ export const createWikiTag = safeAuthAction
   .action(
     async ({ ctx: { user }, parsedInput: { spaceId, ...input } }) => await createWikiTagCore(user, spaceId, input),
   )
+
+/** ページの版の一覧(本文なし、新しい順)と保持期間(日)。削除済みのページも引ける。`id` はページ ID */
+export const getWikiPageRevisions = safeAuthAction
+  .metadata({ actionName: 'getWikiPageRevisions', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => ({
+    revisions: await listWikiPageRevisions(user, id),
+    retentionDays: envu.server.WIKI_REVISION_RETENTION_DAYS,
+  }))
+export type GetWikiPageRevisionsReturnType = Awaited<ReturnType<typeof getWikiPageRevisions>>['data']
+
+/** 版の本文と、差分の比較元になる1つ前の版の本文。`id` は版 ID */
+export const getWikiPageRevisionDiff = safeAuthAction
+  .metadata({ actionName: 'getWikiPageRevisionDiff', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => getWikiPageRevisionContents(user, id))
+
+/** 削除済みのページ(最後に削除された版)と保持期間(日)。`id` はスペース ID */
+export const getDeletedWikiPages = safeAuthAction
+  .metadata({ actionName: 'getDeletedWikiPages', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => ({
+    pages: await listDeletedWikiPages(user, id),
+    retentionDays: envu.server.WIKI_REVISION_RETENTION_DAYS,
+  }))
+export type GetDeletedWikiPagesReturnType = Awaited<ReturnType<typeof getDeletedWikiPages>>['data']
+
+/** 版の内容へ戻す。存在するページは本文系だけ、削除済みのページは作り直す。`id` は版 ID */
+export const restoreWikiPageRevision = safeAuthAction
+  .metadata({ actionName: 'restoreWikiPageRevision', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => restoreWikiPageRevisionCore(user, WEB, id))

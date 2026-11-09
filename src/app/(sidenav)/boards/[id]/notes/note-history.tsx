@@ -7,6 +7,7 @@ import { PanelSkeleton } from '@/components/general/panel'
 import { ArrowUturnLeftIcon, ClockIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { TextDiffView } from '@/components/text-diff-view'
+import { UpdatedBy } from '@/components/updated-by'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { ticketShortPath } from '@/lib/board/ticket-id'
 import { useConfirmAction } from '@/lib/use-confirm-action'
@@ -14,7 +15,6 @@ import { useLocale } from '@/locale/client'
 import { cn } from '@heroui/react'
 import Link from 'next/link'
 import { FC, ReactNode, useState } from 'react'
-import { NoteUpdatedBy } from './note-updated-by'
 import { getBoardNoteRevisions, type GetBoardNoteRevisionsReturnType, restoreBoardNoteRevision } from './server'
 
 export type HistoryTarget = { noteId: string; name: string }
@@ -136,7 +136,7 @@ export const NoteHistoryModal: FC<{
                   onClick={() => setSelected(index)}
                 >
                   <div className='text-sm font-medium'>{t(`board_note_action_${rev.action}`)}</div>
-                  <NoteUpdatedBy name={rev.actorName} isAgent={rev.actorIsAgent} via={rev.via} at={rev.createdAt} />
+                  <UpdatedBy name={rev.actorName} isAgent={rev.actorIsAgent} via={rev.via} at={rev.createdAt} />
                 </button>
               </li>
             ))}

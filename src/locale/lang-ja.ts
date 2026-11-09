@@ -649,6 +649,7 @@ export const ja: DefaultLocaleItems = {
   wiki_add_space: 'スペースを作成',
   wiki_child_count: '子 ${count}',
   wiki_child_pages: '子ページ',
+  wiki_deleted_pages: '削除済みのページ',
   wiki_move: '移動',
   wiki_move_page: 'ページを移動',
   wiki_page_ref: 'ページの指定',
@@ -661,6 +662,15 @@ export const ja: DefaultLocaleItems = {
   wiki_position_first: '先頭',
   wiki_position_last: '末尾',
   wiki_reorder_mode: '並べ替え',
+  wiki_restore_this: 'この版に戻す',
+  wiki_revision_action_created: '作成',
+  wiki_revision_action_deleted: '削除',
+  wiki_revision_action_moved: '移動',
+  wiki_revision_action_restored: '復元',
+  wiki_revision_action_updated: '更新',
+  wiki_revision_before_retention: '保持期間より前',
+  wiki_revision_parent: '親ページ',
+  wiki_revision_parent_missing: '(削除されたページ)',
   wiki_role_editor: '編集者',
   wiki_role_viewer: '閲覧者',
   wiki_search: '検索',
@@ -772,6 +782,9 @@ export const ja: DefaultLocaleItems = {
   msg_confirm_delete_wiki_page_with_children: '${target} を削除します。配下の ${count} ページもまとめて削除されます。',
   msg_confirm_deletion: '${target} を削除します。',
   msg_confirm_disable_share: '共有を無効にすると、現在の共有URLは無効になります。よろしいですか？',
+  msg_confirm_restore_deleted_wiki_page: '${target} を復元します。元の親ページが無い場合は、スペース直下に戻ります。',
+  msg_confirm_restore_wiki_page:
+    '${target} のタイトル・本文・タグを、この版の内容に戻します。ページの位置は変わりません。',
   msg_confirm_revoke_consent:
     '許可を取り消すと、発行済みのトークンも無効になります。このアプリを利用するには、あらためて許可が必要です。',
   msg_confirm_rotate_token:
@@ -830,6 +843,7 @@ export const ja: DefaultLocaleItems = {
   msg_no_approvable_agent: '承認者に設定されているエージェントがありません。',
   msg_no_boards: '参加しているボードがありません。',
   msg_no_command_runs: 'リモート実行の履歴はありません。',
+  msg_no_deleted_wiki_pages: '削除済みのページはありません。',
   msg_no_due_soon_tickets: '期限切れ・期限間近のチケットはありません。',
   msg_no_mentions: '自分宛てのメンションはありません。',
   msg_no_recent_activity: '更新されたチケットはありません。',
@@ -849,6 +863,7 @@ export const ja: DefaultLocaleItems = {
   msg_no_wiki_boards: '割り当てられたボードはありません。',
   msg_no_wiki_groups: '割り当てられたグループはありません。',
   msg_no_wiki_pages: 'ページはまだありません。',
+  msg_no_wiki_revisions: '履歴はありません。',
   msg_no_wiki_search_results: '一致するページはありません。',
   msg_no_wiki_spaces: '閲覧できるスペースはありません。',
   msg_not_allowed_domain_in_google:
@@ -883,12 +898,18 @@ export const ja: DefaultLocaleItems = {
   msg_user_not_exist: 'ユーザーが存在しません。',
   msg_wiki_board_assign:
     'ボードのメンバー(直接・グループ経由)が、選んだロールでこのスペースを使えます。割り当てられるのは、あなたが参加しているボードです。',
+  msg_wiki_deleted_pages_hint:
+    '削除したページを復元できるのは、削除から ${days} 日のあいだだけです。配下ごと削除したページは1ページずつ復元します。',
+  msg_wiki_deleted_revision: 'この版で削除されました。この版に戻すと、削除前の内容でページを作り直します。',
   msg_wiki_manage_only:
     'このスペースに割り当てられていないため、設定だけを変更できます。ページを読むには、自分を割り当ててください。',
+  msg_wiki_no_revision_change: '前の版からタイトル・本文・タグの変更はありません。',
   msg_wiki_page_conflict: '他の人が先に更新しました。編集中の内容を控えてから、開き直して編集してください。',
   msg_wiki_page_has_children: '子ページがあるため削除できません。配下ごと削除してください。',
   msg_wiki_page_invalid_parent: 'そのページの下には移動できません(自分自身・子孫・別のスペースは選べません)。',
   msg_wiki_page_too_deep: '階層が深すぎます(10階層まで)。',
+  msg_wiki_revision_retention:
+    '版は最後の保存から ${days} 日残ります。それより古い版は、保持期間より前の状態として最新の1版だけが残ります。続けて保存した分は1つの版にまとまります。',
   msg_wiki_role_note:
     '閲覧者は読むだけ、編集者はページの作成・編集・移動・削除、owner は設定も変更できます。owner は1人以上必要です。',
   msg_wiki_search_hint:

@@ -129,6 +129,28 @@ export const shouldMergeWikiRevision = (
   latest.ticketId === next.ticketId &&
   now.getTime() - latest.createdAt.getTime() <= mergeMinutes * 60_000
 
+/**
+ * 保持期間の掃除で消す版の id。`expired` は保持期限より古い版を新しい順(updatedAt, id の降順)に並べたもの。
+ * - 存在するページ: 最新の1版を基準版として残す。版は変更後の全文なので、一律に消すと
+ *   しばらく編集していないページを編集した直後に編集前へ戻せなくなるため
+ * - 削除済みのページ: すべて消す
+ */
+export const pickExpiredWikiRevisionIds = (
+  expired: readonly { id: string; pageId: string }[],
+  alivePageIds: ReadonlySet<string>,
+): string[] => {
+  const kept = new Set<string>()
+  const ids: string[] = []
+  for (const { id, pageId } of expired) {
+    if (alivePageIds.has(pageId) && !kept.has(pageId)) {
+      kept.add(pageId)
+    } else {
+      ids.push(id)
+    }
+  }
+  return ids
+}
+
 /** ページの指定(`KEY/番号`) */
 export const wikiPageRef = ({ key, number }: { key: string; number: number }): string => `${key}/${number}`
 

@@ -5,7 +5,7 @@ import { FlexCol } from '@/components/general/flex'
 import { useModalState } from '@/components/general/modal'
 import { NoticePanel } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
-import { BookOpenIcon, Cog6ToothIcon, DocumentPlusIcon } from '@/components/icon'
+import { BookOpenIcon, Cog6ToothIcon, DocumentPlusIcon, TrashIcon } from '@/components/icon'
 import { ReloadButton } from '@/components/reload-button'
 import { WikiRoleChip, WikiVisibilityChip } from '@/components/wiki-chip'
 import { useLocale } from '@/locale/client'
@@ -13,6 +13,7 @@ import { ButtonGroup } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
 import { ChildPages } from './child-pages'
+import { DeletedPagesModal } from './deleted-pages'
 import { CreatePageModal } from './page-modals'
 import { useWikiSpace } from './space-context'
 
@@ -22,6 +23,7 @@ export const WikiSpaceTopClient: FC = () => {
   const router = useRouter()
   const { space, access, tree, reloadSpace } = useWikiSpace()
   const createModalState = useModalState()
+  const deletedModalState = useModalState()
 
   return (
     <FlexCol>
@@ -34,6 +36,16 @@ export const WikiSpaceTopClient: FC = () => {
             onPress={() => createModalState.open()}
           />
         )}
+        {access.canView && (
+          <MultiButton
+            isIconOnly
+            tooltip={t('wiki_deleted_pages')}
+            icon={<TrashIcon />}
+            onPress={() => deletedModalState.open()}
+          >
+            {access.canWrite && <ButtonGroup.Separator />}
+          </MultiButton>
+        )}
         {access.canManage && (
           <MultiButton
             isIconOnly
@@ -41,10 +53,10 @@ export const WikiSpaceTopClient: FC = () => {
             icon={<Cog6ToothIcon />}
             onPress={() => router.push(`/wiki/${space.key}/settings`)}
           >
-            {access.canWrite && <ButtonGroup.Separator />}
+            {(access.canWrite || access.canView) && <ButtonGroup.Separator />}
           </MultiButton>
         )}
-        <ReloadButton onReload={reloadSpace} hasSeparator={access.canWrite || access.canManage} />
+        <ReloadButton onReload={reloadSpace} hasSeparator={access.canView || access.canManage} />
       </ContentHeader>
 
       {space.archived && <NoticePanel status='warning'>{t('msg_wiki_space_archived')}</NoticePanel>}
@@ -65,6 +77,7 @@ export const WikiSpaceTopClient: FC = () => {
       )}
 
       <CreatePageModal state={createModalState} reload={reloadSpace} key={createModalState.key} parent={null} />
+      {access.canView && <DeletedPagesModal state={deletedModalState} key={deletedModalState.key} />}
     </FlexCol>
   )
 }
