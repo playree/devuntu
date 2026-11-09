@@ -84,6 +84,7 @@ export const WikiSpacesClient: FC<{ keyword: string }> = ({ keyword }) => {
       ) : (
         <MultiTable
           aria-label='wiki space list'
+          isSmart
           pagingList={list}
           emptyContent={t('msg_no_wiki_spaces')}
           columns={[
