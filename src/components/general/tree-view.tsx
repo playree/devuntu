@@ -22,7 +22,7 @@ export type TreeViewItem = {
 export type TreeViewItemPlace = { index: number; siblingCount: number }
 
 const rowStyles = tv({
-  base: 'flex min-h-8 items-center gap-0.5 rounded-lg pr-1 text-sm',
+  base: 'flex min-h-6 items-center gap-0.5 rounded-lg pr-1 text-sm',
   variants: {
     isSelected: {
       true: 'bg-accent-soft text-accent-soft-foreground font-semibold',
@@ -154,13 +154,13 @@ const TreeLevel: FC<{
                   ref={isSelected ? selectedRef : undefined}
                   aria-current={isSelected ? 'page' : undefined}
                   title={item.label}
-                  className='min-w-0 flex-1 truncate py-1'
+                  className='min-w-0 flex-1 truncate py-0.5'
                   onClick={onNavigate}
                 >
                   {item.label}
                 </Link>
               ) : (
-                <span title={item.label} className='min-w-0 flex-1 truncate py-1'>
+                <span title={item.label} className='min-w-0 flex-1 truncate py-0.5'>
                   {item.label}
                 </span>
               )}
