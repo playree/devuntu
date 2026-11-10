@@ -473,8 +473,13 @@ describe('ボードノートの上限と保持期間', () => {
   })
 })
 
-describe('Wiki の版の保持期間・上限・まとめる時間', () => {
-  const KEYS = ['WIKI_REVISION_RETENTION_DAYS', 'WIKI_REVISION_MAX_PER_PAGE', 'WIKI_REVISION_MERGE_MINUTES'] as const
+describe('Wiki の版の保持期間・上限・まとめる時間・残す直近の版の数', () => {
+  const KEYS = [
+    'WIKI_REVISION_RETENTION_DAYS',
+    'WIKI_REVISION_MAX_PER_PAGE',
+    'WIKI_REVISION_MERGE_MINUTES',
+    'WIKI_REVISION_KEEP_RECENT',
+  ] as const
   KEYS.forEach(restoreEnv)
 
   it('未設定なら既定値', () => {
@@ -482,6 +487,7 @@ describe('Wiki の版の保持期間・上限・まとめる時間', () => {
     expect(envu.server.WIKI_REVISION_RETENTION_DAYS).toBe(7)
     expect(envu.server.WIKI_REVISION_MAX_PER_PAGE).toBe(50)
     expect(envu.server.WIKI_REVISION_MERGE_MINUTES).toBe(10)
+    expect(envu.server.WIKI_REVISION_KEEP_RECENT).toBe(2)
   })
 
   it('設定した値を返す', () => {
@@ -489,9 +495,11 @@ describe('Wiki の版の保持期間・上限・まとめる時間', () => {
     KEYS.forEach((key) => expect(envu.server[key]).toBe(3))
   })
 
-  it('まとめる時間だけは 0(まとめない)を許す', () => {
+  it('まとめる時間と残す直近の版の数は 0 を許す', () => {
     process.env.WIKI_REVISION_MERGE_MINUTES = '0'
     expect(envu.server.WIKI_REVISION_MERGE_MINUTES).toBe(0)
+    process.env.WIKI_REVISION_KEEP_RECENT = '0'
+    expect(envu.server.WIKI_REVISION_KEEP_RECENT).toBe(0)
     process.env.WIKI_REVISION_RETENTION_DAYS = '0'
     expect(() => envu.server.WIKI_REVISION_RETENTION_DAYS).toThrow()
     process.env.WIKI_REVISION_MAX_PER_PAGE = '0'

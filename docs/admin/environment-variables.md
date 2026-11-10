@@ -214,11 +214,16 @@ updated: 2026-11-07
 | `WIKI_REVISION_RETENTION_DAYS` | Wiki ページの変更履歴(版)を残す期間(日)               |      | `7`        |
 | `WIKI_REVISION_MAX_PER_PAGE`   | Wiki ページ1件あたりに残す版の数                      |      | `50`       |
 | `WIKI_REVISION_MERGE_MINUTES`  | 同じ人が続けて保存したときに1つの版へまとめる時間(分) |      | `10`       |
+| `WIKI_REVISION_KEEP_RECENT`    | 最新の版の他に、保持期間を過ぎても残す直近の版の数    |      | `2`        |
 
-- `WIKI_REVISION_RETENTION_DAYS` と `WIKI_REVISION_MAX_PER_PAGE` は 1 以上、`WIKI_REVISION_MERGE_MINUTES` は 0 以上の整数
+- `WIKI_REVISION_RETENTION_DAYS` と `WIKI_REVISION_MAX_PER_PAGE` は 1 以上、`WIKI_REVISION_MERGE_MINUTES` と `WIKI_REVISION_KEEP_RECENT` は 0 以上の整数
 - 版の数を超えた古い版は、書き込みのたびに消える
 - 保持期間を過ぎた版は[自動メンテナンス](operations.md#自動メンテナンス)で消す。期間は最後の保存(版をまとめたときは最後に保存した時刻)から数える
-  - ページが残っていれば、期間を過ぎた版のうち最新の1版は「保持期間より前の状態」として残す。しばらく編集していないページを編集した直後でも、編集前へ戻せる
+  - ページが残っていれば、最新の版(いまの内容)と直近の `WIKI_REVISION_KEEP_RECENT` 版(既定2版)は期間を過ぎても残す。
+    しばらく編集していないページでも、最近の数回分の変更を見て戻せる
+  - あわせて、期間を過ぎた版のうち最新の1版は「保持期間より前の状態」として残す。期間内に何度も編集したページでも、期間より前の時点へ戻せる
+  - 1ページあたりの版の数(`WIKI_REVISION_MAX_PER_PAGE`)の上限が優先する。`WIKI_REVISION_KEEP_RECENT` を上限以上にしても、上限を超えた版は書き込み時に消える
+  - `WIKI_REVISION_KEEP_RECENT` を `0` にすると、最新の版を除いた直近の版は期間どおりに消える(期間を過ぎた版のうち最新の1版は残る)
   - 削除したページは期間を過ぎた版をすべて消す。**削除したページを復元できるのは、削除から保持期間のあいだだけ**
 - 続けて保存した分をまとめるのは、同じ人が同じ経路(画面 / MCP)・同じチケットで、最初の保存からこの時間内に保存した場合だけ。
   作成・移動・削除・復元はまとめない。`0` にするとまとめず、保存のたびに版を作る

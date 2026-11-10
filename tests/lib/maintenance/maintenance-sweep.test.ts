@@ -41,7 +41,7 @@ const COMMAND_KEEP = 50
 const TICKET_ACTIVITY_DAYS = 60
 const BOARD_NOTE_REVISION_DAYS = 90
 // 版の保持期間はテストごとに変える(既定値の 7 は env-util.test.ts で確かめている)
-const wiki = { retentionDays: 7 }
+const wiki = { retentionDays: 7, keepRecent: 2 }
 
 vi.mock('@/lib/env-util', () => ({
   envu: {
@@ -67,6 +67,9 @@ vi.mock('@/lib/env-util', () => ({
       get WIKI_REVISION_RETENTION_DAYS() {
         return wiki.retentionDays
       },
+      get WIKI_REVISION_KEEP_RECENT() {
+        return wiki.keepRecent
+      },
     },
   },
 }))
@@ -85,7 +88,7 @@ vi.mock('@/lib/prisma', async () =>
     gitCheckSuite: ['deleteMany'],
     ticketActivity: ['deleteMany'],
     boardNoteRevision: ['deleteMany'],
-    wikiPageRevision: ['findMany', 'deleteMany'],
+    wikiPageRevision: ['findMany', 'deleteMany', 'groupBy'],
     wikiPage: ['findMany'],
     ticketDueReminder: ['deleteMany'],
   }),
@@ -118,7 +121,9 @@ beforeEach(() => {
     vi.mocked(model.deleteMany).mockResolvedValue({ count: 0 })
   }
   wiki.retentionDays = 7
+  wiki.keepRecent = 2
   vi.mocked(prisma.wikiPageRevision.findMany).mockResolvedValue([] as never)
+  vi.mocked(prisma.wikiPageRevision.groupBy).mockResolvedValue([] as never)
   vi.mocked(prisma.wikiPage.findMany).mockResolvedValue([] as never)
   vi.mocked(prisma.agentRunner.findMany).mockResolvedValue([] as never)
   vi.mocked(prisma.agentRun.findMany).mockResolvedValue([] as never)
@@ -344,22 +349,56 @@ describe('sweepWikiPageRevisions', () => {
     })
   })
 
-  it('存在するページは期限より古い版のうち最新の1版(基準版)を残し、削除済みのページは期限より古い版をすべて消す', async () => {
-    const count = await sweepWikiPageRevisions(now)
+  it('存在するページの期限内の版を数える', async () => {
+    await sweepWikiPageRevisions(now)
 
     expect(vi.mocked(prisma.wikiPage.findMany).mock.calls[0][0]).toEqual({
       where: { id: { in: ['p1', 'p2'] } },
       select: { id: true },
     })
-    expect(deletedIds()).toEqual(['p2-r2', 'p1-r2', 'p2-r1', 'p1-r1'])
-    expect(deletedIds(), '基準版は残す').not.toContain('p1-r3')
-    expect(count).toBe(4)
+    expect(vi.mocked(prisma.wikiPageRevision.groupBy).mock.calls[0][0]).toEqual({
+      by: ['pageId'],
+      where: { pageId: { in: ['p1'] }, updatedAt: { gte: msBefore(now, 7 * DAY_MS) } },
+      _count: { _all: true },
+    })
   })
 
-  it('基準版しか無ければ何も消さない', async () => {
+  it('期限内の版が無い存在ページは最新の版と直近2版を残し、削除済みのページは期限より古い版をすべて消す', async () => {
+    const count = await sweepWikiPageRevisions(now)
+    expect(deletedIds()).toEqual(['p2-r2', 'p2-r1'])
+    expect(count).toBe(2)
+  })
+
+  it('期限内の版がある存在ページは、合わせて最新の版と直近の版の数になるまで期限より古い版を残す', async () => {
+    vi.mocked(prisma.wikiPageRevision.groupBy).mockResolvedValue([{ pageId: 'p1', _count: { _all: 1 } }] as never)
+    await sweepWikiPageRevisions(now)
+    expect(deletedIds()).toEqual(['p2-r2', 'p2-r1', 'p1-r1'])
+  })
+
+  it('期限内の版が十分あっても、期限より古い版のうち最新の1版(基準版)は残す', async () => {
+    vi.mocked(prisma.wikiPageRevision.groupBy).mockResolvedValue([{ pageId: 'p1', _count: { _all: 5 } }] as never)
+    await sweepWikiPageRevisions(now)
+    expect(deletedIds()).toEqual(['p2-r2', 'p1-r2', 'p2-r1', 'p1-r1'])
+  })
+
+  it('WIKI_REVISION_KEEP_RECENT で残す版の数を変えられる', async () => {
+    wiki.keepRecent = 0
+    await sweepWikiPageRevisions(now)
+    expect(deletedIds(), '0 なら基準版だけ残す').toEqual(['p2-r2', 'p1-r2', 'p2-r1', 'p1-r1'])
+  })
+
+  it('期限より古い版が1版だけの存在ページは、期限内の版を数えずに残す', async () => {
     vi.mocked(prisma.wikiPageRevision.findMany).mockResolvedValue([{ id: 'p1-r3', pageId: 'p1' }] as never)
     expect(await sweepWikiPageRevisions(now)).toBe(0)
+    expect(prisma.wikiPageRevision.groupBy).not.toHaveBeenCalled()
     expect(prisma.wikiPageRevision.deleteMany).not.toHaveBeenCalled()
+  })
+
+  it('存在するページが無ければ期限内の版を数えない', async () => {
+    vi.mocked(prisma.wikiPage.findMany).mockResolvedValue([] as never)
+    await sweepWikiPageRevisions(now)
+    expect(prisma.wikiPageRevision.groupBy).not.toHaveBeenCalled()
+    expect(deletedIds()).toEqual(EXPIRED.map(({ id }) => id))
   })
 
   it('期限より古い版が無ければページを引かない', async () => {

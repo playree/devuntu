@@ -148,23 +148,48 @@ describe('parseWikiSearchParams', () => {
 
 describe('pickExpiredWikiRevisionIds', () => {
   const EXPIRED = [
-    { id: 'a3', pageId: 'a' },
+    { id: 'a4', pageId: 'a' },
     { id: 'b2', pageId: 'b' },
+    { id: 'a3', pageId: 'a' },
     { id: 'a2', pageId: 'a' },
     { id: 'b1', pageId: 'b' },
     { id: 'a1', pageId: 'a' },
   ]
+  const NO_RECENT = new Map<string, number>()
 
-  it('存在するページは最新の1版(基準版)だけを残す', () => {
-    expect(pickExpiredWikiRevisionIds(EXPIRED, new Set(['a', 'b']))).toEqual(['a2', 'b1', 'a1'])
+  it('期限内の版が無い存在ページは、最新の版と直近の keepRecent 版を残す', () => {
+    expect(pickExpiredWikiRevisionIds(EXPIRED, new Set(['a', 'b']), NO_RECENT, 2)).toEqual(['a1'])
+  })
+
+  it('期限内の版がある存在ページは、合わせて 1 + keepRecent 版になるまで期限より古い版を残す', () => {
+    expect(pickExpiredWikiRevisionIds(EXPIRED, new Set(['a']), new Map([['a', 2]]), 2)).toEqual([
+      'b2',
+      'a3',
+      'a2',
+      'b1',
+      'a1',
+    ])
+  })
+
+  it('期限内の版が 1 + keepRecent 版以上でも、期限より古い版のうち最新の1版(基準版)は残す', () => {
+    expect(pickExpiredWikiRevisionIds(EXPIRED, new Set(['a']), new Map([['a', 10]]), 2)).toEqual([
+      'b2',
+      'a3',
+      'a2',
+      'b1',
+      'a1',
+    ])
+  })
+
+  it('keepRecent が 0 なら基準版だけを残す', () => {
+    expect(pickExpiredWikiRevisionIds(EXPIRED, new Set(['a', 'b']), NO_RECENT, 0)).toEqual(['a3', 'a2', 'b1', 'a1'])
   })
 
   it('削除済みのページは期限より古い版をすべて消す', () => {
-    expect(pickExpiredWikiRevisionIds(EXPIRED, new Set(['a']))).toEqual(['b2', 'a2', 'b1', 'a1'])
-    expect(pickExpiredWikiRevisionIds(EXPIRED, new Set())).toEqual(EXPIRED.map(({ id }) => id))
+    expect(pickExpiredWikiRevisionIds(EXPIRED, new Set(), new Map([['a', 0]]), 2)).toEqual(EXPIRED.map(({ id }) => id))
   })
 
-  it('期限より古い版が1つだけの存在ページは何も消さない', () => {
-    expect(pickExpiredWikiRevisionIds([{ id: 'a1', pageId: 'a' }], new Set(['a']))).toEqual([])
+  it('期限より古い版が残す数以下の存在ページは何も消さない', () => {
+    expect(pickExpiredWikiRevisionIds([{ id: 'a1', pageId: 'a' }], new Set(['a']), NO_RECENT, 2)).toEqual([])
   })
 })

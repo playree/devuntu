@@ -78,13 +78,14 @@ export const createWikiTag = safeAuthAction
     async ({ ctx: { user }, parsedInput: { spaceId, ...input } }) => await createWikiTagCore(user, spaceId, input),
   )
 
-/** ページの版の一覧(本文なし、新しい順)と保持期間(日)。削除済みのページも引ける。`id` はページ ID */
+/** ページの版の一覧(本文なし、新しい順)と保持期間(日)・期限を過ぎても残す直近の版の数。削除済みのページも引ける。`id` はページ ID */
 export const getWikiPageRevisions = safeAuthAction
   .metadata({ actionName: 'getWikiPageRevisions', role: 'user' })
   .inputSchema(scUUID)
   .action(async ({ ctx: { user }, parsedInput: { id } }) => ({
     revisions: await listWikiPageRevisions(user, id),
     retentionDays: envu.server.WIKI_REVISION_RETENTION_DAYS,
+    keepRecent: envu.server.WIKI_REVISION_KEEP_RECENT,
   }))
 export type GetWikiPageRevisionsReturnType = Awaited<ReturnType<typeof getWikiPageRevisions>>['data']
 

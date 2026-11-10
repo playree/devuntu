@@ -913,7 +913,7 @@ export const ja: DefaultLocaleItems = {
   msg_wiki_page_too_deep: '階層が深すぎます(10階層まで)。',
   msg_wiki_restore_unchanged: 'いまの内容と同じため、変更はありません。',
   msg_wiki_revision_retention:
-    '版は最後の保存から ${days} 日残ります。それより古い版は、保持期間より前の状態として最新の1版だけが残ります。続けて保存した分は1つの版にまとまります。',
+    '版は最後の保存から ${days} 日残ります。それより古い版も、ページが残っていれば最新の版と直近の ${keep} 版、保持期間より前の状態を表す1版は残ります。続けて保存した分は1つの版にまとまります。',
   msg_wiki_role_note:
     '閲覧者は読むだけ、編集者はページの作成・編集・移動・削除、owner は設定も変更できます。owner は1人以上必要です。',
   msg_wiki_search_hint:

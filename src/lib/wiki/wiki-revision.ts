@@ -4,6 +4,7 @@
  * 書き込みはページの書き込みと同じトランザクションで呼ぶ。同じ人が続けて保存した分は `WIKI_REVISION_MERGE_MINUTES` 以内なら
  * 最新の版へまとめ、1ページあたり `WIKI_REVISION_MAX_PER_PAGE` を超えた古い版を消す。
  * 保持期間(`WIKI_REVISION_RETENTION_DAYS`)を過ぎた版は自動メンテナンス(`sweepWikiPageRevisions`)で消す。
+ * ただし存在するページの最新の版と直近の `WIKI_REVISION_KEEP_RECENT` 版は残す。
  * 復元は `wiki-page.ts` の `restoreWikiPageRevision`。
  */
 
@@ -102,7 +103,7 @@ export type WikiPageRevisionSummary = Omit<RevisionSummaryRow, 'actor' | 'ticket
   actorIsAgent: boolean
   /** 書いたときに対応していたチケットの表示ID */
   ticketDisplayId: string | null
-  /** 最後の保存が保持期限より古い(保持期間より前の状態を残した基準版) */
+  /** 最後の保存が保持期限より古い(基準版、または期限を過ぎても残す最新・直近の版) */
   beforeRetention: boolean
 }
 
