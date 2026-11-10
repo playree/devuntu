@@ -917,7 +917,7 @@ Please copy and use the connection information above.
   msg_wiki_page_too_deep: 'Pages can be nested at most 10 levels deep.',
   msg_wiki_restore_unchanged: 'No changes. The content is the same as the current one.',
   msg_wiki_revision_retention:
-    'Versions are kept for ${days} days after the last save. Of older versions, only the latest one is kept as the state before the retention period. Consecutive saves are combined into one version.',
+    'Versions are kept for ${days} days after the last save. While the page exists, older versions are still kept if they are the latest version, one of the ${keep} before it, or the one showing the state before the retention period. However, only the newest ${max} versions are kept per page. Consecutive saves are combined into one version.',
   msg_wiki_role_note:
     'Viewers can read, editors can create, edit, move and delete pages, and owners can also change settings. At least one owner is required.',
   msg_wiki_search_hint: 'Enter keywords or choose tags. Words of two characters or fewer may take longer to search.',

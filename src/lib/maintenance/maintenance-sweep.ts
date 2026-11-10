@@ -188,14 +188,16 @@ export const sweepBoardNoteRevisions = async (now: Date): Promise<number> =>
 
 /**
  * Wiki ページの版。最後の保存(updatedAt)が保持期間(`WIKI_REVISION_RETENTION_DAYS`)より古いものを消す。
- * 存在するページは期限より古い版のうち最新の1版を基準版として残し、保持期間より前の時点へ常に戻せるようにする。
+ * 存在するページは最新の版と直近の `WIKI_REVISION_KEEP_RECENT` 版を期限より古くても残し、
+ * あわせて期限より古い版のうち最新の1版を基準版として残して、保持期間より前の時点へ常に戻せるようにする。
  * 削除済みのページは期限より古い版をすべて消すので、削除したページを復元できるのは保持期間のあいだだけになる。
  *
- * 基準版は作成から保持期間以上たっているので、書き込み側の連続保存のまとめ(最新の版の上書き)の対象にならない
+ * 残す版のうち期限より古いものは作成から保持期間以上たっているので、書き込み側の連続保存のまとめ(最新の版の上書き)の対象にならない
  */
 export const sweepWikiPageRevisions = async (now: Date): Promise<number> => {
+  const cutoff = wikiRevisionCutoff(now)
   const expired = await prisma.wikiPageRevision.findMany({
-    where: { updatedAt: { lt: wikiRevisionCutoff(now) } },
+    where: { updatedAt: { lt: cutoff } },
     select: { id: true, pageId: true },
     orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
   })
@@ -206,7 +208,27 @@ export const sweepWikiPageRevisions = async (now: Date): Promise<number> => {
     where: { id: { in: [...new Set(expired.map(({ pageId }) => pageId))] } },
     select: { id: true },
   })
-  const ids = pickExpiredWikiRevisionIds(expired, new Set(alive.map(({ id }) => id))).slice(0, MAINTENANCE_DELETE_BATCH)
+  const aliveIds = new Set(alive.map(({ id }) => id))
+  // 期限より古い版が1版だけのページはどのみち消さないので、期限内の版を数えるのは2版以上あるページに絞る
+  const expiredCounts = new Map<string, number>()
+  for (const { pageId } of expired) {
+    expiredCounts.set(pageId, (expiredCounts.get(pageId) ?? 0) + 1)
+  }
+  const countIds = [...aliveIds].filter((id) => (expiredCounts.get(id) ?? 0) > 1)
+  const recent =
+    countIds.length > 0
+      ? await prisma.wikiPageRevision.groupBy({
+          by: ['pageId'],
+          where: { pageId: { in: countIds }, updatedAt: { gte: cutoff } },
+          _count: { _all: true },
+        })
+      : []
+  const ids = pickExpiredWikiRevisionIds(
+    expired,
+    aliveIds,
+    new Map(recent.map(({ pageId, _count }) => [pageId, _count._all])),
+    envu.server.WIKI_REVISION_KEEP_RECENT,
+  ).slice(0, MAINTENANCE_DELETE_BATCH)
   if (ids.length === 0) {
     return 0
   }

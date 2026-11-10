@@ -205,7 +205,13 @@ export const WikiPageHistoryModal: FC<{
         <div className='text-muted text-sm'>{t('msg_no_wiki_revisions')}</div>
       ) : (
         <div className='space-y-3'>
-          <p className='text-muted text-xs'>{t('msg_wiki_revision_retention', { days: data?.retentionDays ?? '-' })}</p>
+          <p className='text-muted text-xs'>
+            {t('msg_wiki_revision_retention', {
+              days: data?.retentionDays ?? '-',
+              keep: data?.keepRecent ?? '-',
+              max: data?.maxPerPage ?? '-',
+            })}
+          </p>
           <div className='grid grid-cols-12 gap-3'>
             <ul className='col-span-12 max-h-48 space-y-1 overflow-y-auto md:col-span-4 md:max-h-[60vh]'>
               {revisions.map((rev, index) => (
