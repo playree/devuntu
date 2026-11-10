@@ -1,12 +1,11 @@
 'use client'
 
-import { PanelSkeleton } from '@/components/general/panel'
+import { PanelSkeleton, PanelSpinner } from '@/components/general/panel'
 import { SideNavPortal } from '@/components/general/side-nav-slot'
 import { BookOpenIcon } from '@/components/icon'
 import { NoAccessView } from '@/components/no-access-view'
 import { useActionData } from '@/lib/action/action-client'
 import { useLocale } from '@/locale/client'
-import { Spinner } from '@heroui/react'
 import { createContext, FC, ReactNode, useContext, useMemo } from 'react'
 import { WikiSideSpaces } from '../side-spaces'
 import { getWikiSpace, GetWikiSpaceReturnType } from './server'
@@ -55,9 +54,7 @@ export const WikiSpaceShell: FC<{ spaceKey: string; children: ReactNode }> = ({ 
     return (
       <>
         <SideNavPortal label={t('wiki')}>
-          <div className='flex justify-center py-4'>
-            <Spinner size='lg' />
-          </div>
+          <PanelSpinner />
         </SideNavPortal>
         <PanelSkeleton />
       </>

@@ -2,7 +2,7 @@
 
 import { MultiButton } from '@/components/general/button'
 import { DialogModal, useModalState } from '@/components/general/modal'
-import { PanelSkeleton } from '@/components/general/panel'
+import { PanelSpinner } from '@/components/general/panel'
 import { ArrowUturnLeftIcon, ClockIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { RevisionContentView, RevisionFieldChange } from '@/components/revision-diff'
@@ -18,6 +18,7 @@ import Link from 'next/link'
 import { FC, useState } from 'react'
 import {
   getWikiPageRevisionDiff,
+  type GetWikiPageRevisionDiffReturnType,
   getWikiPageRevisions,
   type GetWikiPageRevisionsReturnType,
   restoreWikiPageRevision,
@@ -38,25 +39,20 @@ const useParentLabel = () => {
       : (tree.find(({ id }) => id === parentId)?.title ?? t('wiki_revision_parent_missing'))
 }
 
-/**
- * 1つ前(古い側)の版との違い。本文は選んだときに引く。最初の版は本文をそのまま出す。
- * `isDeletion` は、いまページを消している削除の版(戻すと作り直す)
- */
-const RevisionDiff: FC<{ revision: Revision; previous: Revision | undefined; isDeletion: boolean }> = ({
-  revision,
-  previous,
-  isDeletion,
-}) => {
+type RevisionDiffProps = {
+  revision: Revision
+  previous: Revision | undefined
+  /** いまページを消している削除の版(戻すと作り直す) */
+  isDeletion: boolean
+}
+
+type RevisionDiffView = RevisionDiffProps & { data: NonNullable<GetWikiPageRevisionDiffReturnType> }
+
+/** 1つ前(古い側)の版との違い。最初の版は本文をそのまま出す */
+const RevisionDiffBody: FC<RevisionDiffView> = ({ revision, previous, isDeletion, data }) => {
   const { t } = useLocale()
   const parentLabel = useParentLabel()
-  const { data, isLoading } = useActionData(() => getWikiPageRevisionDiff({ id: revision.id }), { key: revision.id })
 
-  if (isLoading) {
-    return <PanelSkeleton />
-  }
-  if (!data) {
-    return null
-  }
   if (isDeletion) {
     return (
       <div className='space-y-2'>
@@ -104,6 +100,35 @@ const RevisionDiff: FC<{ revision: Revision; previous: Revision | undefined; isD
       ) : (
         <TextDiffView before={data.previousContent} after={data.content} />
       )}
+    </div>
+  )
+}
+
+/**
+ * 選んだ版の差分。本文は選んだときに引く。
+ * 取得中は直前の差分を薄く残してスピナーを重ね、版を選ぶたびに高さが変わらないようにする
+ */
+const RevisionDiffPane: FC<RevisionDiffProps> = (props) => {
+  const { data, isLoading } = useActionData(() => getWikiPageRevisionDiff({ id: props.revision.id }), {
+    key: props.revision.id,
+  })
+  const [shown, setShown] = useState<RevisionDiffView>()
+  if (!isLoading && shown?.data !== data) {
+    setShown(data && { ...props, data })
+  }
+
+  if (!isLoading) {
+    return data ? <RevisionDiffBody {...props} data={data} /> : null
+  }
+  if (!shown) {
+    return <PanelSpinner />
+  }
+  return (
+    <div className='relative min-h-20' aria-busy>
+      <div className='pointer-events-none opacity-50'>
+        <RevisionDiffBody {...shown} />
+      </div>
+      <PanelSpinner className='absolute inset-x-0 top-6 py-0' />
     </div>
   )
 }
@@ -160,7 +185,7 @@ export const WikiPageHistoryModal: FC<{
       title={{ text: `${t('history')}: ${target?.title ?? ''}`, icon: <ClockIcon /> }}
     >
       {isLoading ? (
-        <PanelSkeleton />
+        <PanelSpinner />
       ) : revisions.length === 0 || !revision ? (
         <div className='text-muted text-sm'>{t('msg_no_wiki_revisions')}</div>
       ) : (
@@ -211,8 +236,7 @@ export const WikiPageHistoryModal: FC<{
                   </MultiButton>
                 )}
               </div>
-              <RevisionDiff
-                key={revision.id}
+              <RevisionDiffPane
                 revision={revision}
                 previous={revisions.at(selected + 1)}
                 isDeletion={isDeletedPage && selected === 0}
