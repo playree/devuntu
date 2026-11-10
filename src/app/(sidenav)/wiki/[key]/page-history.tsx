@@ -39,6 +39,21 @@ const useParentLabel = () => {
       : (tree.find(({ id }) => id === parentId)?.title ?? t('wiki_revision_parent_missing'))
 }
 
+const RevisionNumber: FC<{ number: number }> = ({ number }) => (
+  <span className='text-muted font-mono text-xs'>v{number}</span>
+)
+
+/** 復元の版の戻し元。戻し元の版が消えていれば出さない */
+const RestoredFrom: FC<{ revisions: readonly Revision[]; id: string }> = ({ revisions, id }) => {
+  const { t } = useLocale()
+  const source = revisions.find((rev) => rev.id === id)
+  return source ? (
+    <span className='text-muted text-xs font-normal'>
+      {t('wiki_revision_restored_from', { version: source.number })}
+    </span>
+  ) : null
+}
+
 type RevisionDiffProps = {
   revision: Revision
   previous: Revision | undefined
@@ -204,7 +219,9 @@ export const WikiPageHistoryModal: FC<{
                     onClick={() => setSelected(index)}
                   >
                     <div className='flex flex-wrap items-center gap-2 text-sm font-medium'>
+                      <RevisionNumber number={rev.number} />
                       {t(`wiki_revision_action_${rev.action}`)}
+                      {rev.restoredFromId && <RestoredFrom revisions={revisions} id={rev.restoredFromId} />}
                       {rev.beforeRetention && (
                         <Chip color='warning' variant='soft' size='sm'>
                           <Chip.Label>{t('wiki_revision_before_retention')}</Chip.Label>
@@ -218,6 +235,7 @@ export const WikiPageHistoryModal: FC<{
             </ul>
             <div className='col-span-12 min-w-0 space-y-2 md:col-span-8'>
               <div className='flex flex-wrap items-center gap-2'>
+                <RevisionNumber number={revision.number} />
                 <span className='text-sm font-medium break-all'>{revision.title}</span>
                 {revision.ticketDisplayId && (
                   <Link className='text-accent text-xs' href={ticketShortPath(revision.ticketDisplayId)}>

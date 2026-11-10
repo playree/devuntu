@@ -58,6 +58,7 @@ const revision = (override: Partial<WriteWikiPageRevision> = {}): WriteWikiPageR
 /** 最新の版。既定は今回と同じ人・経路で 5 分前の updated(まとめる対象) */
 const latest = (override: Record<string, unknown> = {}) => ({
   id: 'r-latest',
+  number: 4,
   action: 'updated',
   actorId: 'u1',
   via: 'web',
@@ -101,6 +102,7 @@ describe('writeWikiPageRevision: 連続保存のまとめ', () => {
     expect(prisma.wikiPageRevision.update).not.toHaveBeenCalled()
     expect(vi.mocked(prisma.wikiPageRevision.create).mock.calls[0][0].data).toMatchObject({
       pageId: 'p1',
+      number: 5,
       action: 'updated',
       actorId: 'u1',
       ticketId: null,
@@ -110,15 +112,40 @@ describe('writeWikiPageRevision: 連続保存のまとめ', () => {
     })
   })
 
-  it('updated 以外は最新の版を引かずに新しい版を作る', async () => {
+  it('updated 以外はまとめずに新しい版を作る', async () => {
+    vi.mocked(prisma.wikiPageRevision.findFirst).mockResolvedValue(latest() as never)
     expect(await writeWikiPageRevision(prisma, revision({ action: 'moved' }), NOW)).toBe('created')
-    expect(prisma.wikiPageRevision.findFirst).not.toHaveBeenCalled()
+    expect(prisma.wikiPageRevision.update).not.toHaveBeenCalled()
   })
 
-  it('まとめる時間が 0 なら最新の版を引かない', async () => {
+  it('まとめる時間が 0 ならまとめない', async () => {
     settings.merge = 0
+    vi.mocked(prisma.wikiPageRevision.findFirst).mockResolvedValue(latest() as never)
     expect(await writeWikiPageRevision(prisma, revision(), NOW)).toBe('created')
-    expect(prisma.wikiPageRevision.findFirst).not.toHaveBeenCalled()
+    expect(prisma.wikiPageRevision.update).not.toHaveBeenCalled()
+  })
+})
+
+describe('writeWikiPageRevision: 版の番号', () => {
+  it('版が無ければ 1 から振る', async () => {
+    await writeWikiPageRevision(prisma, revision({ action: 'created' }), NOW)
+    expect(vi.mocked(prisma.wikiPageRevision.create).mock.calls[0][0].data).toMatchObject({ number: 1 })
+  })
+
+  it('updated 以外でも最新の版の番号に続ける', async () => {
+    vi.mocked(prisma.wikiPageRevision.findFirst).mockResolvedValue(latest({ number: 7 }) as never)
+    await writeWikiPageRevision(prisma, revision({ action: 'moved' }), NOW)
+    expect(vi.mocked(prisma.wikiPageRevision.findFirst).mock.calls[0][0]).toMatchObject({
+      where: { pageId: 'p1' },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    })
+    expect(vi.mocked(prisma.wikiPageRevision.create).mock.calls[0][0].data).toMatchObject({ number: 8 })
+  })
+
+  it('まとめたときは番号を変えない', async () => {
+    vi.mocked(prisma.wikiPageRevision.findFirst).mockResolvedValue(latest() as never)
+    await writeWikiPageRevision(prisma, revision(), NOW)
+    expect(vi.mocked(prisma.wikiPageRevision.update).mock.calls[0][0].data).not.toHaveProperty('number')
   })
 })
 
@@ -153,6 +180,7 @@ const summaryRow = (id: string, daysAgo: number, override: Record<string, unknow
   id,
   pageId: 'p1',
   pageNumber: 1,
+  number: 1,
   action: 'updated',
   parentId: null,
   title: 'タイトル',

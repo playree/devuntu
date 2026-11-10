@@ -248,6 +248,9 @@ model WikiPageRevision {
   /// 対象ページの番号(削除後も `KEY/番号` を出せるように持つ)
   pageNumber Int
 
+  /// ページ内の版の通し番号(1 始まり)。まとめても変わらず、古い版が消えても振り直さない
+  number Int
+
   action WikiPageRevisionAction
 
   // スナップショット
@@ -276,6 +279,7 @@ model WikiPageRevision {
   /// 最後に保存した時刻。まとめると進む。表示と保持期間の判定に使う
   updatedAt DateTime @default(now()) @updatedAt
 
+  @@unique([pageId, number])
   @@index([pageId, createdAt])
   @@index([spaceId, createdAt])
   // 保持期間の掃除で古い順に引く

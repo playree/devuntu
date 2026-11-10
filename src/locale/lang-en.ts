@@ -673,6 +673,7 @@ export const en: DefaultLocaleItems = {
   wiki_revision_before_retention: 'Before retention period',
   wiki_revision_parent: 'Parent page',
   wiki_revision_parent_missing: '(deleted page)',
+  wiki_revision_restored_from: 'from v${version}',
   wiki_role_editor: 'Editor',
   wiki_role_viewer: 'Viewer',
   wiki_search: 'Search',

@@ -678,6 +678,7 @@ export type LocaleItemBase =
   | 'wiki_revision_before_retention'
   | 'wiki_revision_parent'
   | 'wiki_revision_parent_missing'
+  | 'wiki_revision_restored_from'
   | 'wiki_role_editor'
   | 'wiki_role_viewer'
   | 'wiki_search'

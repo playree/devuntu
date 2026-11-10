@@ -672,6 +672,7 @@ export const ja: DefaultLocaleItems = {
   wiki_revision_before_retention: '保持期間より前',
   wiki_revision_parent: '親ページ',
   wiki_revision_parent_missing: '(削除されたページ)',
+  wiki_revision_restored_from: 'v${version} から',
   wiki_role_editor: '編集者',
   wiki_role_viewer: '閲覧者',
   wiki_search: '検索',
