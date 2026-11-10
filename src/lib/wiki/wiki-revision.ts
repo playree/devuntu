@@ -41,15 +41,12 @@ export const writeWikiPageRevision = async (
 ): Promise<'created' | 'merged'> => {
   const ticketId = revision.ticketId ?? null
   const mergeMinutes = envu.server.WIKI_REVISION_MERGE_MINUTES
-  // まとめる対象になりうるのは updated だけなので、それ以外では最新の版を引かない
-  const latest =
-    revision.action === 'updated' && mergeMinutes > 0
-      ? await tx.wikiPageRevision.findFirst({
-          where: { pageId: revision.pageId },
-          select: { id: true, action: true, actorId: true, via: true, ticketId: true, createdAt: true },
-          orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-        })
-      : null
+  // 版の番号を続けるため、まとめない操作でも最新の版を引く
+  const latest = await tx.wikiPageRevision.findFirst({
+    where: { pageId: revision.pageId },
+    select: { id: true, number: true, action: true, actorId: true, via: true, ticketId: true, createdAt: true },
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+  })
 
   if (
     latest &&
@@ -64,7 +61,9 @@ export const writeWikiPageRevision = async (
     return 'merged'
   }
 
-  await tx.wikiPageRevision.create({ data: { ...revision, ticketId, ...snapshot, createdAt: now, updatedAt: now } })
+  await tx.wikiPageRevision.create({
+    data: { ...revision, number: (latest?.number ?? 0) + 1, ticketId, ...snapshot, createdAt: now, updatedAt: now },
+  })
   const excess = await tx.wikiPageRevision.findMany({
     where: { pageId: revision.pageId },
     select: { id: true },
@@ -82,6 +81,7 @@ const REVISION_SUMMARY_SELECT = {
   id: true,
   pageId: true,
   pageNumber: true,
+  number: true,
   action: true,
   parentId: true,
   order: true,

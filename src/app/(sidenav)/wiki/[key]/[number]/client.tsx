@@ -6,7 +6,7 @@ import { FlexCol } from '@/components/general/flex'
 import { useModalState } from '@/components/general/modal'
 import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
-import { ArrowRightCircleIcon, BookOpenIcon, ClockIcon, DocumentPlusIcon, TrashIcon } from '@/components/icon'
+import { BookOpenIcon, ClockIcon, DocumentPlusIcon, FolderArrowRightIcon, TrashIcon } from '@/components/icon'
 import { NoAccessView } from '@/components/no-access-view'
 import { ReloadButton } from '@/components/reload-button'
 import { useActionData } from '@/lib/action/action-client'
@@ -14,6 +14,7 @@ import { wikiPageRef } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { Breadcrumbs, ButtonGroup } from '@heroui/react'
 import { FC } from 'react'
+import { tv } from 'tailwind-variants'
 import { ChildPages } from '../child-pages'
 import { WikiPageHistoryModal, type WikiHistoryTarget } from '../page-history'
 import { CreatePageModal, MovePageModal, useDeleteWikiPage } from '../page-modals'
@@ -23,22 +24,46 @@ import { getWikiPage, GetWikiPageReturnType } from './server'
 
 type PageDetail = NonNullable<GetWikiPageReturnType>
 
+/**
+ * HeroUI の項目は shrink-0 で、合計が溢れて隣のコピー欄へ重なるため、縮めて省略させる。
+ * 中の <a> も flex item なので min-w-0 が要る
+ */
+const crumbItem = tv({
+  base: 'shrink [&>a]:min-w-0 [&>svg]:shrink-0',
+  variants: {
+    kind: {
+      space: 'min-w-16', // アイコンの分、先祖より広く残す
+      ancestor: 'min-w-12', // 2文字程度の短い名前は省略しない
+      current: 'max-w-[60%] shrink-0', // 少し縮めるだけで1文字省略されるため、縮めずに上限で抑えて先祖側を縮める
+    },
+    /** スマホ幅では親以外の先祖を省く(ツリーから辿れる) */
+    isMiddle: { true: 'max-sm:hidden' },
+  },
+})
+
 /** パンくず。スペース > 先祖 > このページ。長い名前は幅で省略する */
 const WikiBreadcrumbs: FC<{ detail: PageDetail }> = ({ detail: { space, ancestors, page } }) => (
-  <Breadcrumbs className='min-w-0'>
-    <Breadcrumbs.Item href={`/wiki/${space.key}`}>
-      <span className='flex items-center gap-1'>
-        <BookOpenIcon width={16} />
+  <Breadcrumbs // 縮めきっても収まらないときは、現在のページ側を残して先頭(スペース側)を切る
+    className='min-w-0 justify-end overflow-hidden'
+  >
+    <Breadcrumbs.Item href={`/wiki/${space.key}`} className={crumbItem({ kind: 'space' })}>
+      <span className='flex min-w-0 items-center gap-1'>
+        <BookOpenIcon width={16} className='shrink-0' />
         <span className='max-w-32 truncate sm:max-w-48'>{space.name}</span>
       </span>
     </Breadcrumbs.Item>
-    {ancestors.map((ancestor) => (
-      <Breadcrumbs.Item key={ancestor.number} href={`/wiki/${space.key}/${ancestor.number}`}>
+    {ancestors.map((ancestor, index) => (
+      <Breadcrumbs.Item
+        key={ancestor.number}
+        href={`/wiki/${space.key}/${ancestor.number}`}
+        className={crumbItem({ kind: 'ancestor', isMiddle: index < ancestors.length - 1 })}
+      >
         <span className='block max-w-24 truncate sm:max-w-40'>{ancestor.title}</span>
       </Breadcrumbs.Item>
     ))}
     <Breadcrumbs.Item
       href={`/wiki/${space.key}/${page.number}`}
+      className={crumbItem({ kind: 'current' })}
       isDisabled={false} // react-aria は最後の項目を現在地として無効化するため、明示的に打ち消してリンクにする
     >
       <span className='block max-w-40 truncate sm:max-w-72'>{page.title}</span>
@@ -77,6 +102,7 @@ export const WikiPageClient: FC<{ spaceKey: string; number: number }> = ({ space
   return (
     <FlexCol>
       <ContentHeader
+        isTitleWide
         title={
           <>
             <WikiBreadcrumbs detail={data} />
@@ -101,7 +127,7 @@ export const WikiPageClient: FC<{ spaceKey: string; number: number }> = ({ space
           <MultiButton
             isIconOnly
             tooltip={t('wiki_move_page')}
-            icon={<ArrowRightCircleIcon />}
+            icon={<FolderArrowRightIcon />}
             onPress={() => moveModalState.open()}
           >
             <ButtonGroup.Separator />

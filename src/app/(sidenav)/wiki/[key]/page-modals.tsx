@@ -4,7 +4,7 @@ import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input'
 import { DialogModal, FormModal, type ModalBaseProps } from '@/components/general/modal'
 import { SingleSelectField } from '@/components/general/select'
-import { ArrowRightCircleIcon, DocumentPlusIcon } from '@/components/icon'
+import { DocumentPlusIcon, FolderArrowRightIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action/action-client'
 import { ClientError } from '@/lib/error'
@@ -150,10 +150,10 @@ export const MovePageModal: FC<ModalBaseProps & { page: { id: string; title: str
   return (
     <DialogModal
       state={state}
-      title={{ text: t('wiki_move_page'), icon: <ArrowRightCircleIcon /> }}
+      title={{ text: t('wiki_move_page'), icon: <FolderArrowRightIcon /> }}
       submit={{ label: t('wiki_move'), isPending, onPress: submit }}
     >
-      <GridBox>
+      <GridBox isSmart>
         <p className='col-span-12 truncate text-sm font-semibold'>{page.title}</p>
         <div className='col-span-12'>
           <SingleSelectField

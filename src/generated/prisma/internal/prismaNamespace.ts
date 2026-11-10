@@ -6581,6 +6581,7 @@ export const WikiPageRevisionScalarFieldEnum = {
   spaceId: 'spaceId',
   pageId: 'pageId',
   pageNumber: 'pageNumber',
+  number: 'number',
   action: 'action',
   parentId: 'parentId',
   order: 'order',

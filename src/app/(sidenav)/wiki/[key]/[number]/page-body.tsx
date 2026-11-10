@@ -1,6 +1,7 @@
 'use client'
 
 import { MultiButton, SubmitButtons } from '@/components/general/button'
+import { Grid } from '@/components/general/grid'
 import { InputField } from '@/components/general/input'
 import { CheckIcon, PencilSquareIcon } from '@/components/icon'
 import { MarkdownField } from '@/components/markdown/markdown-editor'
@@ -100,30 +101,35 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
     <>
       <div className='space-y-1'>
         {isEditing ? (
-          <InputField
-            label={t('wiki_page_title')}
-            value={titleDraft}
-            maxLength={MAX_WIKI_TITLE}
-            onChange={(e) => setTitleDraft(e.target.value)}
-            errorMessage={titleDraft.trim() === '' ? t('@invalid_wiki_title') : undefined}
-          />
+          <Grid isSmart className='items-start'>
+            <div className='col-span-12 md:col-span-7'>
+              <InputField
+                label={t('wiki_page_title')}
+                value={titleDraft}
+                maxLength={MAX_WIKI_TITLE}
+                onChange={(e) => setTitleDraft(e.target.value)}
+                errorMessage={titleDraft.trim() === '' ? t('@invalid_wiki_title') : undefined}
+              />
+            </div>
+            <div className='col-span-12 md:col-span-5'>
+              <TagIdSelectField
+                options={spaceTags}
+                value={tagIdsDraft}
+                onChange={setTagIdsDraft}
+                onCreate={async (name) => {
+                  const tag = await parseAction(createWikiTag({ spaceId: space.id, name }))
+                  // 選択欄が覚えている作成済みのタグは編集を閉じると消えるので、スペースのタグ(選択肢・ツリー)も取り直す
+                  await reloadSpace()
+                  return tag
+                }}
+              />
+            </div>
+          </Grid>
         ) : (
-          <h1 className='text-2xl font-bold wrap-break-word'>{page.title}</h1>
-        )}
-        {isEditing ? (
-          <TagIdSelectField
-            options={spaceTags}
-            value={tagIdsDraft}
-            onChange={setTagIdsDraft}
-            onCreate={async (name) => {
-              const tag = await parseAction(createWikiTag({ spaceId: space.id, name }))
-              // 選択欄が覚えている作成済みのタグは編集を閉じると消えるので、スペースのタグ(選択肢・ツリー)も取り直す
-              await reloadSpace()
-              return tag
-            }}
-          />
-        ) : (
-          <WikiTagLinks spaceKey={space.key} tags={page.tags.map(({ tag }) => tag)} />
+          <>
+            <h1 className='text-2xl font-bold wrap-break-word'>{page.title}</h1>
+            <WikiTagLinks spaceKey={space.key} tags={page.tags.map(({ tag }) => tag)} />
+          </>
         )}
         <p className='text-muted text-xs'>
           {t('wiki_updated_by', { name: updatedBy ?? '-', at: dayformat(page.updatedAt, 'tz-minute', tz) })}

@@ -1,12 +1,13 @@
 'use client'
 
-import { PanelSkeleton } from '@/components/general/panel'
+import { PanelSkeleton, PanelSpinner } from '@/components/general/panel'
 import { SideNavPortal } from '@/components/general/side-nav-slot'
 import { BookOpenIcon } from '@/components/icon'
 import { NoAccessView } from '@/components/no-access-view'
 import { useActionData } from '@/lib/action/action-client'
 import { useLocale } from '@/locale/client'
 import { createContext, FC, ReactNode, useContext, useMemo } from 'react'
+import { WikiSideSpaces } from '../side-spaces'
 import { getWikiSpace, GetWikiSpaceReturnType } from './server'
 import { WikiSideTree } from './side-tree'
 
@@ -48,20 +49,31 @@ export const WikiSpaceShell: FC<{ spaceKey: string; children: ReactNode }> = ({ 
     return { ...data, reloadSpace: refresh, tagsOf }
   }, [data, refresh])
 
+  // 読み込み中・閲覧できないときも差し込みは外さない(外すとタブが消え、出し直しで再びスライドする)
   if (isLoading) {
-    return <PanelSkeleton />
+    return (
+      <>
+        <SideNavPortal label={t('wiki')}>
+          <PanelSpinner />
+        </SideNavPortal>
+        <PanelSkeleton />
+      </>
+    )
   }
   if (!value) {
-    return <NoAccessView icon={<BookOpenIcon />} title={t('wiki')} backHref='/wiki' />
+    return (
+      <>
+        <SideNavPortal label={t('wiki')}>
+          <WikiSideSpaces />
+        </SideNavPortal>
+        <NoAccessView icon={<BookOpenIcon />} title={t('wiki')} backHref='/wiki' />
+      </>
+    )
   }
 
   return (
     <WikiSpaceContext.Provider value={value}>
-      {value.access.canView && (
-        <SideNavPortal label={t('wiki_tree')}>
-          <WikiSideTree />
-        </SideNavPortal>
-      )}
+      <SideNavPortal label={t('wiki')}>{value.access.canView ? <WikiSideTree /> : <WikiSideSpaces />}</SideNavPortal>
       {children}
     </WikiSpaceContext.Provider>
   )

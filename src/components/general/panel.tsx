@@ -1,4 +1,4 @@
-import { Alert, cn, Skeleton } from '@heroui/react'
+import { Alert, cn, Skeleton, Spinner } from '@heroui/react'
 import { ComponentProps, FC } from 'react'
 import { tv } from 'tailwind-variants'
 
@@ -16,6 +16,8 @@ const panelStyles = tv({
 })
 
 const skeletonStyles = tv({ base: 'min-h-48 w-full rounded-xl' })
+
+const spinnerStyles = tv({ base: 'flex justify-center py-4' })
 
 /**
  * 情報をひとまとめにするサーフェス。
@@ -38,6 +40,13 @@ export const Panel: FC<ComponentProps<'div'> & { variant?: PanelVariant }> = ({
  */
 export const PanelSkeleton: FC<{ className?: string }> = ({ className }) => (
   <Skeleton className={skeletonStyles({ className })} />
+)
+
+/** データ取得中の表示。場所を確保しなくてよいところで、スケルトンの代わりに使う */
+export const PanelSpinner: FC<{ className?: string }> = ({ className }) => (
+  <div className={spinnerStyles({ className })}>
+    <Spinner size='lg' />
+  </div>
 )
 
 /**

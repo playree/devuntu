@@ -93,6 +93,7 @@ export const getWikiPageRevisionDiff = safeAuthAction
   .metadata({ actionName: 'getWikiPageRevisionDiff', role: 'user' })
   .inputSchema(scUUID)
   .action(async ({ ctx: { user }, parsedInput: { id } }) => getWikiPageRevisionContents(user, id))
+export type GetWikiPageRevisionDiffReturnType = Awaited<ReturnType<typeof getWikiPageRevisionDiff>>['data']
 
 /** 削除済みのページ(最後に削除された版)と保持期間(日)。`id` はスペース ID */
 export const getDeletedWikiPages = safeAuthAction
