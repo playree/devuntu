@@ -63,6 +63,7 @@ const revision = (override: Record<string, unknown> = {}) => ({
   order: 1,
   title: '戻すタイトル',
   content: '戻す本文',
+  type: 'design_doc',
   tagNames: ['設計', '廃止'],
   ...override,
 })
@@ -73,6 +74,7 @@ const existingPage = (override: Record<string, unknown> = {}) => ({
   order: 0,
   title: 'いまのタイトル',
   content: 'いまの本文',
+  type: 'page',
   tags: [{ tag: { id: 'tag-b', name: '運用' } }],
   updatedAt: UPDATED_AT,
   ...override,
@@ -118,13 +120,19 @@ describe('restoreWikiPageRevision(ページが存在する)', () => {
     vi.mocked(prisma.wikiPage.findUnique).mockResolvedValue(existingPage() as never)
   })
 
-  it('タイトル・本文・タグを版の内容に戻し、restored の版を残す。位置は変えない', async () => {
+  it('タイトル・本文・種類・タグを版の内容に戻し、restored の版を残す。位置は変えない', async () => {
     const result = await restoreWikiPageRevision(actor, WEB, 'rev-1')
 
     expect(result).toMatchObject({ result: 'updated', id: 'x', ref: 'DOCS/7', number: 7 })
     expect(assertWikiSpaceAccess).toHaveBeenCalledWith(actor, SPACE_ID, 'write', expect.anything())
     const data = vi.mocked(prisma.wikiPage.update).mock.calls[0][0].data
-    expect(data).toMatchObject({ title: '戻すタイトル', content: '戻す本文', updatedById: 'u1', updatedVia: 'web' })
+    expect(data).toMatchObject({
+      title: '戻すタイトル',
+      content: '戻す本文',
+      type: 'design_doc',
+      updatedById: 'u1',
+      updatedVia: 'web',
+    })
     expect(data, '親・並びは変えない').not.toHaveProperty('parentId')
     expect(data).not.toHaveProperty('order')
     expect(prisma.$executeRaw).not.toHaveBeenCalled()
@@ -134,7 +142,14 @@ describe('restoreWikiPageRevision(ページが存在する)', () => {
       pageId: 'x',
       pageNumber: 7,
       action: 'restored',
-      snapshot: { parentId: 'e', order: 0, title: '戻すタイトル', content: '戻す本文', tagNames: ['設計'] },
+      snapshot: {
+        parentId: 'e',
+        order: 0,
+        title: '戻すタイトル',
+        content: '戻す本文',
+        type: 'design_doc',
+        tagNames: ['設計'],
+      },
       actorId: 'u1',
       via: 'web',
       restoredFromId: 'rev-1',
@@ -146,6 +161,7 @@ describe('restoreWikiPageRevision(ページが存在する)', () => {
       existingPage({
         title: '戻すタイトル',
         content: '戻す本文',
+        type: 'design_doc',
         tags: [{ tag: { id: 'tag-a', name: '設計' } }],
       }) as never,
     )
@@ -155,6 +171,22 @@ describe('restoreWikiPageRevision(ページが存在する)', () => {
     expect(result).toMatchObject({ result: 'unchanged', updatedAt: UPDATED_AT })
     expect(prisma.wikiPage.update).not.toHaveBeenCalled()
     expect(writeWikiPageRevision).not.toHaveBeenCalled()
+  })
+
+  it('種類だけが違っても戻す', async () => {
+    vi.mocked(prisma.wikiPage.findUnique).mockResolvedValue(
+      existingPage({
+        title: '戻すタイトル',
+        content: '戻す本文',
+        tags: [{ tag: { id: 'tag-a', name: '設計' } }],
+      }) as never,
+    )
+
+    const result = await restoreWikiPageRevision(actor, WEB, 'rev-1')
+
+    expect(result.result).toBe('updated')
+    expect(vi.mocked(prisma.wikiPage.update).mock.calls[0][0].data).toMatchObject({ type: 'design_doc' })
+    expect(vi.mocked(writeWikiPageRevision).mock.calls[0][1].snapshot.type).toBe('design_doc')
   })
 
   it('タグが同じならタグは付け直さない', async () => {
@@ -179,13 +211,14 @@ describe('restoreWikiPageRevision(削除済みのページ)', () => {
       order: 1,
       title: '戻すタイトル',
       content: '戻す本文',
+      type: 'design_doc',
     })
     expect(orderUpdates(), 'd を後ろへずらす').toEqual([['d', 2]])
     expect(syncWikiPageTags).toHaveBeenCalledWith(expect.anything(), 'x', [], ['tag-a'])
     expect(vi.mocked(writeWikiPageRevision).mock.calls[0][1]).toMatchObject({
       action: 'restored',
       restoredFromId: 'rev-1',
-      snapshot: { parentId: 'a', order: 1, tagNames: ['設計'] },
+      snapshot: { parentId: 'a', order: 1, type: 'design_doc', tagNames: ['設計'] },
     })
   })
 

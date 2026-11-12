@@ -12,6 +12,7 @@
  */
 
 import { Prisma } from '@/generated/prisma/client'
+import type { WikiPageType } from '@/generated/prisma/enums'
 import { getTicketAccess, type Actor } from '../board/board-access'
 import { ClientError, errInvalidOperation, errValidation } from '../error'
 import { logger } from '../logger'
@@ -149,6 +150,7 @@ const SNAPSHOT_SELECT = {
   order: true,
   title: true,
   content: true,
+  type: true,
   tags: {
     select: { tag: { select: { id: true, name: true } } },
     orderBy: PAGE_TAG_ORDER,
@@ -160,14 +162,16 @@ type SnapshotRow = {
   order: number
   title: string
   content: string
+  type: WikiPageType
   tags: { tag: { id: string; name: string } }[]
 }
 
-const snapshotOf = ({ parentId, order, title, content, tags }: SnapshotRow): WikiPageSnapshot => ({
+const snapshotOf = ({ parentId, order, title, content, type, tags }: SnapshotRow): WikiPageSnapshot => ({
   parentId,
   order,
   title,
   content,
+  type,
   tagNames: tags.map(({ tag }) => tag.name),
 })
 
@@ -204,6 +208,8 @@ const assertNotConflicted = (expected: number | null, updatedAt: Date) => {
 export type CreateWikiPageInput = {
   title: string
   content?: string
+  /** 種類。省略で通常のページ */
+  type?: WikiPageType
   /** 親ページの id。null / 省略でスペース直下 */
   parentId?: string | null
   /** 兄弟の中での位置(0 始まり)。省略で末尾 */
@@ -221,6 +227,7 @@ export const createWikiPage = async (
 ): Promise<WikiPageWriteResult> => {
   const title = input.title.trim()
   const content = input.content ?? ''
+  const type = input.type ?? 'page'
   assertTitle(title)
   assertContent(content)
   const parentId = input.parentId ?? null
@@ -254,6 +261,7 @@ export const createWikiPage = async (
         number,
         title,
         content,
+        type,
         order,
         createdById: actor.id,
         updatedById: actor.id,
@@ -272,7 +280,7 @@ export const createWikiPage = async (
       pageId: created.id,
       pageNumber: number,
       action: 'created',
-      snapshot: { parentId, order, title, content, tagNames: tags.map(({ name }) => name) },
+      snapshot: { parentId, order, title, content, type, tagNames: tags.map(({ name }) => name) },
       actorId: actor.id,
       via: writer.via,
       ticketId,
@@ -305,14 +313,14 @@ const findPageSpace = async (pageId: string) => {
 }
 
 /**
- * タイトル・本文・タグの更新。`patch` の undefined の項目はそのまま残す。`tagIds` は渡した集合に置き換える。
+ * タイトル・本文・種類・タグの更新。`patch` の undefined の項目はそのまま残す。`tagIds` は渡した集合に置き換える。
  * `expectedUpdatedAt`(ISO 8601)を渡すと、読んだ後に他の人が更新していれば WIKI_PAGE_CONFLICT で弾く
  */
 export const updateWikiPage = async (
   actor: Actor,
   writer: WikiWriter,
   pageId: string,
-  patch: { title?: string; content?: string; tagIds?: string[] },
+  patch: { title?: string; content?: string; type?: WikiPageType; tagIds?: string[] },
   opts: UpdateOpts = {},
 ): Promise<WikiPageWriteResult> => {
   const expected = parseExpectedUpdatedAt(opts.expectedUpdatedAt)
@@ -337,6 +345,7 @@ export const updateWikiPage = async (
       ...before,
       title: patch.title?.trim() ?? before.title,
       content: patch.content ?? before.content,
+      type: patch.type ?? before.type,
       tagNames: nextTags ? nextTags.map(({ name }) => name) : before.tagNames,
     }
     assertTitle(next.title)
@@ -345,14 +354,20 @@ export const updateWikiPage = async (
     const tagsChanged =
       nextTags !== undefined &&
       (nextTags.length !== currentTagIds.length || nextTags.some(({ id }) => !currentTagIds.includes(id)))
-    if (next.title === before.title && next.content === before.content && !tagsChanged) {
+    if (next.title === before.title && next.content === before.content && next.type === before.type && !tagsChanged) {
       return { result: 'unchanged' as const, id: pageId, ref, number: existing.number, updatedAt: existing.updatedAt }
     }
 
     const ticketId = await resolveRevisionTicketId(tx, actor, opts.ticketId)
     const updated = await tx.wikiPage.update({
       where: { id: pageId },
-      data: { title: next.title, content: next.content, updatedById: actor.id, updatedVia: writer.via },
+      data: {
+        title: next.title,
+        content: next.content,
+        type: next.type,
+        updatedById: actor.id,
+        updatedVia: writer.via,
+      },
       select: { updatedAt: true },
     })
     if (nextTags && tagsChanged) {
@@ -515,12 +530,13 @@ const RESTORE_SOURCE_SELECT = {
   order: true,
   title: true,
   content: true,
+  type: true,
   tagNames: true,
 } as const
 
 /**
  * 版の内容へ戻し、restored の版を残す。タグは名前で引き当て、スペースから消えたタグは外す。
- * - ページが残っている: タイトル・本文・タグだけを戻す。位置(親・並び)は変えない(位置は移動で変える)
+ * - ページが残っている: タイトル・本文・種類・タグだけを戻す。位置(親・並び)は変えない(位置は移動で変える)
  * - 削除済み: 同じ id・番号で作り直す。版の親が残っていて深さの上限に収まればその下の元の位置へ、
  *   そうでなければスペース直下の末尾へ戻す。配下ごと削除したページは1ページずつ戻す
  */
@@ -568,18 +584,35 @@ export const restoreWikiPageRevision = async (
     if (existing) {
       const currentTagIds = existing.tags.map(({ tag }) => tag.id)
       const tagsChanged = tagIds.length !== currentTagIds.length || tagIds.some((id) => !currentTagIds.includes(id))
-      if (existing.title === revision.title && existing.content === revision.content && !tagsChanged) {
+      if (
+        existing.title === revision.title &&
+        existing.content === revision.content &&
+        existing.type === revision.type &&
+        !tagsChanged
+      ) {
         return { result: 'unchanged' as const, id: pageId, ref, number, updatedAt: existing.updatedAt }
       }
       const updated = await tx.wikiPage.update({
         where: { id: pageId },
-        data: { title: revision.title, content: revision.content, updatedById: actor.id, updatedVia: writer.via },
+        data: {
+          title: revision.title,
+          content: revision.content,
+          type: revision.type,
+          updatedById: actor.id,
+          updatedVia: writer.via,
+        },
         select: { updatedAt: true },
       })
       if (tagsChanged) {
         await syncWikiPageTags(tx, pageId, currentTagIds, tagIds)
       }
-      await writeRestored({ ...snapshotOf(existing), title: revision.title, content: revision.content, tagNames })
+      await writeRestored({
+        ...snapshotOf(existing),
+        title: revision.title,
+        content: revision.content,
+        type: revision.type,
+        tagNames,
+      })
       return { result: 'updated' as const, id: pageId, ref, number, updatedAt: updated.updatedAt }
     }
 
@@ -606,6 +639,7 @@ export const restoreWikiPageRevision = async (
         number,
         title: revision.title,
         content: revision.content,
+        type: revision.type,
         order,
         createdById: actor.id,
         updatedById: actor.id,
@@ -614,7 +648,14 @@ export const restoreWikiPageRevision = async (
       select: { updatedAt: true },
     })
     await syncWikiPageTags(tx, pageId, [], tagIds)
-    await writeRestored({ parentId, order, title: revision.title, content: revision.content, tagNames })
+    await writeRestored({
+      parentId,
+      order,
+      title: revision.title,
+      content: revision.content,
+      type: revision.type,
+      tagNames,
+    })
     return { result: 'created' as const, id: pageId, ref, number, updatedAt: created.updatedAt }
   })
 
@@ -644,6 +685,7 @@ const PAGE_DETAIL_SELECT = {
   number: true,
   title: true,
   content: true,
+  type: true,
   order: true,
   updatedVia: true,
   createdAt: true,

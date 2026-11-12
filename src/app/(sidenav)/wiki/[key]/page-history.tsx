@@ -8,6 +8,7 @@ import { notify } from '@/components/notify'
 import { RevisionContentView, RevisionFieldChange } from '@/components/revision-diff'
 import { TextDiffView } from '@/components/text-diff-view'
 import { UpdatedBy } from '@/components/updated-by'
+import { useWikiPageTypeOptions } from '@/components/wiki-chip'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { ticketShortPath } from '@/lib/board/ticket-id'
 import { useConfirmAction } from '@/lib/use-confirm-action'
@@ -67,6 +68,7 @@ type RevisionDiffView = RevisionDiffProps & { data: NonNullable<GetWikiPageRevis
 const RevisionDiffBody: FC<RevisionDiffView> = ({ revision, previous, isDeletion, data }) => {
   const { t } = useLocale()
   const parentLabel = useParentLabel()
+  const typeOptions = useWikiPageTypeOptions()
 
   if (isDeletion) {
     return (
@@ -85,6 +87,14 @@ const RevisionDiffBody: FC<RevisionDiffView> = ({ revision, previous, isDeletion
   const changes = [
     previous.title !== revision.title && (
       <RevisionFieldChange key='title' label={t('wiki_page_title')} before={previous.title} after={revision.title} />
+    ),
+    previous.type !== revision.type && (
+      <RevisionFieldChange
+        key='type'
+        label={t('wiki_page_type')}
+        before={typeOptions[previous.type]}
+        after={typeOptions[revision.type]}
+      />
     ),
     beforeTags !== afterTags && (
       <RevisionFieldChange key='tags' label={t('tags')} before={beforeTags || '-'} after={afterTags || '-'} />

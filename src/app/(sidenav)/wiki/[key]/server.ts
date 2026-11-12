@@ -10,6 +10,7 @@ import {
   scMoveWikiPage,
   scWikiSpaceKey,
 } from '@/lib/schema/schema-wiki'
+import { designDocFrontMatter } from '@/lib/wiki/wiki-markdown'
 import {
   createWikiPage as createWikiPageCore,
   deleteWikiPage as deleteWikiPageCore,
@@ -44,13 +45,19 @@ export const getWikiSpace = safeAuthAction
   })
 export type GetWikiSpaceReturnType = Awaited<ReturnType<typeof getWikiSpace>>['data']
 
-/** ページの作成。親の子(親が無ければスペース直下)の末尾に置く */
+/** ページの作成。親の子(親が無ければスペース直下)の末尾に置く。設計書は最小の front matter を入れて作る */
 export const createWikiPage = safeAuthAction
   .metadata({ actionName: 'createWikiPage', role: 'user' })
   .inputSchema(scCreateWikiPage)
   .action(
-    async ({ ctx: { user }, parsedInput: { spaceId, parentId, title } }) =>
-      await createWikiPageCore(user, WEB, spaceId, { title, parentId }),
+    async ({ ctx: { user }, parsedInput: { spaceId, parentId, title, type } }) =>
+      await createWikiPageCore(user, WEB, spaceId, {
+        title,
+        parentId,
+        type,
+        // 設計書は最小の front matter から書き始める(ビューアの設計書ヘッダになる)
+        content: type === 'design_doc' ? designDocFrontMatter(title) : '',
+      }),
   )
 
 /** 移動・並べ替え */

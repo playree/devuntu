@@ -43,6 +43,7 @@ export type WikiPageMinAggregateOutputType = {
   number: number | null
   title: string | null
   content: string | null
+  type: $Enums.WikiPageType | null
   order: number | null
   createdById: string | null
   updatedById: string | null
@@ -58,6 +59,7 @@ export type WikiPageMaxAggregateOutputType = {
   number: number | null
   title: string | null
   content: string | null
+  type: $Enums.WikiPageType | null
   order: number | null
   createdById: string | null
   updatedById: string | null
@@ -73,6 +75,7 @@ export type WikiPageCountAggregateOutputType = {
   number: number
   title: number
   content: number
+  type: number
   order: number
   createdById: number
   updatedById: number
@@ -100,6 +103,7 @@ export type WikiPageMinAggregateInputType = {
   number?: true
   title?: true
   content?: true
+  type?: true
   order?: true
   createdById?: true
   updatedById?: true
@@ -115,6 +119,7 @@ export type WikiPageMaxAggregateInputType = {
   number?: true
   title?: true
   content?: true
+  type?: true
   order?: true
   createdById?: true
   updatedById?: true
@@ -130,6 +135,7 @@ export type WikiPageCountAggregateInputType = {
   number?: true
   title?: true
   content?: true
+  type?: true
   order?: true
   createdById?: true
   updatedById?: true
@@ -232,6 +238,7 @@ export type WikiPageGroupByOutputType = {
   number: number
   title: string
   content: string
+  type: $Enums.WikiPageType
   order: number
   createdById: string | null
   updatedById: string | null
@@ -270,6 +277,7 @@ export type WikiPageWhereInput = {
   number?: Prisma.IntFilter<"WikiPage"> | number
   title?: Prisma.StringFilter<"WikiPage"> | string
   content?: Prisma.StringFilter<"WikiPage"> | string
+  type?: Prisma.EnumWikiPageTypeFilter<"WikiPage"> | $Enums.WikiPageType
   order?: Prisma.IntFilter<"WikiPage"> | number
   createdById?: Prisma.StringNullableFilter<"WikiPage"> | string | null
   updatedById?: Prisma.StringNullableFilter<"WikiPage"> | string | null
@@ -291,6 +299,7 @@ export type WikiPageOrderByWithRelationInput = {
   number?: Prisma.SortOrder
   title?: Prisma.SortOrder
   content?: Prisma.SortOrder
+  type?: Prisma.SortOrder
   order?: Prisma.SortOrder
   createdById?: Prisma.SortOrderInput | Prisma.SortOrder
   updatedById?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -316,6 +325,7 @@ export type WikiPageWhereUniqueInput = Prisma.AtLeast<{
   number?: Prisma.IntFilter<"WikiPage"> | number
   title?: Prisma.StringFilter<"WikiPage"> | string
   content?: Prisma.StringFilter<"WikiPage"> | string
+  type?: Prisma.EnumWikiPageTypeFilter<"WikiPage"> | $Enums.WikiPageType
   order?: Prisma.IntFilter<"WikiPage"> | number
   createdById?: Prisma.StringNullableFilter<"WikiPage"> | string | null
   updatedById?: Prisma.StringNullableFilter<"WikiPage"> | string | null
@@ -337,6 +347,7 @@ export type WikiPageOrderByWithAggregationInput = {
   number?: Prisma.SortOrder
   title?: Prisma.SortOrder
   content?: Prisma.SortOrder
+  type?: Prisma.SortOrder
   order?: Prisma.SortOrder
   createdById?: Prisma.SortOrderInput | Prisma.SortOrder
   updatedById?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -360,6 +371,7 @@ export type WikiPageScalarWhereWithAggregatesInput = {
   number?: Prisma.IntWithAggregatesFilter<"WikiPage"> | number
   title?: Prisma.StringWithAggregatesFilter<"WikiPage"> | string
   content?: Prisma.StringWithAggregatesFilter<"WikiPage"> | string
+  type?: Prisma.EnumWikiPageTypeWithAggregatesFilter<"WikiPage"> | $Enums.WikiPageType
   order?: Prisma.IntWithAggregatesFilter<"WikiPage"> | number
   createdById?: Prisma.StringNullableWithAggregatesFilter<"WikiPage"> | string | null
   updatedById?: Prisma.StringNullableWithAggregatesFilter<"WikiPage"> | string | null
@@ -373,6 +385,7 @@ export type WikiPageCreateInput = {
   number: number
   title: string
   content?: string
+  type?: $Enums.WikiPageType
   order?: number
   updatedVia?: $Enums.WikiVia
   createdAt?: Date | string
@@ -392,6 +405,7 @@ export type WikiPageUncheckedCreateInput = {
   number: number
   title: string
   content?: string
+  type?: $Enums.WikiPageType
   order?: number
   createdById?: string | null
   updatedById?: string | null
@@ -407,6 +421,7 @@ export type WikiPageUpdateInput = {
   number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
   order?: Prisma.IntFieldUpdateOperationsInput | number
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -426,6 +441,7 @@ export type WikiPageUncheckedUpdateInput = {
   number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
   order?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -443,6 +459,7 @@ export type WikiPageCreateManyInput = {
   number: number
   title: string
   content?: string
+  type?: $Enums.WikiPageType
   order?: number
   createdById?: string | null
   updatedById?: string | null
@@ -456,6 +473,7 @@ export type WikiPageUpdateManyMutationInput = {
   number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
   order?: Prisma.IntFieldUpdateOperationsInput | number
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -469,6 +487,7 @@ export type WikiPageUncheckedUpdateManyInput = {
   number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
   order?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -504,6 +523,7 @@ export type WikiPageCountOrderByAggregateInput = {
   number?: Prisma.SortOrder
   title?: Prisma.SortOrder
   content?: Prisma.SortOrder
+  type?: Prisma.SortOrder
   order?: Prisma.SortOrder
   createdById?: Prisma.SortOrder
   updatedById?: Prisma.SortOrder
@@ -524,6 +544,7 @@ export type WikiPageMaxOrderByAggregateInput = {
   number?: Prisma.SortOrder
   title?: Prisma.SortOrder
   content?: Prisma.SortOrder
+  type?: Prisma.SortOrder
   order?: Prisma.SortOrder
   createdById?: Prisma.SortOrder
   updatedById?: Prisma.SortOrder
@@ -539,6 +560,7 @@ export type WikiPageMinOrderByAggregateInput = {
   number?: Prisma.SortOrder
   title?: Prisma.SortOrder
   content?: Prisma.SortOrder
+  type?: Prisma.SortOrder
   order?: Prisma.SortOrder
   createdById?: Prisma.SortOrder
   updatedById?: Prisma.SortOrder
@@ -703,6 +725,10 @@ export type WikiPageUncheckedCreateNestedManyWithoutParentInput = {
   connect?: Prisma.WikiPageWhereUniqueInput | Prisma.WikiPageWhereUniqueInput[]
 }
 
+export type EnumWikiPageTypeFieldUpdateOperationsInput = {
+  set?: $Enums.WikiPageType
+}
+
 export type EnumWikiViaFieldUpdateOperationsInput = {
   set?: $Enums.WikiVia
 }
@@ -764,6 +790,7 @@ export type WikiPageCreateWithoutCreatedByInput = {
   number: number
   title: string
   content?: string
+  type?: $Enums.WikiPageType
   order?: number
   updatedVia?: $Enums.WikiVia
   createdAt?: Date | string
@@ -782,6 +809,7 @@ export type WikiPageUncheckedCreateWithoutCreatedByInput = {
   number: number
   title: string
   content?: string
+  type?: $Enums.WikiPageType
   order?: number
   updatedById?: string | null
   updatedVia?: $Enums.WikiVia
@@ -806,6 +834,7 @@ export type WikiPageCreateWithoutUpdatedByInput = {
   number: number
   title: string
   content?: string
+  type?: $Enums.WikiPageType
   order?: number
   updatedVia?: $Enums.WikiVia
   createdAt?: Date | string
@@ -824,6 +853,7 @@ export type WikiPageUncheckedCreateWithoutUpdatedByInput = {
   number: number
   title: string
   content?: string
+  type?: $Enums.WikiPageType
   order?: number
   createdById?: string | null
   updatedVia?: $Enums.WikiVia
@@ -869,6 +899,7 @@ export type WikiPageScalarWhereInput = {
   number?: Prisma.IntFilter<"WikiPage"> | number
   title?: Prisma.StringFilter<"WikiPage"> | string
   content?: Prisma.StringFilter<"WikiPage"> | string
+  type?: Prisma.EnumWikiPageTypeFilter<"WikiPage"> | $Enums.WikiPageType
   order?: Prisma.IntFilter<"WikiPage"> | number
   createdById?: Prisma.StringNullableFilter<"WikiPage"> | string | null
   updatedById?: Prisma.StringNullableFilter<"WikiPage"> | string | null
@@ -898,6 +929,7 @@ export type WikiPageCreateWithoutSpaceInput = {
   number: number
   title: string
   content?: string
+  type?: $Enums.WikiPageType
   order?: number
   updatedVia?: $Enums.WikiVia
   createdAt?: Date | string
@@ -915,6 +947,7 @@ export type WikiPageUncheckedCreateWithoutSpaceInput = {
   number: number
   title: string
   content?: string
+  type?: $Enums.WikiPageType
   order?: number
   createdById?: string | null
   updatedById?: string | null
@@ -956,6 +989,7 @@ export type WikiPageCreateWithoutChildrenInput = {
   number: number
   title: string
   content?: string
+  type?: $Enums.WikiPageType
   order?: number
   updatedVia?: $Enums.WikiVia
   createdAt?: Date | string
@@ -974,6 +1008,7 @@ export type WikiPageUncheckedCreateWithoutChildrenInput = {
   number: number
   title: string
   content?: string
+  type?: $Enums.WikiPageType
   order?: number
   createdById?: string | null
   updatedById?: string | null
@@ -993,6 +1028,7 @@ export type WikiPageCreateWithoutParentInput = {
   number: number
   title: string
   content?: string
+  type?: $Enums.WikiPageType
   order?: number
   updatedVia?: $Enums.WikiVia
   createdAt?: Date | string
@@ -1010,6 +1046,7 @@ export type WikiPageUncheckedCreateWithoutParentInput = {
   number: number
   title: string
   content?: string
+  type?: $Enums.WikiPageType
   order?: number
   createdById?: string | null
   updatedById?: string | null
@@ -1046,6 +1083,7 @@ export type WikiPageUpdateWithoutChildrenInput = {
   number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
   order?: Prisma.IntFieldUpdateOperationsInput | number
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1064,6 +1102,7 @@ export type WikiPageUncheckedUpdateWithoutChildrenInput = {
   number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
   order?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1094,6 +1133,7 @@ export type WikiPageCreateWithoutTagsInput = {
   number: number
   title: string
   content?: string
+  type?: $Enums.WikiPageType
   order?: number
   updatedVia?: $Enums.WikiVia
   createdAt?: Date | string
@@ -1112,6 +1152,7 @@ export type WikiPageUncheckedCreateWithoutTagsInput = {
   number: number
   title: string
   content?: string
+  type?: $Enums.WikiPageType
   order?: number
   createdById?: string | null
   updatedById?: string | null
@@ -1142,6 +1183,7 @@ export type WikiPageUpdateWithoutTagsInput = {
   number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
   order?: Prisma.IntFieldUpdateOperationsInput | number
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1160,6 +1202,7 @@ export type WikiPageUncheckedUpdateWithoutTagsInput = {
   number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
   order?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1176,6 +1219,7 @@ export type WikiPageCreateManyCreatedByInput = {
   number: number
   title: string
   content?: string
+  type?: $Enums.WikiPageType
   order?: number
   updatedById?: string | null
   updatedVia?: $Enums.WikiVia
@@ -1190,6 +1234,7 @@ export type WikiPageCreateManyUpdatedByInput = {
   number: number
   title: string
   content?: string
+  type?: $Enums.WikiPageType
   order?: number
   createdById?: string | null
   updatedVia?: $Enums.WikiVia
@@ -1202,6 +1247,7 @@ export type WikiPageUpdateWithoutCreatedByInput = {
   number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
   order?: Prisma.IntFieldUpdateOperationsInput | number
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1220,6 +1266,7 @@ export type WikiPageUncheckedUpdateWithoutCreatedByInput = {
   number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
   order?: Prisma.IntFieldUpdateOperationsInput | number
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
@@ -1236,6 +1283,7 @@ export type WikiPageUncheckedUpdateManyWithoutCreatedByInput = {
   number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
   order?: Prisma.IntFieldUpdateOperationsInput | number
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
@@ -1248,6 +1296,7 @@ export type WikiPageUpdateWithoutUpdatedByInput = {
   number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
   order?: Prisma.IntFieldUpdateOperationsInput | number
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1266,6 +1315,7 @@ export type WikiPageUncheckedUpdateWithoutUpdatedByInput = {
   number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
   order?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
@@ -1282,6 +1332,7 @@ export type WikiPageUncheckedUpdateManyWithoutUpdatedByInput = {
   number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
   order?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
@@ -1295,6 +1346,7 @@ export type WikiPageCreateManySpaceInput = {
   number: number
   title: string
   content?: string
+  type?: $Enums.WikiPageType
   order?: number
   createdById?: string | null
   updatedById?: string | null
@@ -1308,6 +1360,7 @@ export type WikiPageUpdateWithoutSpaceInput = {
   number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
   order?: Prisma.IntFieldUpdateOperationsInput | number
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1325,6 +1378,7 @@ export type WikiPageUncheckedUpdateWithoutSpaceInput = {
   number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
   order?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1341,6 +1395,7 @@ export type WikiPageUncheckedUpdateManyWithoutSpaceInput = {
   number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
   order?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1355,6 +1410,7 @@ export type WikiPageCreateManyParentInput = {
   number: number
   title: string
   content?: string
+  type?: $Enums.WikiPageType
   order?: number
   createdById?: string | null
   updatedById?: string | null
@@ -1368,6 +1424,7 @@ export type WikiPageUpdateWithoutParentInput = {
   number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
   order?: Prisma.IntFieldUpdateOperationsInput | number
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1385,6 +1442,7 @@ export type WikiPageUncheckedUpdateWithoutParentInput = {
   number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
   order?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1401,6 +1459,7 @@ export type WikiPageUncheckedUpdateManyWithoutParentInput = {
   number?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   content?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
   order?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1456,6 +1515,7 @@ export type WikiPageSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   number?: boolean
   title?: boolean
   content?: boolean
+  type?: boolean
   order?: boolean
   createdById?: boolean
   updatedById?: boolean
@@ -1478,6 +1538,7 @@ export type WikiPageSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   number?: boolean
   title?: boolean
   content?: boolean
+  type?: boolean
   order?: boolean
   createdById?: boolean
   updatedById?: boolean
@@ -1497,6 +1558,7 @@ export type WikiPageSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   number?: boolean
   title?: boolean
   content?: boolean
+  type?: boolean
   order?: boolean
   createdById?: boolean
   updatedById?: boolean
@@ -1516,6 +1578,7 @@ export type WikiPageSelectScalar = {
   number?: boolean
   title?: boolean
   content?: boolean
+  type?: boolean
   order?: boolean
   createdById?: boolean
   updatedById?: boolean
@@ -1524,7 +1587,7 @@ export type WikiPageSelectScalar = {
   updatedAt?: boolean
 }
 
-export type WikiPageOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "spaceId" | "parentId" | "number" | "title" | "content" | "order" | "createdById" | "updatedById" | "updatedVia" | "createdAt" | "updatedAt", ExtArgs["result"]["wikiPage"]>
+export type WikiPageOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "spaceId" | "parentId" | "number" | "title" | "content" | "type" | "order" | "createdById" | "updatedById" | "updatedVia" | "createdAt" | "updatedAt", ExtArgs["result"]["wikiPage"]>
 export type WikiPageInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   space?: boolean | Prisma.WikiSpaceDefaultArgs<ExtArgs>
   parent?: boolean | Prisma.WikiPage$parentArgs<ExtArgs>
@@ -1577,6 +1640,10 @@ export type $WikiPagePayload<ExtArgs extends runtime.Types.Extensions.InternalAr
      * 本文(Markdown)
      */
     content: string
+    /**
+     * 種類
+     */
+    type: $Enums.WikiPageType
     /**
      * 兄弟内の表示順。昇順。同値は number 昇順で安定させる
      */
@@ -2024,6 +2091,7 @@ export interface WikiPageFieldRefs {
   readonly number: Prisma.FieldRef<"WikiPage", 'Int'>
   readonly title: Prisma.FieldRef<"WikiPage", 'String'>
   readonly content: Prisma.FieldRef<"WikiPage", 'String'>
+  readonly type: Prisma.FieldRef<"WikiPage", 'WikiPageType'>
   readonly order: Prisma.FieldRef<"WikiPage", 'Int'>
   readonly createdById: Prisma.FieldRef<"WikiPage", 'String'>
   readonly updatedById: Prisma.FieldRef<"WikiPage", 'String'>

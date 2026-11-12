@@ -13,6 +13,7 @@ import {
   writeWikiPageRevision,
   type WriteWikiPageRevision,
 } from '@/lib/wiki/wiki-revision'
+import type { WikiPageSnapshot } from '@/lib/wiki/wiki-rule'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const settings = { merge: 10, max: 3, retention: 7 }
@@ -42,7 +43,14 @@ vi.mock('@/lib/prisma', async () =>
 vi.mock('@/lib/wiki/wiki-access', () => ({ assertWikiSpaceAccess: vi.fn() }))
 
 const NOW = new Date('2026-11-08T10:00:00.000Z')
-const snapshot = { parentId: null, order: 0, title: 'タイトル', content: '本文', tagNames: [] }
+const snapshot: WikiPageSnapshot = {
+  parentId: null,
+  order: 0,
+  title: 'タイトル',
+  content: '本文',
+  type: 'page',
+  tagNames: [],
+}
 
 const revision = (override: Partial<WriteWikiPageRevision> = {}): WriteWikiPageRevision => ({
   spaceId: 's1',

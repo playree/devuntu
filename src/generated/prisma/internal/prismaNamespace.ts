@@ -6542,6 +6542,7 @@ export const WikiPageScalarFieldEnum = {
   number: 'number',
   title: 'title',
   content: 'content',
+  type: 'type',
   order: 'order',
   createdById: 'createdById',
   updatedById: 'updatedById',
@@ -6587,6 +6588,7 @@ export const WikiPageRevisionScalarFieldEnum = {
   order: 'order',
   title: 'title',
   content: 'content',
+  type: 'type',
   tagNames: 'tagNames',
   actorId: 'actorId',
   via: 'via',
@@ -7231,6 +7233,20 @@ export type EnumWikiAssignRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$P
  * Reference to a field of type 'WikiAssignRole[]'
  */
 export type ListEnumWikiAssignRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiAssignRole[]'>
+    
+
+
+/**
+ * Reference to a field of type 'WikiPageType'
+ */
+export type EnumWikiPageTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiPageType'>
+    
+
+
+/**
+ * Reference to a field of type 'WikiPageType[]'
+ */
+export type ListEnumWikiPageTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiPageType[]'>
     
 
 

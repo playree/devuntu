@@ -74,6 +74,9 @@ docker compose up -d --wait
   - Write descriptions and comments in Markdown, including mermaid diagrams, syntax-highlighted code, GitHub-style alerts and footnotes
   - Filter the board and the ticket list down to the children or related tickets of a given ticket
   - Export a ticket or a plan / report as PDF or HTML
+- A Wiki for hierarchical documents (permissions per space, tags, search, page history and restore), which AI can also read and write over MCP
+  - Design document pages in the [Markdown Design Doc Viewer](https://github.com/playree/markdown-design-doc-viewer) format
+    (diagrams linked to their step headings, item tables, document headers), viewed and edited in place
 - Google Calendar integration, and sharing your free/busy time through a public URL that needs no sign-in
 - Email / Slack DM / web push notifications for mentions, assignee changes, AI agent run results, auto-completion held on merge and due date reminders,
   and Slack channel notifications per team board (tickets created / completed, assignee changes, agent run results, auto-completion held on merge, announcements)

@@ -345,6 +345,14 @@ export const WikiVia = {
 export type WikiVia = (typeof WikiVia)[keyof typeof WikiVia]
 
 
+export const WikiPageType = {
+  page: 'page',
+  design_doc: 'design_doc'
+} as const
+
+export type WikiPageType = (typeof WikiPageType)[keyof typeof WikiPageType]
+
+
 export const WikiPageRevisionAction = {
   created: 'created',
   updated: 'updated',

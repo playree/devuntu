@@ -87,6 +87,7 @@ const REVISION_SUMMARY_SELECT = {
   parentId: true,
   order: true,
   title: true,
+  type: true,
   tagNames: true,
   via: true,
   restoredFromId: true,

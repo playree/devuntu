@@ -1,10 +1,18 @@
 /**
- * Wiki ページ本文の節の抽出と部分更新(wiki-markdown.ts)
+ * Wiki ページ本文の節の抽出と部分更新、front matter の判定(wiki-markdown.ts)
  */
 
 import { VALIDATION_ERROR } from '@/lib/error'
-import { applyTextEdits, extractMarkdownSection, listMarkdownHeadings } from '@/lib/wiki/wiki-markdown'
+import {
+  applyTextEdits,
+  designDocFrontMatter,
+  extractMarkdownSection,
+  hasDesignDocFrontMatter,
+  hasFrontMatter,
+  listMarkdownHeadings,
+} from '@/lib/wiki/wiki-markdown'
 import { describe, expect, it } from 'vitest'
+import { parse } from 'yaml'
 
 const errorTypeOf = (fn: () => unknown) => {
   try {
@@ -140,5 +148,55 @@ describe('境界のケース', () => {
 
   it('重なって現れる oldText も複数として数える', () => {
     expect(() => applyTextEdits('aaa', [{ oldText: 'aa', newText: 'b' }])).toThrow('matches 2 places')
+  })
+})
+
+describe('hasDesignDocFrontMatter', () => {
+  const fm = (...lines: string[]) => ['---', ...lines, '---', '', '# 本文'].join('\n')
+
+  it('先頭の front matter の type: design_doc を設計書とみなす(引用符・行末コメントは問わない)', () => {
+    expect(hasDesignDocFrontMatter(fm('type: design_doc', 'title: ログイン'))).toBe(true)
+    expect(hasDesignDocFrontMatter(fm('title: ログイン', 'type: "design_doc"'))).toBe(true)
+    expect(hasDesignDocFrontMatter(fm("type: 'design_doc'"))).toBe(true)
+    expect(hasDesignDocFrontMatter(fm('type:design_doc # 設計書'))).toBe(true)
+  })
+
+  it('BOM と CRLF の本文でも判定する', () => {
+    expect(hasDesignDocFrontMatter(`\uFEFF${fm('type: design_doc')}`)).toBe(true)
+    expect(hasDesignDocFrontMatter(fm('type: design_doc').replaceAll('\n', '\r\n'))).toBe(true)
+  })
+
+  it('front matter が無い・閉じていない・先頭に無いときは設計書にしない', () => {
+    expect(hasDesignDocFrontMatter('# 本文\ntype: design_doc')).toBe(false)
+    expect(hasDesignDocFrontMatter('---\ntype: design_doc\n')).toBe(false)
+    expect(hasDesignDocFrontMatter(`\n${fm('type: design_doc')}`)).toBe(false)
+    // 本文中の区切り線に挟まれた行は front matter ではない
+    expect(hasDesignDocFrontMatter('# 見出し\n\n---\ntype: design_doc\n---\n')).toBe(false)
+  })
+
+  it('別の値・入れ子のキーは設計書にしない', () => {
+    expect(hasDesignDocFrontMatter(fm('type: design_doc_x'))).toBe(false)
+    expect(hasDesignDocFrontMatter(fm('type: "design_doc'))).toBe(false)
+    expect(hasDesignDocFrontMatter(fm('meta:', '  type: design_doc'))).toBe(false)
+    expect(hasDesignDocFrontMatter(fm('doctype: design_doc'))).toBe(false)
+  })
+
+  it('YAML の終端 ... でも閉じる', () => {
+    expect(hasDesignDocFrontMatter('---\ntype: design_doc\n...\n本文')).toBe(true)
+  })
+})
+
+describe('designDocFrontMatter', () => {
+  it('設計書として判定される front matter を作り、タイトルは YAML の文字列として壊れない形にする', () => {
+    const title = 'API: "認証" # 設計'
+    const header = designDocFrontMatter(`  ${title}  `)
+    expect(header).toBe('---\ntype: design_doc\ntitle: "API: \\"認証\\" # 設計"\n---\n\n')
+    expect(hasDesignDocFrontMatter(`${header}# 本文`)).toBe(true)
+    expect(parse(header.split('---\n')[1])).toEqual({ type: 'design_doc', title })
+  })
+
+  it('hasFrontMatter は閉じた front matter の有無だけを見る', () => {
+    expect(hasFrontMatter('---\ntitle: a\n---\n')).toBe(true)
+    expect(hasFrontMatter('# a\n---\n')).toBe(false)
   })
 })
