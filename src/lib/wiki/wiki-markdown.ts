@@ -129,7 +129,7 @@ const DESIGN_DOC_TYPE = /^type[ \t]*:[ \t]*(["']?)design_doc\1[ \t]*(?:#.*)?$/
 
 /** 先頭の front matter(YAML)の行。閉じていなければ front matter とみなさず null。BOM と CRLF は無視する */
 const frontMatterLines = (content: string): string[] | null => {
-  const lines = content.replace(/^﻿/, '').split('\n')
+  const lines = content.replace(/^\uFEFF/, '').split('\n')
   if (!FRONT_MATTER_OPEN.test(lines[0].replace(/\r$/, ''))) {
     return null
   }

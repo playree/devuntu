@@ -30,7 +30,13 @@ const useOpenLink = () => {
   const router = useRouter()
   return useCallback(
     (href: string) => {
-      const url = new URL(href, window.location.href)
+      let url: URL
+      try {
+        url = new URL(href, window.location.href)
+      } catch {
+        // 書き間違いの URL は開かない
+        return
+      }
       if (url.origin === window.location.origin) {
         router.push(`${url.pathname}${url.search}${url.hash}`)
         return

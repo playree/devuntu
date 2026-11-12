@@ -39,7 +39,7 @@ export type CodeEditorCoreProps = {
   language?: Extension | (() => Promise<Extension>)
   /** 追加の拡張を作る。**初回マウント時に一度だけ呼ぶ**(差し替えると内容が巻き戻るため) */
   extensions?: () => Extension
-  /** カーソルのある行(0 始まり)が変わったとき */
+  /** カーソルを動かして行(0 始まり)が変わったとき。入力による変化では呼ばない */
   onCursorLine?: (line: number) => void
   /** ファイルが貼り付け・ドロップされたとき。true を返すと引き取ったとみなし、エディタには入れない */
   onFiles?: (files: File[]) => boolean
@@ -170,10 +170,11 @@ const CodeEditorInner: FC<CodeEditorCoreProps & { isDark: boolean }> = ({
             if (update.focusChanged && !update.view.hasFocus) {
               handlers.current.onBlur?.()
             }
-            if (update.docChanged || update.selectionSet) {
+            // 入力中は通知しない(行番号が、遅れて追随する側の内容とずれるため)。カーソルを動かしたときだけ知らせる
+            if (update.selectionSet && !update.docChanged) {
               const line = update.state.doc.lineAt(update.state.selection.main.head).number - 1
               const before = update.startState.doc.lineAt(update.startState.selection.main.head).number - 1
-              if (line !== before || update.docChanged) {
+              if (line !== before) {
                 handlers.current.onCursorLine?.(line)
               }
             }

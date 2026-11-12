@@ -5,12 +5,13 @@ import { EditorField } from '@/components/general/editor-field'
 import { TabsBox } from '@/components/general/tabs'
 import { notify } from '@/components/notify'
 import { uploadImage } from '@/lib/storage/upload'
+import { useDebounced } from '@/lib/use-debounced'
 import { useMediaQuery } from '@/lib/use-media-query'
 import { useLocale } from '@/locale/client'
 import { cn, Skeleton } from '@heroui/react'
 import type { DesignDocViewerHandle } from 'markdown-design-doc-viewer-embed/react'
 import dynamic from 'next/dynamic'
-import { FC, ReactNode, useCallback, useEffect, useRef, useState } from 'react'
+import { FC, ReactNode, useCallback, useRef, useState } from 'react'
 import { DesignDocView } from './design-doc-view'
 
 const MarkdownEditorCore = dynamic(() => import('@/components/code/markdown-editor-core'), {
@@ -29,16 +30,6 @@ const PANE_HEIGHT = 'h-[calc(100dvh-16rem)] min-h-96'
 
 /** 画像の代替テキスト。拡張子を除き、リンクの記法を壊す文字は外す */
 const altOf = (file: File) => file.name.replace(/\.[^.]*$/, '').replace(/[[\]\\]/g, '')
-
-/** 値の更新を遅らせる */
-const useDebounced = <T,>(value: T, delayMs: number): T => {
-  const [debounced, setDebounced] = useState(value)
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(value), delayMs)
-    return () => clearTimeout(timer)
-  }, [value, delayMs])
-  return debounced
-}
 
 /**
  * 設計書(Markdown Design Doc Viewer の形式)の編集。ソースを CodeMirror で書き、横にビューアのプレビューを並べる。

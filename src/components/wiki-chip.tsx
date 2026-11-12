@@ -34,6 +34,5 @@ const pageTypeChip = createEnumChip<WikiPageType>({
   design_doc: { item: 'wiki_page_type_design_doc', color: 'accent' },
 })
 
-/** ページの種類 */
-export const WikiPageTypeChip = pageTypeChip.EnumChip
+/** ページの種類の選択肢 */
 export const useWikiPageTypeOptions = pageTypeChip.useOptions

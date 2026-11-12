@@ -93,7 +93,7 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
     if (type === 'design_doc') {
       // 設計書ヘッダの元になる front matter が無ければ足す
       if (!hasFrontMatter(content)) {
-        content = `${designDocFrontMatter(titleDraft || page.title)}${content}`
+        content = `${designDocFrontMatter(titleDraft.trim() || page.title)}${content}`
       }
     } else if (
       !(await confirmModal().confirm({ title: t('wiki_change_page_type'), text: t('msg_confirm_wiki_type_to_page') }))
