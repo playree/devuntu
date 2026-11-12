@@ -37,7 +37,8 @@ const altOf = (file: File) => file.name.replace(/\.[^.]*$/, '').replace(/[[\]\\]
  *
  * - lg 以上は左にソース、右にプレビュー。プレビューのダブルクリックでソースの該当行へ移り、ソースのカーソル行にプレビューで印を付ける
  * - lg 未満はタブで切り替える
- * - 画像の貼り付け・ドロップはアップロードして `![名前](URL)` を差し込む
+ * - 画像の貼り付け・ドロップは、その位置へ仮の印(HTML コメント)を置いてアップロードし、終わったら印を `![名前](URL)` に置き換える。
+ *   待つ間に選択や本文が変わっても、置き換えるのは印だけ。アップロード中は `onUploadingChange` で知らせる
  *
  * 非制御。`initialValue` は初回マウント時の値としてのみ使う
  */
@@ -54,6 +55,8 @@ export const DesignDocEditor: FC<{
   allowImages?: boolean
   /** 挿入した画像の添付先 Wiki スペース。配信時にこのスペースの閲覧判定が掛かる */
   uploadWikiSpaceId?: string | null
+  /** 画像のアップロード中かどうかが変わったとき。終わるまでは本文に仮の印が残るので、保存を止めるのに使う */
+  onUploadingChange?: (isUploading: boolean) => void
   /** ラベル行の右端に置く操作 */
   action?: ReactNode
   /** 本文の下に右寄せで置く操作(キャンセル / 保存など) */
@@ -67,6 +70,7 @@ export const DesignDocEditor: FC<{
   label,
   allowImages,
   uploadWikiSpaceId,
+  onUploadingChange,
   action,
   footer,
 }) => {
@@ -77,6 +81,8 @@ export const DesignDocEditor: FC<{
   const [tab, setTab] = useState('edit')
   const editorRef = useRef<CodeEditorHandle>(null)
   const viewerRef = useRef<DesignDocViewerHandle>(null)
+  // アップロード中の件数と、仮の印を一意にする連番
+  const uploads = useRef({ pending: 0, seq: 0 })
 
   const change = useCallback(
     (value: string) => {
@@ -97,22 +103,35 @@ export const DesignDocEditor: FC<{
   const insertImages = useCallback(
     (files: File[]) => {
       const images = files.filter((file) => file.type.startsWith('image/'))
-      if (!allowImages || images.length === 0) {
+      const editor = editorRef.current
+      if (!allowImages || images.length === 0 || !editor) {
         return false
       }
+      const state = uploads.current
+      const items = images.map((file) => ({ file, mark: `<!-- uploading ${Date.now()}-${++state.seq} -->` }))
+      editor.insertText(items.map(({ mark }) => `${mark}\n`).join(''))
+      state.pending += items.length
+      onUploadingChange?.(true)
       void (async () => {
-        for (const file of images) {
+        for (const { file, mark } of items) {
           try {
             const url = await uploadImage(file, { wikiSpaceId: uploadWikiSpaceId })
-            editorRef.current?.insertText(`![${altOf(file)}](${url})\n`)
+            // 印を消されていたら差し込まない。幅の変化でエディタを作り直していても、本文に残った印を置き換える
+            editorRef.current?.replaceText(mark, `![${altOf(file)}](${url})`)
           } catch (e) {
+            if (!editorRef.current?.replaceText(`${mark}\n`, '')) {
+              editorRef.current?.replaceText(mark, '')
+            }
             notify.error(t('msg_image_upload_failed'), { description: e instanceof Error ? e.message : undefined })
+          } finally {
+            state.pending--
+            onUploadingChange?.(state.pending > 0)
           }
         }
       })()
       return true
     },
-    [allowImages, uploadWikiSpaceId, t],
+    [allowImages, uploadWikiSpaceId, onUploadingChange, t],
   )
 
   const editor = (

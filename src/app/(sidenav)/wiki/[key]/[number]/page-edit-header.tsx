@@ -19,9 +19,11 @@ export const WikiPageEditHeader: FC<{
   onTitleChange: (title: string) => void
   type: WikiPageType
   onTypeChange: (type: WikiPageType) => void
+  /** 種類を切り替えられない間(画像のアップロード中など) */
+  isTypeDisabled?: boolean
   tagIds: string[]
   onTagIdsChange: (tagIds: string[]) => void
-}> = ({ title, onTitleChange, type, onTypeChange, tagIds, onTagIdsChange }) => {
+}> = ({ title, onTitleChange, type, onTypeChange, isTypeDisabled, tagIds, onTagIdsChange }) => {
   const { t } = useLocale()
   const { space, tags: spaceTags, reloadSpace } = useWikiSpace()
   const typeOptions = useWikiPageTypeOptions()
@@ -42,6 +44,7 @@ export const WikiPageEditHeader: FC<{
           label={t('wiki_page_type')}
           groupOptions={typeOptions}
           value={type}
+          isDisabled={isTypeDisabled}
           onChange={(key) => key && onTypeChange(key as WikiPageType)}
         />
       </div>

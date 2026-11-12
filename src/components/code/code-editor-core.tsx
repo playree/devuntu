@@ -20,6 +20,8 @@ export type CodeEditorHandle = {
   revealLine: (line: number) => void
   /** 選択範囲をテキストで置き換える(無ければカーソル位置へ挿入する) */
   insertText: (text: string) => void
+  /** 本文で最初に現れる `search` を置き換える。見つからなければ何もせず false */
+  replaceText: (search: string, text: string) => boolean
 }
 
 export type CodeEditorCoreProps = {
@@ -41,7 +43,10 @@ export type CodeEditorCoreProps = {
   extensions?: () => Extension
   /** カーソルを動かして行(0 始まり)が変わったとき。入力による変化では呼ばない */
   onCursorLine?: (line: number) => void
-  /** ファイルが貼り付け・ドロップされたとき。true を返すと引き取ったとみなし、エディタには入れない */
+  /**
+   * ファイルが貼り付け・ドロップされたとき。true を返すと引き取ったとみなし、エディタには入れない。
+   * ドロップでは、呼ぶ前にカーソルをドロップした位置へ移す
+   */
   onFiles?: (files: File[]) => boolean
   /** 親の高さいっぱいに広げ、中でスクロールする(minRows は効かない) */
   isFill?: boolean
@@ -122,6 +127,15 @@ const CodeEditorInner: FC<CodeEditorCoreProps & { isDark: boolean }> = ({
       view.dispatch(view.state.replaceSelection(text))
       view.focus()
     },
+    replaceText: (search, text) => {
+      const view = viewRef.current
+      const from = view?.state.doc.toString().indexOf(search) ?? -1
+      if (!view || from < 0) {
+        return false
+      }
+      view.dispatch({ changes: { from, to: from + search.length, insert: text } })
+      return true
+    },
   }))
 
   useEffect(() => {
@@ -161,7 +175,15 @@ const CodeEditorInner: FC<CodeEditorCoreProps & { isDark: boolean }> = ({
           themeRef.current.of(colorTheme(isDarkRef.current)),
           EditorView.domEventHandlers({
             paste: (event) => takeFiles(filesOf(event.clipboardData), event),
-            drop: (event) => takeFiles(filesOf(event.dataTransfer), event),
+            drop: (event, view) => {
+              const files = filesOf(event.dataTransfer)
+              // 引き取った側はカーソル位置へ挿入するので、選択範囲ではなくドロップした位置にする
+              const pos = files.length > 0 ? view.posAtCoords({ x: event.clientX, y: event.clientY }) : null
+              if (pos !== null) {
+                view.dispatch({ selection: EditorSelection.cursor(pos) })
+              }
+              return takeFiles(files, event)
+            },
           }),
           EditorView.updateListener.of((update) => {
             if (update.docChanged) {

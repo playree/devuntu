@@ -64,7 +64,16 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
   // 競合の判定の基準。編集中にページを取り直しても(移動など)、編集を始めた時点の値で比べる
   const [baseUpdatedAt, setBaseUpdatedAt] = useState(page.updatedAt)
   const [isSaving, setSaving] = useState(false)
+  // 設計書の画像のアップロード中。終わるまで本文に仮の印があるので、保存と種類の切り替えを止める
+  const [isUploading, setUploading] = useState(false)
   const contentRef = useRef<HTMLDivElement>(null)
+  // 最新の下書き。種類の切り替えで確認を待つ間に本文が変わっても、承認した時点の本文を引き継ぐ
+  const contentDraftRef = useRef(page.content)
+
+  const changeContent = (content: string) => {
+    contentDraftRef.current = content
+    setContentDraft(content)
+  }
 
   // クエリは消して、再読み込みで編集に戻らないようにする
   useEffect(() => {
@@ -75,8 +84,9 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
 
   const startEditing = () => {
     setTitleDraft(page.title)
-    setContentDraft(page.content)
+    changeContent(page.content)
     setTypeDraft(page.type)
+    setUploading(false)
     setEditorBase(page.content)
     setEditorKey((key) => key + 1)
     setTagIdsDraft(pageTagIds())
@@ -86,21 +96,21 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
 
   /** 種類を切り替え、下書きを引き継いでエディタを開き直す */
   const changeType = async (type: WikiPageType) => {
-    if (type === typeDraft) {
+    if (type === typeDraft || isUploading) {
       return
     }
-    let content = contentDraft
-    if (type === 'design_doc') {
-      // 設計書ヘッダの元になる front matter が無ければ足す
-      if (!hasFrontMatter(content)) {
-        content = `${designDocFrontMatter(titleDraft.trim() || page.title)}${content}`
-      }
-    } else if (
+    if (
+      type === 'page' &&
       !(await confirmModal().confirm({ title: t('wiki_change_page_type'), text: t('msg_confirm_wiki_type_to_page') }))
     ) {
       return
     }
-    setContentDraft(content)
+    let content = contentDraftRef.current
+    // 設計書ヘッダの元になる front matter が無ければ足す
+    if (type === 'design_doc' && !hasFrontMatter(content)) {
+      content = `${designDocFrontMatter(titleDraft.trim() || page.title)}${content}`
+    }
+    changeContent(content)
     setEditorBase(content)
     setEditorKey((key) => key + 1)
     setTypeDraft(type)
@@ -135,7 +145,10 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
   }
 
   const isSubmittable =
-    titleDraft.trim().length > 0 && titleDraft.length <= MAX_WIKI_TITLE && contentDraft.length <= MAX_WIKI_CONTENT
+    !isUploading &&
+    titleDraft.trim().length > 0 &&
+    titleDraft.length <= MAX_WIKI_TITLE &&
+    contentDraft.length <= MAX_WIKI_CONTENT
   const updatedBy = page.updatedBy?.name ?? page.createdBy?.name
   const isDesignDoc = (isEditing ? typeDraft : page.type) === 'design_doc'
 
@@ -168,7 +181,7 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
       isEditing={isEditing}
       // 編集中に変わらない値を渡す(MDXEditor は編集モードのマウント時にこの値を取り込む)
       defaultValue={editorBase}
-      onChange={setContentDraft}
+      onChange={changeContent}
       length={contentDraft.length}
       maxLength={MAX_WIKI_CONTENT}
       label={t('content')}
@@ -182,13 +195,14 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
     <DesignDocEditor
       key={editorKey}
       initialValue={editorBase}
-      onChange={setContentDraft}
+      onChange={changeContent}
       documentId={page.id}
       length={contentDraft.length}
       maxLength={MAX_WIKI_CONTENT}
       label={t('content')}
       allowImages
       uploadWikiSpaceId={page.spaceId}
+      onUploadingChange={setUploading}
       footer={footer}
     />
   ) : (
@@ -218,6 +232,7 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
             onTitleChange={setTitleDraft}
             type={typeDraft}
             onTypeChange={changeType}
+            isTypeDisabled={isUploading}
             tagIds={tagIdsDraft}
             onTagIdsChange={setTagIdsDraft}
           />

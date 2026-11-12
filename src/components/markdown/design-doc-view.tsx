@@ -21,9 +21,20 @@ const DesignDocViewer = dynamic(() => import('./design-doc-viewer-core'), {
 /** ワイヤーフレームの別ファイルは扱わない。本文に書かれたパスを同一オリジンへ fetch させないため、常に読めないとする */
 const readNoFile = async () => undefined
 
-/** アップロードした添付(`/api/upload/...`)はそのまま、ほかは今のオリジンを基準に解決する */
-const resolveResource = (src: string): string =>
-  src.startsWith('/api/upload/') ? src : new URL(src, window.location.origin).href
+/**
+ * アップロードした添付(`/api/upload/...`)はそのまま、ほかは今のオリジンを基準に解決する。
+ * 解決できない URL はそのまま返す(ビューアは例外を拾わないので、1つの壊れた画像で本文全体が描けなくなる)
+ */
+const resolveResource = (src: string): string => {
+  if (src.startsWith('/api/upload/')) {
+    return src
+  }
+  try {
+    return new URL(src, window.location.origin).href
+  } catch {
+    return src
+  }
+}
 
 /** 本文のリンクを開く。同一オリジン(相対を含む)は画面内で遷移し、ほかは新しいタブ(http(s) / mailto のみ) */
 const useOpenLink = () => {

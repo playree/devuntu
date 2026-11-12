@@ -154,11 +154,13 @@ describe('境界のケース', () => {
 describe('hasDesignDocFrontMatter', () => {
   const fm = (...lines: string[]) => ['---', ...lines, '---', '', '# 本文'].join('\n')
 
-  it('先頭の front matter の type: design_doc を設計書とみなす(引用符・行末コメントは問わない)', () => {
+  it('先頭の front matter の type: design_doc を設計書とみなす(キーと値の引用符・行末コメントは問わない)', () => {
     expect(hasDesignDocFrontMatter(fm('type: design_doc', 'title: ログイン'))).toBe(true)
     expect(hasDesignDocFrontMatter(fm('title: ログイン', 'type: "design_doc"'))).toBe(true)
     expect(hasDesignDocFrontMatter(fm("type: 'design_doc'"))).toBe(true)
-    expect(hasDesignDocFrontMatter(fm('type:design_doc # 設計書'))).toBe(true)
+    expect(hasDesignDocFrontMatter(fm('type:  design_doc # 設計書'))).toBe(true)
+    expect(hasDesignDocFrontMatter(fm('"type": design_doc'))).toBe(true)
+    expect(hasDesignDocFrontMatter(fm("'type' : design_doc"))).toBe(true)
   })
 
   it('BOM と CRLF の本文でも判定する', () => {
@@ -179,6 +181,9 @@ describe('hasDesignDocFrontMatter', () => {
     expect(hasDesignDocFrontMatter(fm('type: "design_doc'))).toBe(false)
     expect(hasDesignDocFrontMatter(fm('meta:', '  type: design_doc'))).toBe(false)
     expect(hasDesignDocFrontMatter(fm('doctype: design_doc'))).toBe(false)
+    expect(hasDesignDocFrontMatter(fm('"type\': design_doc'))).toBe(false)
+    // コロンの後に空白が無ければキーではない(ビューアも設計書にしない)
+    expect(hasDesignDocFrontMatter(fm('type:design_doc'))).toBe(false)
   })
 
   it('YAML の終端 ... でも閉じる', () => {
@@ -187,12 +192,20 @@ describe('hasDesignDocFrontMatter', () => {
 })
 
 describe('designDocFrontMatter', () => {
-  it('設計書として判定される front matter を作り、タイトルは YAML の文字列として壊れない形にする', () => {
-    const title = 'API: "認証" # 設計'
+  it('設計書として判定される front matter を作り、タイトルはダブルクオートの文字列にする', () => {
+    const title = "API: 'ログイン' # 設計"
     const header = designDocFrontMatter(`  ${title}  `)
-    expect(header).toBe('---\ntype: design_doc\ntitle: "API: \\"認証\\" # 設計"\n---\n\n')
+    expect(header).toBe(`---\ntype: design_doc\ntitle: "${title}"\n---\n\n`)
     expect(hasDesignDocFrontMatter(`${header}# 本文`)).toBe(true)
     expect(parse(header.split('---\n')[1])).toEqual({ type: 'design_doc', title })
+  })
+
+  it('エスケープが要るタイトルはブロックスカラーにする(ビューアはエスケープを戻さない)', () => {
+    for (const title of ['API "認証"', 'C:\\path', '"引用"で始まる']) {
+      const header = designDocFrontMatter(title)
+      expect(header).toBe(`---\ntype: design_doc\ntitle: |-\n  ${title}\n---\n\n`)
+      expect(parse(header.split('---\n')[1])).toEqual({ type: 'design_doc', title })
+    }
   })
 
   it('hasFrontMatter は閉じた front matter の有無だけを見る', () => {

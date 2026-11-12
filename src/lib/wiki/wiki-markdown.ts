@@ -124,8 +124,11 @@ export const applyTextEdits = (content: string, edits: readonly TextEdit[]): str
 
 const FRONT_MATTER_OPEN = /^---[ \t]*$/
 const FRONT_MATTER_CLOSE = /^(?:---|\.\.\.)[ \t]*$/
-/** 最上位の `type: design_doc`(引用符の有無と行末コメントは問わない) */
-const DESIGN_DOC_TYPE = /^type[ \t]*:[ \t]*(["']?)design_doc\1[ \t]*(?:#.*)?$/
+/**
+ * 最上位の `type: design_doc`(キーと値の引用符の有無、行末コメントは問わない)。
+ * ビューアの判定に合わせ、コロンの後には空白を要する(`type:design_doc` は YAML でもキーにならない)
+ */
+const DESIGN_DOC_TYPE = /^(["']?)type\1[ \t]*:[ \t]+(["']?)design_doc\2[ \t]*(?:#.*)?$/
 
 /** 先頭の front matter(YAML)の行。閉じていなければ front matter とみなさず null。BOM と CRLF は無視する */
 const frontMatterLines = (content: string): string[] | null => {
@@ -151,6 +154,15 @@ export const hasFrontMatter = (content: string): boolean => frontMatterLines(con
 export const hasDesignDocFrontMatter = (content: string): boolean =>
   frontMatterLines(content)?.some((line) => DESIGN_DOC_TYPE.test(line)) ?? false
 
-/** 設計書の最小の front matter(本文の先頭に置く)。タイトルは JSON の文字列にして YAML のダブルクオートとして読ませる */
+/**
+ * front matter のタイトルの値。ビューアは引用符を外すだけでエスケープを戻さないので、
+ * エスケープが要らなければダブルクオート、要るならブロックスカラーにする(どちらも YAML として同じ値になる)
+ */
+const frontMatterTitle = (title: string): string => {
+  const quoted = JSON.stringify(title)
+  return quoted === `"${title}"` ? quoted : `|-\n  ${title}`
+}
+
+/** 設計書の最小の front matter(本文の先頭に置く) */
 export const designDocFrontMatter = (title: string): string =>
-  `---\ntype: design_doc\ntitle: ${JSON.stringify(title.trim())}\n---\n\n`
+  `---\ntype: design_doc\ntitle: ${frontMatterTitle(title.trim())}\n---\n\n`
