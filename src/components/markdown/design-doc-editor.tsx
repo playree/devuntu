@@ -11,7 +11,7 @@ import { useLocale } from '@/locale/client'
 import { cn, Skeleton } from '@heroui/react'
 import type { DesignDocViewerHandle } from 'markdown-design-doc-viewer-embed/react'
 import dynamic from 'next/dynamic'
-import { FC, ReactNode, useCallback, useRef, useState } from 'react'
+import { FC, ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import { DesignDocView } from './design-doc-view'
 
 const MarkdownEditorCore = dynamic(() => import('@/components/code/markdown-editor-core'), {
@@ -81,8 +81,15 @@ export const DesignDocEditor: FC<{
   const [tab, setTab] = useState('edit')
   const editorRef = useRef<CodeEditorHandle>(null)
   const viewerRef = useRef<DesignDocViewerHandle>(null)
-  // アップロード中の件数と、仮の印を一意にする連番
-  const uploads = useRef({ pending: 0, seq: 0 })
+  // アップロード中の件数と、仮の印を一意にする連番。isActive はこのエディタがマウント中か
+  const uploads = useRef({ pending: 0, seq: 0, isActive: false })
+  useEffect(() => {
+    const state = uploads.current
+    state.isActive = true
+    return () => {
+      state.isActive = false
+    }
+  }, [])
 
   const change = useCallback(
     (value: string) => {
@@ -125,7 +132,10 @@ export const DesignDocEditor: FC<{
             notify.error(t('msg_image_upload_failed'), { description: e instanceof Error ? e.message : undefined })
           } finally {
             state.pending--
-            onUploadingChange?.(state.pending > 0)
+            // 閉じた後(キャンセルして編集し直した後など)に終わったものは、次の編集のアップロード状態を変えない
+            if (state.isActive) {
+              onUploadingChange?.(state.pending > 0)
+            }
           }
         }
       })()
