@@ -116,7 +116,7 @@ describe('saveWikiPageForMcp: 作成', () => {
       agentAuth().user,
       { via: 'mcp' },
       SPACE_ID,
-      { title: '新しいページ', content: '本文', parentId: 'page-3', position: 1, tagIds: ['tag-1'] },
+      { title: '新しいページ', content: '本文', type: 'page', parentId: 'page-3', position: 1, tagIds: ['tag-1'] },
       { ticketId: 'ticket-1' },
     )
     expect(result).toEqual({
@@ -125,6 +125,21 @@ describe('saveWikiPageForMcp: 作成', () => {
       url: 'http://localhost:3000/wiki/DOCS/12',
       updatedAt: SAVED_AT,
     })
+  })
+
+  it('type を省くと、本文の front matter が type: design_doc なら設計書として作る', async () => {
+    const typeOf = async (input: { content?: string; type?: 'page' | 'design_doc' }) => {
+      vi.mocked(createWikiPage).mockClear()
+      await saveWikiPageForMcp(human, { space: 'DOCS', title: 't', ...input })
+      return vi.mocked(createWikiPage).mock.calls[0][3].type
+    }
+    const designDoc = '---\ntype: design_doc\ntitle: ログイン\n---\n\n# 概要'
+
+    expect(await typeOf({ content: designDoc })).toBe('design_doc')
+    expect(await typeOf({ content: '# 概要' })).toBe('page')
+    expect(await typeOf({})).toBe('page')
+    expect(await typeOf({ content: designDoc, type: 'page' }), '指定した type を優先する').toBe('page')
+    expect(await typeOf({ content: '# 概要', type: 'design_doc' })).toBe('design_doc')
   })
 
   it('space か title が無ければエラー', async () => {
@@ -166,6 +181,19 @@ describe('saveWikiPageForMcp: 更新', () => {
       { expectedUpdatedAt: READ_AT.toISOString(), ticketId: null },
     )
     expect(moveWikiPage).not.toHaveBeenCalled()
+  })
+
+  it('type は渡したときだけ変え、type だけでも保存する(本文の front matter からは推定しない)', async () => {
+    await saveWikiPageForMcp(human, { ref: 'DOCS/12', type: 'design_doc' })
+    expect(vi.mocked(updateWikiPage).mock.calls[0][3]).toEqual({
+      title: undefined,
+      content: undefined,
+      type: 'design_doc',
+      tagIds: undefined,
+    })
+
+    await saveWikiPageForMcp(human, { ref: 'DOCS/12', content: '---\ntype: design_doc\n---\n' })
+    expect(vi.mocked(updateWikiPage).mock.calls[1][3].type).toBeUndefined()
   })
 
   it('edits は読んだ本文に当て、指定が無くても読んだ時点の updatedAt で楽観ロックをかける', async () => {
@@ -305,6 +333,7 @@ const pageDetail = () =>
       number: 12,
       title: 'API',
       content: PAGE_CONTENT,
+      type: 'page',
       updatedAt: READ_AT,
       updatedBy: { name: 'tester' },
       tags: [{ tag: { id: 't1', name: '設計' } }],
@@ -319,7 +348,7 @@ describe('getWikiPageForMcp', () => {
     vi.mocked(getWikiPage).mockResolvedValue(pageDetail())
   })
 
-  it('パンくず・子ページを ref 付きで、タグ名・updatedAt・canEdit と一緒に返す', async () => {
+  it('パンくず・子ページを ref 付きで、種類・タグ名・updatedAt・canEdit と一緒に返す', async () => {
     const result = await getWikiPageForMcp(human, { ref: 'docs/12' })
 
     expect(getWikiPage).toHaveBeenCalledWith(human.user, 'DOCS', 12)
@@ -327,6 +356,7 @@ describe('getWikiPageForMcp', () => {
       ref: 'DOCS/12',
       url: 'http://localhost:3000/wiki/DOCS/12',
       title: 'API',
+      type: 'page',
       breadcrumbs: [{ ref: 'DOCS/1', title: '設計' }],
       children: [{ ref: 'DOCS/13', title: '認証' }],
       tags: ['設計'],
@@ -463,6 +493,7 @@ describe('registerWikiTools', () => {
         'tags',
         'ticketId',
         'title',
+        'type',
       ].toSorted(),
     )
     expect(required('save_wiki_page')).toEqual([])

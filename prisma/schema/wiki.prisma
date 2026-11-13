@@ -30,6 +30,14 @@ enum WikiVia {
   mcp
 }
 
+/// Wiki ページの種類。表示と編集のしかたが変わる
+enum WikiPageType {
+  /// 通常の Markdown(リッチエディタで編集する)
+  page
+  /// 設計書(Markdown Design Doc Viewer の形式。ソースで編集し、mddv のビューアで表示する)
+  design_doc
+}
+
 /// Wiki ページの版の操作
 enum WikiPageRevisionAction {
   created
@@ -161,6 +169,9 @@ model WikiPage {
   /// 本文(Markdown)
   content String @default("")
 
+  /// 種類
+  type WikiPageType @default(page)
+
   /// 兄弟内の表示順。昇順。同値は number 昇順で安定させる
   order Int @default(0)
 
@@ -258,6 +269,7 @@ model WikiPageRevision {
   order    Int
   title    String
   content  String
+  type     WikiPageType @default(page)
   /// タグは削除されうるので名前で持つ
   tagNames String[] @default([])
 

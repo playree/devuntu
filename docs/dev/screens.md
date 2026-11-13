@@ -84,8 +84,13 @@ Proxy は通るリクエストのボディを既定 10MB まで複製して溜�
 - スペース内の画面は `wiki/[key]/layout.tsx` でスペース・ツリー(本文なし。タグの ID 付き)・タグを 1 度だけ取得し、`SideNavPortal` でサイドメニューへツリーを差し込む。スペース一覧(`/wiki`)と、取得中・閲覧できないスペースでもスペース一覧などを差し込み、Wiki の中を移る間はサイドメニューのタブを出したままにする
 - タグ(`src/lib/wiki/wiki-tag.ts`)はスペースごと。作成は `editor` 以上、更新・削除は `manage`。ページへの付与は `assertWikiTagIdsInSpace` で同じスペースのタグに限る
 - 版(`src/lib/wiki/wiki-revision.ts`)の一覧は本文を含めず、差分を出すときに選んだ版と1つ前の版の本文だけを引く(本文の最大長 × 版数を一度に転送しない)。
-  復元(`restoreWikiPageRevision`)は、存在するページならタイトル・本文・タグだけを戻して位置を変えず、削除済みなら同じ id・番号で作り直す(親が無い・深さの上限を超えるならスペース直下)。
+  復元(`restoreWikiPageRevision`)は、存在するページならタイトル・本文・種類・タグだけを戻して位置を変えず、削除済みなら同じ id・番号で作り直す(親が無い・深さの上限を超えるならスペース直下)。
   スペースのトップの「削除済みのページ」は、ページごとに最後の `deleted` の版を引き、いま存在するページを除いて出す
+- ページの種類(`WikiPageType`)が `design_doc` のページは、`markdown-design-doc-viewer-embed` のビューアで表示し(`src/components/markdown/design-doc-view.tsx`)、
+  CodeMirror のソースとプレビューで編集する(`design-doc-editor.tsx`)。ビューアの本体と `viewer.css` は `design-doc-viewer-core.tsx` を `next/dynamic` で読むので、
+  通常のページではチャンクも CSS も読み込まない。ワイヤーフレームの別ファイルは扱わない(`readFile` は常に undefined を返し、`baseUrl` は渡さない)。
+  mermaid の設定はグローバルなので、Devuntu の mermaid 表示(`mermaid-diagram.tsx`)と設計書のビューアは描画のたびに `initialize` し直している。
+  ページを素早く行き来して両方の描画が重なると、どちらかの図に相手の設定(テーマ・フォント)が当たることがある
 - 検索(`src/lib/wiki/wiki-search.ts`)は `$queryRaw` で組む
   - 語ごとに、3文字以上なら「title / content の ILIKE(`gin_trgm_ops` の GIN 索引で BitmapOr)とタグ名の完全一致の UNION」に `IN` で当てる。タグとの OR を EXISTS で書くと索引が使われなくなるため
   - 2文字以下の語はトライグラムが作れず索引が効かないので、他の語で絞った行へのフィルタとして書く(すべての語が短いときだけ全件を走査する)

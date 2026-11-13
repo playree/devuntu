@@ -9,15 +9,23 @@
  * スペースの作成・設定・割り当て、版の復元は画面で行う。
  */
 
+import type { WikiPageType } from '@/generated/prisma/enums'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 import { MAX_TAG_NAME } from '../board/tag-rule'
 import { ClientError, errValidation } from '../error'
 import type { ResourceAuth } from '../oauth/oauth-resource'
+import { zWikiPageType } from '../schema/schema-wiki'
 import { makeUrl } from '../server-utils'
 import { extractUploadKeys } from '../storage/upload'
 import { type WikiSpaceAccess } from '../wiki/wiki-access'
-import { applyTextEdits, extractMarkdownSection, listMarkdownHeadings, type TextEdit } from '../wiki/wiki-markdown'
+import {
+  applyTextEdits,
+  extractMarkdownSection,
+  hasDesignDocFrontMatter,
+  listMarkdownHeadings,
+  type TextEdit,
+} from '../wiki/wiki-markdown'
 import {
   createWikiPage,
   deleteWikiPage,
@@ -209,6 +217,7 @@ export const getWikiPageForMcp = async (auth: ResourceAuth, input: { ref: string
     url: pageUrl({ key: space.key, number: page.number }),
     space: { key: space.key, name: space.name },
     title: page.title,
+    type: page.type,
     ...(ancestors.length > 0
       ? { breadcrumbs: ancestors.map(({ number, title }) => ({ ref: refOf(number), title })) }
       : {}),
@@ -228,6 +237,7 @@ export type McpSaveWikiPageInput = {
   space?: string
   title?: string
   content?: string
+  type?: WikiPageType
   edits?: TextEdit[]
   parent?: string | null
   position?: number
@@ -258,7 +268,15 @@ const createWikiPageForMcp = async (auth: ResourceAuth, input: McpSaveWikiPageIn
     auth.user,
     WRITER,
     access.spaceId,
-    { title: input.title, content: input.content, parentId, position: toPosition(input.position), tagIds },
+    {
+      title: input.title,
+      content: input.content,
+      // 省略時は本文の front matter から決める(markdown-design-doc スキルが書く設計書は type: design_doc を持つ)
+      type: input.type ?? (input.content && hasDesignDocFrontMatter(input.content) ? 'design_doc' : 'page'),
+      parentId,
+      position: toPosition(input.position),
+      tagIds,
+    },
     { ticketId },
   )
   return writeResult(created.result, created, access.key)
@@ -299,7 +317,8 @@ const updateWikiPageForMcp = async (
   // 親は書き込む前に解決する(無い親で内容だけ保存されないように)。undefined は今の親のまま
   const parentId =
     input.parent === undefined ? undefined : input.parent === null ? null : await resolveParentId(access, input.parent)
-  const wantsUpdate = input.title !== undefined || content !== undefined || tagIds !== undefined
+  const wantsUpdate =
+    input.title !== undefined || content !== undefined || input.type !== undefined || tagIds !== undefined
   // 位置を省いた移動は末尾へ送るので、今と同じ親を位置なしで渡されたときは動かさない
   const wantsMove = input.position !== undefined || (parentId !== undefined && parentId !== page.parentId)
   if (!wantsUpdate && !wantsMove) {
@@ -310,7 +329,7 @@ const updateWikiPageForMcp = async (
         access.key,
       )
     }
-    throw errValidation('Nothing to save. Pass title, content, edits, tags, parent or position')
+    throw errValidation('Nothing to save. Pass title, content, edits, type, tags, parent or position')
   }
 
   const updated = wantsUpdate
@@ -318,7 +337,7 @@ const updateWikiPageForMcp = async (
         auth.user,
         WRITER,
         page.id,
-        { title: input.title, content, tagIds },
+        { title: input.title, content, type: input.type, tagIds },
         { expectedUpdatedAt, ticketId },
       )
     : undefined
@@ -341,7 +360,7 @@ const updateWikiPageForMcp = async (
     if (updated?.result === 'updated' && error instanceof ClientError) {
       throw new ClientError(
         error.errorType,
-        `The title / content / tags were saved (updatedAt: ${updated.updatedAt.toISOString()}), but moving the page failed: ${error.message}`,
+        `The title / content / type / tags were saved (updatedAt: ${updated.updatedAt.toISOString()}), but moving the page failed: ${error.message}`,
       )
     }
     throw error
@@ -453,7 +472,7 @@ export const registerWikiTools = (server: McpServer, auth: ResourceAuth) => {
       title: 'Get wiki page',
       annotations: TOOL_ANNOTATIONS.readOnly,
       description:
-        'Reads a Wiki page (Markdown) by ref, with breadcrumbs, child pages, tags and updatedAt. ' +
+        'Reads a Wiki page (Markdown) by ref, with its type (page / design_doc), breadcrumbs, child pages, tags and updatedAt. ' +
         'Pass section with a heading to read only that section (including its subsections) and save tokens; ' +
         'an unknown heading returns the list of headings. Images and files in the content can be read with get_image / get_file',
       inputSchema: z.strictObject({
@@ -474,12 +493,17 @@ export const registerWikiTools = (server: McpServer, auth: ResourceAuth) => {
         'Before updating, read the page with get_wiki_page and pass its updatedAt as expectedUpdatedAt so you do not overwrite changes by others. ' +
         'For partial changes use edits instead of sending the whole content: each oldText must match exactly one place, and edits are checked against the content as you read it. ' +
         'parent / position move the page within the space. tags replace all tags of the page and must be existing tag names of the space. ' +
+        'type design_doc makes the page a design document in the Markdown Design Doc Viewer format (write it with the markdown-design-doc skill if you have it); ' +
+        'when creating without type, a content whose front matter has type: design_doc becomes one. Omit type when updating to keep it. ' +
         'Write only what the user asked for or agreed to; every change is kept in the page history, from which users can restore it',
       inputSchema: z.strictObject({
         ref: zWikiPageRef.optional().describe('Page ref KEY/number to update. Omit to create a page'),
         space: zSpaceKey.optional().describe('Space key to create the page in. Only when creating'),
         title: z.string().min(1).max(MAX_WIKI_TITLE).optional().describe('Required when creating'),
         content: z.string().max(MAX_WIKI_CONTENT).optional().describe('Markdown body. Replaces the whole content'),
+        type: zWikiPageType
+          .optional()
+          .describe('page (Markdown) or design_doc (Markdown Design Doc Viewer design document)'),
         edits: z
           .array(
             z.strictObject({

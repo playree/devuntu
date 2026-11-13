@@ -73,6 +73,7 @@ const pageRow = (id: string, override: Record<string, unknown> = {}) => {
     order: row?.order ?? 0,
     title: `title-${id}`,
     content: `content-${id}`,
+    type: 'page',
     tags: [],
     spaceId: SPACE_ID,
     number: 10,
@@ -138,6 +139,7 @@ describe('createWikiPage', () => {
       number: 11,
       title: '新規',
       content: '',
+      type: 'page',
       order: 2,
       createdById: actor.id,
       updatedVia: 'mcp',
@@ -147,11 +149,22 @@ describe('createWikiPage', () => {
       pageId: 'new',
       pageNumber: 11,
       action: 'created',
-      snapshot: { parentId: 'a', order: 2, title: '新規', content: '', tagNames: [] },
+      snapshot: { parentId: 'a', order: 2, title: '新規', content: '', type: 'page', tagNames: [] },
       actorId: actor.id,
       via: 'mcp',
       ticketId: 't1',
     })
+  })
+
+  it('種類を指定すると、その種類で作って版にも残す', async () => {
+    await createWikiPage(actor, WEB, SPACE_ID, {
+      title: '設計書',
+      content: '---\ntype: design_doc\n---\n',
+      type: 'design_doc',
+    })
+
+    expect(vi.mocked(prisma.wikiPage.create).mock.calls[0][0].data).toMatchObject({ type: 'design_doc' })
+    expect(vi.mocked(writeWikiPageRevision).mock.calls[0][1].snapshot.type).toBe('design_doc')
   })
 
   it('位置を指定すると、後ろの兄弟の並びを詰め直す', async () => {
@@ -221,18 +234,30 @@ describe('updateWikiPage', () => {
     expect(vi.mocked(prisma.wikiPage.update).mock.calls[0][0].data).toMatchObject({
       title: 'title-b',
       content: '新しい本文',
+      type: 'page',
       updatedById: actor.id,
       updatedVia: 'web',
     })
     expect(vi.mocked(writeWikiPageRevision).mock.calls[0][1]).toMatchObject({
       pageId: 'b',
       action: 'updated',
-      snapshot: { parentId: 'a', order: 0, title: 'title-b', content: '新しい本文', tagNames: [] },
+      snapshot: { parentId: 'a', order: 0, title: 'title-b', content: '新しい本文', type: 'page', tagNames: [] },
     })
   })
 
+  it('種類だけを変えても保存し、版に新しい種類を残す', async () => {
+    const result = await updateWikiPage(actor, WEB, 'b', { type: 'design_doc' })
+
+    expect(result.result).toBe('updated')
+    expect(vi.mocked(prisma.wikiPage.update).mock.calls[0][0].data).toMatchObject({
+      content: 'content-b',
+      type: 'design_doc',
+    })
+    expect(vi.mocked(writeWikiPageRevision).mock.calls[0][1].snapshot.type).toBe('design_doc')
+  })
+
   it('内容が変わらなければ書かない', async () => {
-    const result = await updateWikiPage(actor, WEB, 'b', { title: 'title-b', content: 'content-b' })
+    const result = await updateWikiPage(actor, WEB, 'b', { title: 'title-b', content: 'content-b', type: 'page' })
     expect(result.result).toBe('unchanged')
     expect(prisma.wikiPage.update).not.toHaveBeenCalled()
     expect(writeWikiPageRevision).not.toHaveBeenCalled()

@@ -3,9 +3,10 @@
 import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input'
 import { DialogModal, FormModal, type ModalBaseProps } from '@/components/general/modal'
-import { SingleSelectField } from '@/components/general/select'
+import { SingleSelectCtrl, SingleSelectField } from '@/components/general/select'
 import { DocumentPlusIcon, FolderArrowRightIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
+import { useWikiPageTypeOptions } from '@/components/wiki-chip'
 import { parseAction } from '@/lib/action/action-client'
 import { ClientError } from '@/lib/error'
 import { type CreateWikiPage, scCreateWikiPage } from '@/lib/schema/schema-wiki'
@@ -23,7 +24,7 @@ import { useWikiSpace } from './space-context'
 /** 作成後に本文の編集から始めるため、ページ詳細へ付けるクエリ */
 export const EDIT_QUERY = 'edit'
 
-/** ページの作成。タイトルだけを入れて作り、作ったページへ移って本文の編集を始める */
+/** ページの作成。タイトルと種類を入れて作り、作ったページへ移って本文の編集を始める */
 export const CreatePageModal: FC<ModalBaseProps & { parent: { id: string; title: string } | null }> = ({
   state,
   reload,
@@ -32,6 +33,7 @@ export const CreatePageModal: FC<ModalBaseProps & { parent: { id: string; title:
   const { t, fet } = useLocale()
   const router = useRouter()
   const { space } = useWikiSpace()
+  const typeOptions = useWikiPageTypeOptions()
 
   const {
     control,
@@ -40,7 +42,7 @@ export const CreatePageModal: FC<ModalBaseProps & { parent: { id: string; title:
   } = useForm<CreateWikiPage>({
     resolver: zodResolver(scCreateWikiPage),
     mode: 'onChange',
-    defaultValues: { spaceId: space.id, parentId: parent?.id ?? null, title: '' },
+    defaultValues: { spaceId: space.id, parentId: parent?.id ?? null, title: '', type: 'page' },
   })
 
   return (
@@ -76,6 +78,9 @@ export const CreatePageModal: FC<ModalBaseProps & { parent: { id: string; title:
             errorMessage={fet(errors.title)}
             autoFocus
           />
+        </div>
+        <div className='col-span-12'>
+          <SingleSelectCtrl control={control} name='type' groupOptions={typeOptions} label={t('wiki_page_type')} />
         </div>
       </GridBox>
     </FormModal>

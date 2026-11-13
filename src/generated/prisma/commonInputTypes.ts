@@ -1010,11 +1010,28 @@ export type EnumWikiAssignRoleWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumWikiAssignRoleFilter<$PrismaModel>
 }
 
+export type EnumWikiPageTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiPageType | Prisma.EnumWikiPageTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiPageType[] | Prisma.ListEnumWikiPageTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiPageType[] | Prisma.ListEnumWikiPageTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiPageTypeFilter<$PrismaModel> | $Enums.WikiPageType
+}
+
 export type EnumWikiViaFilter<$PrismaModel = never> = {
   equals?: $Enums.WikiVia | Prisma.EnumWikiViaFieldRefInput<$PrismaModel>
   in?: $Enums.WikiVia[] | Prisma.ListEnumWikiViaFieldRefInput<$PrismaModel>
   notIn?: $Enums.WikiVia[] | Prisma.ListEnumWikiViaFieldRefInput<$PrismaModel>
   not?: Prisma.NestedEnumWikiViaFilter<$PrismaModel> | $Enums.WikiVia
+}
+
+export type EnumWikiPageTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiPageType | Prisma.EnumWikiPageTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiPageType[] | Prisma.ListEnumWikiPageTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiPageType[] | Prisma.ListEnumWikiPageTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiPageTypeWithAggregatesFilter<$PrismaModel> | $Enums.WikiPageType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumWikiPageTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumWikiPageTypeFilter<$PrismaModel>
 }
 
 export type EnumWikiViaWithAggregatesFilter<$PrismaModel = never> = {
@@ -1999,11 +2016,28 @@ export type NestedEnumWikiAssignRoleWithAggregatesFilter<$PrismaModel = never> =
   _max?: Prisma.NestedEnumWikiAssignRoleFilter<$PrismaModel>
 }
 
+export type NestedEnumWikiPageTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiPageType | Prisma.EnumWikiPageTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiPageType[] | Prisma.ListEnumWikiPageTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiPageType[] | Prisma.ListEnumWikiPageTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiPageTypeFilter<$PrismaModel> | $Enums.WikiPageType
+}
+
 export type NestedEnumWikiViaFilter<$PrismaModel = never> = {
   equals?: $Enums.WikiVia | Prisma.EnumWikiViaFieldRefInput<$PrismaModel>
   in?: $Enums.WikiVia[] | Prisma.ListEnumWikiViaFieldRefInput<$PrismaModel>
   notIn?: $Enums.WikiVia[] | Prisma.ListEnumWikiViaFieldRefInput<$PrismaModel>
   not?: Prisma.NestedEnumWikiViaFilter<$PrismaModel> | $Enums.WikiVia
+}
+
+export type NestedEnumWikiPageTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiPageType | Prisma.EnumWikiPageTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiPageType[] | Prisma.ListEnumWikiPageTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiPageType[] | Prisma.ListEnumWikiPageTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiPageTypeWithAggregatesFilter<$PrismaModel> | $Enums.WikiPageType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumWikiPageTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumWikiPageTypeFilter<$PrismaModel>
 }
 
 export type NestedEnumWikiViaWithAggregatesFilter<$PrismaModel = never> = {

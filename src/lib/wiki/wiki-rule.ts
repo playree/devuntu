@@ -5,7 +5,7 @@
  * 版の保持期間・上限・まとめる時間は環境変数から読むため、ここでは持たず引数で受け取る。
  */
 
-import type { WikiPageRevisionAction, WikiSpaceRole, WikiVia } from '@/generated/prisma/enums'
+import type { WikiPageRevisionAction, WikiPageType, WikiSpaceRole, WikiVia } from '@/generated/prisma/enums'
 import { MAX_TAG_NAME, MAX_TICKET_TAGS } from '../board/tag-rule'
 import { BOARD_KEY_PATTERN, MAX_BOARD_KEY } from '../board/ticket-id'
 
@@ -98,6 +98,7 @@ export type WikiPageSnapshot = {
   order: number
   title: string
   content: string
+  type: WikiPageType
   tagNames: string[]
 }
 
