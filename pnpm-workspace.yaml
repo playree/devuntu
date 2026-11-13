@@ -6,7 +6,7 @@ allowBuilds:
   unrs-resolver: true
 # 自前の mddv の embed。公開直後に取り込むため除外する(公開から日が経てば不要なので削除する)
 minimumReleaseAgeExclude:
-  - markdown-design-doc-viewer-embed@1.5.1
+  - markdown-design-doc-viewer-embed@1.5.3
 onlyBuiltDependencies:
   - '@heroui/shared-utils'
   - '@prisma/client'

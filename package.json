@@ -73,7 +73,7 @@
     "framer-motion": "^14.9.0",
     "jose": "^6.2.15",
     "lexical": "0.48.0",
-    "markdown-design-doc-viewer-embed": "^1.5.1",
+    "markdown-design-doc-viewer-embed": "^1.5.3",
     "mdast-util-gfm-footnote": "^2.1.0",
     "mermaid": "^12.3.0",
     "micromark-extension-gfm-footnote": "^2.1.0",
