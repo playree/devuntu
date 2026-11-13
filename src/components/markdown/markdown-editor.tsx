@@ -187,6 +187,10 @@ export const MarkdownField: FC<{
   /** 文字数カウンタに使う現在値 */
   length: number
   label?: string
+  /** ラベルを読み上げ名だけにする({@link EditorField} 参照) */
+  isLabelHidden?: boolean
+  /** ラベル行の左側に置く補足({@link EditorField} 参照) */
+  info?: ReactNode
   maxLength?: number
   /** 挿入した画像の添付先ボード({@link MarkdownInput} 参照) */
   uploadBoardId?: string | null
@@ -209,6 +213,8 @@ export const MarkdownField: FC<{
   onChange,
   length,
   label,
+  isLabelHidden,
+  info,
   maxLength,
   uploadBoardId,
   uploadWikiSpaceId,
@@ -223,6 +229,8 @@ export const MarkdownField: FC<{
   return (
     <EditorField
       label={label ?? t('content')}
+      isLabelHidden={isLabelHidden}
+      info={info}
       length={length}
       // カウンタは編集中だけ出す。ラベル行の高さは Label と action で決まるので出し入れしても動かない
       maxLength={isEditing ? maxLength : undefined}

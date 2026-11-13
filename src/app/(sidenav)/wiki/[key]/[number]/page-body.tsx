@@ -1,7 +1,6 @@
 'use client'
 
 import { MultiButton, SubmitButtons } from '@/components/general/button'
-import { EditorField } from '@/components/general/editor-field'
 import { useConfirmModal } from '@/components/general/modal'
 import { CheckIcon, PencilSquareIcon } from '@/components/icon'
 import { DesignDocEditor } from '@/components/markdown/design-doc-editor'
@@ -26,9 +25,6 @@ import { WikiPageEditHeader } from './page-edit-header'
 import { GetWikiPageReturnType, updateWikiPage } from './server'
 
 type Page = NonNullable<GetWikiPageReturnType>['page']
-
-/** 設計書の表示の高さ。ビューアは中でスクロールするので、画面の残りを与える */
-const DESIGN_DOC_VIEW_HEIGHT = 'h-[calc(100dvh-12rem)] min-h-96'
 
 /**
  * ページのタイトル・タグ・本文。表示と編集を切り替え、保存したらサーバー値を取り直す。
@@ -151,7 +147,13 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
     contentDraft.length <= MAX_WIKI_CONTENT
   const updatedBy = page.updatedBy?.name ?? page.createdBy?.name
   const isDesignDoc = (isEditing ? typeDraft : page.type) === 'design_doc'
+  const isDesignDocView = isDesignDoc && !isEditing
 
+  const updatedInfo = (
+    <p className='text-muted text-xs'>
+      {t('wiki_updated_by', { name: updatedBy ?? '-', at: dayformat(page.updatedAt, 'tz-minute', tz) })}
+    </p>
+  )
   const editAction = !isEditing && canWrite && (
     <MultiButton
       isIconOnly
@@ -185,10 +187,12 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
       length={contentDraft.length}
       maxLength={MAX_WIKI_CONTENT}
       label={t('content')}
+      isLabelHidden
+      // 表示中はタイトルの横に出している
+      info={isEditing ? updatedInfo : undefined}
       minRows={6}
       allowImages
       uploadWikiSpaceId={page.spaceId}
-      action={editAction}
       footer={footer}
     />
   ) : isEditing ? (
@@ -200,23 +204,19 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
       length={contentDraft.length}
       maxLength={MAX_WIKI_CONTENT}
       label={t('content')}
+      isLabelHidden
+      info={updatedInfo}
       allowImages
       uploadWikiSpaceId={page.spaceId}
       onUploadingChange={setUploading}
       footer={footer}
     />
   ) : (
-    <EditorField
-      label={t('content')}
-      action={editAction && <div className='flex min-h-8 items-center gap-2'>{editAction}</div>}
-      isFlat
-    >
-      <DesignDocView
-        className={`border-default-200 overflow-hidden rounded-xl border ${DESIGN_DOC_VIEW_HEIGHT}`}
-        markdown={page.content}
-        documentId={page.id}
-      />
-    </EditorField>
+    <DesignDocView // 中でスクロールするので、画面の残りを埋める枠(下の div)いっぱいに広げる
+      className='border-default-200 absolute inset-0 overflow-hidden rounded-xl border'
+      markdown={page.content}
+      documentId={page.id}
+    />
   )
 
   return (
@@ -238,16 +238,24 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
           />
         ) : (
           <>
-            <h1 className='text-2xl font-bold wrap-break-word'>{page.title}</h1>
+            <div className='flex items-start gap-2'>
+              <div className='flex min-w-0 flex-1 flex-wrap items-baseline gap-x-3'>
+                <h1 className='text-2xl font-bold wrap-break-word'>{page.title}</h1>
+                {updatedInfo}
+              </div>
+              {editAction}
+            </div>
             <WikiTagLinks spaceKey={space.key} tags={page.tags.map(({ tag }) => tag)} />
           </>
         )}
-        <p className='text-muted text-xs'>
-          {t('wiki_updated_by', { name: updatedBy ?? '-', at: dayformat(page.updatedAt, 'tz-minute', tz) })}
-        </p>
       </div>
 
-      <div ref={contentRef} className='py-2'>
+      <div
+        ref={contentRef}
+        // 設計書の表示は、ページ側(data-fill-screen を見て画面 1 枚分の高さを持つ)の残りを埋める
+        data-fill-screen={isDesignDocView ? '' : undefined}
+        className={isDesignDocView ? 'relative min-h-96 flex-1' : 'py-2'}
+      >
         {body}
       </div>
       {!isEditing && !isDesignDoc && <MarkdownToc targetRef={contentRef} />}

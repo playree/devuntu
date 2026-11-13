@@ -51,6 +51,10 @@ export const DesignDocEditor: FC<{
   length: number
   maxLength?: number
   label?: string
+  /** ラベルを読み上げ名だけにする({@link EditorField} 参照) */
+  isLabelHidden?: boolean
+  /** ラベル行の左側に置く補足({@link EditorField} 参照) */
+  info?: ReactNode
   /** 画像の挿入を許可する。添付先のスペースと一緒に渡す */
   allowImages?: boolean
   /** 挿入した画像の添付先 Wiki スペース。配信時にこのスペースの閲覧判定が掛かる */
@@ -68,6 +72,8 @@ export const DesignDocEditor: FC<{
   length,
   maxLength,
   label,
+  isLabelHidden,
+  info,
   allowImages,
   uploadWikiSpaceId,
   onUploadingChange,
@@ -173,6 +179,8 @@ export const DesignDocEditor: FC<{
   return (
     <EditorField
       label={label ?? t('content')}
+      isLabelHidden={isLabelHidden}
+      info={info}
       length={length}
       maxLength={maxLength}
       action={action && <div className='flex min-h-8 items-center gap-2'>{action}</div>}

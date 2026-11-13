@@ -101,65 +101,69 @@ export const WikiPageClient: FC<{ spaceKey: string; number: number }> = ({ space
 
   return (
     <FlexCol>
-      <ContentHeader
-        isTitleWide
-        title={
-          <>
-            <WikiBreadcrumbs detail={data} />
-            <CopyableField // `KEY/番号` は改名・移動で変わらないので、AI やチケットからの参照に使える
-              className='w-28 shrink-0'
-              isSmart
-              text={wikiPageRef({ key: space.key, number: page.number })}
-              aria-label={t('wiki_page_ref')}
-            />
-          </>
-        }
+      <FlexCol // 設計書の表示中は画面 1 枚分(#side-main の p-4 を除く)の高さを持ち、本文が下端まで伸びる。子ページはその下
+        className='has-data-fill-screen:min-h-[calc(100dvh-2rem)]'
       >
-        {access.canWrite && (
-          <MultiButton
-            isIconOnly
-            tooltip={t('wiki_add_child_page')}
-            icon={<DocumentPlusIcon />}
-            onPress={() => createModalState.open()}
-          />
-        )}
-        {access.canWrite && (
-          <MultiButton
-            isIconOnly
-            tooltip={t('wiki_move_page')}
-            icon={<FolderArrowRightIcon />}
-            onPress={() => moveModalState.open()}
-          >
-            <ButtonGroup.Separator />
-          </MultiButton>
-        )}
-        <MultiButton
-          isIconOnly
-          tooltip={t('history')}
-          icon={<ClockIcon />}
-          onPress={() => historyState.open({ pageId: page.id, title: page.title })}
+        <ContentHeader
+          isTitleWide
+          title={
+            <>
+              <WikiBreadcrumbs detail={data} />
+              <CopyableField // `KEY/番号` は改名・移動で変わらないので、AI やチケットからの参照に使える
+                className='w-28 shrink-0'
+                isSmart
+                text={wikiPageRef({ key: space.key, number: page.number })}
+                aria-label={t('wiki_page_ref')}
+              />
+            </>
+          }
         >
-          {access.canWrite && <ButtonGroup.Separator />}
-        </MultiButton>
-        {access.canWrite && (
+          {access.canWrite && (
+            <MultiButton
+              isIconOnly
+              tooltip={t('wiki_add_child_page')}
+              icon={<DocumentPlusIcon />}
+              onPress={() => createModalState.open()}
+            />
+          )}
+          {access.canWrite && (
+            <MultiButton
+              isIconOnly
+              tooltip={t('wiki_move_page')}
+              icon={<FolderArrowRightIcon />}
+              onPress={() => moveModalState.open()}
+            >
+              <ButtonGroup.Separator />
+            </MultiButton>
+          )}
           <MultiButton
             isIconOnly
-            tooltip={t('delete')}
-            icon={<TrashIcon />}
-            onPress={() => deletePage(page, parentHref)}
+            tooltip={t('history')}
+            icon={<ClockIcon />}
+            onPress={() => historyState.open({ pageId: page.id, title: page.title })}
           >
-            <ButtonGroup.Separator />
+            {access.canWrite && <ButtonGroup.Separator />}
           </MultiButton>
-        )}
-        <ReloadButton // 編集中の下書きを消さないよう、画面を作り直さずに取り直す
-          onReload={reloadAll}
-          hasSeparator
-        />
-      </ContentHeader>
+          {access.canWrite && (
+            <MultiButton
+              isIconOnly
+              tooltip={t('delete')}
+              icon={<TrashIcon />}
+              onPress={() => deletePage(page, parentHref)}
+            >
+              <ButtonGroup.Separator />
+            </MultiButton>
+          )}
+          <ReloadButton // 編集中の下書きを消さないよう、画面を作り直さずに取り直す
+            onReload={reloadAll}
+            hasSeparator
+          />
+        </ContentHeader>
 
-      {space.archived && <NoticePanel status='warning'>{t('msg_wiki_space_archived')}</NoticePanel>}
+        {space.archived && <NoticePanel status='warning'>{t('msg_wiki_space_archived')}</NoticePanel>}
 
-      <WikiPageBody key={page.id} page={page} canWrite={access.canWrite} onSaved={reloadAll} />
+        <WikiPageBody key={page.id} page={page} canWrite={access.canWrite} onSaved={reloadAll} />
+      </FlexCol>
 
       <ChildPages parentId={page.id} />
 
