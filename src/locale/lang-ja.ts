@@ -651,6 +651,7 @@ export const ja: DefaultLocaleItems = {
   wiki_child_count: '子 ${count}',
   wiki_change_page_type: '種類の変更',
   wiki_child_pages: '子ページ',
+  wiki_delete_revision: 'この版を削除',
   wiki_deleted_pages: '削除済みのページ',
   wiki_design_doc_editor: '設計書の編集',
   wiki_design_doc_source: 'ソース',
@@ -676,8 +677,8 @@ export const ja: DefaultLocaleItems = {
   wiki_revision_action_restored: '復元',
   wiki_revision_action_updated: '更新',
   wiki_revision_before_retention: '保持期間より前',
-  wiki_revision_parent: '親ページ',
-  wiki_revision_parent_missing: '(削除されたページ)',
+  wiki_revision_latest: '最新',
+  wiki_revision_message: 'コミットメッセージ(任意)',
   wiki_revision_restored_from: 'v${version} から',
   wiki_role_editor: '編集者',
   wiki_role_viewer: '閲覧者',
@@ -789,6 +790,7 @@ export const ja: DefaultLocaleItems = {
   msg_confirm_approve_report: '報告を承認し、チケットを完了にします。',
   msg_confirm_archive_wiki_space: '${target} をアーカイブします。',
   msg_confirm_delete_wiki_page_with_children: '${target} を削除します。配下の ${count} ページもまとめて削除されます。',
+  msg_confirm_delete_wiki_revision: '${target} を履歴から削除します。削除した版は元に戻せません。',
   msg_confirm_wiki_type_to_page:
     '通常のページはリッチエディタで編集するため、front matter や HTML コメントなど、設計書の書き方が変わることがあります。通常のページにしますか?',
   msg_confirm_deletion: '${target} を削除します。',
@@ -874,7 +876,6 @@ export const ja: DefaultLocaleItems = {
   msg_no_wiki_boards: '割り当てられたボードはありません。',
   msg_no_wiki_groups: '割り当てられたグループはありません。',
   msg_no_wiki_pages: 'ページはまだありません。',
-  msg_no_wiki_revisions: '履歴はありません。',
   msg_no_wiki_search_results: '一致するページはありません。',
   msg_no_wiki_spaces: '閲覧できるスペースはありません。',
   msg_not_allowed_domain_in_google:
@@ -911,10 +912,8 @@ export const ja: DefaultLocaleItems = {
     'ボードのメンバー(直接・グループ経由)が、選んだロールでこのスペースを使えます。割り当てられるのは、あなたが参加しているボードです。',
   msg_wiki_deleted_pages_hint:
     '削除したページを復元できるのは、削除から ${days} 日のあいだだけです。配下ごと削除したページは1ページずつ復元します。',
-  msg_wiki_deleted_revision: 'この版で削除されました。この版に戻すと、削除前の内容でページを作り直します。',
   msg_wiki_manage_only:
     'このスペースに割り当てられていないため、設定だけを変更できます。ページを読むには、自分を割り当ててください。',
-  msg_wiki_no_revision_change: '前の版からタイトル・種類・本文・タグの変更はありません。',
   msg_wiki_page_conflict: '他の人が先に更新しました。編集中の内容を控えてから、開き直して編集してください。',
   msg_wiki_page_has_children: '子ページがあるため削除できません。配下ごと削除してください。',
   msg_wiki_page_invalid_parent: 'そのページの下には移動できません(自分自身・子孫・別のスペースは選べません)。',
@@ -922,6 +921,7 @@ export const ja: DefaultLocaleItems = {
   msg_wiki_restore_unchanged: 'いまの内容と同じため、変更はありません。',
   msg_wiki_revision_retention:
     '版は最後の保存から ${days} 日残ります。それより古い版も、ページが残っていれば最新の版と直近の ${keep} 版、保持期間より前の状態を表す1版は残ります。ただし1ページに残るのは新しい ${max} 版までです。続けて保存した分は1つの版にまとまります。',
+  msg_wiki_viewing_revision: '過去の版(${target})を表示しています。',
   msg_wiki_role_note:
     '閲覧者は読むだけ、編集者はページの作成・編集・移動・削除、owner は設定も変更できます。owner は1人以上必要です。',
   msg_wiki_search_hint:

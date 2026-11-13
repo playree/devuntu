@@ -73,7 +73,13 @@ describe('evaluateWikiAccess', () => {
 
 describe('shouldMergeWikiRevision', () => {
   const NOW = new Date('2026-11-08T10:00:00.000Z')
-  const origin: WikiRevisionOrigin = { action: 'updated', actorId: 'u1', via: 'web', ticketId: null }
+  const origin: WikiRevisionOrigin = {
+    action: 'updated',
+    actorId: 'u1',
+    via: 'web',
+    ticketId: null,
+    message: null,
+  }
   const latest = (override: Partial<WikiRevisionOrigin & { createdAt: Date }> = {}) => ({
     ...origin,
     createdAt: new Date('2026-11-08T09:55:00.000Z'),
@@ -99,6 +105,8 @@ describe('shouldMergeWikiRevision', () => {
     ['別のチケット', latest({ ticketId: 't1' }), origin, 10],
     ['最新の版が updated でない', latest({ action: 'created' }), origin, 10],
     ['今回が updated でない', latest(), { ...origin, action: 'moved' }, 10],
+    ['今回にコミットメッセージがある', latest(), { ...origin, message: '誤字の修正' }, 10],
+    ['最新の版にコミットメッセージがある', latest({ message: '誤字の修正' }), origin, 10],
   ] as const)('%s ならまとめない', (_, last, next, minutes) => {
     expect(shouldMergeWikiRevision(last, next, NOW, minutes)).toBe(false)
   })

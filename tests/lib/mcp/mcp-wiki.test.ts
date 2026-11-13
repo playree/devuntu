@@ -108,6 +108,7 @@ describe('saveWikiPageForMcp: 作成', () => {
       position: 2,
       tags: ['設計'],
       ticketId: 'ABC-42',
+      message: '初版',
     })
 
     expect(getWikiSpaceByKey).toHaveBeenCalledWith(agentAuth().user, 'docs', 'write')
@@ -117,7 +118,7 @@ describe('saveWikiPageForMcp: 作成', () => {
       { via: 'mcp' },
       SPACE_ID,
       { title: '新しいページ', content: '本文', type: 'page', parentId: 'page-3', position: 1, tagIds: ['tag-1'] },
-      { ticketId: 'ticket-1' },
+      { ticketId: 'ticket-1', message: '初版' },
     )
     expect(result).toEqual({
       result: 'created',
@@ -171,14 +172,19 @@ describe('saveWikiPageForMcp: 作成', () => {
 
 describe('saveWikiPageForMcp: 更新', () => {
   it('渡した項目だけを更新し、expectedUpdatedAt をそのまま渡す', async () => {
-    await saveWikiPageForMcp(human, { ref: 'DOCS/12', title: '改名', expectedUpdatedAt: READ_AT.toISOString() })
+    await saveWikiPageForMcp(human, {
+      ref: 'DOCS/12',
+      title: '改名',
+      expectedUpdatedAt: READ_AT.toISOString(),
+      message: '名前を揃える',
+    })
 
     expect(updateWikiPage).toHaveBeenCalledWith(
       human.user,
       { via: 'mcp' },
       PAGE_ID,
       { title: '改名', content: undefined, tagIds: undefined },
-      { expectedUpdatedAt: READ_AT.toISOString(), ticketId: null },
+      { expectedUpdatedAt: READ_AT.toISOString(), ticketId: null, message: '名前を揃える' },
     )
     expect(moveWikiPage).not.toHaveBeenCalled()
   })
@@ -486,6 +492,7 @@ describe('registerWikiTools', () => {
         'content',
         'edits',
         'expectedUpdatedAt',
+        'message',
         'parent',
         'position',
         'ref',

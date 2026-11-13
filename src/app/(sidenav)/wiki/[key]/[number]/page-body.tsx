@@ -1,7 +1,9 @@
 'use client'
 
 import { MultiButton, SubmitButtons } from '@/components/general/button'
+import { InputField } from '@/components/general/input'
 import { useConfirmModal } from '@/components/general/modal'
+import { PanelSpinner } from '@/components/general/panel'
 import { CheckIcon, PencilSquareIcon } from '@/components/icon'
 import { DesignDocEditor } from '@/components/markdown/design-doc-editor'
 import { DesignDocView } from '@/components/markdown/design-doc-view'
@@ -15,13 +17,20 @@ import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { dayformat } from '@/lib/day'
 import { ClientError } from '@/lib/error'
 import { designDocFrontMatter, hasFrontMatter } from '@/lib/wiki/wiki-markdown'
-import { MAX_WIKI_CONTENT, MAX_WIKI_TITLE } from '@/lib/wiki/wiki-rule'
+import { MAX_WIKI_CONTENT, MAX_WIKI_REVISION_MESSAGE, MAX_WIKI_TITLE } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { FC, useEffect, useRef, useState } from 'react'
 import { EDIT_QUERY } from '../page-modals'
 import { useWikiSpace } from '../space-context'
 import { WikiPageEditHeader } from './page-edit-header'
+import {
+  usePastPageView,
+  useWikiPageRevisions,
+  WikiPastRevisionNotice,
+  WikiRevisionActions,
+  WikiRevisionSelect,
+} from './page-revision'
 import { GetWikiPageReturnType, updateWikiPage } from './server'
 
 type Page = NonNullable<GetWikiPageReturnType>['page']
@@ -29,7 +38,8 @@ type Page = NonNullable<GetWikiPageReturnType>['page']
 /**
  * ページのタイトル・タグ・本文。表示と編集を切り替え、保存したらサーバー値を取り直す。
  * 作成直後(`?edit=1`)は編集から始める。
- * 設計書のページは Markdown Design Doc Viewer で表示し、ソースとプレビューで編集する(幅の制限を外す)
+ * 設計書のページは Markdown Design Doc Viewer で表示し、ソースとプレビューで編集する(幅の制限を外す)。
+ * 表示中は更新者・日時から版を選べ、過去の版はその時点の内容で表示する(編集はできず、ロールバックと削除だけ)
  */
 export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Promise<void> }> = ({
   page,
@@ -40,6 +50,7 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
   const tz = useUserTimezone()
   const { space } = useWikiSpace()
   const { confirmModal } = useConfirmModal()
+  const revisions = useWikiPageRevisions(page)
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -57,6 +68,7 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
   const [editorKey, setEditorKey] = useState(0)
   const pageTagIds = () => page.tags.map(({ tag }) => tag.id)
   const [tagIdsDraft, setTagIdsDraft] = useState(pageTagIds)
+  const [messageDraft, setMessageDraft] = useState('')
   // 競合の判定の基準。編集中にページを取り直しても(移動など)、編集を始めた時点の値で比べる
   const [baseUpdatedAt, setBaseUpdatedAt] = useState(page.updatedAt)
   const [isSaving, setSaving] = useState(false)
@@ -86,6 +98,7 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
     setEditorBase(page.content)
     setEditorKey((key) => key + 1)
     setTagIdsDraft(pageTagIds())
+    setMessageDraft('')
     setBaseUpdatedAt(page.updatedAt)
     setEditing(true)
   }
@@ -124,6 +137,7 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
           type: typeDraft,
           tagIds: tagIdsDraft,
           expectedUpdatedAt: baseUpdatedAt.toISOString(),
+          message: messageDraft,
         }),
       )
       notify.success(t('msg_saved'))
@@ -144,17 +158,19 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
     !isUploading &&
     titleDraft.trim().length > 0 &&
     titleDraft.length <= MAX_WIKI_TITLE &&
-    contentDraft.length <= MAX_WIKI_CONTENT
+    contentDraft.length <= MAX_WIKI_CONTENT &&
+    messageDraft.length <= MAX_WIKI_REVISION_MESSAGE
   const updatedBy = page.updatedBy?.name ?? page.createdBy?.name
-  const isDesignDoc = (isEditing ? typeDraft : page.type) === 'design_doc'
+  // 過去の版は表示中だけ(編集はいまの内容から始める)
+  const pastView = usePastPageView(isEditing ? undefined : revisions.past)
+  const shown = pastView ?? { title: page.title, type: page.type, tags: page.tags.map(({ tag }) => tag) }
+  const shownContent = pastView ? revisions.pastContent : page.content
+  const isDesignDoc = (isEditing ? typeDraft : shown.type) === 'design_doc'
   const isDesignDocView = isDesignDoc && !isEditing
 
-  const updatedInfo = (
-    <p className='text-muted text-xs'>
-      {t('wiki_updated_by', { name: updatedBy ?? '-', at: dayformat(page.updatedAt, 'tz-minute', tz) })}
-    </p>
-  )
-  const editAction = !isEditing && canWrite && (
+  const updatedText = t('wiki_updated_by', { name: updatedBy ?? '-', at: dayformat(page.updatedAt, 'tz-minute', tz) })
+  const updatedInfo = <p className='text-muted text-xs'>{updatedText}</p>
+  const editAction = !isEditing && canWrite && !pastView && (
     <MultiButton
       isIconOnly
       size='sm'
@@ -165,59 +181,79 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
     />
   )
   const footer = isEditing && (
-    <SubmitButtons
-      size='sm'
-      label={t('save')}
-      icon={<CheckIcon width={16} />}
-      isPending={isSaving}
-      isDisabled={!isSubmittable}
-      onPress={save}
-      onCancel={() => setEditing(false)}
-    />
+    <div // スマホ幅ではコミットメッセージを1行に取り、ボタンをその下に置く
+      className='flex w-full flex-wrap items-center justify-end gap-2'
+    >
+      <div className='w-full min-w-0 sm:w-auto sm:flex-1'>
+        <InputField // 版に残すコミットメッセージ(任意)
+          isSmart
+          isLabelHidden
+          label={t('wiki_revision_message')}
+          placeholder={t('wiki_revision_message')}
+          value={messageDraft}
+          onChange={(e) => setMessageDraft(e.target.value)}
+          maxLength={MAX_WIKI_REVISION_MESSAGE}
+        />
+      </div>
+      <SubmitButtons
+        size='sm'
+        label={t('save')}
+        icon={<CheckIcon width={16} />}
+        isPending={isSaving}
+        isDisabled={!isSubmittable}
+        onPress={save}
+        onCancel={() => setEditing(false)}
+      />
+    </div>
   )
 
-  const body = !isDesignDoc ? (
-    <MarkdownField
-      key={editorKey}
-      body={page.content}
-      isEditing={isEditing}
-      // 編集中に変わらない値を渡す(MDXEditor は編集モードのマウント時にこの値を取り込む)
-      defaultValue={editorBase}
-      onChange={changeContent}
-      length={contentDraft.length}
-      maxLength={MAX_WIKI_CONTENT}
-      label={t('content')}
-      isLabelHidden
-      // 表示中はタイトルの横に出している
-      info={isEditing ? updatedInfo : undefined}
-      minRows={6}
-      allowImages
-      uploadWikiSpaceId={page.spaceId}
-      footer={footer}
-    />
-  ) : isEditing ? (
-    <DesignDocEditor
-      key={editorKey}
-      initialValue={editorBase}
-      onChange={changeContent}
-      documentId={page.id}
-      length={contentDraft.length}
-      maxLength={MAX_WIKI_CONTENT}
-      label={t('content')}
-      isLabelHidden
-      info={updatedInfo}
-      allowImages
-      uploadWikiSpaceId={page.spaceId}
-      onUploadingChange={setUploading}
-      footer={footer}
-    />
-  ) : (
-    <DesignDocView // 中でスクロールするので、画面の残りを埋める枠(下の div)いっぱいに広げる
-      className='border-default-200 absolute inset-0 overflow-hidden rounded-xl border'
-      markdown={page.content}
-      documentId={page.id}
-    />
-  )
+  const body =
+    shownContent === undefined ? (
+      // 過去の版の本文を取得中
+      <PanelSpinner />
+    ) : !isDesignDoc ? (
+      <MarkdownField
+        key={editorKey}
+        body={shownContent}
+        isEditing={isEditing}
+        // 編集中に変わらない値を渡す(MDXEditor は編集モードのマウント時にこの値を取り込む)
+        defaultValue={editorBase}
+        onChange={changeContent}
+        length={contentDraft.length}
+        maxLength={MAX_WIKI_CONTENT}
+        label={t('content')}
+        isLabelHidden
+        // 表示中はタイトルの横に出している
+        info={isEditing ? updatedInfo : undefined}
+        minRows={6}
+        allowImages
+        uploadWikiSpaceId={page.spaceId}
+        footer={footer}
+      />
+    ) : isEditing ? (
+      <DesignDocEditor
+        key={editorKey}
+        initialValue={editorBase}
+        onChange={changeContent}
+        documentId={page.id}
+        length={contentDraft.length}
+        maxLength={MAX_WIKI_CONTENT}
+        label={t('content')}
+        isLabelHidden
+        info={updatedInfo}
+        allowImages
+        uploadWikiSpaceId={page.spaceId}
+        onUploadingChange={setUploading}
+        footer={footer}
+      />
+    ) : (
+      <DesignDocView // 中でスクロールするので、画面の残りを埋める枠(下の div)いっぱいに広げる
+        className='border-default-200 absolute inset-0 overflow-hidden rounded-xl border'
+        markdown={shownContent}
+        // 版を切り替えたら先頭から表示し直す
+        documentId={revisions.past && pastView ? `${page.id}:${revisions.past.id}` : page.id}
+      />
+    )
 
   return (
     <>
@@ -239,14 +275,16 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
         ) : (
           <div className='flex items-start gap-2'>
             <div className='flex min-w-0 flex-1 flex-wrap items-baseline gap-x-3'>
-              <h1 className='min-w-0 text-2xl font-bold wrap-break-word'>{page.title}</h1>
-              <WikiTagLinks spaceKey={space.key} tags={page.tags.map(({ tag }) => tag)} />
-              {updatedInfo}
+              <h1 className='min-w-0 text-2xl font-bold wrap-break-word'>{shown.title}</h1>
+              <WikiTagLinks spaceKey={space.key} tags={shown.tags} />
+              <WikiRevisionSelect revisions={revisions} updatedText={updatedText} />
             </div>
             {editAction}
+            {canWrite && !isEditing && <WikiRevisionActions revisions={revisions} onRestored={onSaved} />}
           </div>
         )}
       </div>
+      {!isEditing && <WikiPastRevisionNotice revisions={revisions} />}
 
       <div
         ref={contentRef}

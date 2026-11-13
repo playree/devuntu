@@ -20,6 +20,8 @@ export const MAX_WIKI_TITLE = 200
 export const MAX_WIKI_CONTENT = 100_000
 /** 階層の深さの上限。スペース直下のページが 1 */
 export const MAX_WIKI_DEPTH = 10
+/** 版に付けるコミットメッセージの最大長 */
+export const MAX_WIKI_REVISION_MESSAGE = 200
 /** 1ページに付けられるタグ数(チケットと同じ) */
 export const MAX_WIKI_PAGE_TAGS = MAX_TICKET_TAGS
 
@@ -108,12 +110,15 @@ export type WikiRevisionOrigin = {
   actorId: string | null
   via: WikiVia
   ticketId: string | null
+  /** コミットメッセージ。付いた版は、その時点の内容を指すのでまとめない */
+  message: string | null
 }
 
 /**
  * 新しい版を作らず、最新の版へまとめてよいか。
  * 同じ人・同じ経路・同じチケットの `updated` が、最新の版の作成から `mergeMinutes` 以内に続いたときだけまとめる。
- * 起点を最新の版の作成時刻に固定するので、編集が続いても1つの版が際限なく伸びない
+ * 起点を最新の版の作成時刻に固定するので、編集が続いても1つの版が際限なく伸びない。
+ * どちらかにコミットメッセージがあればまとめない
  */
 export const shouldMergeWikiRevision = (
   latest: (WikiRevisionOrigin & { createdAt: Date }) | null,
@@ -128,6 +133,8 @@ export const shouldMergeWikiRevision = (
   latest.actorId === next.actorId &&
   latest.via === next.via &&
   latest.ticketId === next.ticketId &&
+  latest.message === null &&
+  next.message === null &&
   now.getTime() - latest.createdAt.getTime() <= mergeMinutes * 60_000
 
 /**

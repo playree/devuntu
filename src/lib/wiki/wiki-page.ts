@@ -22,6 +22,7 @@ import { writeWikiPageRevision } from './wiki-revision'
 import {
   MAX_WIKI_CONTENT,
   MAX_WIKI_DEPTH,
+  MAX_WIKI_REVISION_MESSAGE,
   MAX_WIKI_TITLE,
   WIKI_PAGE_CONFLICT,
   WIKI_PAGE_HAS_CHILDREN,
@@ -185,7 +186,18 @@ export type WikiPageWriteResult = {
 }
 
 type WriteOpts = { ticketId?: string | null }
-type UpdateOpts = WriteOpts & { expectedUpdatedAt?: string }
+/** 本文を書く操作(作成・更新)の版に付けるコミットメッセージ(任意) */
+type MessageOpts = { message?: string | null }
+type ExpectOpts = WriteOpts & { expectedUpdatedAt?: string }
+
+/** コミットメッセージは前後の空白を除き、空なら付けない */
+const normalizeMessage = (message: string | null | undefined): string | null => {
+  const trimmed = message?.trim() ?? ''
+  if (trimmed.length > MAX_WIKI_REVISION_MESSAGE) {
+    throw errValidation(`message must be at most ${MAX_WIKI_REVISION_MESSAGE} characters`)
+  }
+  return trimmed || null
+}
 
 /** `expectedUpdatedAt` が日時として読めなければ入力不正(競合と返すと、読み直しても解消しないため) */
 const parseExpectedUpdatedAt = (raw: string | undefined): number | null => {
@@ -223,13 +235,14 @@ export const createWikiPage = async (
   writer: WikiWriter,
   spaceId: string,
   input: CreateWikiPageInput,
-  opts: WriteOpts = {},
+  opts: WriteOpts & MessageOpts = {},
 ): Promise<WikiPageWriteResult> => {
   const title = input.title.trim()
   const content = input.content ?? ''
   const type = input.type ?? 'page'
   assertTitle(title)
   assertContent(content)
+  const message = normalizeMessage(opts.message)
   const parentId = input.parentId ?? null
 
   const page = await prisma.$transaction(async (tx) => {
@@ -284,6 +297,7 @@ export const createWikiPage = async (
       actorId: actor.id,
       via: writer.via,
       ticketId,
+      message,
     })
     return { ...created, ref: wikiPageRef({ key: access.key, number }) }
   })
@@ -321,9 +335,10 @@ export const updateWikiPage = async (
   writer: WikiWriter,
   pageId: string,
   patch: { title?: string; content?: string; type?: WikiPageType; tagIds?: string[] },
-  opts: UpdateOpts = {},
+  opts: ExpectOpts & MessageOpts = {},
 ): Promise<WikiPageWriteResult> => {
   const expected = parseExpectedUpdatedAt(opts.expectedUpdatedAt)
+  const message = normalizeMessage(opts.message)
   const spaceId = await findPageSpace(pageId)
   const outcome = await prisma.$transaction(async (tx) => {
     await lockSpaceForContent(tx, spaceId)
@@ -387,6 +402,7 @@ export const updateWikiPage = async (
       actorId: actor.id,
       via: writer.via,
       ticketId,
+      message,
     })
     return { result: 'updated' as const, id: pageId, ref, number: existing.number, updatedAt: updated.updatedAt }
   })
@@ -406,7 +422,7 @@ export const moveWikiPage = async (
   writer: WikiWriter,
   pageId: string,
   target: { parentId?: string | null; position?: number },
-  opts: UpdateOpts = {},
+  opts: ExpectOpts = {},
 ): Promise<WikiPageWriteResult> => {
   const expected = parseExpectedUpdatedAt(opts.expectedUpdatedAt)
   const spaceId = await findPageSpace(pageId)

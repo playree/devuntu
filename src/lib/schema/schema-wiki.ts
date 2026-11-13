@@ -8,6 +8,7 @@ import { MAX_TAG_NAME } from '../board/tag-rule'
 import {
   MAX_WIKI_CONTENT,
   MAX_WIKI_PAGE_TAGS,
+  MAX_WIKI_REVISION_MESSAGE,
   MAX_WIKI_SEARCH_KEYWORD,
   MAX_WIKI_SEARCH_LIMIT,
   MAX_WIKI_SPACE_DESCRIPTION,
@@ -94,6 +95,8 @@ export const scUpdateWikiPage = z.object({
   type: zWikiPageType,
   tagIds: z.array(z.uuidv7()).max(MAX_WIKI_PAGE_TAGS, el('@invalid_tag')),
   expectedUpdatedAt: z.iso.datetime(),
+  /** コミットメッセージ(任意) */
+  message: z.string().max(MAX_WIKI_REVISION_MESSAGE).optional(),
 })
 export type UpdateWikiPage = z.infer<typeof scUpdateWikiPage>
 
