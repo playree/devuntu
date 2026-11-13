@@ -856,6 +856,7 @@ export type LocaleItemBase =
   | 'msg_wiki_board_assign'
   | 'msg_wiki_deleted_pages_hint'
   | 'msg_wiki_manage_only'
+  | 'msg_wiki_message_not_saved'
   | 'msg_wiki_page_conflict'
   | 'msg_wiki_page_has_children'
   | 'msg_wiki_page_invalid_parent'

@@ -33,6 +33,7 @@ type Revision = NonNullable<GetWikiPageRevisionsReturnType>['revisions'][number]
  * ページを取り直して更新日時が変わったら(保存・ロールバック・再読み込み)一覧も取り直す
  */
 export const useWikiPageRevisions = (page: Page) => {
+  const { t } = useLocale()
   const { data, refresh } = useActionData(() => getWikiPageRevisions({ id: page.id }), { key: page.id })
   const updatedAt = page.updatedAt.getTime()
   const fetchedAt = useRef(updatedAt)
@@ -52,14 +53,26 @@ export const useWikiPageRevisions = (page: Page) => {
     skip: !past,
     key: past?.id,
   })
+  // 本文を引けなかった(他の人の削除や掃除で版が消えた)ら、最新に戻して一覧を取り直す
+  const [missingId, setMissingId] = useState<string | null>(null)
+  if (past && !content.isLoading && content.data === undefined && missingId !== past.id) {
+    setMissingId(past.id)
+    setSelectedId(null)
+  }
+  useEffect(() => {
+    if (missingId) {
+      notify.error(t('msg_invalid_operation'))
+      void refresh()
+    }
+  }, [missingId, refresh, t])
 
   return {
     revisions,
     retention: data,
     past,
     pastContent: past ? content.data : undefined,
-    isPastLoading: !!past && content.isLoading,
-    select: setSelectedId,
+    // 最新の版を選んだときは選択を外す(新しい版ができても最新を表示し続ける)
+    select: (id: string | null) => setSelectedId(id === revisions[0]?.id ? null : id),
     refresh,
   }
 }
@@ -73,6 +86,7 @@ export const usePastPageView = (past: Revision | undefined) => {
     return undefined
   }
   return {
+    id: past.id,
     title: past.title,
     type: past.type,
     tags: past.tagNames.flatMap((name) => tags.filter((tag) => tag.name === name)),

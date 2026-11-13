@@ -914,6 +914,7 @@ export const ja: DefaultLocaleItems = {
     '削除したページを復元できるのは、削除から ${days} 日のあいだだけです。配下ごと削除したページは1ページずつ復元します。',
   msg_wiki_manage_only:
     'このスペースに割り当てられていないため、設定だけを変更できます。ページを読むには、自分を割り当ててください。',
+  msg_wiki_message_not_saved: '内容に変更が無いため、コミットメッセージは残りませんでした。',
   msg_wiki_page_conflict: '他の人が先に更新しました。編集中の内容を控えてから、開き直して編集してください。',
   msg_wiki_page_has_children: '子ページがあるため削除できません。配下ごと削除してください。',
   msg_wiki_page_invalid_parent: 'そのページの下には移動できません(自分自身・子孫・別のスペースは選べません)。',

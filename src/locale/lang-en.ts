@@ -917,6 +917,7 @@ Please copy and use the connection information above.
     'Deleted pages can be restored only for ${days} days after deletion. Pages deleted together with their descendants are restored one page at a time.',
   msg_wiki_manage_only:
     'You are not assigned to this space, so you can only change its settings. Assign yourself to read its pages.',
+  msg_wiki_message_not_saved: 'Nothing changed, so the commit message was not kept.',
   msg_wiki_page_conflict: 'Someone else updated it first. Copy your changes, then reopen the page and edit again.',
   msg_wiki_page_has_children: 'The page has child pages. Delete it together with its descendants.',
   msg_wiki_page_invalid_parent: 'The page cannot be moved there (not under itself, its descendants, or another space).',

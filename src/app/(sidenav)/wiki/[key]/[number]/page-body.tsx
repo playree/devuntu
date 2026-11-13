@@ -129,7 +129,7 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
     setSaving(true)
     try {
       // 編集を始めた時点の更新日時を渡し、その後に他の人が保存していれば競合として止める(下書きは残る)
-      await parseAction(
+      const result = await parseAction(
         updateWikiPage({
           id: page.id,
           title: titleDraft,
@@ -140,7 +140,12 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
           message: messageDraft,
         }),
       )
-      notify.success(t('msg_saved'))
+      // 変更が無ければ版を作らないので、コミットメッセージも残らない
+      if (result.result === 'unchanged' && messageDraft.trim()) {
+        notify.info(t('msg_wiki_message_not_saved'))
+      } else {
+        notify.success(t('msg_saved'))
+      }
       // 表示モードへ戻すのはサーバー値が届いた後。先に戻すと旧本文が一瞬見える
       await onSaved()
       setEditing(false)
@@ -251,7 +256,7 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
         className='border-default-200 absolute inset-0 overflow-hidden rounded-xl border'
         markdown={shownContent}
         // 版を切り替えたら先頭から表示し直す
-        documentId={revisions.past && pastView ? `${page.id}:${revisions.past.id}` : page.id}
+        documentId={pastView ? `${page.id}:${pastView.id}` : page.id}
       />
     )
 
