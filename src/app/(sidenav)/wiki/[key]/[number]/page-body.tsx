@@ -239,7 +239,7 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
         ) : (
           <div className='flex items-start gap-2'>
             <div className='flex min-w-0 flex-1 flex-wrap items-baseline gap-x-3'>
-              <h1 className='text-2xl font-bold wrap-break-word'>{page.title}</h1>
+              <h1 className='min-w-0 text-2xl font-bold wrap-break-word'>{page.title}</h1>
               <WikiTagLinks spaceKey={space.key} tags={page.tags.map(({ tag }) => tag)} />
               {updatedInfo}
             </div>
