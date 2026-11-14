@@ -14,7 +14,7 @@ import { useConfirmAction } from '@/lib/use-confirm-action'
 import { useLocale } from '@/locale/client'
 import { Button, Chip, cn, Dropdown } from '@heroui/react'
 import Link from 'next/link'
-import { FC, useEffect, useRef, useState } from 'react'
+import { FC, useEffect, useEffectEvent, useRef, useState } from 'react'
 import {
   deleteWikiPageRevision,
   getWikiPageRevisionContent,
@@ -30,9 +30,10 @@ type Revision = NonNullable<GetWikiPageRevisionsReturnType>['revisions'][number]
 
 /**
  * ページの版の一覧と、選んでいる版。最新の版はいまの内容と同じなので、過去の版(`past`)を選んだときだけ本文を引く。
- * ページを取り直して更新日時が変わったら(保存・ロールバック・再読み込み)一覧も取り直す
+ * ページを取り直して更新日時が変わったら(保存・ロールバック・再読み込み)一覧も取り直す。
+ * 一覧だけを取り直すと、他の人の保存で一覧の最新といまの表示がずれるので、取り直しはページ(`reloadPage`)とあわせて行う
  */
-export const useWikiPageRevisions = (page: Page) => {
+export const useWikiPageRevisions = (page: Page, reloadPage: () => Promise<void>) => {
   const { t } = useLocale()
   const { data, refresh } = useActionData(() => getWikiPageRevisions({ id: page.id }), { key: page.id })
   const updatedAt = page.updatedAt.getTime()
@@ -43,28 +44,37 @@ export const useWikiPageRevisions = (page: Page) => {
       void refresh()
     }
   }, [updatedAt, refresh])
+  const reload = async () => {
+    await Promise.all([refresh(), reloadPage()])
+  }
 
   const revisions = data?.revisions ?? []
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  // 選び直すたびに本文を引き直す(同じ版を選び直したときも、前回の失敗を引きずらない)
+  const [attempt, setAttempt] = useState(0)
   // 一覧から消えた版(削除・掃除)を選んでいたら最新に戻る
   const selected = revisions.find(({ id }) => id === selectedId)
   const past = selected && selected.id !== revisions[0]?.id ? selected : undefined
+  const contentKey = past ? `${past.id}#${attempt}` : undefined
   const content = useActionData(() => getWikiPageRevisionContent({ id: past?.id ?? '' }), {
     skip: !past,
-    key: past?.id,
+    key: contentKey,
   })
-  // 本文を引けなかった(他の人の削除や掃除で版が消えた)ら、最新に戻して一覧を取り直す
-  const [missingId, setMissingId] = useState<string | null>(null)
-  if (past && !content.isLoading && content.data === undefined && missingId !== past.id) {
-    setMissingId(past.id)
+  // 本文を引けなかった(他の人の削除や掃除で版が消えた)ら、最新に戻して取り直す
+  const [missingKey, setMissingKey] = useState<string | null>(null)
+  if (contentKey && !content.isLoading && content.data === undefined && missingKey !== contentKey) {
+    setMissingKey(contentKey)
     setSelectedId(null)
   }
+  const onMissing = useEffectEvent(() => {
+    notify.error(t('msg_invalid_operation'))
+    void reload()
+  })
   useEffect(() => {
-    if (missingId) {
-      notify.error(t('msg_invalid_operation'))
-      void refresh()
+    if (missingKey) {
+      onMissing()
     }
-  }, [missingId, refresh, t])
+  }, [missingKey])
 
   return {
     revisions,
@@ -72,8 +82,14 @@ export const useWikiPageRevisions = (page: Page) => {
     past,
     pastContent: past ? content.data : undefined,
     // 最新の版を選んだときは選択を外す(新しい版ができても最新を表示し続ける)
-    select: (id: string | null) => setSelectedId(id === revisions[0]?.id ? null : id),
-    refresh,
+    select: (id: string | null) => {
+      const next = id === revisions[0]?.id ? null : id
+      if (next !== selectedId) {
+        setSelectedId(next)
+        setAttempt((n) => n + 1)
+      }
+    },
+    reload,
   }
 }
 
@@ -205,10 +221,7 @@ export const WikiRevisionSelect: FC<{ revisions: WikiPageRevisions; updatedText:
  * 過去の版のロールバックと削除(編集者以上)。ロールバックはタイトル・種類・本文・タグだけを戻し、位置は変えない。
  * どちらも終わったら最新の版の表示に戻す
  */
-export const WikiRevisionActions: FC<{
-  revisions: WikiPageRevisions
-  onRestored: () => Promise<void>
-}> = ({ revisions: { past, select, refresh }, onRestored }) => {
+export const WikiRevisionActions: FC<{ revisions: WikiPageRevisions }> = ({ revisions: { past, select, reload } }) => {
   const { t } = useLocale()
   const confirmAction = useConfirmAction()
   if (!past) {
@@ -226,7 +239,7 @@ export const WikiRevisionActions: FC<{
         }
         notify.success(t('msg_restored_target', { target: past.title }))
         select(null)
-        await onRestored()
+        await reload()
       },
     )
 
@@ -237,7 +250,7 @@ export const WikiRevisionActions: FC<{
         await parseAction(deleteWikiPageRevision({ id: past.id }))
         notify.success(t('msg_deleted_target', { target: `v${past.number}` }))
         select(null)
-        await refresh()
+        await reload()
       },
     )
 

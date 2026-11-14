@@ -50,7 +50,7 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
   const tz = useUserTimezone()
   const { space } = useWikiSpace()
   const { confirmModal } = useConfirmModal()
-  const revisions = useWikiPageRevisions(page)
+  const revisions = useWikiPageRevisions(page, onSaved)
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -286,7 +286,7 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
             >
               <WikiRevisionSelect revisions={revisions} updatedText={updatedText} />
               {editAction}
-              {canWrite && !isEditing && <WikiRevisionActions revisions={revisions} onRestored={onSaved} />}
+              {canWrite && !isEditing && <WikiRevisionActions revisions={revisions} />}
             </div>
           </div>
         )}
