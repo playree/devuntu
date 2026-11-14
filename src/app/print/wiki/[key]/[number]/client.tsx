@@ -4,7 +4,7 @@ import { getWikiPage } from '@/app/(sidenav)/wiki/[key]/[number]/server'
 import { PanelSkeleton } from '@/components/general/panel'
 import { BookOpenIcon } from '@/components/icon'
 import { NoAccessView } from '@/components/no-access-view'
-import { PrintToolbar, useSaveHtml } from '@/components/print-export'
+import { PrintToolbar, useReportNotFoundToParent, useSaveHtml } from '@/components/print-export'
 import { useActionData } from '@/lib/action/action-client'
 import { authClient } from '@/lib/auth/auth-client'
 import type { PrintFormat } from '@/lib/print-export'
@@ -41,7 +41,7 @@ const toPrintContent = ({ page }: PrintWikiDetail, revision: Revision | undefine
 
 /**
  * Wiki ページの印刷用ページ。revisionId を渡すとその版の内容、無ければいまの内容を出す。
- * 描画が終わったら format に応じて印刷ダイアログを開くか、HTML を保存する。
+ * 描画が終わったら format に応じて印刷ダイアログを開くか、HTML を作る(html は出力メニューが見えない iframe で開き、HTML を受け取る)。
  * 認可はページ詳細と同じ getWikiPage(版は getWikiPageRevisionSnapshot)で行う
  */
 export const WikiPrintClient: FC<{ spaceKey: string; number: number; revisionId?: string; format: PrintFormat }> = ({
@@ -84,10 +84,12 @@ export const WikiPrintClient: FC<{ spaceKey: string; number: number; revisionId?
     }
   }, [documentTitle])
 
-  const { save: saveHtml, isPending: isSavingHtml } = useSaveHtml(
+  const saveHtml = useSaveHtml(
     ref,
     documentTitle ? { title: documentTitle, fileName: wikiExportFileName(documentTitle, 'html') } : undefined,
   )
+
+  useReportNotFoundToParent(!isLoading && !isRevisionLoading && !isFound)
 
   useWhenRendered(ref, isFound && !isSessionPending, () => (format === 'html' ? void saveHtml() : window.print()))
 
@@ -99,7 +101,7 @@ export const WikiPrintClient: FC<{ spaceKey: string; number: number; revisionId?
     <div className='mx-auto w-full max-w-3xl p-4 print:max-w-none print:p-0'>
       {detail && content ? (
         <>
-          <PrintToolbar format={format} onSaveHtml={() => void saveHtml()} isSavingHtml={isSavingHtml} />
+          <PrintToolbar />
           <div ref={ref}>
             <PrintWikiPage detail={detail} content={content} />
           </div>

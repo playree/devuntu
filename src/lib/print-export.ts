@@ -10,7 +10,7 @@ export const PRINT_PATH_PREFIX = '/print/'
 /** 印刷用ページのクエリで出力形式を指すキー */
 export const PRINT_FORMAT_PARAM = 'format'
 
-/** 印刷用ページの出力形式。pdf は印刷ダイアログを開き、html は自己完結の HTML ファイルを保存する */
+/** 印刷用ページの出力形式。pdf は印刷ダイアログを開き、html は自己完結の HTML を作る(出力メニューの見えない iframe へ返す) */
 export const PRINT_FORMATS = ['pdf', 'html'] as const
 export type PrintFormat = (typeof PRINT_FORMATS)[number]
 
@@ -31,3 +31,22 @@ export const withQuery = (path: string, query: URLSearchParams): string => (quer
 /** 保存するファイル名。OS でファイル名に使えない文字は `_` に置き換え、空なら fallback にする */
 export const exportFileName = (title: string, ext: string, fallback: string): string =>
   `${title.replace(/[\\/:*?"<>|\u0000-\u001f\u007f]/g, '_').trim() || fallback}.${ext}`
+
+/** HTML 出力で、見えない iframe に開いた印刷用ページが親へ HTML を返すメッセージの種別 */
+export const PRINT_HTML_MESSAGE = 'devuntu:print-html'
+
+/** 印刷用ページから親へのメッセージ。作れなかった(取得できない・保存に失敗した)ときは error */
+export type PrintHtmlMessage =
+  { type: typeof PRINT_HTML_MESSAGE; fileName: string; html: string } | { type: typeof PRINT_HTML_MESSAGE; error: true }
+
+/** 受け取ったメッセージが印刷用ページからの HTML(またはエラー)か */
+export const isPrintHtmlMessage = (data: unknown): data is PrintHtmlMessage => {
+  if (typeof data !== 'object' || data === null) {
+    return false
+  }
+  const message = data as Record<string, unknown>
+  if (message.type !== PRINT_HTML_MESSAGE) {
+    return false
+  }
+  return message.error === true || (typeof message.fileName === 'string' && typeof message.html === 'string')
+}

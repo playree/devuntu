@@ -2,7 +2,14 @@
  * 印刷用ページの共通部分(`print-export.ts`)の単体テスト
  */
 
-import { exportFileName, parsePrintFormat, setPrintFormatParam, withQuery } from '@/lib/print-export'
+import {
+  exportFileName,
+  isPrintHtmlMessage,
+  parsePrintFormat,
+  PRINT_HTML_MESSAGE,
+  setPrintFormatParam,
+  withQuery,
+} from '@/lib/print-export'
 import { describe, expect, it } from 'vitest'
 
 describe('parsePrintFormat: 出力形式', () => {
@@ -39,5 +46,20 @@ describe('exportFileName: 保存ファイル名', () => {
 
   it('空になる場合は fallback', () => {
     expect(exportFileName('  ', 'html', 'wiki')).toBe('wiki.html')
+  })
+})
+
+describe('isPrintHtmlMessage: 印刷用ページからのメッセージ', () => {
+  it('HTML とエラーを受け付ける', () => {
+    expect(isPrintHtmlMessage({ type: PRINT_HTML_MESSAGE, fileName: 'a.html', html: '<p>' })).toBe(true)
+    expect(isPrintHtmlMessage({ type: PRINT_HTML_MESSAGE, error: true })).toBe(true)
+  })
+
+  it('種別が違う・中身が欠けている・オブジェクトでないものは受け付けない', () => {
+    expect(isPrintHtmlMessage({ type: 'other', fileName: 'a.html', html: '<p>' })).toBe(false)
+    expect(isPrintHtmlMessage({ type: PRINT_HTML_MESSAGE, fileName: 'a.html' })).toBe(false)
+    expect(isPrintHtmlMessage({ type: PRINT_HTML_MESSAGE, error: 'x' })).toBe(false)
+    expect(isPrintHtmlMessage(null)).toBe(false)
+    expect(isPrintHtmlMessage('devuntu:print-html')).toBe(false)
   })
 })

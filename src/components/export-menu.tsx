@@ -15,6 +15,7 @@ export const ExportMenu = <K extends string>({
   variant,
   className,
   disabledIds,
+  isPending,
 }: {
   items: ExportMenuItem<K>[]
   onAction: (id: K) => void
@@ -22,6 +23,8 @@ export const ExportMenu = <K extends string>({
   className?: string
   /** いまは選べない形式 */
   disabledIds?: K[]
+  /** 出力ファイルを作っている間。ボタンにスピナーを出し、押せなくする */
+  isPending?: boolean
 }) => {
   const { t } = useLocale()
   return (
@@ -33,6 +36,7 @@ export const ExportMenu = <K extends string>({
         className={className}
         tooltip={t('export')}
         icon={<ArrowDownTrayIcon width={16} />}
+        isPending={isPending}
       />
       <Dropdown.Popover placement='bottom end'>
         <Dropdown.Menu disabledKeys={disabledIds} onAction={(key) => onAction(key as K)}>

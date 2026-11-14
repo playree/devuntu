@@ -5,7 +5,7 @@ import { useBoardAssignees } from '@/app/(sidenav)/tickets/use-ticket-form'
 import { PanelSkeleton } from '@/components/general/panel'
 import { TicketIcon } from '@/components/icon'
 import { NoAccessView } from '@/components/no-access-view'
-import { PrintToolbar, useSaveHtml } from '@/components/print-export'
+import { PrintToolbar, useReportNotFoundToParent, useSaveHtml } from '@/components/print-export'
 import { useActionData } from '@/lib/action/action-client'
 import { authClient } from '@/lib/auth/auth-client'
 import { TICKET_COMMENT_TYPE_LOCALE } from '@/lib/board/ticket-enum'
@@ -19,7 +19,7 @@ import { PrintTicket } from './print-ticket'
 
 /**
  * チケットの印刷用ページ。commentId を渡すとそのプラン/報告書だけ、無ければチケット全体を出す。
- * 描画が終わったら format に応じて印刷ダイアログを開くか、HTML を保存する。
+ * 描画が終わったら format に応じて印刷ダイアログを開くか、HTML を作る(html は出力メニューが見えない iframe で開き、HTML を受け取る)。
  * 認可はチケット詳細と同じ getTicket で行う
  */
 export const TicketPrintClient: FC<{ id: string; commentId?: string; format: PrintFormat }> = ({
@@ -51,10 +51,12 @@ export const TicketPrintClient: FC<{ id: string; commentId?: string; format: Pri
     }
   }, [documentTitle])
 
-  const { save: saveHtml, isPending: isSavingHtml } = useSaveHtml(
+  const saveHtml = useSaveHtml(
     ref,
     documentTitle ? { title: documentTitle, fileName: ticketExportFileName(documentTitle) } : undefined,
   )
+
+  useReportNotFoundToParent(!isLoading && !isFound)
 
   useWhenRendered(ref, isFound && !isAssigneesLoading && !isSessionPending, () =>
     format === 'html' ? void saveHtml() : window.print(),
@@ -68,7 +70,7 @@ export const TicketPrintClient: FC<{ id: string; commentId?: string; format: Pri
     <div className='mx-auto w-full max-w-3xl p-4 print:max-w-none print:p-0'>
       {isFound ? (
         <>
-          <PrintToolbar format={format} onSaveHtml={() => void saveHtml()} isSavingHtml={isSavingHtml} />
+          <PrintToolbar />
           <div ref={ref}>
             {comment ? (
               <PrintComment ticket={ticket} comment={comment} mentionUsers={assignees} />
