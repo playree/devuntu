@@ -39,20 +39,22 @@ export const useWikiPageRevisions = (page: Page, reloadPage: () => Promise<void>
   const updatedAt = page.updatedAt.getTime()
   const listPageAt = data ? (data.pageUpdatedAt?.getTime() ?? null) : undefined
   const isSynced = listPageAt === updatedAt
-  // 取り直しても(失敗などで)そろわない組み合わせは繰り返さない。画面の再読み込みで取り直せる
-  const triedPair = useRef<string | null>(null)
+  /**
+   * 取り直しは、ページか一覧を新しく受け取るたびに1回だけ行う。取得に失敗すると前の値のまま残るので、失敗しても繰り返さない。
+   * 画面の再読み込みボタンでページを取り直せば(更新日時が同じでも)もう一度試す
+   */
+  const tried = useRef<{ page: Page; list: typeof data } | null>(null)
   const syncLatest = useEffectEvent((older: 'list' | 'page') => (older === 'list' ? refresh() : reloadPage()))
   useEffect(() => {
     if (listPageAt === undefined || listPageAt === updatedAt) {
       return
     }
-    const pair = `${listPageAt}:${updatedAt}`
-    if (triedPair.current !== pair) {
-      triedPair.current = pair
+    if (tried.current?.page !== page || tried.current.list !== data) {
+      tried.current = { page, list: data }
       // 一覧のほうが新しい(他の人の保存・ページの削除)ならページを、ページのほうが新しい(保存・ロールバック)なら一覧を取り直す
       void syncLatest(listPageAt === null || listPageAt > updatedAt ? 'page' : 'list')
     }
-  }, [listPageAt, updatedAt])
+  }, [listPageAt, updatedAt, page, data])
   const reload = async () => {
     await Promise.all([refresh(), reloadPage()])
   }
