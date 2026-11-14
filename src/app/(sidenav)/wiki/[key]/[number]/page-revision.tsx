@@ -107,7 +107,7 @@ const RevisionItem: FC<{ revision: Revision; revisions: readonly Revision[]; isL
   const source = revision.restoredFromId && revisions.find(({ id }) => id === revision.restoredFromId)
   return (
     <div className='min-w-0 space-y-0.5'>
-      <div className='flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm'>
+      <div className='flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs'>
         <RevisionNumber number={revision.number} />
         {t(`wiki_revision_action_${revision.action}`)}
         {source && (
@@ -124,16 +124,21 @@ const RevisionItem: FC<{ revision: Revision; revisions: readonly Revision[]; isL
           </Chip>
         )}
         {revision.ticketDisplayId && <span className='text-muted text-xs'>{revision.ticketDisplayId}</span>}
+        <UpdatedBy
+          name={revision.actorName}
+          isAgent={revision.actorIsAgent}
+          via={revision.via}
+          at={revision.updatedAt}
+        />
       </div>
       {revision.message && <p className='line-clamp-2 text-xs break-all whitespace-pre-line'>{revision.message}</p>}
-      <UpdatedBy name={revision.actorName} isAgent={revision.actorIsAgent} via={revision.via} at={revision.updatedAt} />
     </div>
   )
 }
 
 /**
- * 更新者・日時を兼ねた版の選択。版が取れていなければ(取得中・旧データ)文言だけを出す。
- * 過去の版を選んでいる間は、その版の版数・更新者・日時を注意色で出す
+ * 更新者・日時を兼ねた版の選択。選んでいる版(既定は最新)の版数・更新者・日時を出す。
+ * 版が取れていなければ(取得中・旧データ)文言だけを出す。過去の版を選んでいる間は注意色にする
  */
 export const WikiRevisionSelect: FC<{ revisions: WikiPageRevisions; updatedText: string }> = ({
   revisions: { revisions, past, select },
@@ -145,18 +150,16 @@ export const WikiRevisionSelect: FC<{ revisions: WikiPageRevisions; updatedText:
     return <span className='text-muted text-xs'>{updatedText}</span>
   }
   const current = past ?? revisions[0]
-  const label = past
-    ? `v${past.number} · ${t('wiki_updated_by', { name: past.actorName || '-', at: dayformat(past.updatedAt, 'tz-minute', tz) })}`
-    : updatedText
+  const label = `v${current.number} · ${t('wiki_updated_by', { name: current.actorName || '-', at: dayformat(current.updatedAt, 'tz-minute', tz) })}`
   return (
     <Dropdown>
       <Button
-        variant='ghost'
+        variant='outline'
         size='sm'
         aria-label={`${t('history')}: ${label}`}
         className={cn(
-          'h-auto min-h-0 gap-1 px-1 py-0.5 text-xs font-normal whitespace-normal',
-          past ? 'text-warning' : 'text-muted',
+          'h-auto min-h-0 gap-1 px-2 py-0.5 text-xs font-normal whitespace-normal',
+          past ? 'text-warning border-warning' : 'text-muted',
         )}
       >
         {label}
