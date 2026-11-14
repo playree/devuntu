@@ -30,25 +30,34 @@ type Revision = NonNullable<GetWikiPageRevisionsReturnType>['revisions'][number]
 
 /**
  * ページの版の一覧と、選んでいる版。最新の版はいまの内容と同じなので、過去の版(`past`)を選んだときだけ本文を引く。
- * ページを取り直して更新日時が変わったら(保存・ロールバック・再読み込み)一覧も取り直す。
- * 一覧だけを取り直すと、他の人の保存で一覧の最新といまの表示がずれるので、取り直しはページ(`reloadPage`)とあわせて行う
+ * 一覧は同じ時点のページの更新日時を持つので、表示中のページと照合し、ずれていれば古いほう(一覧かページ)を取り直す。
+ * そろうまでは一覧を出さない(版の表示と内容が別の版を指さないように)
  */
 export const useWikiPageRevisions = (page: Page, reloadPage: () => Promise<void>) => {
   const { t } = useLocale()
   const { data, refresh } = useActionData(() => getWikiPageRevisions({ id: page.id }), { key: page.id })
   const updatedAt = page.updatedAt.getTime()
-  const fetchedAt = useRef(updatedAt)
+  const listPageAt = data ? (data.pageUpdatedAt?.getTime() ?? null) : undefined
+  const isSynced = listPageAt === updatedAt
+  // 取り直しても(失敗などで)そろわない組み合わせは繰り返さない。画面の再読み込みで取り直せる
+  const triedPair = useRef<string | null>(null)
+  const syncLatest = useEffectEvent((older: 'list' | 'page') => (older === 'list' ? refresh() : reloadPage()))
   useEffect(() => {
-    if (fetchedAt.current !== updatedAt) {
-      fetchedAt.current = updatedAt
-      void refresh()
+    if (listPageAt === undefined || listPageAt === updatedAt) {
+      return
     }
-  }, [updatedAt, refresh])
+    const pair = `${listPageAt}:${updatedAt}`
+    if (triedPair.current !== pair) {
+      triedPair.current = pair
+      // 一覧のほうが新しい(他の人の保存・ページの削除)ならページを、ページのほうが新しい(保存・ロールバック)なら一覧を取り直す
+      void syncLatest(listPageAt === null || listPageAt > updatedAt ? 'page' : 'list')
+    }
+  }, [listPageAt, updatedAt])
   const reload = async () => {
     await Promise.all([refresh(), reloadPage()])
   }
 
-  const revisions = data?.revisions ?? []
+  const revisions = isSynced && data ? data.revisions : []
   const [selectedId, setSelectedId] = useState<string | null>(null)
   // 選び直すたびに本文を引き直す(同じ版を選び直したときも、前回の失敗を引きずらない)
   const [attempt, setAttempt] = useState(0)
@@ -154,9 +163,12 @@ const RevisionItem: FC<{ revision: Revision; revisions: readonly Revision[]; isL
   )
 }
 
+const revisionButton = 'h-auto min-h-0 gap-1 px-2 py-0.5 text-xs font-normal whitespace-normal'
+
 /**
  * 更新者・日時を兼ねた版の選択。選んでいる版(既定は最新)の版数・更新者・日時を出す。
- * 版が取れていなければ(取得中・旧データ)文言だけを出す。過去の版を選んでいる間は注意色にする
+ * 版が取れていなければ(取得中・ページとの照合中・旧データ)同じ形のまま押せないボタンで文言だけを出す。
+ * 過去の版を選んでいる間は注意色にする
  */
 export const WikiRevisionSelect: FC<{ revisions: WikiPageRevisions; updatedText: string }> = ({
   revisions: { revisions, past, select },
@@ -165,7 +177,11 @@ export const WikiRevisionSelect: FC<{ revisions: WikiPageRevisions; updatedText:
   const { t } = useLocale()
   const tz = useUserTimezone()
   if (revisions.length === 0) {
-    return <span className='text-muted text-xs'>{updatedText}</span>
+    return (
+      <Button variant='outline' size='sm' isDisabled className={cn(revisionButton, 'text-muted')}>
+        {updatedText}
+      </Button>
+    )
   }
   const current = past ?? revisions[0]
   const label = `v${current.number} · ${t('wiki_updated_by', { name: current.actorName || '-', at: dayformat(current.updatedAt, 'tz-minute', tz) })}`
@@ -175,10 +191,7 @@ export const WikiRevisionSelect: FC<{ revisions: WikiPageRevisions; updatedText:
         variant='outline'
         size='sm'
         aria-label={`${t('history')}: ${label}`}
-        className={cn(
-          'h-auto min-h-0 gap-1 px-2 py-0.5 text-xs font-normal whitespace-normal',
-          past ? 'text-warning border-warning' : 'text-muted',
-        )}
+        className={cn(revisionButton, past ? 'text-warning border-warning' : 'text-muted')}
       >
         {label}
         <ChevronDownIcon width={12} className='shrink-0' />

@@ -151,20 +151,34 @@ const spaceIdOfPage = async (pageId: string): Promise<string> => {
   return owner.spaceId
 }
 
-/** ページの版の一覧(新しい順、本文なし)。削除済みのページの版も引ける */
+export type WikiPageRevisionList = {
+  /** 新しい順、本文なし */
+  revisions: WikiPageRevisionSummary[]
+  /** 一覧と同じ時点のページの更新日時。画面側で、ページの表示と一覧が同じ版を指しているかの照合に使う。削除済みなら null */
+  pageUpdatedAt: Date | null
+}
+
+/** ページの版の一覧。削除済みのページの版も引ける */
 export const listWikiPageRevisions = async (
   actor: Actor,
   pageId: string,
   now: Date = new Date(),
-): Promise<WikiPageRevisionSummary[]> => {
+): Promise<WikiPageRevisionList> => {
   await assertWikiSpaceAccess(actor, await spaceIdOfPage(pageId), 'view')
-  const rows = await prisma.wikiPageRevision.findMany({
-    where: { pageId },
-    select: REVISION_SUMMARY_SELECT,
-    orderBy: [...REVISION_ORDER],
-  })
+  // ページと版は同じトランザクションで書くので、同じスナップショットで読めば最新の版とページの更新日時がそろう
+  const [page, rows] = await prisma.$transaction(
+    [
+      prisma.wikiPage.findUnique({ where: { id: pageId }, select: { updatedAt: true } }),
+      prisma.wikiPageRevision.findMany({
+        where: { pageId },
+        select: REVISION_SUMMARY_SELECT,
+        orderBy: [...REVISION_ORDER],
+      }),
+    ],
+    { isolationLevel: 'RepeatableRead' },
+  )
   const cutoff = wikiRevisionCutoff(now)
-  return rows.map((row) => toRevisionSummary(row, cutoff))
+  return { revisions: rows.map((row) => toRevisionSummary(row, cutoff)), pageUpdatedAt: page?.updatedAt ?? null }
 }
 
 /** 版の本文(版を選んで表示するときに引く) */
