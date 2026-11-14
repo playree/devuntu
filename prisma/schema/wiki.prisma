@@ -286,6 +286,9 @@ model WikiPageRevision {
   /// action=restored のときの戻し元の版
   restoredFromId String?
 
+  /// 保存時に付けたコミットメッセージ(任意)。付いた版は連続保存のまとめの対象にしない
+  message String?
+
   /// 版の始まり。連続保存のまとめはここから数える
   createdAt DateTime @default(now())
   /// 最後に保存した時刻。まとめると進む。表示と保持期間の判定に使う

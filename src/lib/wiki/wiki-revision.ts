@@ -15,6 +15,7 @@ import { ticketDisplayId } from '../board/ticket-id'
 import { DAY_MS, msBefore } from '../day'
 import { envu } from '../env-util'
 import { errInvalidOperation } from '../error'
+import { logger } from '../logger'
 import { prisma, type Db } from '../prisma'
 import { assertWikiSpaceAccess } from './wiki-access'
 import { shouldMergeWikiRevision, wikiPageRef, type WikiPageSnapshot } from './wiki-rule'
@@ -32,6 +33,8 @@ export type WriteWikiPageRevision = {
   via: WikiVia
   ticketId?: string | null
   restoredFromId?: string | null
+  /** コミットメッセージ(正規化済み。空は null) */
+  message?: string | null
 }
 
 /** 版を残す。まとめたときは 'merged'、新しく作ったときは 'created' */
@@ -41,11 +44,21 @@ export const writeWikiPageRevision = async (
   now: Date = new Date(),
 ): Promise<'created' | 'merged'> => {
   const ticketId = revision.ticketId ?? null
+  const message = revision.message ?? null
   const mergeMinutes = envu.server.WIKI_REVISION_MERGE_MINUTES
   // 版の番号を続けるため、まとめない操作でも最新の版を引く
   const latest = await tx.wikiPageRevision.findFirst({
     where: { pageId: revision.pageId },
-    select: { id: true, number: true, action: true, actorId: true, via: true, ticketId: true, createdAt: true },
+    select: {
+      id: true,
+      number: true,
+      action: true,
+      actorId: true,
+      via: true,
+      ticketId: true,
+      message: true,
+      createdAt: true,
+    },
     orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
   })
 
@@ -53,7 +66,7 @@ export const writeWikiPageRevision = async (
     latest &&
     shouldMergeWikiRevision(
       latest,
-      { action: revision.action, actorId: revision.actorId, via: revision.via, ticketId },
+      { action: revision.action, actorId: revision.actorId, via: revision.via, ticketId, message },
       now,
       mergeMinutes,
     )
@@ -63,7 +76,15 @@ export const writeWikiPageRevision = async (
   }
 
   await tx.wikiPageRevision.create({
-    data: { ...revision, number: (latest?.number ?? 0) + 1, ticketId, ...snapshot, createdAt: now, updatedAt: now },
+    data: {
+      ...revision,
+      number: (latest?.number ?? 0) + 1,
+      ticketId,
+      message,
+      ...snapshot,
+      createdAt: now,
+      updatedAt: now,
+    },
   })
   const excess = await tx.wikiPageRevision.findMany({
     where: { pageId: revision.pageId },
@@ -91,6 +112,7 @@ const REVISION_SUMMARY_SELECT = {
   tagNames: true,
   via: true,
   restoredFromId: true,
+  message: true,
   createdAt: true,
   updatedAt: true,
   actor: { select: { name: true, isAgent: true } },
@@ -129,44 +151,77 @@ const spaceIdOfPage = async (pageId: string): Promise<string> => {
   return owner.spaceId
 }
 
-/** ページの版の一覧(新しい順、本文なし)。削除済みのページの版も引ける */
+export type WikiPageRevisionList = {
+  /** 新しい順、本文なし */
+  revisions: WikiPageRevisionSummary[]
+  /** 一覧と同じ時点のページの更新日時。画面側で、ページの表示と一覧が同じ版を指しているかの照合に使う。削除済みなら null */
+  pageUpdatedAt: Date | null
+}
+
+/** ページの版の一覧。削除済みのページの版も引ける */
 export const listWikiPageRevisions = async (
   actor: Actor,
   pageId: string,
   now: Date = new Date(),
-): Promise<WikiPageRevisionSummary[]> => {
+): Promise<WikiPageRevisionList> => {
   await assertWikiSpaceAccess(actor, await spaceIdOfPage(pageId), 'view')
-  const rows = await prisma.wikiPageRevision.findMany({
-    where: { pageId },
-    select: REVISION_SUMMARY_SELECT,
-    orderBy: [...REVISION_ORDER],
-  })
+  // ページと版は同じトランザクションで書くので、同じスナップショットで読めば最新の版とページの更新日時がそろう
+  const [page, rows] = await prisma.$transaction(
+    [
+      prisma.wikiPage.findUnique({ where: { id: pageId }, select: { updatedAt: true } }),
+      prisma.wikiPageRevision.findMany({
+        where: { pageId },
+        select: REVISION_SUMMARY_SELECT,
+        orderBy: [...REVISION_ORDER],
+      }),
+    ],
+    { isolationLevel: 'RepeatableRead' },
+  )
   const cutoff = wikiRevisionCutoff(now)
-  return rows.map((row) => toRevisionSummary(row, cutoff))
+  return { revisions: rows.map((row) => toRevisionSummary(row, cutoff)), pageUpdatedAt: page?.updatedAt ?? null }
 }
 
-/** 版の本文と、差分の比較元になる1つ前(古い側)の版の本文 */
-export const getWikiPageRevisionContents = async (
-  actor: Actor,
-  revisionId: string,
-): Promise<{ content: string; previousContent: string | null }> => {
+/** 版の本文(版を選んで表示するときに引く) */
+export const getWikiPageRevisionContent = async (actor: Actor, revisionId: string): Promise<string> => {
   const revision = await prisma.wikiPageRevision.findUnique({
     where: { id: revisionId },
-    select: { spaceId: true, pageId: true, content: true, createdAt: true },
+    select: { spaceId: true, content: true },
   })
   if (!revision) {
     throw errInvalidOperation()
   }
   await assertWikiSpaceAccess(actor, revision.spaceId, 'view')
-  const previous = await prisma.wikiPageRevision.findFirst({
-    where: {
-      pageId: revision.pageId,
-      OR: [{ createdAt: { lt: revision.createdAt } }, { createdAt: revision.createdAt, id: { lt: revisionId } }],
-    },
-    select: { content: true },
-    orderBy: [...REVISION_ORDER],
+  return revision.content
+}
+
+/**
+ * 版を消す(編集者以上)。最新の版はいまの内容そのもの(削除済みのページなら復元の元)なので消せない。
+ * 掃除や上限で先に消えていれば何もしない
+ */
+export const deleteWikiPageRevision = async (actor: Actor, revisionId: string): Promise<void> => {
+  const source = await prisma.wikiPageRevision.findUnique({ where: { id: revisionId }, select: { spaceId: true } })
+  if (!source) {
+    throw errInvalidOperation()
+  }
+  await prisma.$transaction(async (tx) => {
+    // 本文の更新と同じロック。アーカイブとは直列にする
+    await tx.$queryRaw`SELECT "id" FROM "wiki_space" WHERE "id" = ${source.spaceId} FOR SHARE`
+    await assertWikiSpaceAccess(actor, source.spaceId, 'write', tx)
+    const revision = await tx.wikiPageRevision.findUnique({ where: { id: revisionId }, select: { pageId: true } })
+    if (!revision) {
+      return
+    }
+    const latest = await tx.wikiPageRevision.findFirst({
+      where: { pageId: revision.pageId },
+      select: { id: true },
+      orderBy: [...REVISION_ORDER],
+    })
+    if (latest?.id === revisionId) {
+      throw errInvalidOperation()
+    }
+    await tx.wikiPageRevision.deleteMany({ where: { id: revisionId } })
   })
-  return { content: revision.content, previousContent: previous?.content ?? null }
+  logger.info({ userId: actor.id, spaceId: source.spaceId, revisionId }, 'wiki page revision deleted')
 }
 
 export type DeletedWikiPage = WikiPageRevisionSummary & {

@@ -18,7 +18,12 @@ import {
   moveWikiPage as moveWikiPageCore,
   restoreWikiPageRevision as restoreWikiPageRevisionCore,
 } from '@/lib/wiki/wiki-page'
-import { getWikiPageRevisionContents, listDeletedWikiPages, listWikiPageRevisions } from '@/lib/wiki/wiki-revision'
+import {
+  deleteWikiPageRevision as deleteWikiPageRevisionCore,
+  getWikiPageRevisionContent as getWikiPageRevisionContentCore,
+  listDeletedWikiPages,
+  listWikiPageRevisions,
+} from '@/lib/wiki/wiki-revision'
 import { getWikiSpaceByKeyForManage } from '@/lib/wiki/wiki-space'
 import { createWikiTag as createWikiTagCore, listWikiTags } from '@/lib/wiki/wiki-tag'
 
@@ -85,24 +90,36 @@ export const createWikiTag = safeAuthAction
     async ({ ctx: { user }, parsedInput: { spaceId, ...input } }) => await createWikiTagCore(user, spaceId, input),
   )
 
-/** ページの版の一覧(本文なし、新しい順)と保持期間(日)・期限を過ぎても残す直近の版の数・1ページあたりの版の上限。削除済みのページも引ける。`id` はページ ID */
+/**
+ * ページの版の一覧(本文なし、新しい順)と、同じ時点のページの更新日時。
+ * 保持期間(日)・期限を過ぎても残す直近の版の数・1ページあたりの版の上限も返す。削除済みのページも引ける。`id` はページ ID
+ */
 export const getWikiPageRevisions = safeAuthAction
   .metadata({ actionName: 'getWikiPageRevisions', role: 'user' })
   .inputSchema(scUUID)
   .action(async ({ ctx: { user }, parsedInput: { id } }) => ({
-    revisions: await listWikiPageRevisions(user, id),
+    ...(await listWikiPageRevisions(user, id)),
     retentionDays: envu.server.WIKI_REVISION_RETENTION_DAYS,
     keepRecent: envu.server.WIKI_REVISION_KEEP_RECENT,
     maxPerPage: envu.server.WIKI_REVISION_MAX_PER_PAGE,
   }))
 export type GetWikiPageRevisionsReturnType = Awaited<ReturnType<typeof getWikiPageRevisions>>['data']
 
-/** 版の本文と、差分の比較元になる1つ前の版の本文。`id` は版 ID */
-export const getWikiPageRevisionDiff = safeAuthAction
-  .metadata({ actionName: 'getWikiPageRevisionDiff', role: 'user' })
+/** 版の本文。`id` は版 ID */
+export const getWikiPageRevisionContent = safeAuthAction
+  .metadata({ actionName: 'getWikiPageRevisionContent', role: 'user' })
   .inputSchema(scUUID)
-  .action(async ({ ctx: { user }, parsedInput: { id } }) => getWikiPageRevisionContents(user, id))
-export type GetWikiPageRevisionDiffReturnType = Awaited<ReturnType<typeof getWikiPageRevisionDiff>>['data']
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => getWikiPageRevisionContentCore(user, id))
+
+/** 版の削除(編集者以上)。最新の版は消せない。`id` は版 ID */
+export const deleteWikiPageRevision = safeAuthAction
+  .metadata({ actionName: 'deleteWikiPageRevision', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => {
+    await deleteWikiPageRevisionCore(user, id)
+    // 戻り値が無いと parseAction が失敗として扱うので、消した版の ID を返す
+    return { id }
+  })
 
 /** 削除済みのページ(最後に削除された版)と保持期間(日)。`id` はスペース ID */
 export const getDeletedWikiPages = safeAuthAction

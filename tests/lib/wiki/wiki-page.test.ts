@@ -153,7 +153,13 @@ describe('createWikiPage', () => {
       actorId: actor.id,
       via: 'mcp',
       ticketId: 't1',
+      message: null,
     })
+  })
+
+  it('コミットメッセージは前後の空白を除いて版に残す', async () => {
+    await createWikiPage(actor, MCP, SPACE_ID, { title: '新規' }, { message: '  初版  ' })
+    expect(vi.mocked(writeWikiPageRevision).mock.calls[0][1].message).toBe('初版')
   })
 
   it('種類を指定すると、その種類で作って版にも残す', async () => {
@@ -243,6 +249,22 @@ describe('updateWikiPage', () => {
       action: 'updated',
       snapshot: { parentId: 'a', order: 0, title: 'title-b', content: '新しい本文', type: 'page', tagNames: [] },
     })
+  })
+
+  it.each([
+    ['前後の空白を除いて残す', '  見出しを整理 ', '見出しを整理'],
+    ['空白だけなら付けない', '   ', null],
+    ['省略なら付けない', undefined, null],
+  ])('コミットメッセージ: %s', async (_, message, expected) => {
+    await updateWikiPage(actor, WEB, 'b', { content: '新しい本文' }, { message })
+    expect(vi.mocked(writeWikiPageRevision).mock.calls[0][1].message).toBe(expected)
+  })
+
+  it('コミットメッセージが長すぎれば書かない', async () => {
+    await expect(
+      updateWikiPage(actor, WEB, 'b', { content: '新しい本文' }, { message: 'a'.repeat(201) }),
+    ).rejects.toThrow('message')
+    expect(prisma.wikiPage.update).not.toHaveBeenCalled()
   })
 
   it('種類だけを変えても保存し、版に新しい種類を残す', async () => {

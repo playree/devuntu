@@ -652,6 +652,7 @@ export const en: DefaultLocaleItems = {
   wiki_child_count: '${count} children',
   wiki_change_page_type: 'Change Type',
   wiki_child_pages: 'Child Pages',
+  wiki_delete_revision: 'Delete this version',
   wiki_deleted_pages: 'Deleted pages',
   wiki_design_doc_editor: 'Design doc editor',
   wiki_design_doc_source: 'Source',
@@ -677,8 +678,8 @@ export const en: DefaultLocaleItems = {
   wiki_revision_action_restored: 'Restored',
   wiki_revision_action_updated: 'Updated',
   wiki_revision_before_retention: 'Before retention period',
-  wiki_revision_parent: 'Parent page',
-  wiki_revision_parent_missing: '(deleted page)',
+  wiki_revision_latest: 'Latest',
+  wiki_revision_message: 'Commit message (optional)',
   wiki_revision_restored_from: 'from v${version}',
   wiki_role_editor: 'Editor',
   wiki_role_viewer: 'Viewer',
@@ -789,6 +790,7 @@ Please copy and use the connection information above.
   msg_confirm_approve_report: 'Approve the report and mark the ticket as done.',
   msg_confirm_archive_wiki_space: 'Archive ${target}.',
   msg_confirm_delete_wiki_page_with_children: 'Delete ${target}. Its ${count} descendant page(s) will also be deleted.',
+  msg_confirm_delete_wiki_revision: 'Delete ${target} from the history. A deleted version cannot be recovered.',
   msg_confirm_wiki_type_to_page:
     'A page is edited in the rich editor, which may change how the design doc is written, such as its front matter and HTML comments. Make it a page?',
   msg_confirm_deletion: 'Delete ${target}.',
@@ -875,7 +877,6 @@ Please copy and use the connection information above.
   msg_no_wiki_boards: 'No boards are assigned.',
   msg_no_wiki_groups: 'No groups are assigned.',
   msg_no_wiki_pages: 'No pages yet.',
-  msg_no_wiki_revisions: 'No history.',
   msg_no_wiki_search_results: 'No matching pages.',
   msg_no_wiki_spaces: 'No spaces you can view.',
   msg_not_allowed_domain_in_google:
@@ -914,11 +915,9 @@ Please copy and use the connection information above.
     'Members of the board (direct or via groups) can use this space with the chosen role. You can assign boards you belong to.',
   msg_wiki_deleted_pages_hint:
     'Deleted pages can be restored only for ${days} days after deletion. Pages deleted together with their descendants are restored one page at a time.',
-  msg_wiki_deleted_revision:
-    'The page was deleted in this version. Restoring it recreates the page with the content before deletion.',
   msg_wiki_manage_only:
     'You are not assigned to this space, so you can only change its settings. Assign yourself to read its pages.',
-  msg_wiki_no_revision_change: 'No changes to the title, type, content or tags from the previous version.',
+  msg_wiki_message_not_saved: 'Nothing changed, so the commit message was not kept.',
   msg_wiki_page_conflict: 'Someone else updated it first. Copy your changes, then reopen the page and edit again.',
   msg_wiki_page_has_children: 'The page has child pages. Delete it together with its descendants.',
   msg_wiki_page_invalid_parent: 'The page cannot be moved there (not under itself, its descendants, or another space).',
@@ -926,6 +925,7 @@ Please copy and use the connection information above.
   msg_wiki_restore_unchanged: 'No changes. The content is the same as the current one.',
   msg_wiki_revision_retention:
     'Versions are kept for ${days} days after the last save. While the page exists, older versions are still kept if they are the latest version, one of the ${keep} before it, or the one showing the state before the retention period. However, only the newest ${max} versions are kept per page. Consecutive saves are combined into one version.',
+  msg_wiki_viewing_revision: 'Showing a past version (${target}).',
   msg_wiki_role_note:
     'Viewers can read, editors can create, edit, move and delete pages, and owners can also change settings. At least one owner is required.',
   msg_wiki_search_hint: 'Enter keywords or choose tags. Words of two characters or fewer may take longer to search.',

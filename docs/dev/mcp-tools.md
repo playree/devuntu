@@ -213,14 +213,14 @@ AI から Wiki のページを探して読み、書けるようにする6ツー�
 権限はスペースの割り当て(直接・グループ・ボード経由)で決まる(画面と同じ)。everyone のスペースは全ログインユーザーが閲覧でき、editor 以上の割り当てがあれば編集もできる。
 スペースの作成・設定・割り当て、タグの作成、版の復元は画面で行う。
 
-| ツール             | 用途                                                                                                            | 入力                                                                                                                         |
-| ------------------ | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `list_wiki_spaces` | 閲覧できるスペースの一覧(キー・名前・説明・公開範囲・自分のロール・書き込めるか)                                | `includeArchived`(任意)                                                                                                      |
-| `get_wiki_tree`    | スペースのページの階層(ref・タイトル・タグだけ。本文なし)                                                       | `space` / `root` / `depth`                                                                                                   |
-| `search_wiki`      | 閲覧できるページを検索し、ref・タイトル・パンくず・タグ・一致箇所の抜粋を返す                                   | `keyword` / `space` / `tags` / `limit`                                                                                       |
-| `get_wiki_page`    | ページを読む(種類・本文・パンくず・子ページ・タグ・`updatedAt`・貼られた添付のキー)。`section` で節だけを読める | `ref` / `section`                                                                                                            |
-| `save_wiki_page`   | `ref` が無ければ作成、あれば渡した項目だけを更新する。`edits` で部分更新、`parent` / `position` で移動する      | `ref` / `space` / `title` / `content` / `type` / `edits` / `parent` / `position` / `tags` / `expectedUpdatedAt` / `ticketId` |
-| `delete_wiki_page` | ページを削除する。子孫を持つページは `recursive: true` のときだけ配下ごと消す                                   | `ref` / `recursive` / `ticketId`                                                                                             |
+| ツール             | 用途                                                                                                            | 入力                                                                                                                                     |
+| ------------------ | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `list_wiki_spaces` | 閲覧できるスペースの一覧(キー・名前・説明・公開範囲・自分のロール・書き込めるか)                                | `includeArchived`(任意)                                                                                                                  |
+| `get_wiki_tree`    | スペースのページの階層(ref・タイトル・タグだけ。本文なし)                                                       | `space` / `root` / `depth`                                                                                                               |
+| `search_wiki`      | 閲覧できるページを検索し、ref・タイトル・パンくず・タグ・一致箇所の抜粋を返す                                   | `keyword` / `space` / `tags` / `limit`                                                                                                   |
+| `get_wiki_page`    | ページを読む(種類・本文・パンくず・子ページ・タグ・`updatedAt`・貼られた添付のキー)。`section` で節だけを読める | `ref` / `section`                                                                                                                        |
+| `save_wiki_page`   | `ref` が無ければ作成、あれば渡した項目だけを更新する。`edits` で部分更新、`parent` / `position` で移動する      | `ref` / `space` / `title` / `content` / `type` / `edits` / `parent` / `position` / `tags` / `expectedUpdatedAt` / `ticketId` / `message` |
+| `delete_wiki_page` | ページを削除する。子孫を持つページは `recursive: true` のときだけ配下ごと消す                                   | `ref` / `recursive` / `ticketId`                                                                                                         |
 
 - ページは `ref`(`<スペースキー>/<番号>`、例: `DOCS/12`)で指定する。番号はスペース内の連番で、改名や移動では変わらない。
   キーは大文字小文字を問わない
@@ -250,7 +250,9 @@ AI から Wiki のページを探して読み、書けるようにする6ツー�
     (AI に表記ゆれのタグを増やさせない)
   - 応答は `result`(`created` / `updated` / `moved` / `updated+moved` / `unchanged`)・`ref`・`url`・`updatedAt`
 - `ticketId` を渡すと、どのチケットの対応中に書いたかが版に残る(閲覧できるチケットのみ)。書き込みの経路は版に `mcp` として残る
-- 削除したページは、保持期間(`WIKI_REVISION_RETENTION_DAYS`)の間は画面の履歴から復元できる
+- `save_wiki_page` の `message` は版に残すコミットメッセージ(任意、200文字まで。前後の空白は除き、空なら付けない)。
+  作成と、タイトル・本文・種類・タグの更新の版に残る(移動だけでは残らない)。付けた版は連続保存のまとめの対象にしない
+- 削除したページは、保持期間(`WIKI_REVISION_RETENTION_DAYS`)の間は画面(スペースのトップの「削除済みのページ」)から復元できる
 - エラーは `errorType` 付きで返す。`WIKI_PAGE_CONFLICT`(読んだ後に更新された)/ `WIKI_PAGE_HAS_CHILDREN`(子孫があり `recursive` が無い)/
   `WIKI_PAGE_TOO_DEEP`(深さの上限10を超える)/ `WIKI_PAGE_INVALID_PARENT`(自分自身・子孫の下へは移せない)
 

@@ -1,13 +1,14 @@
 /**
  * Wiki ページの版の書き込み(wiki-revision.ts)
  *
- * 連続保存のまとめと、1ページあたりの上限を超えた分の削除、版の一覧・本文・削除済みページの参照を確かめる。
+ * 連続保存のまとめと、1ページあたりの上限を超えた分の削除、版の一覧・本文・削除済みページの参照、版の削除を確かめる。
  */
 
 import { prisma } from '@/lib/prisma'
 import { assertWikiSpaceAccess } from '@/lib/wiki/wiki-access'
 import {
-  getWikiPageRevisionContents,
+  deleteWikiPageRevision,
+  getWikiPageRevisionContent,
   listDeletedWikiPages,
   listWikiPageRevisions,
   writeWikiPageRevision,
@@ -71,6 +72,7 @@ const latest = (override: Record<string, unknown> = {}) => ({
   actorId: 'u1',
   via: 'web',
   ticketId: null,
+  message: null,
   createdAt: new Date('2026-11-08T09:55:00.000Z'),
   ...override,
 })
@@ -103,6 +105,7 @@ describe('writeWikiPageRevision: 連続保存のまとめ', () => {
     ['別の経路', latest({ via: 'mcp' }), revision()],
     ['別のチケット', latest({ ticketId: 't1' }), revision()],
     ['最新の版が created', latest({ action: 'created' }), revision()],
+    ['最新の版にコミットメッセージがある', latest({ message: '見出しを整理' }), revision()],
   ])('%s なら新しい版を作る', async (_, last, next) => {
     vi.mocked(prisma.wikiPageRevision.findFirst).mockResolvedValue(last as never)
 
@@ -117,6 +120,17 @@ describe('writeWikiPageRevision: 連続保存のまとめ', () => {
       ...snapshot,
       createdAt: NOW,
       updatedAt: NOW,
+    })
+  })
+
+  it('コミットメッセージ付きの保存はまとめず、新しい版にメッセージを残す', async () => {
+    vi.mocked(prisma.wikiPageRevision.findFirst).mockResolvedValue(latest() as never)
+
+    expect(await writeWikiPageRevision(prisma, revision({ message: '見出しを整理' }), NOW)).toBe('created')
+    expect(prisma.wikiPageRevision.update).not.toHaveBeenCalled()
+    expect(vi.mocked(prisma.wikiPageRevision.create).mock.calls[0][0].data).toMatchObject({
+      number: 5,
+      message: '見出しを整理',
     })
   })
 
@@ -204,13 +218,16 @@ const summaryRow = (id: string, daysAgo: number, override: Record<string, unknow
 
 describe('listWikiPageRevisions', () => {
   it('存在するページのスペースで閲覧権限を確かめ、本文なしで新しい順に返す', async () => {
-    vi.mocked(prisma.wikiPage.findUnique).mockResolvedValue({ spaceId: 's1' } as never)
+    const pageUpdatedAt = new Date('2026-11-08T09:00:00.000Z')
+    vi.mocked(prisma.wikiPage.findUnique)
+      .mockResolvedValueOnce({ spaceId: 's1' } as never)
+      .mockResolvedValueOnce({ updatedAt: pageUpdatedAt } as never)
     vi.mocked(prisma.wikiPageRevision.findMany).mockResolvedValue([
       summaryRow('r2', 1, { ticket: { number: 5, board: { key: 'DEV' } } }),
       summaryRow('r1', 8, { actor: null }),
     ] as never)
 
-    const list = await listWikiPageRevisions({ id: 'u1' }, 'p1', NOW)
+    const { revisions: list, pageUpdatedAt: at } = await listWikiPageRevisions({ id: 'u1' }, 'p1', NOW)
 
     expect(assertWikiSpaceAccess).toHaveBeenCalledWith({ id: 'u1' }, 's1', 'view')
     const args = vi.mocked(prisma.wikiPageRevision.findMany).mock.calls[0][0]
@@ -222,19 +239,29 @@ describe('listWikiPageRevisions', () => {
     ])
     expect(list[0]).toMatchObject({ ticketDisplayId: 'DEV-5', actorName: '利用者' })
     expect(list[1]).toMatchObject({ ticketDisplayId: null, actorName: '', actorIsAgent: false })
+    expect(at).toEqual(pageUpdatedAt)
+  })
+
+  it('ページの更新日時は版の一覧と同じスナップショットで読む', async () => {
+    vi.mocked(prisma.wikiPage.findUnique).mockResolvedValue({ spaceId: 's1' } as never)
+    vi.mocked(prisma.wikiPageRevision.findMany).mockResolvedValue([] as never)
+    await listWikiPageRevisions({ id: 'u1' }, 'p1', NOW)
+    expect(prisma.$transaction).toHaveBeenCalledWith(expect.any(Array), { isolationLevel: 'RepeatableRead' })
+    expect(prisma.wikiPage.findUnique).toHaveBeenLastCalledWith({ where: { id: 'p1' }, select: { updatedAt: true } })
   })
 
   it('保持期間は WIKI_REVISION_RETENTION_DAYS に従う', async () => {
     settings.retention = 30
     vi.mocked(prisma.wikiPage.findUnique).mockResolvedValue({ spaceId: 's1' } as never)
     vi.mocked(prisma.wikiPageRevision.findMany).mockResolvedValue([summaryRow('r1', 8)] as never)
-    expect((await listWikiPageRevisions({ id: 'u1' }, 'p1', NOW))[0].beforeRetention).toBe(false)
+    expect((await listWikiPageRevisions({ id: 'u1' }, 'p1', NOW)).revisions[0].beforeRetention).toBe(false)
   })
 
-  it('削除済みのページは版からスペースを引く', async () => {
+  it('削除済みのページは版からスペースを引き、ページの更新日時は null', async () => {
     vi.mocked(prisma.wikiPage.findUnique).mockResolvedValue(null)
     vi.mocked(prisma.wikiPageRevision.findFirst).mockResolvedValue({ spaceId: 's2' } as never)
-    await listWikiPageRevisions({ id: 'u1' }, 'p1', NOW)
+    vi.mocked(prisma.wikiPageRevision.findMany).mockResolvedValue([] as never)
+    expect((await listWikiPageRevisions({ id: 'u1' }, 'p1', NOW)).pageUpdatedAt).toBeNull()
     expect(assertWikiSpaceAccess).toHaveBeenCalledWith({ id: 'u1' }, 's2', 'view')
   })
 
@@ -246,39 +273,71 @@ describe('listWikiPageRevisions', () => {
   })
 })
 
-describe('getWikiPageRevisionContents', () => {
-  it('版の本文と、1つ前の版の本文を返す', async () => {
-    const createdAt = new Date('2026-11-07T00:00:00.000Z')
-    vi.mocked(prisma.wikiPageRevision.findUnique).mockResolvedValue({
-      spaceId: 's1',
-      pageId: 'p1',
-      content: '新しい本文',
-      createdAt,
-    } as never)
-    vi.mocked(prisma.wikiPageRevision.findFirst).mockResolvedValue({ content: '前の本文' } as never)
+describe('getWikiPageRevisionContent', () => {
+  it('閲覧権限を確かめて版の本文を返す', async () => {
+    vi.mocked(prisma.wikiPageRevision.findUnique).mockResolvedValue({ spaceId: 's1', content: '本文' } as never)
 
-    expect(await getWikiPageRevisionContents({ id: 'u1' }, 'r2')).toEqual({
-      content: '新しい本文',
-      previousContent: '前の本文',
-    })
+    expect(await getWikiPageRevisionContent({ id: 'u1' }, 'r2')).toBe('本文')
     expect(assertWikiSpaceAccess).toHaveBeenCalledWith({ id: 'u1' }, 's1', 'view')
-    expect(vi.mocked(prisma.wikiPageRevision.findFirst).mock.calls[0][0]).toMatchObject({
-      where: {
-        pageId: 'p1',
-        OR: [{ createdAt: { lt: createdAt } }, { createdAt, id: { lt: 'r2' } }],
-      },
-      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-    })
   })
 
-  it('最初の版は比較元が無い', async () => {
-    vi.mocked(prisma.wikiPageRevision.findUnique).mockResolvedValue({
-      spaceId: 's1',
-      pageId: 'p1',
-      content: '本文',
-      createdAt: NOW,
-    } as never)
-    expect((await getWikiPageRevisionContents({ id: 'u1' }, 'r1')).previousContent).toBeNull()
+  it('版が無ければエラー', async () => {
+    vi.mocked(prisma.wikiPageRevision.findUnique).mockResolvedValue(null)
+    await expect(getWikiPageRevisionContent({ id: 'u1' }, 'r2')).rejects.toThrow()
+    expect(assertWikiSpaceAccess).not.toHaveBeenCalled()
+  })
+})
+
+describe('deleteWikiPageRevision', () => {
+  const found = () =>
+    vi
+      .mocked(prisma.wikiPageRevision.findUnique)
+      .mockResolvedValueOnce({ spaceId: 's1' } as never)
+      .mockResolvedValueOnce({ pageId: 'p1' } as never)
+
+  it('書き込み権限を確かめ、最新でない版を消す', async () => {
+    found()
+    vi.mocked(prisma.wikiPageRevision.findFirst).mockResolvedValue({ id: 'r-latest' } as never)
+
+    await deleteWikiPageRevision({ id: 'u1' }, 'r2')
+    expect(prisma.$queryRaw).toHaveBeenCalled()
+    expect(assertWikiSpaceAccess).toHaveBeenCalledWith({ id: 'u1' }, 's1', 'write', prisma)
+    expect(vi.mocked(prisma.wikiPageRevision.findFirst).mock.calls[0][0]).toMatchObject({
+      where: { pageId: 'p1' },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    })
+    expect(prisma.wikiPageRevision.deleteMany).toHaveBeenCalledWith({ where: { id: 'r2' } })
+  })
+
+  it('最新の版は消せない', async () => {
+    found()
+    vi.mocked(prisma.wikiPageRevision.findFirst).mockResolvedValue({ id: 'r2' } as never)
+
+    await expect(deleteWikiPageRevision({ id: 'u1' }, 'r2')).rejects.toThrow()
+    expect(prisma.wikiPageRevision.deleteMany).not.toHaveBeenCalled()
+  })
+
+  it('書き込み権限が無ければ消さない', async () => {
+    vi.mocked(prisma.wikiPageRevision.findUnique).mockResolvedValueOnce({ spaceId: 's1' } as never)
+    vi.mocked(assertWikiSpaceAccess).mockRejectedValueOnce(new Error('forbidden'))
+
+    await expect(deleteWikiPageRevision({ id: 'u1' }, 'r2')).rejects.toThrow('forbidden')
+    expect(prisma.wikiPageRevision.deleteMany).not.toHaveBeenCalled()
+  })
+
+  it('ロックを取った後に版が消えていれば何もしない', async () => {
+    vi.mocked(prisma.wikiPageRevision.findUnique)
+      .mockResolvedValueOnce({ spaceId: 's1' } as never)
+      .mockResolvedValueOnce(null)
+
+    await deleteWikiPageRevision({ id: 'u1' }, 'r2')
+    expect(prisma.wikiPageRevision.deleteMany).not.toHaveBeenCalled()
+  })
+
+  it('版が無ければエラー', async () => {
+    vi.mocked(prisma.wikiPageRevision.findUnique).mockResolvedValue(null)
+    await expect(deleteWikiPageRevision({ id: 'u1' }, 'r2')).rejects.toThrow()
+    expect(assertWikiSpaceAccess).not.toHaveBeenCalled()
   })
 })
 

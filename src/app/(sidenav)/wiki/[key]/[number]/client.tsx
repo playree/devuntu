@@ -6,7 +6,7 @@ import { FlexCol } from '@/components/general/flex'
 import { useModalState } from '@/components/general/modal'
 import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
-import { BookOpenIcon, ClockIcon, DocumentPlusIcon, FolderArrowRightIcon, TrashIcon } from '@/components/icon'
+import { BookOpenIcon, DocumentPlusIcon, FolderArrowRightIcon, TrashIcon } from '@/components/icon'
 import { NoAccessView } from '@/components/no-access-view'
 import { ReloadButton } from '@/components/reload-button'
 import { useActionData } from '@/lib/action/action-client'
@@ -16,7 +16,6 @@ import { Breadcrumbs, ButtonGroup } from '@heroui/react'
 import { FC } from 'react'
 import { tv } from 'tailwind-variants'
 import { ChildPages } from '../child-pages'
-import { WikiPageHistoryModal, type WikiHistoryTarget } from '../page-history'
 import { CreatePageModal, MovePageModal, useDeleteWikiPage } from '../page-modals'
 import { useWikiSpace } from '../space-context'
 import { WikiPageBody } from './page-body'
@@ -77,7 +76,6 @@ export const WikiPageClient: FC<{ spaceKey: string; number: number }> = ({ space
   const { reloadSpace } = useWikiSpace()
   const createModalState = useModalState()
   const moveModalState = useModalState()
-  const historyState = useModalState<WikiHistoryTarget>()
   const deletePage = useDeleteWikiPage()
   const isValidNumber = Number.isInteger(number) && number > 0
   const { data, refresh, isLoading } = useActionData(() => getWikiPage({ key: spaceKey, number }), {
@@ -136,14 +134,6 @@ export const WikiPageClient: FC<{ spaceKey: string; number: number }> = ({ space
               <ButtonGroup.Separator />
             </MultiButton>
           )}
-          <MultiButton
-            isIconOnly
-            tooltip={t('history')}
-            icon={<ClockIcon />}
-            onPress={() => historyState.open({ pageId: page.id, title: page.title })}
-          >
-            {access.canWrite && <ButtonGroup.Separator />}
-          </MultiButton>
           {access.canWrite && (
             <MultiButton
               isIconOnly
@@ -156,7 +146,7 @@ export const WikiPageClient: FC<{ spaceKey: string; number: number }> = ({ space
           )}
           <ReloadButton // 編集中の下書きを消さないよう、画面を作り直さずに取り直す
             onReload={reloadAll}
-            hasSeparator
+            hasSeparator={access.canWrite}
           />
         </ContentHeader>
 
@@ -174,12 +164,6 @@ export const WikiPageClient: FC<{ spaceKey: string; number: number }> = ({ space
         parent={{ id: page.id, title: page.title }}
       />
       <MovePageModal state={moveModalState} reload={reloadAll} key={moveModalState.key} page={page} />
-      <WikiPageHistoryModal
-        key={historyState.key}
-        state={historyState}
-        canWrite={access.canWrite}
-        onRestored={reloadAll}
-      />
     </FlexCol>
   )
 }

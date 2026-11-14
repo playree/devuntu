@@ -43,6 +43,7 @@ import {
   MAX_WIKI_CONTENT,
   MAX_WIKI_DEPTH,
   MAX_WIKI_PAGE_TAGS,
+  MAX_WIKI_REVISION_MESSAGE,
   MAX_WIKI_SEARCH_KEYWORD,
   MAX_WIKI_SEARCH_LIMIT,
   MAX_WIKI_SPACE_KEY,
@@ -244,6 +245,7 @@ export type McpSaveWikiPageInput = {
   tags?: string[]
   expectedUpdatedAt?: string
   ticketId?: string
+  message?: string
 }
 
 const writeResult = (result: string, written: WikiPageWriteResult, key: string) => ({
@@ -277,7 +279,7 @@ const createWikiPageForMcp = async (auth: ResourceAuth, input: McpSaveWikiPageIn
       position: toPosition(input.position),
       tagIds,
     },
-    { ticketId },
+    { ticketId, message: input.message },
   )
   return writeResult(created.result, created, access.key)
 }
@@ -338,7 +340,7 @@ const updateWikiPageForMcp = async (
         WRITER,
         page.id,
         { title: input.title, content, type: input.type, tagIds },
-        { expectedUpdatedAt, ticketId },
+        { expectedUpdatedAt, ticketId, message: input.message },
       )
     : undefined
   if (!wantsMove) {
@@ -532,6 +534,14 @@ export const registerWikiTools = (server: McpServer, auth: ResourceAuth) => {
           .optional()
           .describe('updatedAt from get_wiki_page. The save fails if someone updated the page after you read it'),
         ticketId: zWikiTicketId,
+        message: z
+          .string()
+          .max(MAX_WIKI_REVISION_MESSAGE)
+          .optional()
+          .describe(
+            'Commit message: a short summary of why you changed the page, shown in the page history. ' +
+              'Kept only when the title / content / edits / type / tags change (not for a move alone)',
+          ),
       }),
     },
     async (input) => jsonResult(await saveWikiPageForMcp(auth, input)),
@@ -544,7 +554,7 @@ export const registerWikiTools = (server: McpServer, auth: ResourceAuth) => {
       annotations: TOOL_ANNOTATIONS.destructiveIdempotent,
       description:
         'Deletes a Wiki page. A page with child pages is deleted only with recursive=true, together with all its descendants; ' +
-        'confirm with the user before deleting descendants. Users can restore deleted pages from the history for a limited period',
+        'confirm with the user before deleting descendants. Users can restore deleted pages from the deleted pages list of the space for a limited period',
       inputSchema: z.strictObject({
         ref: zWikiPageRef.describe('Page ref KEY/number'),
         recursive: z.boolean().optional().describe('Also delete all descendant pages'),
