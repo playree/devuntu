@@ -278,14 +278,16 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
             onTagIdsChange={setTagIdsDraft}
           />
         ) : (
-          <div className='flex items-start gap-2'>
-            <div className='flex min-w-0 flex-1 flex-wrap items-baseline gap-x-3'>
-              <h1 className='min-w-0 text-2xl font-bold wrap-break-word'>{shown.title}</h1>
-              <WikiTagLinks spaceKey={space.key} tags={shown.tags} />
+          <div className='flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1'>
+            <h1 className='min-w-0 text-2xl font-bold wrap-break-word'>{shown.title}</h1>
+            <WikiTagLinks spaceKey={space.key} tags={shown.tags} />
+            <div // 編集・戻す・削除は版の選択のすぐ右に置き、版に対する操作だと分かるようにする(折り返しても離さない)
+              className='flex items-center gap-2'
+            >
               <WikiRevisionSelect revisions={revisions} updatedText={updatedText} />
+              {editAction}
+              {canWrite && !isEditing && <WikiRevisionActions revisions={revisions} onRestored={onSaved} />}
             </div>
-            {editAction}
-            {canWrite && !isEditing && <WikiRevisionActions revisions={revisions} onRestored={onSaved} />}
           </div>
         )}
       </div>
