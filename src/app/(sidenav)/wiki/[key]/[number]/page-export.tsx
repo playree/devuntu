@@ -63,7 +63,7 @@ export const WikiExportMenu: FC<{
     }
     downloadText(
       wikiExportFileName(documentTitle, 'md'),
-      wikiMarkdownExport({ title, type, content, origin: window.location.origin }),
+      wikiMarkdownExport({ title, type, content, origin: window.location.origin, revisionNumber: revision?.number }),
       'text/markdown;charset=utf-8',
     )
   }

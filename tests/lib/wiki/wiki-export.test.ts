@@ -75,13 +75,19 @@ describe('wikiMarkdownExport: Markdown 出力の内容', () => {
     ).toBe(`# 手順\n\n![図](${ORIGIN}/api/upload/a.webp)`)
   })
 
+  it('過去の版は見出しに版数を付ける', () => {
+    expect(
+      wikiMarkdownExport({ title: '手順', type: 'page', content: '本文', origin: ORIGIN, revisionNumber: 2 }),
+    ).toBe('# 手順 (v2)\n\n本文')
+  })
+
   it('本文が空なら見出しだけ', () => {
     expect(wikiMarkdownExport({ title: '手順', type: 'page', content: '  ', origin: ORIGIN })).toBe('# 手順\n')
   })
 
   it('設計書は front matter を先頭に残すため本文のまま', () => {
     const content = '---\ntype: design_doc\ntitle: 設計\n---\n\n![図](/api/upload/a.webp)'
-    expect(wikiMarkdownExport({ title: '設計', type: 'design_doc', content, origin: ORIGIN })).toBe(
+    expect(wikiMarkdownExport({ title: '設計', type: 'design_doc', content, origin: ORIGIN, revisionNumber: 2 })).toBe(
       `---\ntype: design_doc\ntitle: 設計\n---\n\n![図](${ORIGIN}/api/upload/a.webp)`,
     )
   })

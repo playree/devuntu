@@ -51,7 +51,7 @@ export const absolutizeUploadUrls = (markdown: string, origin: string): string =
   markdown.replace(UPLOAD_URL_PATTERN, (_, before: string) => `${before}${origin}${UPLOAD_URL_PREFIX}/`)
 
 /**
- * Markdown 出力の内容。通常のページは先頭にタイトルの見出しを付ける。
+ * Markdown 出力の内容。通常のページは先頭にタイトルの見出しを付ける(過去の版は版数も付ける)。
  * 設計書は front matter が先頭にある必要があり、タイトルもそこに持つので本文のまま出す
  */
 export const wikiMarkdownExport = ({
@@ -59,15 +59,19 @@ export const wikiMarkdownExport = ({
   type,
   content,
   origin,
+  revisionNumber,
 }: {
   title: string
   type: WikiPageType
   content: string
   origin: string
+  /** 過去の版のときの版数 */
+  revisionNumber?: number
 }): string => {
   const body = absolutizeUploadUrls(content, origin)
   if (type === 'design_doc') {
     return body
   }
-  return body.trim() ? `# ${title}\n\n${body}` : `# ${title}\n`
+  const heading = `# ${title}${revisionNumber === undefined ? '' : ` (v${revisionNumber})`}`
+  return body.trim() ? `${heading}\n\n${body}` : `${heading}\n`
 }
