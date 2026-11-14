@@ -165,6 +165,12 @@ export const pickExpiredWikiRevisionIds = (
   return ids
 }
 
+/** 版が名前で持つタグを、いまスペースに残っているタグに引き当てる(消えたタグは出さない。復元時と同じ扱い) */
+export const resolveWikiTagNames = <T extends { name: string }>(
+  names: readonly string[],
+  spaceTags: readonly T[],
+): T[] => names.flatMap((name) => spaceTags.filter((tag) => tag.name === name))
+
 /** ページの指定(`KEY/番号`) */
 export const wikiPageRef = ({ key, number }: { key: string; number: number }): string => `${key}/${number}`
 

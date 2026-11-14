@@ -13,6 +13,7 @@ import {
   parseWikiSearchParams,
   pickExpiredWikiRevisionIds,
   resolveWikiRole,
+  resolveWikiTagNames,
   shouldMergeWikiRevision,
   strongestWikiRole,
   wikiPageRef,
@@ -109,6 +110,16 @@ describe('shouldMergeWikiRevision', () => {
     ['最新の版にコミットメッセージがある', latest({ message: '誤字の修正' }), origin, 10],
   ] as const)('%s ならまとめない', (_, last, next, minutes) => {
     expect(shouldMergeWikiRevision(last, next, NOW, minutes)).toBe(false)
+  })
+})
+
+describe('resolveWikiTagNames', () => {
+  it('名前の順にいまのタグへ引き当て、消えたタグは出さない', () => {
+    const tags = [
+      { id: 't1', name: 'A' },
+      { id: 't2', name: 'B' },
+    ]
+    expect(resolveWikiTagNames(['B', '消えた', 'A'], tags)).toEqual([tags[1], tags[0]])
   })
 })
 

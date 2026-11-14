@@ -504,3 +504,19 @@ div.mdxeditor-popup-container {
     overflow-wrap: anywhere;
   }
 }
+
+/* 設計書の印刷用表示(Wiki の PDF / HTML 出力)。
+ *
+ * 埋め込みビューアは枠の高さいっぱいに広がって中でスクロールする作りなので、紙や保存した HTML で途中が切れないよう、
+ * 高さとスクロールを外して文書全体を流す(末尾の余白はスクロール用のものなので消す)。
+ * viewer.css はレイヤーの外にあるため、ここもレイヤーの外に書き、包む要素のクラスで特異性を上げて勝たせる。
+ */
+.design-doc-print .seqnotes-viewer.seqnotes-embedded,
+.design-doc-print .seqnotes-embedded > .seqnotes-viewer-scroller {
+  height: auto;
+  overflow: visible;
+}
+
+.design-doc-print .seqnotes-embedded > .seqnotes-viewer-scroller {
+  padding-bottom: 0;
+}

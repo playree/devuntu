@@ -332,6 +332,7 @@ export const en: DefaultLocaleItems = {
   expires_in_days: 'In ${days} days',
   export: 'Export',
   export_html: 'Export HTML',
+  export_markdown: 'Export Markdown',
   export_pdf: 'Export PDF',
   filter: 'Filter',
   free_memory: 'Free Memory',

@@ -11,6 +11,7 @@ import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { ticketShortPath } from '@/lib/board/ticket-id'
 import { dayformat } from '@/lib/day'
 import { useConfirmAction } from '@/lib/use-confirm-action'
+import { resolveWikiTagNames } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { Button, Chip, cn, Dropdown } from '@heroui/react'
 import Link from 'next/link'
@@ -116,7 +117,7 @@ export const usePastPageView = (past: Revision | undefined) => {
     id: past.id,
     title: past.title,
     type: past.type,
-    tags: past.tagNames.flatMap((name) => tags.filter((tag) => tag.name === name)),
+    tags: resolveWikiTagNames(past.tagNames, tags),
   }
 }
 

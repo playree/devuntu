@@ -323,6 +323,7 @@ export type LocaleItemBase =
   | 'expires_in_days'
   | 'export'
   | 'export_html'
+  | 'export_markdown'
   | 'export_pdf'
   | 'filter'
   | 'free_memory'

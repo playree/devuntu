@@ -24,6 +24,7 @@ import { FC, useEffect, useRef, useState } from 'react'
 import { EDIT_QUERY } from '../page-modals'
 import { useWikiSpace } from '../space-context'
 import { WikiPageEditHeader } from './page-edit-header'
+import { WikiExportMenu } from './page-export'
 import {
   usePastPageView,
   useWikiPageRevisions,
@@ -39,7 +40,8 @@ type Page = NonNullable<GetWikiPageReturnType>['page']
  * ページのタイトル・タグ・本文。表示と編集を切り替え、保存したらサーバー値を取り直す。
  * 作成直後(`?edit=1`)は編集から始める。
  * 設計書のページは Markdown Design Doc Viewer で表示し、ソースとプレビューで編集する(幅の制限を外す)。
- * 表示中は更新者・日時から版を選べ、過去の版はその時点の内容で表示する(編集はできず、ロールバックと削除だけ)
+ * 表示中は更新者・日時から版を選べ、過去の版はその時点の内容で表示する(編集はできず、ロールバックと削除だけ)。
+ * 表示中の版は PDF / HTML / Markdown に出力できる
  */
 export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Promise<void> }> = ({
   page,
@@ -287,6 +289,14 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
               <WikiRevisionSelect revisions={revisions} updatedText={updatedText} />
               {editAction}
               {canWrite && !isEditing && <WikiRevisionActions revisions={revisions} />}
+              <WikiExportMenu
+                spaceKey={space.key}
+                number={page.number}
+                title={shown.title}
+                type={shown.type}
+                content={shownContent}
+                revision={revisions.past}
+              />
             </div>
           </div>
         )}

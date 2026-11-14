@@ -1,4 +1,5 @@
-import { PRINT_COMMENT_PARAM, PRINT_FORMAT_PARAM, parseTicketExportFormat } from '@/lib/board/ticket-print'
+import { PRINT_COMMENT_PARAM } from '@/lib/board/ticket-print'
+import { PRINT_FORMAT_PARAM, parsePrintFormat } from '@/lib/print-export'
 import { en } from '@/locale/lang-en'
 import { type Metadata } from 'next'
 import { FC } from 'react'
@@ -21,7 +22,7 @@ const TicketPrintPage: FC<{
     <TicketPrintClient
       id={id}
       commentId={typeof commentId === 'string' ? commentId : undefined}
-      format={parseTicketExportFormat(query[PRINT_FORMAT_PARAM])}
+      format={parsePrintFormat(query[PRINT_FORMAT_PARAM])}
     />
   )
 }
