@@ -11,6 +11,9 @@ Playwright MCP(サーバ名 `playwright`)で `http://localhost:3000` を開い�
 
 - **開発DBはユーザーの実データ**。指示が無い限り、作成・更新・削除・ドラッグ移動などの変更操作はしない。表示確認のみを行う
 - **確認が終わったら必ず「5. 後片付け」まで実施する**。ブラウザ(chromium)を閉じずに終わると次のセッションがプロファイルのロックでブラウザを使えなくなる
+- **開発サーバーを止める・起動し直す前に、`browser_close` でブラウザを閉じる**(`pnpm build` の前後での再起動も同じ)
+  - タブを開いたまま再起動すると、Turbopack の永続キャッシュ(`.next/dev`)が壊れ、以降の起動で全画面が再読み込みを繰り返すことがある(Next.js 16.4.3〜16.4.6 で確認)
+  - 再読み込みが止まらないとき(ページを読み込むたびにログへ `✓ Compiled in` が出る)は、開発サーバーを止めて `rm -rf .next/dev` してから起動し直す
 - **既定は `http://localhost:3000`**(`pnpm dev`)。`.env` の `BETTER_AUTH_URL` が localhost:3000 なので、`pnpm dev` を別ポートで開くと better-auth が返すリダイレクト先や Cookie のオリジンが食い違い、画面には「認証NG」トーストしか出ず原因が分からない
 - ドメイン運用での確認が必要な場合のみ `pnpm dev:domain` を使う。未追跡の `.env.domain`(`PORT` / `BETTER_AUTH_URL` / `DEV_ALLOWED_ORIGINS`)を読み込んで起動するので、そこで指定したドメインの URL でアクセスする。ログ出力先は `.work/dev-domain.log`
 - 画面一覧とアクセス制御は `docs/dev/screens.md` を参照する
