@@ -4,6 +4,7 @@ import { useLocale } from '@/locale/client'
 import { Skeleton } from '@heroui/react'
 import dynamic from 'next/dynamic'
 import { FC } from 'react'
+import { viewerLang } from './design-doc-view'
 
 const DesignDocPrintCore = dynamic(() => import('./design-doc-print-core'), {
   ssr: false,
@@ -23,7 +24,7 @@ export const DesignDocPrintView: FC<{ markdown: string }> = ({ markdown }) => {
   const { locale } = useLocale()
   return (
     <div className='design-doc-print'>
-      <DesignDocPrintCore markdown={markdown} lang={locale === 'ja' ? 'ja' : 'en'} />
+      <DesignDocPrintCore markdown={markdown} lang={viewerLang(locale)} />
     </div>
   )
 }

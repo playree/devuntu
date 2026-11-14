@@ -18,6 +18,9 @@ const DesignDocViewer = dynamic(() => import('./design-doc-viewer-core'), {
   loading: () => <Skeleton className='h-full w-full rounded-xl' />,
 })
 
+/** ビューアの文言の言語。ビューアは ja / en だけなので、ほかの言語は en にする */
+export const viewerLang = (locale: string): 'ja' | 'en' => (locale === 'ja' ? 'ja' : 'en')
+
 /** ワイヤーフレームの別ファイルは扱わない。本文に書かれたパスを同一オリジンへ fetch させないため、常に読めないとする */
 export const readNoFile = async () => undefined
 
@@ -84,7 +87,7 @@ export const DesignDocView: FC<{
         className='h-full'
         markdown={markdown}
         documentId={documentId}
-        lang={locale === 'ja' ? 'ja' : 'en'}
+        lang={viewerLang(locale)}
         splitMinWidth={SPLIT_MIN_WIDTH}
         theme={resolvedTheme === 'dark' ? 'dark' : resolvedTheme === 'light' ? 'light' : 'auto'}
         readFile={readNoFile}

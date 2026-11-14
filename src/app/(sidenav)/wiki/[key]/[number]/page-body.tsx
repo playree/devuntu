@@ -289,7 +289,8 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
               <WikiRevisionSelect revisions={revisions} updatedText={updatedText} />
               {editAction}
               {canWrite && !isEditing && <WikiRevisionActions revisions={revisions} />}
-              <WikiExportMenu
+              <WikiExportMenu // ページを移ったら作り直す(作っている途中の HTML 出力を打ち切り、移った先で保存しない)
+                key={page.id}
                 spaceKey={space.key}
                 number={page.number}
                 title={shown.title}

@@ -133,8 +133,10 @@ const renderHtmlInFrame = (path: string, signal: AbortSignal): Promise<{ fileNam
   })
 
 /**
- * 出力メニューの「HTML出力」。印刷用ページ(`?format=html`)を見えない iframe で描き、受け取った HTML をダウンロードする。
- * 中身は印刷用ページの描画結果なので、別タブで開いて保存していたときと同じ。
+ * 出力メニューの「HTML出力」。作った HTML をダウンロードし、作っている間は isPending を立てる。
+ * - exportHtml: 印刷用ページ(`?format=html`)を見えない iframe で描いて HTML を受け取る。中身は印刷用ページの描画結果なので、別タブで開いて保存していたときと同じ
+ * - exportWith: HTML を作る処理を渡す(設計書の HTML など)
+ *
  * 作っている途中で画面を離れたら、iframe を消して保存もしない
  */
 export const useHtmlExport = () => {
@@ -144,13 +146,15 @@ export const useHtmlExport = () => {
 
   useEffect(() => () => controller.current?.abort(), [])
 
-  const exportHtml = async (path: string) => {
+  const exportWith = async (render: (signal: AbortSignal) => Promise<{ fileName: string; html: string }>) => {
     const current = new AbortController()
     controller.current = current
     setIsPending(true)
     try {
-      const { fileName, html } = await renderHtmlInFrame(path, current.signal)
-      downloadHtml(fileName, html)
+      const { fileName, html } = await render(current.signal)
+      if (!current.signal.aborted) {
+        downloadHtml(fileName, html)
+      }
     } catch {
       if (!current.signal.aborted) {
         notify.error(t('msg_save_html_failed'))
@@ -161,7 +165,8 @@ export const useHtmlExport = () => {
       }
     }
   }
-  return { exportHtml, isPending }
+  const exportHtml = (path: string) => exportWith((signal) => renderHtmlInFrame(path, signal))
+  return { exportHtml, exportWith, isPending }
 }
 
 /** 印刷時は隠す操作欄。自動の印刷ダイアログを閉じた後に、開き直せるようにする */

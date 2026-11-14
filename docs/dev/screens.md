@@ -94,10 +94,10 @@ Proxy は通るリクエストのボディを既定 10MB まで複製して溜�
   通常のページではチャンクも CSS も読み込まない。ワイヤーフレームの別ファイルは扱わない(`readFile` は常に undefined を返し、`baseUrl` は渡さない)。
   mermaid の設定はグローバルなので、Devuntu の mermaid 表示(`mermaid-diagram.tsx`)と設計書のビューアは描画のたびに `initialize` し直している。
   ページを素早く行き来して両方の描画が重なると、どちらかの図に相手の設定(テーマ・フォント)が当たることがある
-- 出力(`wiki/[key]/[number]/page-export.tsx`)は表示中の版が対象。PDF / HTML はチケットと同じく印刷用ページ(`src/app/print/wiki/[key]/[number]/`)を使う。PDF は別タブで開き、HTML は `useHtmlExport`(`src/components/print-export.tsx`)が見えない iframe で開いて、描画結果の HTML を受け取って保存する。
+- 出力(`wiki/[key]/[number]/page-export.tsx`)は表示中の版が対象。PDF / HTML はチケットと同じく印刷用ページ(`src/app/print/wiki/[key]/[number]/`)を使う。PDF は別タブで開き、HTML は `useHtmlExport`(`src/components/print-export.tsx`)が見えない iframe で開いて、描画結果の HTML を受け取って保存する。設計書ページの HTML だけは印刷用ページを使わず、`exportDesignDocHtml`(`src/components/markdown/design-doc-export.ts`)が embed の `exportHtml`(`markdown-design-doc-viewer-embed/export`)で表示中の本文から作る(画像は data URI、ルートからの相対リンクは絶対 URL にする)。印刷用ページの HTML 保存(`snapshotElement`)は shadow root を書き出さないので、設計書には使わない。
   Markdown は表示中の本文から `wikiMarkdownExport`(`src/lib/wiki/wiki-export.ts`。`/api/upload/` を絶対 URL にする)で組み立ててその場で保存する。
   設計書の印刷は `design-doc-print-view.tsx` が `createViewer` で目次なしに描き、`ready` まで `data-markdown-loading` を置いて描画の完了を待たせる。
-  ビューアの内部スクロールは `globals.css` の `.design-doc-print` で外す。HTML 保存(`snapshotElement`)は、ワイヤーフレームの shadow root を宣言的 shadow DOM として書き出す
+  ビューアの内部スクロールは `globals.css` の `.design-doc-print` で外す。描画の完了待ち(`useWhenRendered`)は、ワイヤーフレームの shadow root の中の画像も待つ
 - 検索(`src/lib/wiki/wiki-search.ts`)は `$queryRaw` で組む
   - 語ごとに、3文字以上なら「title / content の ILIKE(`gin_trgm_ops` の GIN 索引で BitmapOr)とタグ名の完全一致の UNION」に `IN` で当てる。タグとの OR を EXISTS で書くと索引が使われなくなるため
   - 2文字以下の語はトライグラムが作れず索引が効かないので、他の語で絞った行へのフィルタとして書く(すべての語が短いときだけ全件を走査する)
