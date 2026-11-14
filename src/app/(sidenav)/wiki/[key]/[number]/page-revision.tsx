@@ -107,7 +107,9 @@ const RevisionItem: FC<{ revision: Revision; revisions: readonly Revision[]; isL
   const source = revision.restoredFromId && revisions.find(({ id }) => id === revision.restoredFromId)
   return (
     <div className='min-w-0 space-y-0.5'>
-      <div className='flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs'>
+      <div // チェックの位置(1行目の中央)を合わせるため、Chip の有無によらず高さをそろえる
+        className='flex min-h-5 flex-wrap items-center gap-x-2 gap-y-0.5 text-xs'
+      >
         <RevisionNumber number={revision.number} />
         {t(`wiki_revision_action_${revision.action}`)}
         {source && (
@@ -179,9 +181,11 @@ export const WikiRevisionSelect: FC<{ revisions: WikiPageRevisions; updatedText:
               key={revision.id}
               id={revision.id}
               textValue={`v${revision.number}`}
-              className='min-h-min items-start py-1'
+              className='min-h-min py-1'
             >
-              <Dropdown.ItemIndicator />
+              <Dropdown.ItemIndicator // 既定は項目の縦中央。メッセージの2行目があってもずれないよう、1行目の中央(py-1 + min-h-5 の半分)に置く
+                className='top-3.5'
+              />
               <RevisionItem revision={revision} revisions={revisions} isLatest={index === 0} />
             </Dropdown.Item>
           ))}
