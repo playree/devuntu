@@ -45,11 +45,12 @@ export const buildHtmlDocument = ({
   ].join('\n')
 
 /**
- * ページに読み込まれている CSS を 1 つにまとめる。
+ * ページに読み込まれている CSS(adoptedStyleSheets を含む)を 1 つにまとめる。
  * `@font-face` は保存先から参照できない相対 URL なので外す(フォントは閲覧環境のものになる)
  */
 export const collectPageCss = (): string =>
-  Array.from(document.styleSheets)
+  // adoptedStyleSheets は設計書のビューアがワイヤーフレーム用の規則(@property など)を入れている
+  [...Array.from(document.styleSheets), ...document.adoptedStyleSheets]
     .flatMap((sheet) => {
       try {
         return Array.from(sheet.cssRules)
@@ -94,6 +95,19 @@ const inlineImages = async (originals: HTMLImageElement[], images: HTMLImageElem
   )
 }
 
+/** リンクを絶対 URL にし(保存先ではページの URL を基準に解決できない)、編集可能の印を外す */
+const finishClone = (root: ParentNode) => {
+  root.querySelectorAll<HTMLAnchorElement>('a[href]:not([href^="#"])').forEach((anchor) => {
+    // template の中身は文書の外にあり href プロパティが解決されないので、ページの URL を基準に自分で解決する
+    try {
+      anchor.setAttribute('href', new URL(anchor.getAttribute('href') ?? '', document.baseURI).href)
+    } catch {
+      // 解決できない URL はそのまま残す
+    }
+  })
+  root.querySelectorAll('[contenteditable]').forEach((node) => node.removeAttribute('contenteditable'))
+}
+
 /**
  * 元の要素の open な shadow root を、複製の側に宣言的 shadow DOM(`<template shadowrootmode="open">`)として書き出す。
  * `cloneNode` は shadow root を複製しないため(設計書のワイヤーフレームなど)。shadow root の中の shadow root は扱わない
@@ -112,10 +126,22 @@ const serializeShadowRoots = async (element: HTMLElement, clone: HTMLElement) =>
       const template = document.createElement('template')
       template.setAttribute('shadowrootmode', 'open')
       template.innerHTML = shadow.innerHTML
+      // 設計書のビューアはワイヤーフレームの <style> を adoptedStyleSheets へ移すので、innerHTML には残らない。
+      // adoptedStyleSheets は shadow root 内の <style> より後に効くので、末尾に足す
+      const adopted = shadow.adoptedStyleSheets
+        .flatMap((sheet) => Array.from(sheet.cssRules))
+        .map((rule) => rule.cssText)
+        .join('\n')
+      if (adopted) {
+        const style = document.createElement('style')
+        style.textContent = adopted
+        template.content.append(style)
+      }
       await inlineImages(
         Array.from(shadow.querySelectorAll('img')),
         Array.from(template.content.querySelectorAll('img')),
       )
+      finishClone(template.content)
       target.prepend(template)
     }),
   )
@@ -131,11 +157,7 @@ export const snapshotElement = async (element: HTMLElement): Promise<string> => 
   await serializeShadowRoots(element, clone)
   await inlineImages(Array.from(element.querySelectorAll('img')), Array.from(clone.querySelectorAll('img')))
 
-  clone.querySelectorAll<HTMLAnchorElement>('a[href]:not([href^="#"])').forEach((anchor) => {
-    // href プロパティはページの URL を基準に解決済みの絶対 URL を返す
-    anchor.setAttribute('href', anchor.href)
-  })
-  clone.querySelectorAll('[contenteditable]').forEach((node) => node.removeAttribute('contenteditable'))
+  finishClone(clone)
 
   return clone.outerHTML
 }

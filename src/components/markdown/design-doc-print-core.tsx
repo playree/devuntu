@@ -30,13 +30,13 @@ const DesignDocPrintCore: FC<{ markdown: string; lang: 'ja' | 'en' }> = ({ markd
       readFile: readNoFile,
       resolveResource,
     })
-    // 描けなくても印刷は止めない(useWhenRendered の上限まで待たせない)
+    // ready は描き終えたときだけ解決する。描画に失敗して解決しなければ、useWhenRendered の待つ上限で打ち切られる
     const done = () => {
       if (!isCancelled) {
         setReadyMarkdown(markdown)
       }
     }
-    viewer.ready.then(done, done)
+    void viewer.ready.then(done)
     return () => {
       isCancelled = true
       viewer.destroy()

@@ -16,6 +16,7 @@ import {
   type WriteWikiPageRevision,
 } from '@/lib/wiki/wiki-revision'
 import type { WikiPageSnapshot } from '@/lib/wiki/wiki-rule'
+import { listWikiTags } from '@/lib/wiki/wiki-tag'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const settings = { merge: 10, max: 3, retention: 7 }
@@ -43,6 +44,7 @@ vi.mock('@/lib/prisma', async () =>
   }),
 )
 vi.mock('@/lib/wiki/wiki-access', () => ({ assertWikiSpaceAccess: vi.fn() }))
+vi.mock('@/lib/wiki/wiki-tag', () => ({ listWikiTags: vi.fn() }))
 
 const NOW = new Date('2026-11-08T10:00:00.000Z')
 const snapshot: WikiPageSnapshot = {
@@ -290,20 +292,24 @@ describe('getWikiPageRevisionContent', () => {
 })
 
 describe('getWikiPageRevisionSnapshot', () => {
-  it('閲覧権限を確かめて、版の内容と本文を返す', async () => {
+  it('閲覧権限を確かめて、版の内容と本文を返す。タグはいまスペースに残っているものだけ', async () => {
     vi.mocked(prisma.wikiPageRevision.findUnique).mockResolvedValue({
-      ...summaryRow('r2', 1, { number: 3, type: 'design_doc', tagNames: ['設計'] }),
+      ...summaryRow('r2', 1, { number: 3, type: 'design_doc', tagNames: ['設計', '削除済み'] }),
       spaceId: 's1',
       content: '本文',
     } as never)
+    const tag = { id: 't1', name: '設計', color: 'blue', order: 0 } as const
+    vi.mocked(listWikiTags).mockResolvedValue([tag, { id: 't2', name: '運用', color: 'red', order: 1 }])
 
     const result = await getWikiPageRevisionSnapshot({ id: 'u1' }, 'p1', 'r2', NOW)
     expect(assertWikiSpaceAccess).toHaveBeenCalledWith({ id: 'u1' }, 's1', 'view')
+    expect(listWikiTags).toHaveBeenCalledWith('s1')
     expect(result).toMatchObject({
       id: 'r2',
       number: 3,
       type: 'design_doc',
-      tagNames: ['設計'],
+      tagNames: ['設計', '削除済み'],
+      tags: [tag],
       content: '本文',
       actorName: '利用者',
       beforeRetention: false,

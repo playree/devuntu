@@ -49,5 +49,13 @@ export const WikiExportMenu: FC<{
     )
   }
 
-  return <ExportMenu items={items} variant='outline' isDisabled={content === undefined} onAction={exportAs} />
+  return (
+    <ExportMenu
+      items={items}
+      variant='outline'
+      // 過去の版の本文を取得中は Markdown だけ選べない(PDF / HTML は印刷用ページが版を引く)
+      disabledIds={content === undefined ? ['md'] : undefined}
+      onAction={exportAs}
+    />
+  )
 }

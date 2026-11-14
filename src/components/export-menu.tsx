@@ -14,13 +14,14 @@ export const ExportMenu = <K extends string>({
   onAction,
   variant,
   className,
-  isDisabled,
+  disabledIds,
 }: {
   items: ExportMenuItem<K>[]
   onAction: (id: K) => void
   variant?: ButtonProps['variant']
   className?: string
-  isDisabled?: boolean
+  /** いまは選べない形式 */
+  disabledIds?: K[]
 }) => {
   const { t } = useLocale()
   return (
@@ -30,12 +31,11 @@ export const ExportMenu = <K extends string>({
         size='sm'
         variant={variant}
         className={className}
-        isDisabled={isDisabled}
         tooltip={t('export')}
         icon={<ArrowDownTrayIcon width={16} />}
       />
       <Dropdown.Popover placement='bottom end'>
-        <Dropdown.Menu onAction={(key) => onAction(key as K)}>
+        <Dropdown.Menu disabledKeys={disabledIds} onAction={(key) => onAction(key as K)}>
           {items.map((item) => (
             <Dropdown.Item key={item.id} id={item.id} textValue={item.label}>
               {item.icon}
