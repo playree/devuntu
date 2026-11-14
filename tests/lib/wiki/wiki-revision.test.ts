@@ -1,7 +1,7 @@
 /**
  * Wiki ページの版の書き込み(wiki-revision.ts)
  *
- * 連続保存のまとめと、1ページあたりの上限を超えた分の削除、版の一覧・本文・削除済みページの参照、版の削除を確かめる。
+ * 連続保存のまとめと、1ページあたりの上限を超えた分の削除、版の一覧・本文・内容・削除済みページの参照、版の削除を確かめる。
  */
 
 import { prisma } from '@/lib/prisma'
@@ -9,6 +9,7 @@ import { assertWikiSpaceAccess } from '@/lib/wiki/wiki-access'
 import {
   deleteWikiPageRevision,
   getWikiPageRevisionContent,
+  getWikiPageRevisionSnapshot,
   listDeletedWikiPages,
   listWikiPageRevisions,
   writeWikiPageRevision,
@@ -285,6 +286,54 @@ describe('getWikiPageRevisionContent', () => {
     vi.mocked(prisma.wikiPageRevision.findUnique).mockResolvedValue(null)
     await expect(getWikiPageRevisionContent({ id: 'u1' }, 'r2')).rejects.toThrow()
     expect(assertWikiSpaceAccess).not.toHaveBeenCalled()
+  })
+})
+
+describe('getWikiPageRevisionSnapshot', () => {
+  it('閲覧権限を確かめて、版の内容と本文を返す', async () => {
+    vi.mocked(prisma.wikiPageRevision.findUnique).mockResolvedValue({
+      ...summaryRow('r2', 1, { number: 3, type: 'design_doc', tagNames: ['設計'] }),
+      spaceId: 's1',
+      content: '本文',
+    } as never)
+
+    const result = await getWikiPageRevisionSnapshot({ id: 'u1' }, 'p1', 'r2', NOW)
+    expect(assertWikiSpaceAccess).toHaveBeenCalledWith({ id: 'u1' }, 's1', 'view')
+    expect(result).toMatchObject({
+      id: 'r2',
+      number: 3,
+      type: 'design_doc',
+      tagNames: ['設計'],
+      content: '本文',
+      actorName: '利用者',
+      beforeRetention: false,
+    })
+    expect(result).not.toHaveProperty('spaceId')
+  })
+
+  it('別のページの版はエラー', async () => {
+    vi.mocked(prisma.wikiPageRevision.findUnique).mockResolvedValue({
+      ...summaryRow('r2', 1, { pageId: 'p-other' }),
+      spaceId: 's1',
+      content: '本文',
+    } as never)
+    await expect(getWikiPageRevisionSnapshot({ id: 'u1' }, 'p1', 'r2', NOW)).rejects.toThrow()
+    expect(assertWikiSpaceAccess).not.toHaveBeenCalled()
+  })
+
+  it('版が無ければエラー', async () => {
+    vi.mocked(prisma.wikiPageRevision.findUnique).mockResolvedValue(null)
+    await expect(getWikiPageRevisionSnapshot({ id: 'u1' }, 'p1', 'r2', NOW)).rejects.toThrow()
+  })
+
+  it('閲覧権限が無ければエラー', async () => {
+    vi.mocked(prisma.wikiPageRevision.findUnique).mockResolvedValue({
+      ...summaryRow('r2', 1),
+      spaceId: 's1',
+      content: '本文',
+    } as never)
+    vi.mocked(assertWikiSpaceAccess).mockRejectedValue(new Error('denied'))
+    await expect(getWikiPageRevisionSnapshot({ id: 'u1' }, 'p1', 'r2', NOW)).rejects.toThrow()
   })
 })
 

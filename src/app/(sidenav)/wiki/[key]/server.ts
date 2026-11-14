@@ -7,6 +7,7 @@ import {
   scCreateWikiPage,
   scCreateWikiTag,
   scDeleteWikiPage,
+  scGetWikiPageRevisionSnapshot,
   scMoveWikiPage,
   scWikiSpaceKey,
 } from '@/lib/schema/schema-wiki'
@@ -21,6 +22,7 @@ import {
 import {
   deleteWikiPageRevision as deleteWikiPageRevisionCore,
   getWikiPageRevisionContent as getWikiPageRevisionContentCore,
+  getWikiPageRevisionSnapshot as getWikiPageRevisionSnapshotCore,
   listDeletedWikiPages,
   listWikiPageRevisions,
 } from '@/lib/wiki/wiki-revision'
@@ -110,6 +112,14 @@ export const getWikiPageRevisionContent = safeAuthAction
   .metadata({ actionName: 'getWikiPageRevisionContent', role: 'user' })
   .inputSchema(scUUID)
   .action(async ({ ctx: { user }, parsedInput: { id } }) => getWikiPageRevisionContentCore(user, id))
+
+/** 版の内容(タイトル・種類・タグ名・本文など)。印刷用ページで過去の版を出すときに使う */
+export const getWikiPageRevisionSnapshot = safeAuthAction
+  .metadata({ actionName: 'getWikiPageRevisionSnapshot', role: 'user' })
+  .inputSchema(scGetWikiPageRevisionSnapshot)
+  .action(async ({ ctx: { user }, parsedInput: { pageId, revisionId } }) =>
+    getWikiPageRevisionSnapshotCore(user, pageId, revisionId),
+  )
 
 /** 版の削除(編集者以上)。最新の版は消せない。`id` は版 ID */
 export const deleteWikiPageRevision = safeAuthAction

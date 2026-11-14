@@ -6,7 +6,7 @@ import { GeneralUiText, GeneralUiTextProvider } from '@/components/general/ui-te
 import { LocaleProvider } from '@/components/locale/client'
 import { NotifyProvider } from '@/components/notify'
 import { DefaultTimezoneContext } from '@/lib/auth/use-timezone'
-import { PRINT_PATH_PREFIX } from '@/lib/board/ticket-print'
+import { PRINT_PATH_PREFIX } from '@/lib/print-export'
 import { useLocale } from '@/locale/client'
 import { localeConfig } from '@/locale/config'
 import { RouterProvider } from '@heroui/react'

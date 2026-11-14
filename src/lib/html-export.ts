@@ -1,5 +1,5 @@
 /**
- * 描画済みの画面を、1 ファイルで完結する HTML として保存する(チケットの HTML 出力)。
+ * 描画済みの画面を、1 ファイルで完結する HTML として保存する(チケット・Wiki の HTML 出力)。
  *
  * `buildHtmlDocument` 以外はブラウザ専用。
  */
@@ -79,15 +79,8 @@ const toDataUrl = async (src: string): Promise<string> => {
   })
 }
 
-/**
- * 要素を複製して、保存先でも表示できる形にした HTML を返す。
- * 画像は認証付きの URL(`/api/upload`)もあるため data URI で埋め込み、取得できなければ絶対 URL のまま残す
- */
-export const snapshotElement = async (element: HTMLElement): Promise<string> => {
-  const clone = element.cloneNode(true) as HTMLElement
-
-  const originals = Array.from(element.querySelectorAll('img'))
-  const images = Array.from(clone.querySelectorAll('img'))
+/** 複製した画像の src を、元の画像から取った data URI にする。取得できなければ絶対 URL のまま残す */
+const inlineImages = async (originals: HTMLImageElement[], images: HTMLImageElement[]) => {
   await Promise.all(
     images.map(async (img, i) => {
       const src = originals[i]?.currentSrc || originals[i]?.src
@@ -99,6 +92,44 @@ export const snapshotElement = async (element: HTMLElement): Promise<string> => 
       img.src = await toDataUrl(src).catch(() => src)
     }),
   )
+}
+
+/**
+ * 元の要素の open な shadow root を、複製の側に宣言的 shadow DOM(`<template shadowrootmode="open">`)として書き出す。
+ * `cloneNode` は shadow root を複製しないため(設計書のワイヤーフレームなど)。shadow root の中の shadow root は扱わない
+ */
+const serializeShadowRoots = async (element: HTMLElement, clone: HTMLElement) => {
+  const originals = Array.from(element.querySelectorAll('*'))
+  // 書き出すと複製の要素の並びが変わるので、先に対応を取っておく
+  const clones = Array.from(clone.querySelectorAll('*'))
+  await Promise.all(
+    originals.map(async (original, i) => {
+      const shadow = original.shadowRoot
+      const target = clones[i]
+      if (!shadow || !target) {
+        return
+      }
+      const template = document.createElement('template')
+      template.setAttribute('shadowrootmode', 'open')
+      template.innerHTML = shadow.innerHTML
+      await inlineImages(
+        Array.from(shadow.querySelectorAll('img')),
+        Array.from(template.content.querySelectorAll('img')),
+      )
+      target.prepend(template)
+    }),
+  )
+}
+
+/**
+ * 要素を複製して、保存先でも表示できる形にした HTML を返す。
+ * 画像は認証付きの URL(`/api/upload`)もあるため data URI で埋め込み、取得できなければ絶対 URL のまま残す
+ */
+export const snapshotElement = async (element: HTMLElement): Promise<string> => {
+  const clone = element.cloneNode(true) as HTMLElement
+
+  await serializeShadowRoots(element, clone)
+  await inlineImages(Array.from(element.querySelectorAll('img')), Array.from(clone.querySelectorAll('img')))
 
   clone.querySelectorAll<HTMLAnchorElement>('a[href]:not([href^="#"])').forEach((anchor) => {
     // href プロパティはページの URL を基準に解決済みの絶対 URL を返す
@@ -109,9 +140,9 @@ export const snapshotElement = async (element: HTMLElement): Promise<string> => 
   return clone.outerHTML
 }
 
-/** HTML をファイルとしてダウンロードさせる */
-export const downloadHtml = (fileName: string, html: string) => {
-  const url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }))
+/** 文字列をファイルとしてダウンロードさせる。type は charset 付きの MIME タイプ */
+export const downloadText = (fileName: string, text: string, type: string) => {
+  const url = URL.createObjectURL(new Blob([text], { type }))
   const anchor = document.createElement('a')
   anchor.href = url
   anchor.download = fileName
@@ -119,3 +150,6 @@ export const downloadHtml = (fileName: string, html: string) => {
   // クリック直後に破棄するとダウンロードが始まらないブラウザがある
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
+
+/** HTML をファイルとしてダウンロードさせる */
+export const downloadHtml = (fileName: string, html: string) => downloadText(fileName, html, 'text/html;charset=utf-8')

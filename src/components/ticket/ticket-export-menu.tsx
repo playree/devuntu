@@ -1,11 +1,12 @@
 'use client'
 
-import { MultiButton } from '@/components/general/button'
-import { ArrowDownTrayIcon, CodeBracketIcon, PrinterIcon } from '@/components/icon'
-import { type TicketExportFormat, ticketPrintPath } from '@/lib/board/ticket-print'
+import { ExportMenu, ExportMenuItem } from '@/components/export-menu'
+import { CodeBracketIcon, PrinterIcon } from '@/components/icon'
+import { ticketPrintPath } from '@/lib/board/ticket-print'
+import type { PrintFormat } from '@/lib/print-export'
 import { useLocale } from '@/locale/client'
-import { ButtonProps, Dropdown, Label } from '@heroui/react'
-import { FC, ReactNode } from 'react'
+import { ButtonProps } from '@heroui/react'
+import { FC } from 'react'
 
 /**
  * チケット(commentId があればそのプラン/報告書/アナウンス)を PDF / HTML に出力するメニュー。
@@ -18,39 +19,17 @@ export const TicketExportMenu: FC<{
   className?: string
 }> = ({ ticketId, commentId, variant, className }) => {
   const { t } = useLocale()
-  const items: { format: TicketExportFormat; label: string; icon: ReactNode }[] = [
-    { format: 'pdf', label: t('export_pdf'), icon: <PrinterIcon width={16} /> },
-    { format: 'html', label: t('export_html'), icon: <CodeBracketIcon width={16} /> },
+  const items: ExportMenuItem<PrintFormat>[] = [
+    { id: 'pdf', label: t('export_pdf'), icon: <PrinterIcon width={16} /> },
+    { id: 'html', label: t('export_html'), icon: <CodeBracketIcon width={16} /> },
   ]
 
   return (
-    <Dropdown>
-      <MultiButton
-        isIconOnly
-        size='sm'
-        variant={variant}
-        className={className}
-        tooltip={t('export')}
-        icon={<ArrowDownTrayIcon width={16} />}
-      />
-      <Dropdown.Popover placement='bottom end'>
-        <Dropdown.Menu
-          onAction={(key) =>
-            window.open(
-              ticketPrintPath(ticketId, { commentId, format: key as TicketExportFormat }),
-              '_blank',
-              'noopener',
-            )
-          }
-        >
-          {items.map((item) => (
-            <Dropdown.Item key={item.format} id={item.format} textValue={item.label}>
-              {item.icon}
-              <Label>{item.label}</Label>
-            </Dropdown.Item>
-          ))}
-        </Dropdown.Menu>
-      </Dropdown.Popover>
-    </Dropdown>
+    <ExportMenu
+      items={items}
+      variant={variant}
+      className={className}
+      onAction={(format) => window.open(ticketPrintPath(ticketId, { commentId, format }), '_blank', 'noopener')}
+    />
   )
 }

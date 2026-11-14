@@ -194,6 +194,25 @@ export const getWikiPageRevisionContent = async (actor: Actor, revisionId: strin
   return revision.content
 }
 
+/** 版の内容(印刷用ページで過去の版を出すときに引く)。指定したページの版でなければ拒否する */
+export const getWikiPageRevisionSnapshot = async (
+  actor: Actor,
+  pageId: string,
+  revisionId: string,
+  now: Date = new Date(),
+): Promise<WikiPageRevisionSummary & { content: string }> => {
+  const row = await prisma.wikiPageRevision.findUnique({
+    where: { id: revisionId },
+    select: { ...REVISION_SUMMARY_SELECT, spaceId: true, content: true },
+  })
+  if (!row || row.pageId !== pageId) {
+    throw errInvalidOperation()
+  }
+  const { spaceId, content, ...summary } = row
+  await assertWikiSpaceAccess(actor, spaceId, 'view')
+  return { ...toRevisionSummary(summary, wikiRevisionCutoff(now)), content }
+}
+
 /**
  * 版を消す(編集者以上)。最新の版はいまの内容そのもの(削除済みのページなら復元の元)なので消せない。
  * 掃除や上限で先に消えていれば何もしない

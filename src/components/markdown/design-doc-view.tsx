@@ -19,13 +19,13 @@ const DesignDocViewer = dynamic(() => import('./design-doc-viewer-core'), {
 })
 
 /** ワイヤーフレームの別ファイルは扱わない。本文に書かれたパスを同一オリジンへ fetch させないため、常に読めないとする */
-const readNoFile = async () => undefined
+export const readNoFile = async () => undefined
 
 /**
  * アップロードした添付(`/api/upload/...`)はそのまま、ほかは今のオリジンを基準に解決する。
  * 解決できない URL はそのまま返す(ビューアは例外を拾わないので、1つの壊れた画像で本文全体が描けなくなる)
  */
-const resolveResource = (src: string): string => {
+export const resolveResource = (src: string): string => {
   if (src.startsWith('/api/upload/')) {
     return src
   }

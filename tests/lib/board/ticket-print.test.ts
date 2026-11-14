@@ -2,13 +2,7 @@
  * チケットの印刷用ページ(`board/ticket-print.ts`)の単体テスト
  */
 
-import {
-  findPrintableComment,
-  parseTicketExportFormat,
-  ticketExportFileName,
-  ticketPrintPath,
-  ticketPrintTitle,
-} from '@/lib/board/ticket-print'
+import { findPrintableComment, ticketExportFileName, ticketPrintPath, ticketPrintTitle } from '@/lib/board/ticket-print'
 import { describe, expect, it } from 'vitest'
 
 describe('ticketPrintPath: 印刷用ページのパス', () => {
@@ -31,19 +25,6 @@ describe('ticketPrintPath: 印刷用ページのパス', () => {
   it('html は format を付ける', () => {
     expect(ticketPrintPath('t1', { format: 'html' })).toBe('/print/tickets/t1?format=html')
     expect(ticketPrintPath('t1', { commentId: 'c1', format: 'html' })).toBe('/print/tickets/t1?comment=c1&format=html')
-  })
-})
-
-describe('parseTicketExportFormat: 出力形式', () => {
-  it('pdf / html はそのまま', () => {
-    expect(parseTicketExportFormat('pdf')).toBe('pdf')
-    expect(parseTicketExportFormat('html')).toBe('html')
-  })
-
-  it('未指定・不正値・配列は pdf', () => {
-    expect(parseTicketExportFormat(undefined)).toBe('pdf')
-    expect(parseTicketExportFormat('docx')).toBe('pdf')
-    expect(parseTicketExportFormat(['html'])).toBe('pdf')
   })
 })
 

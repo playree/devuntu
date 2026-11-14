@@ -331,6 +331,7 @@ export const ja: DefaultLocaleItems = {
   expires_in_days: '${days}日後',
   export: '出力',
   export_html: 'HTML出力',
+  export_markdown: 'Markdown出力',
   export_pdf: 'PDF出力',
   filter: 'フィルタ',
   free_memory: '空きメモリ',
