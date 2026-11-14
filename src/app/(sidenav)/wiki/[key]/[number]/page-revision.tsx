@@ -1,7 +1,7 @@
 'use client'
 
 import { MultiButton } from '@/components/general/button'
-import { ChevronDownIcon } from '@/components/general/icons'
+import { CheckIcon, ChevronDownIcon } from '@/components/general/icons'
 import { NoticePanel } from '@/components/general/panel'
 import { ArrowUturnLeftIcon, TrashIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
@@ -183,9 +183,15 @@ export const WikiRevisionSelect: FC<{ revisions: WikiPageRevisions; updatedText:
               textValue={`v${revision.number}`}
               className='min-h-min py-1'
             >
-              <Dropdown.ItemIndicator // 既定は項目の縦中央。メッセージの2行目があってもずれないよう、1行目の中央(py-1 + min-h-5 の半分)に置く
+              <Dropdown.ItemIndicator
+                /**
+                 * 既定は項目の縦中央。メッセージの2行目があってもずれないよう、1行目の中央(py-1 + min-h-5 の半分)に置く。
+                 * 既定のチェック(10px の線画)は細くかすれて見えるので、塗りのアイコンにする
+                 */
                 className='top-3.5'
-              />
+              >
+                {({ isSelected }) => isSelected && <CheckIcon width={14} />}
+              </Dropdown.ItemIndicator>
               <RevisionItem revision={revision} revisions={revisions} isLatest={index === 0} />
             </Dropdown.Item>
           ))}
