@@ -114,6 +114,12 @@ export const scDeleteWikiPage = z.object({
   recursive: z.boolean(),
 })
 
+/** 版の内容(印刷用ページ)。版がそのページのものかも確かめる */
+export const scGetWikiPageRevisionSnapshot = z.object({
+  pageId: z.uuidv7(),
+  revisionId: z.uuidv7(),
+})
+
 /** ユーザーの直接割り当て。`id` はスペース ID */
 export const scUpsertWikiSpaceMember = z.object({
   id: z.uuidv7(),

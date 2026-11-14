@@ -9,10 +9,17 @@ const STABLE_CHECKS = 2
 /** 待つ上限。画像の取得失敗などで条件を満たさなくても、ここで打ち切って onReady を呼ぶ */
 const MAX_WAIT = 10_000
 
+/** 要素の中の画像。open な shadow root(設計書のワイヤーフレーム)の中も含める */
+const imagesIn = (container: HTMLElement): HTMLImageElement[] => [
+  ...Array.from(container.querySelectorAll('img')),
+  ...Array.from(container.querySelectorAll('*')).flatMap((el) =>
+    el.shadowRoot ? Array.from(el.shadowRoot.querySelectorAll('img')) : [],
+  ),
+]
+
 /** Markdown の読み込み中プレースホルダが無く、画像もすべて読み終えているか */
 const isRendered = (container: HTMLElement) =>
-  !container.querySelector('[data-markdown-loading]') &&
-  Array.from(container.querySelectorAll('img')).every((img) => img.complete)
+  !container.querySelector('[data-markdown-loading]') && imagesIn(container).every((img) => img.complete)
 
 /**
  * 印刷用ページの描画が終わったら onReady(印刷ダイアログ / HTML 保存)を 1 回だけ呼ぶ。

@@ -2,7 +2,7 @@
  * HTML 出力(`html-export.ts`)の単体テスト。DOM を使う関数は対象外
  */
 
-import { buildHtmlDocument } from '@/lib/html-export'
+import { absolutizeRootLinks, buildHtmlDocument } from '@/lib/html-export'
 import { describe, expect, it } from 'vitest'
 
 const base = { title: 'DEV-1 件名', lang: 'ja', htmlClass: 'light', bodyClass: 'bg-background', css: '', body: '' }
@@ -30,5 +30,21 @@ describe('buildHtmlDocument: 保存する HTML 文書', () => {
     const html = buildHtmlDocument({ ...base, css: '.a{content:"</style><script>"}' })
     expect(html).toContain('.a{content:"<\\/style><script>"}')
     expect(html.match(/<\/style>/g)).toHaveLength(1)
+  })
+})
+
+describe('absolutizeRootLinks: ルートからの相対リンクの絶対化', () => {
+  const origin = 'https://devuntu.example'
+
+  it('a の href の / で始まるリンクを絶対 URL にする(引用符はどちらでも)', () => {
+    expect(
+      absolutizeRootLinks('<a href="/wiki/DEV/3">x</a> <a class="c" href=\'/api/upload/a.pdf\'>y</a>', origin),
+    ).toBe(`<a href="${origin}/wiki/DEV/3">x</a> <a class="c" href='${origin}/api/upload/a.pdf'>y</a>`)
+  })
+
+  it('絶対 URL・プロトコル相対・ページ内リンク・a 以外の要素は変えない', () => {
+    const html =
+      '<a href="https://example.com/">a</a><a href="//cdn.example/x">b</a><a href="#h">c</a><link href="/x.css"><img src="/api/upload/a.png">'
+    expect(absolutizeRootLinks(html, origin)).toBe(html)
   })
 })

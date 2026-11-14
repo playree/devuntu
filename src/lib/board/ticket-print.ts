@@ -3,38 +3,22 @@
  *
  * サーバー / クライアントの双方から import する純粋関数のみを置く。
  */
-
-/** 印刷用ページのパスの接頭辞。配下はダーク設定でもライトで表示する */
-export const PRINT_PATH_PREFIX = '/print/'
+import { exportFileName, PRINT_PATH_PREFIX, setPrintFormatParam, withQuery, type PrintFormat } from '../print-export'
 
 /** 印刷用ページのクエリでプラン/報告書の 1 件を指すキー */
 export const PRINT_COMMENT_PARAM = 'comment'
 
-/** 印刷用ページのクエリで出力形式を指すキー */
-export const PRINT_FORMAT_PARAM = 'format'
-
-/** 出力形式。pdf は印刷ダイアログを開き、html は自己完結の HTML ファイルを保存する */
-export const TICKET_EXPORT_FORMATS = ['pdf', 'html'] as const
-export type TicketExportFormat = (typeof TICKET_EXPORT_FORMATS)[number]
-
-/** クエリの値を出力形式にする。未指定・不正値は pdf */
-export const parseTicketExportFormat = (value: unknown): TicketExportFormat =>
-  TICKET_EXPORT_FORMATS.find((format) => format === value) ?? 'pdf'
-
 /** 印刷用ページのパス。commentId を渡すとそのプラン/報告書だけを出す。format は既定の pdf ならクエリに付けない */
 export const ticketPrintPath = (
   ticketId: string,
-  { commentId, format = 'pdf' }: { commentId?: string; format?: TicketExportFormat } = {},
+  { commentId, format = 'pdf' }: { commentId?: string; format?: PrintFormat } = {},
 ): string => {
-  const path = `${PRINT_PATH_PREFIX}tickets/${encodeURIComponent(ticketId)}`
   const query = new URLSearchParams()
   if (commentId) {
     query.set(PRINT_COMMENT_PARAM, commentId)
   }
-  if (format !== 'pdf') {
-    query.set(PRINT_FORMAT_PARAM, format)
-  }
-  return query.size > 0 ? `${path}?${query}` : path
+  setPrintFormatParam(query, format)
+  return withQuery(`${PRINT_PATH_PREFIX}tickets/${encodeURIComponent(ticketId)}`, query)
 }
 
 /**
@@ -53,8 +37,7 @@ export const ticketPrintTitle = ({
 }): string => `${displayId} ${typeLabel ?? title}`
 
 /** HTML 出力の保存ファイル名。OS でファイル名に使えない文字は `_` に置き換える */
-export const ticketExportFileName = (title: string): string =>
-  `${title.replace(/[\\/:*?"<>|\u0000-\u001f\u007f]/g, '_').trim() || 'ticket'}.html`
+export const ticketExportFileName = (title: string): string => exportFileName(title, 'html', 'ticket')
 
 /** 種別(プラン/報告書)が付いたコメント */
 export type PrintableComment<C extends { type: string | null }> = C & { type: NonNullable<C['type']> }

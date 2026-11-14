@@ -18,7 +18,8 @@ import { errInvalidOperation } from '../error'
 import { logger } from '../logger'
 import { prisma, type Db } from '../prisma'
 import { assertWikiSpaceAccess } from './wiki-access'
-import { shouldMergeWikiRevision, wikiPageRef, type WikiPageSnapshot } from './wiki-rule'
+import { resolveWikiTagNames, shouldMergeWikiRevision, wikiPageRef, type WikiPageSnapshot } from './wiki-rule'
+import { listWikiTags, type WikiTagOption } from './wiki-tag'
 
 /** 保持期限。最後の保存(updatedAt)がこれより古い版は「保持期間より前の状態」 */
 export const wikiRevisionCutoff = (now: Date): Date => msBefore(now, envu.server.WIKI_REVISION_RETENTION_DAYS * DAY_MS)
@@ -192,6 +193,29 @@ export const getWikiPageRevisionContent = async (actor: Actor, revisionId: strin
   }
   await assertWikiSpaceAccess(actor, revision.spaceId, 'view')
   return revision.content
+}
+
+/**
+ * 版の内容(印刷用ページで過去の版を出すときに引く)。指定したページの版でなければ拒否する。
+ * タグは版のタグ名のうち、いまスペースに残っているものを返す(画面で過去の版を表示するときと同じ)
+ */
+export const getWikiPageRevisionSnapshot = async (
+  actor: Actor,
+  pageId: string,
+  revisionId: string,
+  now: Date = new Date(),
+): Promise<WikiPageRevisionSummary & { content: string; tags: WikiTagOption[] }> => {
+  const row = await prisma.wikiPageRevision.findUnique({
+    where: { id: revisionId },
+    select: { ...REVISION_SUMMARY_SELECT, spaceId: true, content: true },
+  })
+  if (!row || row.pageId !== pageId) {
+    throw errInvalidOperation()
+  }
+  const { spaceId, content, ...summary } = row
+  await assertWikiSpaceAccess(actor, spaceId, 'view')
+  const tags = resolveWikiTagNames(summary.tagNames, await listWikiTags(spaceId))
+  return { ...toRevisionSummary(summary, wikiRevisionCutoff(now)), content, tags }
 }
 
 /**

@@ -291,7 +291,11 @@ export const TicketFieldPanel: FC<{
           </span>
         )}
         <div className='ml-auto flex gap-1'>
-          <TicketExportMenu ticketId={ticket.id} variant='ghost' />
+          <TicketExportMenu // チケットを移ったら作り直す(作っている途中の HTML 出力を打ち切り、移った先で保存しない)
+            key={ticket.id}
+            ticketId={ticket.id}
+            variant='ghost'
+          />
           {ticket.canDelete && (
             <MultiButton
               isIconOnly
