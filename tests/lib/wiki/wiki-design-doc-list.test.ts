@@ -40,6 +40,18 @@ describe('toDesignDocListDocuments', () => {
     expect(shape(docs)).toEqual(['|#1', 'API|#2', '|#5', 'API (#5)|#6'])
   })
 
+  it('番号を付けた名前が別の親のタイトルと同じでも、表を分ける', () => {
+    const docs = [
+      doc(1, 'A'),
+      doc(11, '子1', 'p1'),
+      doc(2, 'A (#3)'),
+      doc(12, '子2', 'p2'),
+      doc(3, 'A'),
+      doc(13, '子3', 'p3'),
+    ]
+    expect(shape(docs)).toEqual(['|#1', 'A|#11', '|#2', 'A (#3)|#12', '|#3', 'A (#3) (#3)|#13'])
+  })
+
   it('親が一覧に無いページは最上位に置く', () => {
     expect(shape([doc(2, '子', 'gone')])).toEqual(['|#2'])
   })

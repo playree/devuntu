@@ -11,6 +11,7 @@ const folderSegment = (title: string) => title.replaceAll('/', '／')
 /**
  * ツリーの並び(親の次にその子孫)の一覧。親ページのタイトルのパスをフォルダ、ページ番号をファイル名にする。
  * 同じパスになる親ページが複数あると表がまとまってしまうので、2つ目以降はパスの末尾に番号を付けて分ける
+ * (付けた名前も使われていれば、さらに付ける)
  */
 export const toDesignDocListDocuments = (
   spaceKey: string,
@@ -21,7 +22,12 @@ export const toDesignDocListDocuments = (
   for (const doc of docs) {
     // 親が一覧に無い(設計書でない)ときは最上位に置く
     const parentId = doc.parentId && ids.has(doc.parentId) ? doc.parentId : null
-    childrenOf.set(parentId, [...(childrenOf.get(parentId) ?? []), doc])
+    const siblings = childrenOf.get(parentId)
+    if (siblings) {
+      siblings.push(doc)
+    } else {
+      childrenOf.set(parentId, [doc])
+    }
   }
   const folders = new Set<string>([''])
   const list: DesignDocListDocument[] = []
@@ -36,7 +42,8 @@ export const toDesignDocListDocuments = (
       })
       if (childrenOf.has(doc.id)) {
         let child = [folder, folderSegment(doc.title)].filter(Boolean).join('/')
-        if (folders.has(child)) {
+        // 番号を付けた名前が別の親のタイトルと同じこともあるので、使われていない名前になるまで付ける
+        while (folders.has(child)) {
           child = `${child} (#${doc.number})`
         }
         folders.add(child)
