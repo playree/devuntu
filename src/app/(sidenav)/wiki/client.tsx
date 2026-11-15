@@ -13,7 +13,7 @@ import { MultiTable } from '@/components/general/table'
 import { ContentHeader } from '@/components/header'
 import { BookOpenIcon, Cog6ToothIcon, PlusIcon } from '@/components/icon'
 import { ReloadButton } from '@/components/reload-button'
-import { WikiRoleChip, WikiVisibilityChip } from '@/components/wiki-chip'
+import { WikiRoleChip, WikiSpaceTypeChip, WikiVisibilityChip } from '@/components/wiki-chip'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { MAX_WIKI_SEARCH_KEYWORD, wikiSearchHref } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
@@ -96,6 +96,7 @@ export const WikiSpacesClient: FC<{ keyword: string }> = ({ keyword }) => {
           columns={[
             { id: 'name', name: t('name'), isRowHeader: true, allowsSorting: true, minWidth: 140, defaultWidth: '2fr' },
             { id: 'description', name: t('description'), allowsSorting: false, minWidth: 120, defaultWidth: '2fr' },
+            { id: 'type', name: t('wiki_space_type'), allowsSorting: true, minWidth: 80 },
             { id: 'visibility', name: t('wiki_visibility'), allowsSorting: true, minWidth: 90 },
             { id: 'role', name: t('role'), allowsSorting: true, minWidth: 80 },
             { id: 'archived', name: t('archived'), allowsSorting: true, minWidth: 80 },
@@ -113,6 +114,9 @@ export const WikiSpacesClient: FC<{ keyword: string }> = ({ keyword }) => {
                 </div>
               </Table.Cell>
               <Table.Cell className='truncate'>{item.description ?? '-'}</Table.Cell>
+              <Table.Cell>
+                <WikiSpaceTypeChip value={item.type} />
+              </Table.Cell>
               <Table.Cell>
                 <WikiVisibilityChip value={item.visibility} />
               </Table.Cell>

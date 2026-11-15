@@ -6493,6 +6493,7 @@ export const WikiSpaceScalarFieldEnum = {
   name: 'name',
   description: 'description',
   visibility: 'visibility',
+  type: 'type',
   pageSeq: 'pageSeq',
   archived: 'archived',
   createdAt: 'createdAt',
@@ -7206,6 +7207,20 @@ export type EnumWikiVisibilityFieldRefInput<$PrismaModel> = FieldRefInputType<$P
  * Reference to a field of type 'WikiVisibility[]'
  */
 export type ListEnumWikiVisibilityFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiVisibility[]'>
+    
+
+
+/**
+ * Reference to a field of type 'WikiSpaceType'
+ */
+export type EnumWikiSpaceTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiSpaceType'>
+    
+
+
+/**
+ * Reference to a field of type 'WikiSpaceType[]'
+ */
+export type ListEnumWikiSpaceTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiSpaceType[]'>
     
 
 

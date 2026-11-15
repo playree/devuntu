@@ -267,7 +267,15 @@ describe('getBoardForMcp', () => {
     vi.mocked(getBoardMemberUsers).mockResolvedValueOnce([])
     vi.mocked(listBoardTags).mockResolvedValueOnce([])
     vi.mocked(countTicketsByBoard).mockResolvedValueOnce({})
-    const wikiSpaces = [{ key: 'DOCS', name: '開発ドキュメント', description: '設計と手順', canWrite: false }]
+    const wikiSpaces = [
+      {
+        key: 'DOCS',
+        name: '開発ドキュメント',
+        description: '設計と手順',
+        type: 'design_doc' as const,
+        canWrite: false,
+      },
+    ]
     vi.mocked(findBoardWikiSpaceIndex).mockResolvedValueOnce({ wikiSpaces })
 
     expect(await getBoardForMcp(auth, boardId)).toMatchObject({ wikiSpaces })

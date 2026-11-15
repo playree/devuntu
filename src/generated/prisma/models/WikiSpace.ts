@@ -41,6 +41,7 @@ export type WikiSpaceMinAggregateOutputType = {
   name: string | null
   description: string | null
   visibility: $Enums.WikiVisibility | null
+  type: $Enums.WikiSpaceType | null
   pageSeq: number | null
   archived: boolean | null
   createdAt: Date | null
@@ -53,6 +54,7 @@ export type WikiSpaceMaxAggregateOutputType = {
   name: string | null
   description: string | null
   visibility: $Enums.WikiVisibility | null
+  type: $Enums.WikiSpaceType | null
   pageSeq: number | null
   archived: boolean | null
   createdAt: Date | null
@@ -65,6 +67,7 @@ export type WikiSpaceCountAggregateOutputType = {
   name: number
   description: number
   visibility: number
+  type: number
   pageSeq: number
   archived: number
   createdAt: number
@@ -87,6 +90,7 @@ export type WikiSpaceMinAggregateInputType = {
   name?: true
   description?: true
   visibility?: true
+  type?: true
   pageSeq?: true
   archived?: true
   createdAt?: true
@@ -99,6 +103,7 @@ export type WikiSpaceMaxAggregateInputType = {
   name?: true
   description?: true
   visibility?: true
+  type?: true
   pageSeq?: true
   archived?: true
   createdAt?: true
@@ -111,6 +116,7 @@ export type WikiSpaceCountAggregateInputType = {
   name?: true
   description?: true
   visibility?: true
+  type?: true
   pageSeq?: true
   archived?: true
   createdAt?: true
@@ -210,6 +216,7 @@ export type WikiSpaceGroupByOutputType = {
   name: string
   description: string | null
   visibility: $Enums.WikiVisibility
+  type: $Enums.WikiSpaceType
   pageSeq: number
   archived: boolean
   createdAt: Date
@@ -245,6 +252,7 @@ export type WikiSpaceWhereInput = {
   name?: Prisma.StringFilter<"WikiSpace"> | string
   description?: Prisma.StringNullableFilter<"WikiSpace"> | string | null
   visibility?: Prisma.EnumWikiVisibilityFilter<"WikiSpace"> | $Enums.WikiVisibility
+  type?: Prisma.EnumWikiSpaceTypeFilter<"WikiSpace"> | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFilter<"WikiSpace"> | number
   archived?: Prisma.BoolFilter<"WikiSpace"> | boolean
   createdAt?: Prisma.DateTimeFilter<"WikiSpace"> | Date | string
@@ -264,6 +272,7 @@ export type WikiSpaceOrderByWithRelationInput = {
   name?: Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   visibility?: Prisma.SortOrder
+  type?: Prisma.SortOrder
   pageSeq?: Prisma.SortOrder
   archived?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -286,6 +295,7 @@ export type WikiSpaceWhereUniqueInput = Prisma.AtLeast<{
   name?: Prisma.StringFilter<"WikiSpace"> | string
   description?: Prisma.StringNullableFilter<"WikiSpace"> | string | null
   visibility?: Prisma.EnumWikiVisibilityFilter<"WikiSpace"> | $Enums.WikiVisibility
+  type?: Prisma.EnumWikiSpaceTypeFilter<"WikiSpace"> | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFilter<"WikiSpace"> | number
   archived?: Prisma.BoolFilter<"WikiSpace"> | boolean
   createdAt?: Prisma.DateTimeFilter<"WikiSpace"> | Date | string
@@ -305,6 +315,7 @@ export type WikiSpaceOrderByWithAggregationInput = {
   name?: Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   visibility?: Prisma.SortOrder
+  type?: Prisma.SortOrder
   pageSeq?: Prisma.SortOrder
   archived?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -325,6 +336,7 @@ export type WikiSpaceScalarWhereWithAggregatesInput = {
   name?: Prisma.StringWithAggregatesFilter<"WikiSpace"> | string
   description?: Prisma.StringNullableWithAggregatesFilter<"WikiSpace"> | string | null
   visibility?: Prisma.EnumWikiVisibilityWithAggregatesFilter<"WikiSpace"> | $Enums.WikiVisibility
+  type?: Prisma.EnumWikiSpaceTypeWithAggregatesFilter<"WikiSpace"> | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntWithAggregatesFilter<"WikiSpace"> | number
   archived?: Prisma.BoolWithAggregatesFilter<"WikiSpace"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"WikiSpace"> | Date | string
@@ -337,6 +349,7 @@ export type WikiSpaceCreateInput = {
   name: string
   description?: string | null
   visibility?: $Enums.WikiVisibility
+  type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
   createdAt?: Date | string
@@ -356,6 +369,7 @@ export type WikiSpaceUncheckedCreateInput = {
   name: string
   description?: string | null
   visibility?: $Enums.WikiVisibility
+  type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
   createdAt?: Date | string
@@ -375,6 +389,7 @@ export type WikiSpaceUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   visibility?: Prisma.EnumWikiVisibilityFieldUpdateOperationsInput | $Enums.WikiVisibility
+  type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -394,6 +409,7 @@ export type WikiSpaceUncheckedUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   visibility?: Prisma.EnumWikiVisibilityFieldUpdateOperationsInput | $Enums.WikiVisibility
+  type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -413,6 +429,7 @@ export type WikiSpaceCreateManyInput = {
   name: string
   description?: string | null
   visibility?: $Enums.WikiVisibility
+  type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
   createdAt?: Date | string
@@ -425,6 +442,7 @@ export type WikiSpaceUpdateManyMutationInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   visibility?: Prisma.EnumWikiVisibilityFieldUpdateOperationsInput | $Enums.WikiVisibility
+  type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -437,6 +455,7 @@ export type WikiSpaceUncheckedUpdateManyInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   visibility?: Prisma.EnumWikiVisibilityFieldUpdateOperationsInput | $Enums.WikiVisibility
+  type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -454,6 +473,7 @@ export type WikiSpaceCountOrderByAggregateInput = {
   name?: Prisma.SortOrder
   description?: Prisma.SortOrder
   visibility?: Prisma.SortOrder
+  type?: Prisma.SortOrder
   pageSeq?: Prisma.SortOrder
   archived?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -470,6 +490,7 @@ export type WikiSpaceMaxOrderByAggregateInput = {
   name?: Prisma.SortOrder
   description?: Prisma.SortOrder
   visibility?: Prisma.SortOrder
+  type?: Prisma.SortOrder
   pageSeq?: Prisma.SortOrder
   archived?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -482,6 +503,7 @@ export type WikiSpaceMinOrderByAggregateInput = {
   name?: Prisma.SortOrder
   description?: Prisma.SortOrder
   visibility?: Prisma.SortOrder
+  type?: Prisma.SortOrder
   pageSeq?: Prisma.SortOrder
   archived?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -515,6 +537,10 @@ export type WikiSpaceUpdateOneWithoutAttachmentsNestedInput = {
 
 export type EnumWikiVisibilityFieldUpdateOperationsInput = {
   set?: $Enums.WikiVisibility
+}
+
+export type EnumWikiSpaceTypeFieldUpdateOperationsInput = {
+  set?: $Enums.WikiSpaceType
 }
 
 export type WikiSpaceCreateNestedOneWithoutMembersInput = {
@@ -607,6 +633,7 @@ export type WikiSpaceCreateWithoutAttachmentsInput = {
   name: string
   description?: string | null
   visibility?: $Enums.WikiVisibility
+  type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
   createdAt?: Date | string
@@ -625,6 +652,7 @@ export type WikiSpaceUncheckedCreateWithoutAttachmentsInput = {
   name: string
   description?: string | null
   visibility?: $Enums.WikiVisibility
+  type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
   createdAt?: Date | string
@@ -659,6 +687,7 @@ export type WikiSpaceUpdateWithoutAttachmentsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   visibility?: Prisma.EnumWikiVisibilityFieldUpdateOperationsInput | $Enums.WikiVisibility
+  type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -677,6 +706,7 @@ export type WikiSpaceUncheckedUpdateWithoutAttachmentsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   visibility?: Prisma.EnumWikiVisibilityFieldUpdateOperationsInput | $Enums.WikiVisibility
+  type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -695,6 +725,7 @@ export type WikiSpaceCreateWithoutMembersInput = {
   name: string
   description?: string | null
   visibility?: $Enums.WikiVisibility
+  type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
   createdAt?: Date | string
@@ -713,6 +744,7 @@ export type WikiSpaceUncheckedCreateWithoutMembersInput = {
   name: string
   description?: string | null
   visibility?: $Enums.WikiVisibility
+  type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
   createdAt?: Date | string
@@ -747,6 +779,7 @@ export type WikiSpaceUpdateWithoutMembersInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   visibility?: Prisma.EnumWikiVisibilityFieldUpdateOperationsInput | $Enums.WikiVisibility
+  type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -765,6 +798,7 @@ export type WikiSpaceUncheckedUpdateWithoutMembersInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   visibility?: Prisma.EnumWikiVisibilityFieldUpdateOperationsInput | $Enums.WikiVisibility
+  type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -783,6 +817,7 @@ export type WikiSpaceCreateWithoutGroupsInput = {
   name: string
   description?: string | null
   visibility?: $Enums.WikiVisibility
+  type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
   createdAt?: Date | string
@@ -801,6 +836,7 @@ export type WikiSpaceUncheckedCreateWithoutGroupsInput = {
   name: string
   description?: string | null
   visibility?: $Enums.WikiVisibility
+  type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
   createdAt?: Date | string
@@ -835,6 +871,7 @@ export type WikiSpaceUpdateWithoutGroupsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   visibility?: Prisma.EnumWikiVisibilityFieldUpdateOperationsInput | $Enums.WikiVisibility
+  type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -853,6 +890,7 @@ export type WikiSpaceUncheckedUpdateWithoutGroupsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   visibility?: Prisma.EnumWikiVisibilityFieldUpdateOperationsInput | $Enums.WikiVisibility
+  type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -871,6 +909,7 @@ export type WikiSpaceCreateWithoutBoardsInput = {
   name: string
   description?: string | null
   visibility?: $Enums.WikiVisibility
+  type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
   createdAt?: Date | string
@@ -889,6 +928,7 @@ export type WikiSpaceUncheckedCreateWithoutBoardsInput = {
   name: string
   description?: string | null
   visibility?: $Enums.WikiVisibility
+  type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
   createdAt?: Date | string
@@ -923,6 +963,7 @@ export type WikiSpaceUpdateWithoutBoardsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   visibility?: Prisma.EnumWikiVisibilityFieldUpdateOperationsInput | $Enums.WikiVisibility
+  type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -941,6 +982,7 @@ export type WikiSpaceUncheckedUpdateWithoutBoardsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   visibility?: Prisma.EnumWikiVisibilityFieldUpdateOperationsInput | $Enums.WikiVisibility
+  type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -959,6 +1001,7 @@ export type WikiSpaceCreateWithoutPagesInput = {
   name: string
   description?: string | null
   visibility?: $Enums.WikiVisibility
+  type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
   createdAt?: Date | string
@@ -977,6 +1020,7 @@ export type WikiSpaceUncheckedCreateWithoutPagesInput = {
   name: string
   description?: string | null
   visibility?: $Enums.WikiVisibility
+  type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
   createdAt?: Date | string
@@ -1011,6 +1055,7 @@ export type WikiSpaceUpdateWithoutPagesInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   visibility?: Prisma.EnumWikiVisibilityFieldUpdateOperationsInput | $Enums.WikiVisibility
+  type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1029,6 +1074,7 @@ export type WikiSpaceUncheckedUpdateWithoutPagesInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   visibility?: Prisma.EnumWikiVisibilityFieldUpdateOperationsInput | $Enums.WikiVisibility
+  type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1047,6 +1093,7 @@ export type WikiSpaceCreateWithoutTagsInput = {
   name: string
   description?: string | null
   visibility?: $Enums.WikiVisibility
+  type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
   createdAt?: Date | string
@@ -1065,6 +1112,7 @@ export type WikiSpaceUncheckedCreateWithoutTagsInput = {
   name: string
   description?: string | null
   visibility?: $Enums.WikiVisibility
+  type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
   createdAt?: Date | string
@@ -1099,6 +1147,7 @@ export type WikiSpaceUpdateWithoutTagsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   visibility?: Prisma.EnumWikiVisibilityFieldUpdateOperationsInput | $Enums.WikiVisibility
+  type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1117,6 +1166,7 @@ export type WikiSpaceUncheckedUpdateWithoutTagsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   visibility?: Prisma.EnumWikiVisibilityFieldUpdateOperationsInput | $Enums.WikiVisibility
+  type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1135,6 +1185,7 @@ export type WikiSpaceCreateWithoutRevisionsInput = {
   name: string
   description?: string | null
   visibility?: $Enums.WikiVisibility
+  type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
   createdAt?: Date | string
@@ -1153,6 +1204,7 @@ export type WikiSpaceUncheckedCreateWithoutRevisionsInput = {
   name: string
   description?: string | null
   visibility?: $Enums.WikiVisibility
+  type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
   createdAt?: Date | string
@@ -1187,6 +1239,7 @@ export type WikiSpaceUpdateWithoutRevisionsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   visibility?: Prisma.EnumWikiVisibilityFieldUpdateOperationsInput | $Enums.WikiVisibility
+  type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1205,6 +1258,7 @@ export type WikiSpaceUncheckedUpdateWithoutRevisionsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   visibility?: Prisma.EnumWikiVisibilityFieldUpdateOperationsInput | $Enums.WikiVisibility
+  type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1308,6 +1362,7 @@ export type WikiSpaceSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   name?: boolean
   description?: boolean
   visibility?: boolean
+  type?: boolean
   pageSeq?: boolean
   archived?: boolean
   createdAt?: boolean
@@ -1328,6 +1383,7 @@ export type WikiSpaceSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ext
   name?: boolean
   description?: boolean
   visibility?: boolean
+  type?: boolean
   pageSeq?: boolean
   archived?: boolean
   createdAt?: boolean
@@ -1340,6 +1396,7 @@ export type WikiSpaceSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
   name?: boolean
   description?: boolean
   visibility?: boolean
+  type?: boolean
   pageSeq?: boolean
   archived?: boolean
   createdAt?: boolean
@@ -1352,13 +1409,14 @@ export type WikiSpaceSelectScalar = {
   name?: boolean
   description?: boolean
   visibility?: boolean
+  type?: boolean
   pageSeq?: boolean
   archived?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type WikiSpaceOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "key" | "name" | "description" | "visibility" | "pageSeq" | "archived" | "createdAt" | "updatedAt", ExtArgs["result"]["wikiSpace"]>
+export type WikiSpaceOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "key" | "name" | "description" | "visibility" | "type" | "pageSeq" | "archived" | "createdAt" | "updatedAt", ExtArgs["result"]["wikiSpace"]>
 export type WikiSpaceInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   members?: boolean | Prisma.WikiSpace$membersArgs<ExtArgs>
   groups?: boolean | Prisma.WikiSpace$groupsArgs<ExtArgs>
@@ -1402,6 +1460,10 @@ export type $WikiSpacePayload<ExtArgs extends runtime.Types.Extensions.InternalA
      * 公開範囲
      */
     visibility: $Enums.WikiVisibility
+    /**
+     * 区分。design_doc にできるのは、削除されていない通常ページが無いときだけ
+     */
+    type: $Enums.WikiSpaceType
     /**
      * 採番済みページ番号の最大値。UPDATE の行ロックで採番を直列化する
      */
@@ -1847,6 +1909,7 @@ export interface WikiSpaceFieldRefs {
   readonly name: Prisma.FieldRef<"WikiSpace", 'String'>
   readonly description: Prisma.FieldRef<"WikiSpace", 'String'>
   readonly visibility: Prisma.FieldRef<"WikiSpace", 'WikiVisibility'>
+  readonly type: Prisma.FieldRef<"WikiSpace", 'WikiSpaceType'>
   readonly pageSeq: Prisma.FieldRef<"WikiSpace", 'Int'>
   readonly archived: Prisma.FieldRef<"WikiSpace", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"WikiSpace", 'DateTime'>

@@ -7,6 +7,7 @@ import {
   deleteWikiPageForMcp,
   getWikiPageForMcp,
   getWikiTreeForMcp,
+  listWikiSpacesForMcp,
   registerWikiTools,
   saveWikiPageForMcp,
   searchWikiForMcp,
@@ -23,7 +24,7 @@ import {
 } from '@/lib/wiki/wiki-page'
 import { WIKI_PAGE_CONFLICT, WIKI_PAGE_TOO_DEEP } from '@/lib/wiki/wiki-rule'
 import { searchWikiPages } from '@/lib/wiki/wiki-search'
-import { getWikiSpaceByKey } from '@/lib/wiki/wiki-space'
+import { getWikiSpaceByKey, listWikiSpaces } from '@/lib/wiki/wiki-space'
 import { listWikiTags, resolveWikiTagIdsByName } from '@/lib/wiki/wiki-tag'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -141,6 +142,16 @@ describe('saveWikiPageForMcp: 作成', () => {
     expect(await typeOf({})).toBe('page')
     expect(await typeOf({ content: designDoc, type: 'page' }), '指定した type を優先する').toBe('page')
     expect(await typeOf({ content: '# 概要', type: 'design_doc' })).toBe('design_doc')
+  })
+
+  it('設計書スペースでは、type を省くと本文によらず設計書として作る', async () => {
+    vi.mocked(getWikiSpaceByKey).mockResolvedValue({
+      space: { id: SPACE_ID, key: 'SPEC', name: '設計書' },
+      access: { spaceId: SPACE_ID, key: 'SPEC', type: 'design_doc', canWrite: true },
+    } as never)
+
+    await saveWikiPageForMcp(human, { space: 'SPEC', title: 't', content: '# 概要' })
+    expect(vi.mocked(createWikiPage).mock.calls[0][3].type).toBe('design_doc')
   })
 
   it('space か title が無ければエラー', async () => {
@@ -385,6 +396,30 @@ describe('getWikiPageForMcp', () => {
 
     expect(error.errorType).toBe(VALIDATION_ERROR)
     expect(error.message).toContain('# 概要 | ## 手順 | ## 運用')
+  })
+})
+
+describe('listWikiSpacesForMcp', () => {
+  it('スペースの区分を返し、説明とアーカイブは該当するときだけ載せる', async () => {
+    const base = { description: null, visibility: 'restricted', role: 'editor', canWrite: true, archived: false }
+    vi.mocked(listWikiSpaces).mockResolvedValue([
+      { ...base, key: 'DOCS', name: '開発', type: 'mixed' },
+      { ...base, key: 'SPEC', name: '設計書', description: '基本設計', type: 'design_doc', archived: true },
+    ] as never)
+
+    expect(await listWikiSpacesForMcp(human, {})).toEqual([
+      { key: 'DOCS', name: '開発', visibility: 'restricted', type: 'mixed', role: 'editor', canWrite: true },
+      {
+        key: 'SPEC',
+        name: '設計書',
+        description: '基本設計',
+        visibility: 'restricted',
+        type: 'design_doc',
+        role: 'editor',
+        canWrite: true,
+        archived: true,
+      },
+    ])
   })
 })
 

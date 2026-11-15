@@ -340,7 +340,7 @@ describe('get_agent_task', () => {
     })
 
     it('ボードに割り当てられた Wiki スペースの索引を task に載せる', async () => {
-      const wikiSpaces = [{ key: 'DOCS', name: '開発ドキュメント', canWrite: true }]
+      const wikiSpaces = [{ key: 'DOCS', name: '開発ドキュメント', type: 'mixed' as const, canWrite: true }]
       vi.mocked(findBoardWikiSpaceIndex).mockResolvedValue({ wikiSpaces })
 
       expect(await callTask()).toMatchObject({ wikiSpaces })

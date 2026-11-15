@@ -7,6 +7,7 @@ import {
   applyTextEdits,
   designDocFrontMatter,
   extractMarkdownSection,
+  frontMatterBlock,
   hasDesignDocFrontMatter,
   hasFrontMatter,
   listMarkdownHeadings,
@@ -148,6 +149,23 @@ describe('境界のケース', () => {
 
   it('重なって現れる oldText も複数として数える', () => {
     expect(() => applyTextEdits('aaa', [{ oldText: 'aa', newText: 'b' }])).toThrow('matches 2 places')
+  })
+})
+
+describe('frontMatterBlock', () => {
+  it('先頭の front matter を区切り線ごと取り出し、本文は含めない', () => {
+    expect(frontMatterBlock('---\ntype: design_doc\nversion: 1.0\n---\n\n# 概要\n本文')).toBe(
+      '---\ntype: design_doc\nversion: 1.0\n---\n',
+    )
+  })
+
+  it('BOM と CRLF をそろえる', () => {
+    expect(frontMatterBlock('\uFEFF---\r\nstatus: draft\r\n...\r\n本文')).toBe('---\nstatus: draft\n---\n')
+  })
+
+  it('front matter が無い・閉じていなければ null', () => {
+    expect(frontMatterBlock('# 本文')).toBeNull()
+    expect(frontMatterBlock('---\ntype: design_doc\n')).toBeNull()
   })
 })
 

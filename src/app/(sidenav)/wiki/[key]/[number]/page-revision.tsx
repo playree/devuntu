@@ -11,7 +11,7 @@ import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { ticketShortPath } from '@/lib/board/ticket-id'
 import { dayformat } from '@/lib/day'
 import { useConfirmAction } from '@/lib/use-confirm-action'
-import { resolveWikiTagNames } from '@/lib/wiki/wiki-rule'
+import { isWikiPageTypeAllowed, resolveWikiTagNames } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { Button, Chip, cn, Dropdown } from '@heroui/react'
 import Link from 'next/link'
@@ -240,6 +240,7 @@ export const WikiRevisionSelect: FC<{ revisions: WikiPageRevisions; updatedText:
 export const WikiRevisionActions: FC<{ revisions: WikiPageRevisions }> = ({ revisions: { past, select, reload } }) => {
   const { t } = useLocale()
   const confirmAction = useConfirmAction()
+  const { space } = useWikiSpace()
   if (!past) {
     return null
   }
@@ -278,6 +279,8 @@ export const WikiRevisionActions: FC<{ revisions: WikiPageRevisions }> = ({ revi
         variant='outline'
         tooltip={t('wiki_restore_this')}
         icon={<ArrowUturnLeftIcon width={16} />}
+        // 設計書スペースへ通常ページの版は戻せない(サーバーでも弾く)
+        isDisabled={!isWikiPageTypeAllowed(space.type, past.type)}
         onPress={restore}
       />
       <MultiButton

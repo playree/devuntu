@@ -5,7 +5,13 @@
  * 版の保持期間・上限・まとめる時間は環境変数から読むため、ここでは持たず引数で受け取る。
  */
 
-import type { WikiPageRevisionAction, WikiPageType, WikiSpaceRole, WikiVia } from '@/generated/prisma/enums'
+import type {
+  WikiPageRevisionAction,
+  WikiPageType,
+  WikiSpaceRole,
+  WikiSpaceType,
+  WikiVia,
+} from '@/generated/prisma/enums'
 import { MAX_TAG_NAME, MAX_TICKET_TAGS } from '../board/tag-rule'
 import { BOARD_KEY_PATTERN, MAX_BOARD_KEY } from '../board/ticket-id'
 
@@ -41,6 +47,18 @@ export const WIKI_PAGE_TOO_DEEP = 'WIKI_PAGE_TOO_DEEP'
 export const WIKI_PAGE_INVALID_PARENT = 'WIKI_PAGE_INVALID_PARENT'
 /** 直接割り当ての owner が 0 人になる変更(管理者は除く) */
 export const WIKI_SPACE_NO_OWNER = 'WIKI_SPACE_NO_OWNER'
+/** スペースの区分で作れない種類のページ(設計書スペースの通常ページ) */
+export const WIKI_PAGE_TYPE_NOT_ALLOWED = 'WIKI_PAGE_TYPE_NOT_ALLOWED'
+/** 通常ページが残っているスペースを設計書スペースにしようとした */
+export const WIKI_SPACE_HAS_NORMAL_PAGES = 'WIKI_SPACE_HAS_NORMAL_PAGES'
+
+/** スペースの区分で作れるページの種類か(設計書スペースは設計書だけ) */
+export const isWikiPageTypeAllowed = (spaceType: WikiSpaceType, pageType: WikiPageType): boolean =>
+  spaceType !== 'design_doc' || pageType === 'design_doc'
+
+/** 種類を指定せずに作るページの種類 */
+export const defaultWikiPageType = (spaceType: WikiSpaceType): WikiPageType =>
+  spaceType === 'design_doc' ? 'design_doc' : 'page'
 
 export type WikiRole = WikiSpaceRole
 

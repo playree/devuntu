@@ -16,6 +16,7 @@ import {
   WIKI_PAGE_HAS_CHILDREN,
   WIKI_PAGE_INVALID_PARENT,
   WIKI_PAGE_TOO_DEEP,
+  WIKI_PAGE_TYPE_NOT_ALLOWED,
   type WikiWriter,
 } from '@/lib/wiki/wiki-rule'
 import { getWikiSpaceByKey } from '@/lib/wiki/wiki-space'
@@ -173,6 +174,26 @@ describe('createWikiPage', () => {
     expect(vi.mocked(writeWikiPageRevision).mock.calls[0][1].snapshot.type).toBe('design_doc')
   })
 
+  it('設計書スペースでは、種類を省略すると設計書で作る', async () => {
+    vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ key: 'SPEC', type: 'design_doc' } as never)
+    await createWikiPage(actor, MCP, SPACE_ID, { title: '設計書' })
+    expect(vi.mocked(prisma.wikiPage.create).mock.calls[0][0].data).toMatchObject({ type: 'design_doc' })
+  })
+
+  it('設計書スペースには通常のページを作れない', async () => {
+    vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ key: 'SPEC', type: 'design_doc' } as never)
+    expect(await errorTypeOf(createWikiPage(actor, WEB, SPACE_ID, { title: '通常', type: 'page' }))).toBe(
+      WIKI_PAGE_TYPE_NOT_ALLOWED,
+    )
+    expect(prisma.wikiPage.create).not.toHaveBeenCalled()
+  })
+
+  it('混合スペースでは、種類を省略すると通常のページで作る', async () => {
+    vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ key: 'DOCS', type: 'mixed' } as never)
+    await createWikiPage(actor, WEB, SPACE_ID, { title: '通常' })
+    expect(vi.mocked(prisma.wikiPage.create).mock.calls[0][0].data).toMatchObject({ type: 'page' })
+  })
+
   it('位置を指定すると、後ろの兄弟の並びを詰め直す', async () => {
     await createWikiPage(actor, WEB, SPACE_ID, { title: '先頭', parentId: null, position: 0 })
 
@@ -276,6 +297,22 @@ describe('updateWikiPage', () => {
       type: 'design_doc',
     })
     expect(vi.mocked(writeWikiPageRevision).mock.calls[0][1].snapshot.type).toBe('design_doc')
+  })
+
+  it('設計書スペースでは、設計書を通常のページに変えられない', async () => {
+    vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ key: 'SPEC', type: 'design_doc' } as never)
+    vi.mocked(prisma.wikiPage.findUnique).mockResolvedValue(pageRow('b', { type: 'design_doc' }) as never)
+
+    expect(await errorTypeOf(updateWikiPage(actor, WEB, 'b', { type: 'page' }))).toBe(WIKI_PAGE_TYPE_NOT_ALLOWED)
+    expect(prisma.wikiPage.update).not.toHaveBeenCalled()
+  })
+
+  it('設計書スペースでも、種類を変えなければ本文を保存できる', async () => {
+    vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ key: 'SPEC', type: 'design_doc' } as never)
+    vi.mocked(prisma.wikiPage.findUnique).mockResolvedValue(pageRow('b', { type: 'design_doc' }) as never)
+
+    const result = await updateWikiPage(actor, WEB, 'b', { content: '新しい本文', type: 'design_doc' })
+    expect(result.result).toBe('updated')
   })
 
   it('内容が変わらなければ書かない', async () => {

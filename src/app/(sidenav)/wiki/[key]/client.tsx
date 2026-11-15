@@ -7,7 +7,7 @@ import { NoticePanel } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
 import { BookOpenIcon, Cog6ToothIcon, DocumentPlusIcon, TrashIcon } from '@/components/icon'
 import { ReloadButton } from '@/components/reload-button'
-import { WikiRoleChip, WikiVisibilityChip } from '@/components/wiki-chip'
+import { WikiRoleChip, WikiSpaceTypeChip, WikiVisibilityChip } from '@/components/wiki-chip'
 import { useLocale } from '@/locale/client'
 import { ButtonGroup } from '@heroui/react'
 import { useRouter } from 'next/navigation'
@@ -64,6 +64,7 @@ export const WikiSpaceTopClient: FC = () => {
       <div className='flex flex-wrap items-center gap-2 text-sm'>
         <span className='text-muted font-mono text-xs'>{space.key}</span>
         <WikiVisibilityChip value={space.visibility} />
+        <WikiSpaceTypeChip value={space.type} />
         {access.role && <WikiRoleChip value={access.role} />}
       </div>
       {space.description && <p className='text-sm whitespace-pre-wrap'>{space.description}</p>}

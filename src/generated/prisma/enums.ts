@@ -345,6 +345,14 @@ export const WikiVia = {
 export type WikiVia = (typeof WikiVia)[keyof typeof WikiVia]
 
 
+export const WikiSpaceType = {
+  mixed: 'mixed',
+  design_doc: 'design_doc'
+} as const
+
+export type WikiSpaceType = (typeof WikiSpaceType)[keyof typeof WikiSpaceType]
+
+
 export const WikiPageType = {
   page: 'page',
   design_doc: 'design_doc'

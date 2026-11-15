@@ -5,7 +5,7 @@
  * 設定の変更(名前・説明・公開範囲・アーカイブ)は owner と管理者。割り当ての変更は画面側のチケットで扱う。
  */
 
-import type { WikiVisibility } from '@/generated/prisma/enums'
+import type { WikiSpaceType, WikiVisibility } from '@/generated/prisma/enums'
 import { isAdminActor, type Actor } from '../board/board-access'
 import { ClientError, errInvalidOperation, errValidation } from '../error'
 import { logger } from '../logger'
@@ -22,6 +22,7 @@ import {
   evaluateWikiAccess,
   MAX_WIKI_SPACE_DESCRIPTION,
   MAX_WIKI_SPACE_NAME,
+  WIKI_SPACE_HAS_NORMAL_PAGES,
   WIKI_SPACE_KEY_PATTERN,
 } from './wiki-rule'
 
@@ -30,10 +31,16 @@ export type WikiSpaceInput = {
   name: string
   description?: string | null
   visibility?: WikiVisibility
+  type?: WikiSpaceType
 }
 
 const errDuplicatedKey = () =>
   new ClientError(DUPLICATED_WIKI_SPACE_KEY, 'A wiki space with this key already exists. Choose another key')
+const errHasNormalPages = (count: number) =>
+  new ClientError(
+    WIKI_SPACE_HAS_NORMAL_PAGES,
+    `The space has ${count} normal page(s). Delete them or change them to design docs before making it a design doc space`,
+  )
 
 const assertName = (name: string) => {
   if (name.trim() === '' || name.length > MAX_WIKI_SPACE_NAME) {
@@ -53,6 +60,7 @@ const SPACE_SELECT = {
   name: true,
   description: true,
   visibility: true,
+  type: true,
   archived: true,
   createdAt: true,
   updatedAt: true,
@@ -74,6 +82,7 @@ export const createWikiSpace = async (actor: Actor, input: WikiSpaceInput) => {
         name: input.name.trim(),
         description: input.description?.trim() || null,
         visibility: input.visibility ?? 'restricted',
+        type: input.type ?? 'mixed',
         members: { create: { userId: actor.id, role: 'owner' } },
       },
       select: SPACE_SELECT,
@@ -86,21 +95,35 @@ export const createWikiSpace = async (actor: Actor, input: WikiSpaceInput) => {
   return space
 }
 
-/** 名前・説明・公開範囲の変更。undefined の項目はそのまま残す */
+/**
+ * 名前・説明・公開範囲・区分の変更。undefined の項目はそのまま残す。
+ * 設計書スペースにできるのは通常ページが無いときだけ。ページの書き込みはスペース行のロックを取ってから区分を読むので、
+ * 同じロックを取ってから数える
+ */
 export const updateWikiSpace = async (actor: Actor, spaceId: string, patch: Partial<Omit<WikiSpaceInput, 'key'>>) => {
   if (patch.name !== undefined) {
     assertName(patch.name)
   }
   assertDescription(patch.description)
-  await assertWikiSpaceAccess(actor, spaceId, 'manage')
-  const space = await prisma.wikiSpace.update({
-    where: { id: spaceId },
-    data: {
-      ...(patch.name !== undefined ? { name: patch.name.trim() } : {}),
-      ...(patch.description !== undefined ? { description: patch.description?.trim() || null } : {}),
-      ...(patch.visibility !== undefined ? { visibility: patch.visibility } : {}),
-    },
-    select: SPACE_SELECT,
+  const space = await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT "id" FROM "wiki_space" WHERE "id" = ${spaceId} FOR NO KEY UPDATE`
+    await assertWikiSpaceAccess(actor, spaceId, 'manage', tx)
+    if (patch.type === 'design_doc') {
+      const normalPages = await tx.wikiPage.count({ where: { spaceId, type: 'page' } })
+      if (normalPages > 0) {
+        throw errHasNormalPages(normalPages)
+      }
+    }
+    return tx.wikiSpace.update({
+      where: { id: spaceId },
+      data: {
+        ...(patch.name !== undefined ? { name: patch.name.trim() } : {}),
+        ...(patch.description !== undefined ? { description: patch.description?.trim() || null } : {}),
+        ...(patch.visibility !== undefined ? { visibility: patch.visibility } : {}),
+        ...(patch.type !== undefined ? { type: patch.type } : {}),
+      },
+      select: SPACE_SELECT,
+    })
   })
   logger.info({ userId: actor.id, spaceId }, 'wiki space updated')
   return space
@@ -151,7 +174,13 @@ export const getWikiSpaceByKeyForManage = async (actor: Actor, key: string) => {
   return { space, access }
 }
 
-export type BoardWikiSpace = { key: string; name: string; description?: string; canWrite: boolean }
+export type BoardWikiSpace = {
+  key: string
+  name: string
+  description?: string
+  type: WikiSpaceType
+  canWrite: boolean
+}
 
 /**
  * ボードに割り当てられたスペースのうち、閲覧できてアーカイブされていないもの(名前順)の索引。
@@ -163,7 +192,7 @@ export const findBoardWikiSpaceIndex = async (
 ): Promise<{ wikiSpaces?: BoardWikiSpace[] }> => {
   const spaces = await prisma.wikiSpace.findMany({
     where: { AND: [wikiSpaceListWhere(actor.id), { boards: { some: { boardId } } }] },
-    select: { key: true, name: true, description: true, archived: true, ...wikiRoleSelect(actor.id) },
+    select: { key: true, name: true, description: true, type: true, archived: true, ...wikiRoleSelect(actor.id) },
     orderBy: [{ name: 'asc' }, { key: 'asc' }],
   })
   if (spaces.length === 0) {
@@ -177,6 +206,7 @@ export const findBoardWikiSpaceIndex = async (
         key: space.key,
         name: space.name,
         ...(space.description ? { description: space.description } : {}),
+        type: space.type,
         canWrite,
       }
     }),

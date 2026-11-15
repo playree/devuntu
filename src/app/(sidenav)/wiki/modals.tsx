@@ -6,7 +6,7 @@ import { FormModal, ModalBaseProps } from '@/components/general/modal'
 import { RadioCtrl } from '@/components/general/radio'
 import { PlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
-import { useWikiVisibilityOptions } from '@/components/wiki-chip'
+import { useWikiSpaceTypeOptions, useWikiVisibilityOptions } from '@/components/wiki-chip'
 import { parseAction } from '@/lib/action/action-client'
 import { ClientError } from '@/lib/error'
 import { type CreateWikiSpace, scCreateWikiSpace } from '@/lib/schema/schema-wiki'
@@ -22,6 +22,7 @@ export const AddSpaceModal: FC<ModalBaseProps> = ({ state, reload }) => {
   const { t, fet } = useLocale()
   const router = useRouter()
   const visibilityOptions = useWikiVisibilityOptions()
+  const spaceTypeOptions = useWikiSpaceTypeOptions()
 
   const {
     control,
@@ -30,7 +31,7 @@ export const AddSpaceModal: FC<ModalBaseProps> = ({ state, reload }) => {
   } = useForm<CreateWikiSpace>({
     resolver: zodResolver(scCreateWikiSpace),
     mode: 'onChange',
-    defaultValues: { name: '', key: '', description: '', visibility: 'restricted' },
+    defaultValues: { name: '', key: '', description: '', visibility: 'restricted', type: 'mixed' },
   })
 
   return (
@@ -94,6 +95,15 @@ export const AddSpaceModal: FC<ModalBaseProps> = ({ state, reload }) => {
             options={Object.entries(visibilityOptions).map(([value, label]) => ({ value, label }))}
           />
           <p className='text-muted text-xs'>{t('msg_wiki_visibility')}</p>
+        </div>
+        <div className='col-span-12'>
+          <RadioCtrl
+            control={control}
+            name='type'
+            label={t('wiki_space_type')}
+            options={Object.entries(spaceTypeOptions).map(([value, label]) => ({ value, label }))}
+          />
+          <p className='text-muted text-xs'>{t('msg_wiki_space_type')}</p>
         </div>
       </GridBox>
     </FormModal>

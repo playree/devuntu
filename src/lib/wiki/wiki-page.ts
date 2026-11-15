@@ -17,7 +17,7 @@ import { getTicketAccess, type Actor } from '../board/board-access'
 import { ClientError, errInvalidOperation, errValidation } from '../error'
 import { logger } from '../logger'
 import { prisma, type Db } from '../prisma'
-import { assertWikiSpaceAccess } from './wiki-access'
+import { assertWikiSpaceAccess, type WikiSpaceAccess } from './wiki-access'
 import { writeWikiPageRevision } from './wiki-revision'
 import {
   MAX_WIKI_CONTENT,
@@ -28,6 +28,9 @@ import {
   WIKI_PAGE_HAS_CHILDREN,
   WIKI_PAGE_INVALID_PARENT,
   WIKI_PAGE_TOO_DEEP,
+  WIKI_PAGE_TYPE_NOT_ALLOWED,
+  defaultWikiPageType,
+  isWikiPageTypeAllowed,
   wikiPageRef,
   type WikiPageSnapshot,
   type WikiWriter,
@@ -59,6 +62,19 @@ const errInvalidParent = () =>
     WIKI_PAGE_INVALID_PARENT,
     'The parent must be another page in the same space, and not the page itself or one of its descendants',
   )
+
+const errTypeNotAllowed = () =>
+  new ClientError(
+    WIKI_PAGE_TYPE_NOT_ALLOWED,
+    'This space is a design doc space: its pages must be design docs (type=design_doc)',
+  )
+
+/** スペースの区分で作れない種類なら弾く(スペース行のロックを取った後に読んだ区分で判定する) */
+const assertPageTypeAllowed = (access: WikiSpaceAccess, type: WikiPageType) => {
+  if (!isWikiPageTypeAllowed(access.type, type)) {
+    throw errTypeNotAllowed()
+  }
+}
 
 const assertTitle = (title: string) => {
   if (title.trim() === '' || title.length > MAX_WIKI_TITLE) {
@@ -220,7 +236,7 @@ const assertNotConflicted = (expected: number | null, updatedAt: Date) => {
 export type CreateWikiPageInput = {
   title: string
   content?: string
-  /** 種類。省略で通常のページ */
+  /** 種類。省略で区分の既定(設計書スペースは設計書、ほかは通常のページ) */
   type?: WikiPageType
   /** 親ページの id。null / 省略でスペース直下 */
   parentId?: string | null
@@ -239,7 +255,6 @@ export const createWikiPage = async (
 ): Promise<WikiPageWriteResult> => {
   const title = input.title.trim()
   const content = input.content ?? ''
-  const type = input.type ?? 'page'
   assertTitle(title)
   assertContent(content)
   const message = normalizeMessage(opts.message)
@@ -248,6 +263,8 @@ export const createWikiPage = async (
   const page = await prisma.$transaction(async (tx) => {
     await lockSpaceForStructure(tx, spaceId)
     const access = await assertWikiSpaceAccess(actor, spaceId, 'write', tx)
+    const type = input.type ?? defaultWikiPageType(access.type)
+    assertPageTypeAllowed(access, type)
     const rows = await loadTree(tx, spaceId)
     if (parentId) {
       const index = indexWikiTree(rows)
@@ -365,6 +382,9 @@ export const updateWikiPage = async (
     }
     assertTitle(next.title)
     assertContent(next.content)
+    if (next.type !== before.type) {
+      assertPageTypeAllowed(access, next.type)
+    }
     const ref = wikiPageRef({ key: access.key, number: existing.number })
     const tagsChanged =
       nextTags !== undefined &&
@@ -575,6 +595,7 @@ export const restoreWikiPageRevision = async (
     if (!revision) {
       throw errInvalidOperation()
     }
+    assertPageTypeAllowed(access, revision.type)
     const { pageId, pageNumber: number } = revision
     const ref = wikiPageRef({ key: access.key, number })
     const tags = await findWikiTagsByNames(tx, spaceId, revision.tagNames)

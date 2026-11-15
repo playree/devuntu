@@ -147,6 +147,12 @@ const frontMatterLines = (content: string): string[] | null => {
   return null
 }
 
+/** 先頭の front matter を区切り線ごと取り出す(改行は LF にそろえる)。無ければ null */
+export const frontMatterBlock = (content: string): string | null => {
+  const lines = frontMatterLines(content)
+  return lines && ['---', ...lines, '---', ''].join('\n')
+}
+
 /** 本文が front matter を持つか */
 export const hasFrontMatter = (content: string): boolean => frontMatterLines(content) !== null
 

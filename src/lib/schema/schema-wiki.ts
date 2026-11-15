@@ -42,6 +42,8 @@ export const zWikiVisibility = z.enum(['restricted', 'everyone'])
 export const zWikiSpaceRole = z.enum(['viewer', 'editor', 'owner'])
 /** Prisma の WikiAssignRole と一致させる */
 export const zWikiAssignRole = z.enum(['viewer', 'editor'])
+/** Prisma の WikiSpaceType と一致させる */
+export const zWikiSpaceType = z.enum(['mixed', 'design_doc'])
 /** Prisma の WikiPageType と一致させる */
 export const zWikiPageType = z.enum(['page', 'design_doc'])
 
@@ -52,6 +54,7 @@ export const scCreateWikiSpace = z.object({
   name: zWikiSpaceName,
   description: zWikiSpaceDescription,
   visibility: zWikiVisibility,
+  type: zWikiSpaceType,
 })
 export type CreateWikiSpace = z.infer<typeof scCreateWikiSpace>
 
@@ -61,6 +64,7 @@ export const scUpdateWikiSpace = z.object({
   name: zWikiSpaceName,
   description: zWikiSpaceDescription,
   visibility: zWikiVisibility,
+  type: zWikiSpaceType,
 })
 export type UpdateWikiSpace = z.infer<typeof scUpdateWikiSpace>
 

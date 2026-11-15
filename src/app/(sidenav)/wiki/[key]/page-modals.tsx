@@ -11,7 +11,7 @@ import { parseAction } from '@/lib/action/action-client'
 import { ClientError } from '@/lib/error'
 import { type CreateWikiPage, scCreateWikiPage } from '@/lib/schema/schema-wiki'
 import { useConfirmAction } from '@/lib/use-confirm-action'
-import { MAX_WIKI_DEPTH } from '@/lib/wiki/wiki-rule'
+import { defaultWikiPageType, MAX_WIKI_DEPTH } from '@/lib/wiki/wiki-rule'
 import { depthOf, descendantIds, indexWikiTree, isSelfOrDescendant, subtreeHeight } from '@/lib/wiki/wiki-tree'
 import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -42,7 +42,12 @@ export const CreatePageModal: FC<ModalBaseProps & { parent: { id: string; title:
   } = useForm<CreateWikiPage>({
     resolver: zodResolver(scCreateWikiPage),
     mode: 'onChange',
-    defaultValues: { spaceId: space.id, parentId: parent?.id ?? null, title: '', type: 'page' },
+    defaultValues: {
+      spaceId: space.id,
+      parentId: parent?.id ?? null,
+      title: '',
+      type: defaultWikiPageType(space.type),
+    },
   })
 
   return (
@@ -79,9 +84,11 @@ export const CreatePageModal: FC<ModalBaseProps & { parent: { id: string; title:
             autoFocus
           />
         </div>
-        <div className='col-span-12'>
-          <SingleSelectCtrl control={control} name='type' groupOptions={typeOptions} label={t('wiki_page_type')} />
-        </div>
+        {space.type === 'mixed' && ( // 設計書スペースは設計書だけなので選ばせない
+          <div className='col-span-12'>
+            <SingleSelectCtrl control={control} name='type' groupOptions={typeOptions} label={t('wiki_page_type')} />
+          </div>
+        )}
       </GridBox>
     </FormModal>
   )
