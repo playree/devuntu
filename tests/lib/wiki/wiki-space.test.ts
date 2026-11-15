@@ -40,6 +40,7 @@ const errorTypeOf = async (promise: Promise<unknown>) => {
 beforeEach(() => {
   vi.clearAllMocks()
   vi.mocked(prisma.wikiSpace.create).mockResolvedValue({ id: 's1' } as never)
+  vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ type: 'mixed' } as never)
 })
 
 describe('createWikiSpace', () => {
@@ -103,6 +104,12 @@ describe('updateWikiSpace / setWikiSpaceArchived', () => {
     vi.mocked(prisma.wikiPage.count).mockResolvedValue(2)
     expect(await errorTypeOf(updateWikiSpace(actor, 's1', { type: 'design_doc' }))).toBe(WIKI_SPACE_HAS_NORMAL_PAGES)
     expect(prisma.wikiSpace.update).not.toHaveBeenCalled()
+  })
+
+  it('すでに設計書スペースなら、区分を送っても通常ページを数えない', async () => {
+    vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ type: 'design_doc' } as never)
+    await updateWikiSpace(actor, 's1', { name: 'x', type: 'design_doc' })
+    expect(prisma.wikiPage.count).not.toHaveBeenCalled()
   })
 
   it('混合に戻すときは通常ページを数えない', async () => {

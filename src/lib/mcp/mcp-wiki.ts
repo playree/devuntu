@@ -274,13 +274,9 @@ const createWikiPageForMcp = async (auth: ResourceAuth, input: McpSaveWikiPageIn
     {
       title: input.title,
       content: input.content,
-      // 省略時は設計書スペースなら設計書、ほかは本文の front matter から決める
-      // (markdown-design-doc スキルが書く設計書は type: design_doc を持つ)
-      type:
-        input.type ??
-        (access.type === 'design_doc' || (input.content && hasDesignDocFrontMatter(input.content))
-          ? 'design_doc'
-          : 'page'),
+      // 省略時は本文の front matter から設計書と分かればそうし(markdown-design-doc スキルが書く設計書は
+      // type: design_doc を持つ)、それ以外はスペースの区分から決めさせる(ロックを取ってから区分を読むため)
+      type: input.type ?? (input.content && hasDesignDocFrontMatter(input.content) ? 'design_doc' : undefined),
       parentId,
       position: toPosition(input.position),
       tagIds,

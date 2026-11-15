@@ -102,7 +102,7 @@ Proxy は通るリクエストのボディを既定 10MB まで複製して溜�
   - 判定は `isWikiPageTypeAllowed`(`src/lib/wiki/wiki-rule.ts`)。ページの作成・種類の変更・版の復元で、スペース行のロックを取った後に読んだ区分(`WikiSpaceAccess.type`)で弾く(`WIKI_PAGE_TYPE_NOT_ALLOWED`)。種類を省いた作成は区分の既定(`defaultWikiPageType`)にする
   - `design_doc` への切り替え(`updateWikiSpace`)は、同じスペース行のロック(`FOR NO KEY UPDATE`)を取ってから通常ページを数え、1件でもあれば拒む(`WIKI_SPACE_HAS_NORMAL_PAGES`)。ページの書き込みもロックの後で区分を読むので、切り替えと同時に通常ページが作られることはない
   - スペースのトップの設計書一覧(`wiki/[key]/design-doc-index.tsx`)は、`getWikiDesignDocIndex`(`src/lib/wiki/wiki-design-doc-index.ts`)が返す設計書の front matter(本文は返さない)を、embed の `DesignDocList`(`markdown-design-doc-viewer-embed/react`)に渡して描く。
-    列(版数など)は embed が mddv と同じ解釈で front matter から取り出す。フォルダには親ページのタイトルのパス、ファイル名にはページ番号を渡し、リンクは `onOpenLink` で `router.push` する
+    列(版数など)は embed が mddv と同じ解釈で front matter から取り出す。フォルダには親ページのタイトルのパス、ファイル名にはページ番号を渡し(組み立ては `src/lib/wiki/wiki-design-doc-list.ts`)、リンクは `onOpenLink` で `router.push` する
 - 検索(`src/lib/wiki/wiki-search.ts`)は `$queryRaw` で組む
   - 語ごとに、3文字以上なら「title / content の ILIKE(`gin_trgm_ops` の GIN 索引で BitmapOr)とタグ名の完全一致の UNION」に `IN` で当てる。タグとの OR を EXISTS で書くと索引が使われなくなるため
   - 2文字以下の語はトライグラムが作れず索引が効かないので、他の語で絞った行へのフィルタとして書く(すべての語が短いときだけ全件を走査する)

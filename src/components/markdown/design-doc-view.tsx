@@ -26,6 +26,10 @@ const DesignDocList = dynamic(() => import('./design-doc-list-core'), {
 /** ビューアの文言の言語。ビューアは ja / en だけなので、ほかの言語は en にする */
 export const viewerLang = (locale: string): 'ja' | 'en' => (locale === 'ja' ? 'ja' : 'en')
 
+/** ビューアのテーマ。テーマが決まる前は OS の設定に従わせる */
+const viewerTheme = (resolvedTheme: string | undefined): 'light' | 'dark' | 'auto' =>
+  resolvedTheme === 'dark' ? 'dark' : resolvedTheme === 'light' ? 'light' : 'auto'
+
 /** ワイヤーフレームの別ファイルは扱わない。本文に書かれたパスを同一オリジンへ fetch させないため、常に読めないとする */
 export const readNoFile = async () => undefined
 
@@ -94,7 +98,7 @@ export const DesignDocView: FC<{
         documentId={documentId}
         lang={viewerLang(locale)}
         splitMinWidth={SPLIT_MIN_WIDTH}
-        theme={resolvedTheme === 'dark' ? 'dark' : resolvedTheme === 'light' ? 'light' : 'auto'}
+        theme={viewerTheme(resolvedTheme)}
         readFile={readNoFile}
         resolveResource={resolveResource}
         onOpenLink={openLink}
@@ -132,7 +136,7 @@ export const DesignDocListView: FC<{
         keepOrder
         limitContentWidth={false}
         lang={viewerLang(locale)}
-        theme={resolvedTheme === 'dark' ? 'dark' : resolvedTheme === 'light' ? 'light' : 'auto'}
+        theme={viewerTheme(resolvedTheme)}
         onOpenLink={openLink}
       />
     </div>

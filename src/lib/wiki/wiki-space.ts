@@ -107,8 +107,8 @@ export const updateWikiSpace = async (actor: Actor, spaceId: string, patch: Part
   assertDescription(patch.description)
   const space = await prisma.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT "id" FROM "wiki_space" WHERE "id" = ${spaceId} FOR NO KEY UPDATE`
-    await assertWikiSpaceAccess(actor, spaceId, 'manage', tx)
-    if (patch.type === 'design_doc') {
+    const access = await assertWikiSpaceAccess(actor, spaceId, 'manage', tx)
+    if (patch.type === 'design_doc' && access.type !== 'design_doc') {
       const normalPages = await tx.wikiPage.count({ where: { spaceId, type: 'page' } })
       if (normalPages > 0) {
         throw errHasNormalPages(normalPages)
