@@ -153,6 +153,15 @@ export const frontMatterBlock = (content: string): string | null => {
   return lines && ['---', ...lines, '---', ''].join('\n')
 }
 
+/** 本文の1行目が front matter の開始の区切りか(閉じの区切りまでは見ない) */
+export const startsWithFrontMatter = (content: string): boolean =>
+  FRONT_MATTER_OPEN.test(
+    content
+      .replace(/^\uFEFF/, '')
+      .split('\n', 1)[0]
+      .replace(/\r$/, ''),
+  )
+
 /** 本文が front matter を持つか */
 export const hasFrontMatter = (content: string): boolean => frontMatterLines(content) !== null
 

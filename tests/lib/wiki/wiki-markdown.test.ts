@@ -11,6 +11,7 @@ import {
   hasDesignDocFrontMatter,
   hasFrontMatter,
   listMarkdownHeadings,
+  startsWithFrontMatter,
 } from '@/lib/wiki/wiki-markdown'
 import { describe, expect, it } from 'vitest'
 import { parse } from 'yaml'
@@ -149,6 +150,15 @@ describe('境界のケース', () => {
 
   it('重なって現れる oldText も複数として数える', () => {
     expect(() => applyTextEdits('aaa', [{ oldText: 'aa', newText: 'b' }])).toThrow('matches 2 places')
+  })
+})
+
+describe('startsWithFrontMatter', () => {
+  it('1行目が開始の区切りなら、閉じの区切りが無くても真', () => {
+    expect(startsWithFrontMatter('---\ntype: design_doc')).toBe(true)
+    expect(startsWithFrontMatter('\uFEFF--- \r\nversion: 1.0\r\n---')).toBe(true)
+    expect(startsWithFrontMatter('# 概要\n---\n')).toBe(false)
+    expect(startsWithFrontMatter('')).toBe(false)
   })
 })
 
