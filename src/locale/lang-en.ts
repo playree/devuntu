@@ -655,6 +655,7 @@ export const en: DefaultLocaleItems = {
   wiki_delete_revision: 'Delete this version',
   wiki_deleted_pages: 'Deleted pages',
   wiki_design_doc_editor: 'Design doc editor',
+  wiki_design_doc_filter: 'Filter by title, number or metadata',
   wiki_design_doc_source: 'Source',
   wiki_design_docs: 'Design docs',
   wiki_move: 'Move',

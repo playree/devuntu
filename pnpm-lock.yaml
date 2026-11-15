@@ -278,8 +278,8 @@ importers:
         specifier: 0.48.0
         version: 0.48.0(@typescript/typescript6@6.0.2)
       markdown-design-doc-viewer-embed:
-        specifier: ^1.5.4
-        version: 1.5.4(mermaid@12.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+        specifier: ^1.5.5
+        version: 1.5.5(mermaid@12.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       mdast-util-gfm-footnote:
         specifier: ^2.1.0
         version: 2.1.0
@@ -4722,8 +4722,8 @@ packages:
   magic-string@1.4.4:
     resolution: {integrity: sha512-jQz9sVhrZuphH4NrAIHSgkDJCluQO7Ioi4KGRLa7aTUjAODQ13hENX0YIytqYE/rIkO485gQG2LeBxJaW53kkQ==}
 
-  markdown-design-doc-viewer-embed@1.5.4:
-    resolution: {integrity: sha512-biOONhEYqWRMhmJqMuNmSOw88iBxHuOL1vA5SM6R95iP56+SVn8OVl7FvGjVzRzdkA+QMvdndpLqepu7L5ECFQ==}
+  markdown-design-doc-viewer-embed@1.5.5:
+    resolution: {integrity: sha512-UAXhy1CUvBL+B2rw+G72zi/Gg92oGbzXBOQYxPgTIlZZitT/YUyds8gkwXsHCaRvX1iL9ZLAhShRIHW3CTC+SQ==}
     peerDependencies:
       mermaid: ^12.3.0
       react: ^19.3.1
@@ -10908,7 +10908,7 @@ snapshots:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.6.0
 
-  markdown-design-doc-viewer-embed@1.5.4(mermaid@12.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1):
+  markdown-design-doc-viewer-embed@1.5.5(mermaid@12.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1):
     dependencies:
       mermaid: 12.3.0
     optionalDependencies:

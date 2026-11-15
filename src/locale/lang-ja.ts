@@ -654,6 +654,7 @@ export const ja: DefaultLocaleItems = {
   wiki_delete_revision: 'この版を削除',
   wiki_deleted_pages: '削除済みのページ',
   wiki_design_doc_editor: '設計書の編集',
+  wiki_design_doc_filter: 'タイトル・番号・メタ情報で絞り込み',
   wiki_design_doc_source: 'ソース',
   wiki_design_docs: '設計書一覧',
   wiki_move: '移動',

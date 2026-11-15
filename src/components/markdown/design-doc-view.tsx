@@ -3,7 +3,7 @@
 import { useResolvedTheme } from '@/lib/use-resolved-theme'
 import { useLocale } from '@/locale/client'
 import { Skeleton } from '@heroui/react'
-import type { DesignDocViewerHandle } from 'markdown-design-doc-viewer-embed/react'
+import type { DesignDocListDocument, DesignDocViewerHandle } from 'markdown-design-doc-viewer-embed/react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { FC, RefObject, useCallback } from 'react'
@@ -16,6 +16,11 @@ const SPLIT_MIN_WIDTH = 900
 const DesignDocViewer = dynamic(() => import('./design-doc-viewer-core'), {
   ssr: false,
   loading: () => <Skeleton className='h-full w-full rounded-xl' />,
+})
+
+const DesignDocList = dynamic(() => import('./design-doc-list-core'), {
+  ssr: false,
+  loading: () => <Skeleton className='h-40 w-full rounded-xl' />,
 })
 
 /** ビューアの文言の言語。ビューアは ja / en だけなので、ほかの言語は en にする */
@@ -94,6 +99,41 @@ export const DesignDocView: FC<{
         resolveResource={resolveResource}
         onOpenLink={openLink}
         onRevealLine={onRevealLine}
+      />
+    </div>
+  )
+}
+
+/**
+ * 設計書一覧(Markdown Design Doc Viewer の拡張と同じ表)。フォルダごとの表に、front matter の版数・ステータスなどを並べ、
+ * 絞り込みと列の並べ替えができる。中でスクロールせず、一覧の高さで表示する
+ */
+export const DesignDocListView: FC<{
+  /** 変わったときだけ表示し直すので、取り直したとき以外は同じ配列を渡すこと */
+  documents: DesignDocListDocument[]
+  title: string
+  fileLabel: string
+  filterPlaceholder: string
+  empty: string
+  className?: string
+}> = ({ documents, title, fileLabel, filterPlaceholder, empty, className }) => {
+  const { locale } = useLocale()
+  const resolvedTheme = useResolvedTheme()
+  const openLink = useOpenLink()
+
+  return (
+    <div className={className}>
+      <DesignDocList
+        documents={documents}
+        title={title}
+        fileLabel={fileLabel}
+        filterPlaceholder={filterPlaceholder}
+        empty={empty}
+        keepOrder
+        limitContentWidth={false}
+        lang={viewerLang(locale)}
+        theme={resolvedTheme === 'dark' ? 'dark' : resolvedTheme === 'light' ? 'light' : 'auto'}
+        onOpenLink={openLink}
       />
     </div>
   )

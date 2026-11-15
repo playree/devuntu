@@ -14,10 +14,11 @@ import { useRouter } from 'next/navigation'
 import { FC } from 'react'
 import { ChildPages } from './child-pages'
 import { DeletedPagesModal } from './deleted-pages'
+import { WikiDesignDocIndex } from './design-doc-index'
 import { CreatePageModal } from './page-modals'
 import { useWikiSpace } from './space-context'
 
-/** スペースのトップ。説明とスペース直下のページ */
+/** スペースのトップ。説明とスペース直下のページ(設計書スペースでは設計書一覧) */
 export const WikiSpaceTopClient: FC = () => {
   const { t } = useLocale()
   const router = useRouter()
@@ -71,6 +72,8 @@ export const WikiSpaceTopClient: FC = () => {
 
       {!access.canView ? (
         <NoticePanel>{t('msg_wiki_manage_only')}</NoticePanel>
+      ) : space.type === 'design_doc' ? (
+        <WikiDesignDocIndex />
       ) : tree.length === 0 ? (
         <p className='text-muted text-sm'>{t('msg_no_wiki_pages')}</p>
       ) : (
