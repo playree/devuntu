@@ -334,6 +334,7 @@ export const en: DefaultLocaleItems = {
   export_html: 'Export HTML',
   export_markdown: 'Export Markdown',
   export_pdf: 'Export PDF (Print)',
+  field_help: 'Help for ${label}',
   filter: 'Filter',
   free_memory: 'Free Memory',
   git_repositories: 'Linked Repositories',

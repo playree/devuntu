@@ -333,6 +333,7 @@ export const ja: DefaultLocaleItems = {
   export_html: 'HTML出力',
   export_markdown: 'Markdown出力',
   export_pdf: 'PDF出力(印刷)',
+  field_help: '${label} のヘルプ',
   filter: 'フィルタ',
   free_memory: '空きメモリ',
   git_repositories: '対応付けたリポジトリ',

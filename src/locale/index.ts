@@ -325,6 +325,7 @@ export type LocaleItemBase =
   | 'export_html'
   | 'export_markdown'
   | 'export_pdf'
+  | 'field_help'
   | 'filter'
   | 'free_memory'
   | 'git_repositories'

@@ -87,18 +87,18 @@ export const WikiSpaceProfile: FC<{ space: Space; reload: () => Promise<void> }>
             control={control}
             name='visibility'
             label={t('wiki_visibility')}
+            help={t('msg_wiki_visibility')}
             options={Object.entries(visibilityOptions).map(([value, label]) => ({ value, label }))}
           />
-          <p className='text-muted text-xs'>{t('msg_wiki_visibility')}</p>
         </div>
         <div className='col-span-12'>
           <RadioCtrl
             control={control}
             name='type'
             label={t('wiki_space_type')}
+            help={t('msg_wiki_space_type')}
             options={Object.entries(spaceTypeOptions).map(([value, label]) => ({ value, label }))}
           />
-          <p className='text-muted text-xs'>{t('msg_wiki_space_type')}</p>
         </div>
         <div className='col-span-12 flex items-center gap-2'>
           <MultiButton className='ml-auto' type='submit' size='sm' icon={<CheckIcon />} isPending={isSubmitting}>
