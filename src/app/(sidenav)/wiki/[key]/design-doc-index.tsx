@@ -27,16 +27,21 @@ export const WikiDesignDocIndex: FC = () => {
   // 取り直したときだけ作り直す(embed の一覧は渡す配列が変わると描き直す)
   const documents = useMemo(() => (data ? toDesignDocListDocuments(space.key, data) : []), [data, space.key])
 
-  if (isLoading) {
-    return <PanelSkeleton />
-  }
   return (
-    <DesignDocListView
-      documents={documents}
-      title={t('wiki_design_docs')}
-      fileLabel={t('wiki_page_number')}
-      filterPlaceholder={t('wiki_design_doc_filter')}
-      empty={t('msg_no_wiki_design_docs')}
-    />
+    <div // 設計書ページと同じく、表を広く見せるため幅の制限(max-w-4xl)を外す
+      data-wide=''
+    >
+      {isLoading ? (
+        <PanelSkeleton />
+      ) : (
+        <DesignDocListView
+          documents={documents}
+          title={t('wiki_design_docs')}
+          fileLabel={t('wiki_page_number')}
+          filterPlaceholder={t('wiki_design_doc_filter')}
+          empty={t('msg_no_wiki_design_docs')}
+        />
+      )}
+    </div>
   )
 }

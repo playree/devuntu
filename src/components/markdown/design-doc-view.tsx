@@ -2,7 +2,7 @@
 
 import { useResolvedTheme } from '@/lib/use-resolved-theme'
 import { useLocale } from '@/locale/client'
-import { Skeleton } from '@heroui/react'
+import { cn, Skeleton } from '@heroui/react'
 import type { DesignDocListDocument, DesignDocViewerHandle } from 'markdown-design-doc-viewer-embed/react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
@@ -126,7 +126,9 @@ export const DesignDocListView: FC<{
   const openLink = useOpenLink()
 
   return (
-    <div className={className}>
+    <div // 設計書ページのビューアと同じ枠。内側の余白は globals.css の .design-doc-list で取る
+      className={cn('design-doc-list border-default-200 overflow-hidden rounded-xl border', className)}
+    >
       <DesignDocList
         documents={documents}
         title={title}
