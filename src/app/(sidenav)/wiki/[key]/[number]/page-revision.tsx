@@ -127,6 +127,7 @@ export const usePastPageView = (past: Revision | undefined) => {
   return {
     id: past.id,
     number: past.number,
+    tagNames: past.tagNames,
     title: past.title,
     type: past.type,
     tags: resolveWikiTagNames(past.tagNames, tags),
@@ -266,13 +267,17 @@ export const WikiRevisionDiffToggle: FC<{ revisions: WikiPageRevisions }> = ({
   )
 }
 
-type RevisionFields = { title: string; type: WikiPageType; tags: readonly { name: string }[] }
+/** タグは名前で比べる(過去の版のタグは、その後に削除されていても名前で残る) */
+type RevisionFields = { title: string; type: WikiPageType; tagNames: readonly string[] }
 
-const tagText = (tags: RevisionFields['tags']) =>
-  tags
-    .map(({ name }) => name)
-    .sort()
-    .join(', ') || '-'
+const sortedNames = (names: readonly string[]) => [...names].sort()
+
+const isSameNames = (a: readonly string[], b: readonly string[]) => {
+  const sortedB = sortedNames(b)
+  return a.length === b.length && sortedNames(a).every((name, index) => name === sortedB[index])
+}
+
+const tagText = (names: readonly string[]) => sortedNames(names).join(', ') || '-'
 
 /** 差分の表示中に、本文の差分とは別に、選んだ過去の版から最新までに変わったタイトル・種類・タグを出す */
 export const WikiRevisionFieldChanges: FC<{ before: RevisionFields; after: RevisionFields }> = ({ before, after }) => {
@@ -289,8 +294,13 @@ export const WikiRevisionFieldChanges: FC<{ before: RevisionFields; after: Revis
         after={t(`wiki_page_type_${after.type}`)}
       />
     ),
-    tagText(before.tags) !== tagText(after.tags) && (
-      <RevisionFieldChange key='tags' label={t('tags')} before={tagText(before.tags)} after={tagText(after.tags)} />
+    !isSameNames(before.tagNames, after.tagNames) && (
+      <RevisionFieldChange
+        key='tags'
+        label={t('tags')}
+        before={tagText(before.tagNames)}
+        after={tagText(after.tagNames)}
+      />
     ),
   ].filter(Boolean)
   return changes.length > 0 && <div className='space-y-1'>{changes}</div>
