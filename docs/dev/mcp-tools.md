@@ -72,10 +72,10 @@ MCP サーバー(`/api/mcp`)が提供するツールと、その権限・入力�
 OAuth / ユーザーの MCP トークンで接続した場合だけ使える
 (エージェントは受け入れ条件の結果を `finish_agent_task` で申告する。スキルを入れる場所は利用者に確かめさせるので、利用者のいないエージェントには出さない)。
 
-| ツール                       | 用途                                                                                                                         | 入力                    |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| `report_acceptance_criteria` | 受け入れ条件ごとの充足と根拠を自己申告として記録する                                                                         | `ticketId` / `criteria` |
-| `get_skill_install_guide`    | AI ツールのスキル(今は markdown-design-doc)を利用者のマシンへ入れる手順を返す([スキルのインストール](#スキルのインストール)) | `skill`                 |
+| ツール                       | 用途                                                                                                                                                            | 入力                    |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `report_acceptance_criteria` | 受け入れ条件ごとの充足と根拠を自己申告として記録する                                                                                                            | `ticketId` / `criteria` |
+| `get_skill_install_guide`    | AI ツールのスキル(今は markdown-design-doc)を利用者のマシンへ入れる手順を返す。ファイルは Devuntu から取得させる([スキルのインストール](#スキルのインストール)) | `skill`                 |
 
 - `update_ticket` と同じ制限を受ける。`criteria` の `id` は `get_ticket` の `acceptanceCriteria` から取り、
   各項目の充足(`met`)と根拠(`evidence`)がチケット詳細に自己申告として表示される。報告しなかった項目は前回の申告のまま残り、
@@ -267,23 +267,25 @@ instructions には `wikiSpaces` の読み方(関係する文書を `search_wiki
 ## スキルのインストール
 
 `get_skill_install_guide` は、AI ツールのスキル([Agent Skills](https://agentskills.io/))を利用者のマシンへ入れる手順を返す。
-今は Wiki の設計書ページの記法を教える markdown-design-doc だけを扱う(`skill` は列挙値なので、増やすときはここに足す)。
-実装は `src/lib/mcp/mcp-skill.ts`。
+今は Wiki の設計書ページの記法を教える markdown-design-doc だけを扱う(`skill` は列挙値なので、増やすときは `src/lib/ai-skill.ts` の `AI_SKILLS` に足す)。
+手順の本文と配布は `src/lib/ai-skill.ts`、ツールの登録は `src/lib/mcp/mcp-skill.ts`。
 
-- スキルの本体は Devuntu に持たない。配布元([Markdown Design Doc Viewer](https://github.com/playree/markdown-design-doc-viewer))の
-  GitHub リリースにある `markdown-design-doc-skill.zip` を、AI ツールが `curl` + `unzip`(Windows は `Invoke-WebRequest` + `Expand-Archive`)で
-  取得・展開する。サーバーは zip を取得しない(外部への通信も zip を扱うライブラリも要らない)
-- zip の URL は `releases/latest` ではなく、Wiki の表示に使っている `markdown-design-doc-viewer-embed` のバージョンのタグ
-  (`releases/download/v<version>/...`)に固定する
-  - ビューアが描ける記法とスキルが教える記法をそろえるため(embed を上げればスキルも同じ版になる)
-  - 同じリポジトリで Desktop app のリリース(`desktop-v*`)も作られ、それが Latest になると `latest/download` の zip が見つからないため
-- 入れる場所(Claude Code / Codex / OpenCode のユーザー全体かプロジェクトか)は AI に利用者へ確かめさせる。既にあれば置き換えることを伝えさせる。
-  ファイルを書けないクライアント(claude.ai など)には、zip の URL を利用者に渡してスキルの設定からアップロードしてもらうよう案内する
-- 手順は失敗したら止まり(`set -e` / `$ErrorActionPreference = 'Stop'`)、一時フォルダ(`mktemp -d` など)に展開して `SKILL.md` を確かめてから
-  既存のフォルダと置き換える。取得に失敗しても入っていたスキルは消えない
+- スキルの本体は依存パッケージに同梱されたものを使う。markdown-design-doc は `markdown-design-doc-viewer-embed/skill` の `agentSkill`
+  (`name` / `revision` / `files`)で、Wiki の表示に使っている embed と常に同じ版になる
+- ファイルは Devuntu が `/api/skills/<name>/<path>` で認証なしに配信し(公開物で秘密を含まないため)、AI ツールは手順の
+  `curl`(Windows は `Invoke-WebRequest`)でそこから取得する。Devuntu もクライアントもインターネットに出ないので、閉じた環境でも入れられる。
+  配信するのは `files` のキーと完全一致したパスだけ。embed を上げた直後に前の版が混ざらないよう `Cache-Control: no-cache` にする
+- 既に入っているコピーは、SKILL.md の front matter の `metadata.revision`(引用符付きの文字列なので整数として比べさせる)で新旧を判定させる。
+  同じでファイルがそろっていれば何もしない、大きい(新しい)ものは置き換えない、小さい・無いものは利用者に確かめてから置き換える
+- 入れる場所(Claude Code / Codex / OpenCode のユーザー全体かプロジェクトか)は AI に利用者へ確かめさせる
+- 手順は失敗したら止まり(`set -e` / `$ErrorActionPreference = 'Stop'`)、スキルのフォルダの中の一時フォルダ(`.<name>-XXXXXX`)に
+  すべてのファイルを取得して `SKILL.md` を確かめてから、既存のフォルダと入れ替える。同じファイルシステム内の名前の付け替えなので途中で欠けず、
+  入れ替えに失敗したら既存のフォルダを戻す。取得に失敗しても入っていたスキルは消えない
+- ファイルを書けないクライアント(claude.ai など)にだけ、配布元の GitHub リリースの `markdown-design-doc-skill.zip` を案内する。
+  URL は `releases/latest` ではなく embed のバージョンのタグに固定する(同じリポジトリの Desktop app のリリースが Latest になると
+  `latest/download` の zip が見つからないため)。embed を上げるときは、そのタグのリリースに zip があることを確かめる
 - エージェントの経路には出さない(入れる場所を確かめる相手がいないため)。`save_wiki_page` の description も、人の経路でだけ
   スキルが無ければこのツールで入れられることを利用者へ提案させる
-- `markdown-design-doc-viewer-embed` を上げるときは、そのバージョンのタグのリリースに `markdown-design-doc-skill.zip` があることを確かめる
 
 ## 画像の添付
 
