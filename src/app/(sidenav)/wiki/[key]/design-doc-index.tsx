@@ -1,6 +1,6 @@
 'use client'
 
-import { PanelSkeleton } from '@/components/general/panel'
+import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { DesignDocListView } from '@/components/markdown/design-doc-view'
 import { useActionData } from '@/lib/action/action-client'
 import { toDesignDocListDocuments } from '@/lib/wiki/wiki-design-doc-list'
@@ -33,7 +33,7 @@ export const WikiDesignDocIndex: FC = () => {
     >
       {isLoading ? (
         <PanelSkeleton />
-      ) : (
+      ) : data ? (
         <DesignDocListView
           documents={documents}
           title={t('wiki_design_docs')}
@@ -41,6 +41,12 @@ export const WikiDesignDocIndex: FC = () => {
           filterPlaceholder={t('wiki_design_doc_filter')}
           empty={t('msg_no_wiki_design_docs')}
         />
+      ) : (
+        <NoticePanel // 取得に失敗した(空の一覧と区別する)
+          status='danger'
+        >
+          {t('msg_wiki_design_docs_load_failed')}
+        </NoticePanel>
       )}
     </div>
   )

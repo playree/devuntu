@@ -1,6 +1,6 @@
 'use client'
 
-import { cn, Popover, PopoverContentProps } from '@heroui/react'
+import { cn, Popover, PopoverContentProps, popoverVariants } from '@heroui/react'
 import { FC, PointerEvent, ReactNode, useEffect, useRef, useState } from 'react'
 
 /** 閉じた状態 / マウスを乗せて開いた状態 / 押して開いた状態 */
@@ -81,9 +81,18 @@ export const HoverPopover: FC<{
         className={contentClassName}
         {...hoverHandlers}
       >
-        <Popover.Dialog aria-label={dialogAriaLabel ?? ariaLabel} className={dialogClassName}>
-          {children}
-        </Popover.Dialog>
+        {mode === 'hover' ? (
+          <div // Dialog はマウント時にフォーカスを奪うため、マウスで開いたときは入力中の欄からフォーカスを動かさない素の要素で出す
+            data-slot='popover-dialog'
+            className={popoverVariants().dialog({ className: dialogClassName })}
+          >
+            {children}
+          </div>
+        ) : (
+          <Popover.Dialog aria-label={dialogAriaLabel ?? ariaLabel} className={dialogClassName}>
+            {children}
+          </Popover.Dialog>
+        )}
       </Popover.Content>
     </Popover>
   )

@@ -922,6 +922,7 @@ Please copy and use the connection information above.
     'Members of the board (direct or via groups) can use this space with the chosen role. You can assign boards you belong to.',
   msg_wiki_deleted_pages_hint:
     'Deleted pages can be restored only for ${days} days after deletion. Pages deleted together with their descendants are restored one page at a time.',
+  msg_wiki_design_docs_load_failed: 'Failed to load the design doc list. Please wait a moment and reload.',
   msg_wiki_manage_only:
     'You are not assigned to this space, so you can only change its settings. Assign yourself to read its pages.',
   msg_wiki_message_not_saved: 'Nothing changed, so the commit message was not kept.',

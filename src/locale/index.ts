@@ -862,6 +862,7 @@ export type LocaleItemBase =
   | 'msg_widget_load_failed'
   | 'msg_wiki_board_assign'
   | 'msg_wiki_deleted_pages_hint'
+  | 'msg_wiki_design_docs_load_failed'
   | 'msg_wiki_manage_only'
   | 'msg_wiki_message_not_saved'
   | 'msg_wiki_page_conflict'
