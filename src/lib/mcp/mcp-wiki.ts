@@ -402,6 +402,15 @@ const zWikiTicketId = z
   .optional()
   .describe('Ticket you are working on (display ID allowed). Recorded in the page history')
 
+/**
+ * 設計書を書くスキルの案内。スキルを入れるのは利用者のマシンへの変更なので、人の経路でだけ入れ方のツールを勧める
+ * (エージェントには `get_skill_install_guide` を登録していない)
+ */
+const designDocSkillNote = (auth: ResourceAuth) =>
+  auth.kind === 'agent'
+    ? 'write it with the markdown-design-doc skill if you have it'
+    : 'write it with the markdown-design-doc skill; if you do not have it, offer the user to install it with get_skill_install_guide'
+
 export const registerWikiTools = (server: McpServer, auth: ResourceAuth) => {
   server.registerTool(
     'list_wiki_spaces',
@@ -498,7 +507,7 @@ export const registerWikiTools = (server: McpServer, auth: ResourceAuth) => {
         'Before updating, read the page with get_wiki_page and pass its updatedAt as expectedUpdatedAt so you do not overwrite changes by others. ' +
         'For partial changes use edits instead of sending the whole content: each oldText must match exactly one place, and edits are checked against the content as you read it. ' +
         'parent / position move the page within the space. tags replace all tags of the page and must be existing tag names of the space. ' +
-        'type design_doc makes the page a design document in the Markdown Design Doc Viewer format (write it with the markdown-design-doc skill if you have it); ' +
+        `type design_doc makes the page a design document in the Markdown Design Doc Viewer format (${designDocSkillNote(auth)}); ` +
         'when creating without type, a content whose front matter has type: design_doc becomes one. Omit type when updating to keep it. ' +
         'In a design doc space (type design_doc in list_wiki_spaces), pages are always design docs: type page is an error, and creating without type makes a design doc. ' +
         'Write only what the user asked for or agreed to; every change is kept in the page history, from which users can restore it',

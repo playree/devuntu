@@ -87,6 +87,7 @@ describe('createDevuntuMcpServer', () => {
         'get_image',
         'create_file_upload_token',
         'get_file',
+        'get_skill_install_guide',
       ]),
     )
   })
@@ -151,6 +152,7 @@ describe('createDevuntuMcpServer', () => {
       get_image: 'readOnly',
       get_file: 'readOnly',
       get_agent_setup_guide: 'readOnly',
+      get_skill_install_guide: 'readOnly',
       get_agent_task: 'readOnly',
       get_board_notes: 'readOnly',
       list_wiki_spaces: 'readOnly',
@@ -197,6 +199,7 @@ describe('createDevuntuMcpServer', () => {
         'search_tickets',
         'get_image',
         'get_agent_setup_guide',
+        'get_skill_install_guide',
         'link_ticket_artifact',
         'get_board_notes',
         'save_board_note',
@@ -212,6 +215,18 @@ describe('createDevuntuMcpServer', () => {
     }
     const { tools } = await (await connectDevuntuMcp(agentAuth)).listTools()
     expect(tools.map((tool) => tool.name)).not.toContain('report_acceptance_criteria')
+  })
+
+  it('get_skill_install_guide は人の経路にだけ出し、save_wiki_page もエージェントにはスキルを入れるよう勧めない', async () => {
+    const toolsOf = async (authKind: typeof auth) => (await (await connectDevuntuMcp(authKind)).listTools()).tools
+    for (const humanAuth of [auth, patAuth]) {
+      const tools = await toolsOf(humanAuth)
+      expect(tools.map((tool) => tool.name)).toContain('get_skill_install_guide')
+      expect(tools.find((tool) => tool.name === 'save_wiki_page')?.description).toContain('get_skill_install_guide')
+    }
+    const tools = await toolsOf(agentAuth)
+    expect(tools.map((tool) => tool.name)).not.toContain('get_skill_install_guide')
+    expect(tools.find((tool) => tool.name === 'save_wiki_page')?.description).not.toContain('get_skill_install_guide')
   })
 
   it('add_ticket_comment の説明: 人にはアナウンスを利用者の了承後に投稿させ、エージェントには報告で提案させる', async () => {

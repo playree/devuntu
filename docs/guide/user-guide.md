@@ -412,6 +412,7 @@ Wiki のページも同じ仕組みで出力できる(Markdown も選べる。[W
 `%% @link-headings` を付けた mermaid のシーケンス図・フローチャート・ER 図・状態遷移図と、その後の見出しが矢印(ノード)ごとに結び付き、図の横に手順が並ぶ。
 front matter の `type: design_doc` は設計書ヘッダ(タイトル・版数・ステータスなど)になり、項目の表(電文定義など)や目次も VS Code 拡張と同じ見た目で出る。
 書き方は Markdown Design Doc Viewer の README(「Writing linked documents」)を参照。
+AI に書かせる場合は、Devuntu の MCP から入れられる markdown-design-doc スキルを使う([AIとの連携](ai.md#wiki-を-ai-から使う))。
 
 - **種類の決め方** — 作成時に「通常 / 設計書」を選ぶ。既存のページは、編集中にタイトルの横の「種類」で切り替えて保存する(版にも残り、版を戻すと種類も戻る)
   - 通常から設計書にすると、本文に front matter が無ければ最小のもの(`type: design_doc` とタイトル)を先頭に足す
