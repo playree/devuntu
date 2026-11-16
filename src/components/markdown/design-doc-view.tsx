@@ -84,7 +84,13 @@ export const DesignDocView: FC<{
   /** ダブルクリックした行(0 始まり)。エディタの該当行へ移すときに渡す */
   onRevealLine?: (line: number) => void
   viewerRef?: RefObject<DesignDocViewerHandle | null>
-}> = ({ markdown, documentId, className, onRevealLine, viewerRef }) => {
+  /** 比べる版(古い版)の本文。渡すと `markdown` をその版からの差分付きで表示する */
+  compareWith?: string
+  /** 比べる版の説明。差分バーに出る */
+  compareLabel?: string
+  /** 差分バーを閉じたとき。ここで `compareWith` を外す */
+  onCloseDiff?: () => void
+}> = ({ markdown, documentId, className, onRevealLine, viewerRef, compareWith, compareLabel, onCloseDiff }) => {
   const { locale } = useLocale()
   const resolvedTheme = useResolvedTheme()
   const openLink = useOpenLink()
@@ -103,6 +109,9 @@ export const DesignDocView: FC<{
         resolveResource={resolveResource}
         onOpenLink={openLink}
         onRevealLine={onRevealLine}
+        compareWith={compareWith}
+        compareLabel={compareLabel}
+        onCloseDiff={onCloseDiff}
       />
     </div>
   )

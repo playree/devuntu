@@ -10,6 +10,7 @@ import { DesignDocView } from '@/components/markdown/design-doc-view'
 import { MarkdownField } from '@/components/markdown/markdown-editor'
 import { MarkdownToc } from '@/components/markdown/markdown-toc'
 import { notify } from '@/components/notify'
+import { TextDiffView } from '@/components/text-diff-view'
 import { WikiTagLinks } from '@/components/wiki-tag'
 import type { WikiPageType } from '@/generated/prisma/enums'
 import { parseAction } from '@/lib/action/action-client'
@@ -29,7 +30,10 @@ import {
   usePastPageView,
   useWikiPageRevisions,
   WikiPastRevisionNotice,
-  WikiRevisionActions,
+  WikiRevisionDeleteButton,
+  WikiRevisionDiffToggle,
+  WikiRevisionFieldChanges,
+  WikiRevisionRestoreButton,
   WikiRevisionSelect,
 } from './page-revision'
 import { GetWikiPageReturnType, updateWikiPage } from './server'
@@ -41,6 +45,7 @@ type Page = NonNullable<GetWikiPageReturnType>['page']
  * 作成直後(`?edit=1`)は編集から始める。
  * 設計書のページは Markdown Design Doc Viewer で表示し、ソースとプレビューで編集する(幅の制限を外す)。
  * 表示中は更新者・日時から版を選べ、過去の版はその時点の内容で表示する(編集はできず、ロールバックと削除だけ)。
+ * 過去の版からは最新への差分も出せる(設計書はビューアの差分表示、通常のページは行単位の差分)。
  * 表示中の版は PDF / HTML / Markdown に出力できる
  */
 export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Promise<void> }> = ({
@@ -172,7 +177,9 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
   const pastView = usePastPageView(isEditing ? undefined : revisions.past)
   const shown = pastView ?? { title: page.title, type: page.type, tags: page.tags.map(({ tag }) => tag) }
   const shownContent = pastView ? revisions.pastContent : page.content
-  const isDesignDoc = (isEditing ? typeDraft : shown.type) === 'design_doc'
+  // 差分は最新の内容に重ねて出すので、版の間で種類が変わっていても最新の種類で表示する
+  const isDiff = !isEditing && pastView !== undefined && revisions.isDiff
+  const isDesignDoc = (isEditing ? typeDraft : isDiff ? page.type : shown.type) === 'design_doc'
   const isDesignDocView = isDesignDoc && !isEditing
 
   const updatedText = t('wiki_updated_by', { name: updatedBy ?? '-', at: dayformat(page.updatedAt, 'tz-minute', tz) })
@@ -218,6 +225,21 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
     shownContent === undefined ? (
       // 過去の版の本文を取得中
       <PanelSpinner />
+    ) : isDiff && isDesignDoc ? (
+      <DesignDocView
+        className='border-default-200 absolute inset-0 overflow-hidden rounded-xl border'
+        markdown={page.content}
+        compareWith={shownContent}
+        compareLabel={t('wiki_diff_compare_label', { version: `v${pastView.number}` })}
+        onCloseDiff={() => revisions.setDiff(false)}
+        documentId={`${page.id}:${pastView.id}:diff`}
+      />
+    ) : isDiff ? (
+      shownContent === page.content ? (
+        <p className='text-muted text-sm'>{t('msg_wiki_diff_no_change')}</p>
+      ) : (
+        <TextDiffView before={shownContent} after={page.content} />
+      )
     ) : !isDesignDoc ? (
       <MarkdownField
         key={editorKey}
@@ -283,12 +305,13 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
           <div className='flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1'>
             <h1 className='min-w-0 text-2xl font-bold wrap-break-word'>{shown.title}</h1>
             <WikiTagLinks spaceKey={space.key} tags={shown.tags} />
-            <div // 編集・戻す・削除は版の選択のすぐ右に置き、版に対する操作だと分かるようにする(折り返しても離さない)
+            <div // 差分・編集・戻す・出力・削除は版の選択のすぐ右に置き、版に対する操作だと分かるようにする(折り返しても離さない)
               className='flex items-center gap-2'
             >
               <WikiRevisionSelect revisions={revisions} updatedText={updatedText} />
+              {!isEditing && <WikiRevisionDiffToggle revisions={revisions} />}
               {editAction}
-              {canWrite && !isEditing && <WikiRevisionActions revisions={revisions} />}
+              {canWrite && !isEditing && <WikiRevisionRestoreButton revisions={revisions} />}
               <WikiExportMenu // ページを移ったら作り直す(作っている途中の HTML 出力を打ち切り、移った先で保存しない)
                 key={page.id}
                 spaceKey={space.key}
@@ -298,11 +321,18 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
                 content={shownContent}
                 revision={revisions.past}
               />
+              {canWrite && !isEditing && <WikiRevisionDeleteButton revisions={revisions} />}
             </div>
           </div>
         )}
       </div>
       {!isEditing && <WikiPastRevisionNotice revisions={revisions} />}
+      {isDiff && pastView && (
+        <WikiRevisionFieldChanges
+          before={pastView}
+          after={{ title: page.title, type: page.type, tagNames: page.tags.map(({ tag }) => tag.name) }}
+        />
+      )}
 
       <div
         ref={contentRef}
@@ -312,7 +342,7 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
       >
         {body}
       </div>
-      {!isEditing && !isDesignDoc && <MarkdownToc targetRef={contentRef} />}
+      {!isEditing && !isDesignDoc && !isDiff && <MarkdownToc targetRef={contentRef} />}
     </>
   )
 }

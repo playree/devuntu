@@ -8,8 +8,8 @@
 export type DiffLine = { op: 'same' | 'add' | 'del'; text: string }
 export type FoldedDiffLine = DiffLine | { op: 'skip'; count: number }
 
-/** LCS の表の大きさの上限(行数の積) */
-const MAX_LCS_CELLS = 250_000
+/** LCS の表の大きさの上限(行数の積)。Wiki の長いページ(2000 行どうし程度)まで行単位で比べられる大きさ */
+const MAX_LCS_CELLS = 4_000_000
 
 const lcsDiff = (a: string[], b: string[]): DiffLine[] => {
   const width = b.length + 1
