@@ -520,3 +520,16 @@ div.mdxeditor-popup-container {
 .design-doc-print .seqnotes-embedded > .seqnotes-viewer-scroller {
   padding-bottom: 0;
 }
+
+/* 設計書一覧(Wiki の設計書スペースのトップ)。embed の一覧は表と同じ幅で余白が無いので、枠(.design-doc-list)の内側に余白を取る。
+ * 上は見出しのマージンがあるので小さめにする。viewer.css はレイヤーの外にあるため、上の印刷用と同じくレイヤーの外に書く。
+ */
+.design-doc-list .seqnotes-embedded-list > .seqnotes-viewer-scroller {
+  padding: 0.25rem 1.5rem 1.5rem;
+}
+
+@media (max-width: 40rem) {
+  .design-doc-list .seqnotes-embedded-list > .seqnotes-viewer-scroller {
+    padding: 0.25rem 0.75rem 1rem;
+  }
+}

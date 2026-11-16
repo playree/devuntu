@@ -7,6 +7,7 @@ import {
   deleteWikiPageForMcp,
   getWikiPageForMcp,
   getWikiTreeForMcp,
+  listWikiSpacesForMcp,
   registerWikiTools,
   saveWikiPageForMcp,
   searchWikiForMcp,
@@ -23,7 +24,7 @@ import {
 } from '@/lib/wiki/wiki-page'
 import { WIKI_PAGE_CONFLICT, WIKI_PAGE_TOO_DEEP } from '@/lib/wiki/wiki-rule'
 import { searchWikiPages } from '@/lib/wiki/wiki-search'
-import { getWikiSpaceByKey } from '@/lib/wiki/wiki-space'
+import { getWikiSpaceByKey, listWikiSpaces } from '@/lib/wiki/wiki-space'
 import { listWikiTags, resolveWikiTagIdsByName } from '@/lib/wiki/wiki-tag'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -117,7 +118,7 @@ describe('saveWikiPageForMcp: 作成', () => {
       agentAuth().user,
       { via: 'mcp' },
       SPACE_ID,
-      { title: '新しいページ', content: '本文', type: 'page', parentId: 'page-3', position: 1, tagIds: ['tag-1'] },
+      { title: '新しいページ', content: '本文', type: undefined, parentId: 'page-3', position: 1, tagIds: ['tag-1'] },
       { ticketId: 'ticket-1', message: '初版' },
     )
     expect(result).toEqual({
@@ -128,7 +129,7 @@ describe('saveWikiPageForMcp: 作成', () => {
     })
   })
 
-  it('type を省くと、本文の front matter が type: design_doc なら設計書として作る', async () => {
+  it('type を省くと、本文の front matter が type: design_doc なら設計書として作り、それ以外は区分の既定に任せる', async () => {
     const typeOf = async (input: { content?: string; type?: 'page' | 'design_doc' }) => {
       vi.mocked(createWikiPage).mockClear()
       await saveWikiPageForMcp(human, { space: 'DOCS', title: 't', ...input })
@@ -137,10 +138,20 @@ describe('saveWikiPageForMcp: 作成', () => {
     const designDoc = '---\ntype: design_doc\ntitle: ログイン\n---\n\n# 概要'
 
     expect(await typeOf({ content: designDoc })).toBe('design_doc')
-    expect(await typeOf({ content: '# 概要' })).toBe('page')
-    expect(await typeOf({})).toBe('page')
+    expect(await typeOf({ content: '# 概要' })).toBeUndefined()
+    expect(await typeOf({})).toBeUndefined()
     expect(await typeOf({ content: designDoc, type: 'page' }), '指定した type を優先する').toBe('page')
     expect(await typeOf({ content: '# 概要', type: 'design_doc' })).toBe('design_doc')
+  })
+
+  it('設計書スペースでも、ロックの前に読んだ区分で種類を決めず createWikiPage に任せる', async () => {
+    vi.mocked(getWikiSpaceByKey).mockResolvedValue({
+      space: { id: SPACE_ID, key: 'SPEC', name: '設計書' },
+      access: { spaceId: SPACE_ID, key: 'SPEC', type: 'design_doc', canWrite: true },
+    } as never)
+
+    await saveWikiPageForMcp(human, { space: 'SPEC', title: 't', content: '# 概要' })
+    expect(vi.mocked(createWikiPage).mock.calls[0][3].type).toBeUndefined()
   })
 
   it('space か title が無ければエラー', async () => {
@@ -385,6 +396,30 @@ describe('getWikiPageForMcp', () => {
 
     expect(error.errorType).toBe(VALIDATION_ERROR)
     expect(error.message).toContain('# 概要 | ## 手順 | ## 運用')
+  })
+})
+
+describe('listWikiSpacesForMcp', () => {
+  it('スペースの区分を返し、説明とアーカイブは該当するときだけ載せる', async () => {
+    const base = { description: null, visibility: 'restricted', role: 'editor', canWrite: true, archived: false }
+    vi.mocked(listWikiSpaces).mockResolvedValue([
+      { ...base, key: 'DOCS', name: '開発', type: 'mixed' },
+      { ...base, key: 'SPEC', name: '設計書', description: '基本設計', type: 'design_doc', archived: true },
+    ] as never)
+
+    expect(await listWikiSpacesForMcp(human, {})).toEqual([
+      { key: 'DOCS', name: '開発', visibility: 'restricted', type: 'mixed', role: 'editor', canWrite: true },
+      {
+        key: 'SPEC',
+        name: '設計書',
+        description: '基本設計',
+        visibility: 'restricted',
+        type: 'design_doc',
+        role: 'editor',
+        canWrite: true,
+        archived: true,
+      },
+    ])
   })
 })
 

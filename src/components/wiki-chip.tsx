@@ -1,7 +1,13 @@
 'use client'
 
 import { createEnumChip } from '@/components/enum-chip'
-import type { WikiAssignRole, WikiPageType, WikiSpaceRole, WikiVisibility } from '@/generated/prisma/enums'
+import type {
+  WikiAssignRole,
+  WikiPageType,
+  WikiSpaceRole,
+  WikiSpaceType,
+  WikiVisibility,
+} from '@/generated/prisma/enums'
 
 const roleChip = createEnumChip<WikiSpaceRole>({
   owner: { item: 'owner', color: 'accent' },
@@ -28,6 +34,15 @@ const visibilityChip = createEnumChip<WikiVisibility>({
 /** スペースの公開範囲 */
 export const WikiVisibilityChip = visibilityChip.EnumChip
 export const useWikiVisibilityOptions = visibilityChip.useOptions
+
+const spaceTypeChip = createEnumChip<WikiSpaceType>({
+  mixed: { item: 'wiki_space_type_mixed', color: 'default' },
+  design_doc: { item: 'wiki_space_type_design_doc', color: 'accent' },
+})
+
+/** スペースの区分 */
+export const WikiSpaceTypeChip = spaceTypeChip.EnumChip
+export const useWikiSpaceTypeOptions = spaceTypeChip.useOptions
 
 const pageTypeChip = createEnumChip<WikiPageType>({
   page: { item: 'wiki_page_type_page', color: 'default' },

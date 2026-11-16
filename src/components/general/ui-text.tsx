@@ -34,6 +34,8 @@ export type GeneralUiText = {
   /** ツリーの枝を開く / 閉じるボタンの読み上げ名 */
   treeExpand: (label: string) => string
   treeCollapse: (label: string) => string
+  /** フォーム項目のラベル横にあるヘルプボタンの読み上げ名 */
+  fieldHelp: (label: string) => string
 }
 
 /** Provider の外で使われたときの既定値 */
@@ -63,6 +65,7 @@ const DEFAULT_UI_TEXT: GeneralUiText = {
   sideNavResize: 'Side menu width',
   treeExpand: (label) => `Expand ${label}`,
   treeCollapse: (label) => `Collapse ${label}`,
+  fieldHelp: (label) => `Help for ${label}`,
 }
 
 const GeneralUiTextContext = createContext<GeneralUiText>(DEFAULT_UI_TEXT)

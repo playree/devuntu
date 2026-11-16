@@ -8,6 +8,7 @@ import { notify } from '@/components/notify'
 import { UpdatedBy } from '@/components/updated-by'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { useConfirmAction } from '@/lib/use-confirm-action'
+import { isWikiPageTypeAllowed } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
@@ -73,6 +74,8 @@ export const DeletedPagesModal: FC<{ state: ReturnType<typeof useModalState<stri
                       variant='ghost'
                       tooltip={t('restore')}
                       icon={<ArrowUturnLeftIcon width={16} />}
+                      // 設計書スペースへ通常ページは戻せない(サーバーでも弾く)
+                      isDisabled={!isWikiPageTypeAllowed(space.type, page.type)}
                       onPress={() => restore(page)}
                     />
                   )}

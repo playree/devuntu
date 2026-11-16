@@ -2,8 +2,8 @@
 
 import { useResolvedTheme } from '@/lib/use-resolved-theme'
 import { useLocale } from '@/locale/client'
-import { Skeleton } from '@heroui/react'
-import type { DesignDocViewerHandle } from 'markdown-design-doc-viewer-embed/react'
+import { cn, Skeleton } from '@heroui/react'
+import type { DesignDocListDocument, DesignDocViewerHandle } from 'markdown-design-doc-viewer-embed/react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { FC, RefObject, useCallback } from 'react'
@@ -18,8 +18,17 @@ const DesignDocViewer = dynamic(() => import('./design-doc-viewer-core'), {
   loading: () => <Skeleton className='h-full w-full rounded-xl' />,
 })
 
+const DesignDocList = dynamic(() => import('./design-doc-list-core'), {
+  ssr: false,
+  loading: () => <Skeleton className='h-40 w-full rounded-xl' />,
+})
+
 /** ビューアの文言の言語。ビューアは ja / en だけなので、ほかの言語は en にする */
 export const viewerLang = (locale: string): 'ja' | 'en' => (locale === 'ja' ? 'ja' : 'en')
+
+/** ビューアのテーマ。テーマが決まる前は OS の設定に従わせる */
+const viewerTheme = (resolvedTheme: string | undefined): 'light' | 'dark' | 'auto' =>
+  resolvedTheme === 'dark' ? 'dark' : resolvedTheme === 'light' ? 'light' : 'auto'
 
 /** ワイヤーフレームの別ファイルは扱わない。本文に書かれたパスを同一オリジンへ fetch させないため、常に読めないとする */
 export const readNoFile = async () => undefined
@@ -89,11 +98,48 @@ export const DesignDocView: FC<{
         documentId={documentId}
         lang={viewerLang(locale)}
         splitMinWidth={SPLIT_MIN_WIDTH}
-        theme={resolvedTheme === 'dark' ? 'dark' : resolvedTheme === 'light' ? 'light' : 'auto'}
+        theme={viewerTheme(resolvedTheme)}
         readFile={readNoFile}
         resolveResource={resolveResource}
         onOpenLink={openLink}
         onRevealLine={onRevealLine}
+      />
+    </div>
+  )
+}
+
+/**
+ * 設計書一覧(Markdown Design Doc Viewer の拡張と同じ表)。フォルダごとの表に、front matter の版数・ステータスなどを並べ、
+ * 絞り込みと列の並べ替えができる。中でスクロールせず、一覧の高さで表示する
+ */
+export const DesignDocListView: FC<{
+  /** 変わったときだけ表示し直すので、取り直したとき以外は同じ配列を渡すこと */
+  documents: DesignDocListDocument[]
+  title: string
+  fileLabel: string
+  filterPlaceholder: string
+  empty: string
+  className?: string
+}> = ({ documents, title, fileLabel, filterPlaceholder, empty, className }) => {
+  const { locale } = useLocale()
+  const resolvedTheme = useResolvedTheme()
+  const openLink = useOpenLink()
+
+  return (
+    <div // 設計書ページのビューアと同じ枠。内側の余白は globals.css の .design-doc-list で取る
+      className={cn('design-doc-list border-default-200 overflow-hidden rounded-xl border', className)}
+    >
+      <DesignDocList
+        documents={documents}
+        title={title}
+        fileLabel={fileLabel}
+        filterPlaceholder={filterPlaceholder}
+        empty={empty}
+        keepOrder
+        limitContentWidth={false}
+        lang={viewerLang(locale)}
+        theme={viewerTheme(resolvedTheme)}
+        onOpenLink={openLink}
       />
     </div>
   )

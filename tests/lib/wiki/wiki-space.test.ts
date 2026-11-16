@@ -5,7 +5,7 @@
 import { VALIDATION_ERROR } from '@/lib/error'
 import { prisma } from '@/lib/prisma'
 import { assertWikiSpaceAccess } from '@/lib/wiki/wiki-access'
-import { DUPLICATED_WIKI_SPACE_KEY } from '@/lib/wiki/wiki-rule'
+import { DUPLICATED_WIKI_SPACE_KEY, WIKI_SPACE_HAS_NORMAL_PAGES } from '@/lib/wiki/wiki-rule'
 import {
   createWikiSpace,
   findBoardWikiSpaceIndex,
@@ -16,7 +16,10 @@ import {
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/prisma', async () =>
-  (await import('../../helpers/prisma')).mockPrisma({ wikiSpace: ['create', 'update', 'findMany', 'findUnique'] }),
+  (await import('../../helpers/prisma')).mockPrisma({
+    wikiSpace: ['create', 'update', 'findMany', 'findUnique'],
+    wikiPage: ['count'],
+  }),
 )
 vi.mock('@/lib/wiki/wiki-access', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/wiki/wiki-access')>()),
@@ -37,6 +40,7 @@ const errorTypeOf = async (promise: Promise<unknown>) => {
 beforeEach(() => {
   vi.clearAllMocks()
   vi.mocked(prisma.wikiSpace.create).mockResolvedValue({ id: 's1' } as never)
+  vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ type: 'mixed' } as never)
 })
 
 describe('createWikiSpace', () => {
@@ -48,8 +52,14 @@ describe('createWikiSpace', () => {
       name: '開発ドキュメント',
       description: null,
       visibility: 'restricted',
+      type: 'mixed',
       members: { create: { userId: actor.id, role: 'owner' } },
     })
+  })
+
+  it('区分を指定して作れる', async () => {
+    await createWikiSpace(actor, { key: 'SPEC', name: '設計書', type: 'design_doc' })
+    expect(vi.mocked(prisma.wikiSpace.create).mock.calls[0][0].data).toMatchObject({ type: 'design_doc' })
   })
 
   it('キーの重複は DUPLICATED_WIKI_SPACE_KEY', async () => {
@@ -71,8 +81,41 @@ describe('updateWikiSpace / setWikiSpaceArchived', () => {
   it('設定の変更は manage を要求し、渡した項目だけを変える', async () => {
     await updateWikiSpace(actor, 's1', { visibility: 'everyone' })
 
-    expect(assertWikiSpaceAccess).toHaveBeenCalledWith(actor, 's1', 'manage')
+    expect(assertWikiSpaceAccess).toHaveBeenCalledWith(actor, 's1', 'manage', expect.anything())
     expect(vi.mocked(prisma.wikiSpace.update).mock.calls[0][0].data).toEqual({ visibility: 'everyone' })
+  })
+
+  it('設定の変更は、スペース行のロックを取ってから権限を判定する', async () => {
+    await updateWikiSpace(actor, 's1', { name: 'x' })
+    expect(vi.mocked(prisma.$queryRaw).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(assertWikiSpaceAccess).mock.invocationCallOrder[0],
+    )
+  })
+
+  it('通常ページが無ければ設計書スペースにできる', async () => {
+    vi.mocked(prisma.wikiPage.count).mockResolvedValue(0)
+    await updateWikiSpace(actor, 's1', { type: 'design_doc' })
+
+    expect(vi.mocked(prisma.wikiPage.count).mock.calls[0][0]).toEqual({ where: { spaceId: 's1', type: 'page' } })
+    expect(vi.mocked(prisma.wikiSpace.update).mock.calls[0][0].data).toEqual({ type: 'design_doc' })
+  })
+
+  it('通常ページがあれば設計書スペースにできない', async () => {
+    vi.mocked(prisma.wikiPage.count).mockResolvedValue(2)
+    expect(await errorTypeOf(updateWikiSpace(actor, 's1', { type: 'design_doc' }))).toBe(WIKI_SPACE_HAS_NORMAL_PAGES)
+    expect(prisma.wikiSpace.update).not.toHaveBeenCalled()
+  })
+
+  it('すでに設計書スペースなら、区分を送っても通常ページを数えない', async () => {
+    vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ type: 'design_doc' } as never)
+    await updateWikiSpace(actor, 's1', { name: 'x', type: 'design_doc' })
+    expect(prisma.wikiPage.count).not.toHaveBeenCalled()
+  })
+
+  it('混合に戻すときは通常ページを数えない', async () => {
+    await updateWikiSpace(actor, 's1', { type: 'mixed' })
+    expect(prisma.wikiPage.count).not.toHaveBeenCalled()
+    expect(vi.mocked(prisma.wikiSpace.update).mock.calls[0][0].data).toEqual({ type: 'mixed' })
   })
 
   it('アーカイブの切り替えも manage を要求する', async () => {
@@ -122,7 +165,7 @@ describe('findBoardWikiSpaceIndex', () => {
     )
   })
 
-  it('キー・名前・説明(あれば)と書き込めるかを返し、0 件なら項目ごと返さない', async () => {
+  it('キー・名前・説明(あれば)・区分と書き込めるかを返し、0 件なら項目ごと返さない', async () => {
     vi.mocked(prisma.wikiSpace.findMany).mockResolvedValue([
       {
         ...base,
@@ -130,15 +173,16 @@ describe('findBoardWikiSpaceIndex', () => {
         name: '開発',
         description: '設計と手順',
         visibility: 'restricted',
+        type: 'design_doc',
         boards: [{ role: 'editor' }],
       },
-      { ...base, key: 'PUB', name: '公開', visibility: 'everyone' },
+      { ...base, key: 'PUB', name: '公開', visibility: 'everyone', type: 'mixed' },
     ] as never)
 
     expect(await findBoardWikiSpaceIndex(actor, 'b1')).toEqual({
       wikiSpaces: [
-        { key: 'DOCS', name: '開発', description: '設計と手順', canWrite: true },
-        { key: 'PUB', name: '公開', canWrite: false },
+        { key: 'DOCS', name: '開発', description: '設計と手順', type: 'design_doc', canWrite: true },
+        { key: 'PUB', name: '公開', type: 'mixed', canWrite: false },
       ],
     })
 

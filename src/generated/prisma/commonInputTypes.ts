@@ -966,6 +966,13 @@ export type EnumWikiVisibilityFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumWikiVisibilityFilter<$PrismaModel> | $Enums.WikiVisibility
 }
 
+export type EnumWikiSpaceTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiSpaceType | Prisma.EnumWikiSpaceTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiSpaceType[] | Prisma.ListEnumWikiSpaceTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiSpaceType[] | Prisma.ListEnumWikiSpaceTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiSpaceTypeFilter<$PrismaModel> | $Enums.WikiSpaceType
+}
+
 export type EnumWikiVisibilityWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.WikiVisibility | Prisma.EnumWikiVisibilityFieldRefInput<$PrismaModel>
   in?: $Enums.WikiVisibility[] | Prisma.ListEnumWikiVisibilityFieldRefInput<$PrismaModel>
@@ -974,6 +981,16 @@ export type EnumWikiVisibilityWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumWikiVisibilityFilter<$PrismaModel>
   _max?: Prisma.NestedEnumWikiVisibilityFilter<$PrismaModel>
+}
+
+export type EnumWikiSpaceTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiSpaceType | Prisma.EnumWikiSpaceTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiSpaceType[] | Prisma.ListEnumWikiSpaceTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiSpaceType[] | Prisma.ListEnumWikiSpaceTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiSpaceTypeWithAggregatesFilter<$PrismaModel> | $Enums.WikiSpaceType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumWikiSpaceTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumWikiSpaceTypeFilter<$PrismaModel>
 }
 
 export type EnumWikiSpaceRoleFilter<$PrismaModel = never> = {
@@ -1972,6 +1989,13 @@ export type NestedEnumWikiVisibilityFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumWikiVisibilityFilter<$PrismaModel> | $Enums.WikiVisibility
 }
 
+export type NestedEnumWikiSpaceTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiSpaceType | Prisma.EnumWikiSpaceTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiSpaceType[] | Prisma.ListEnumWikiSpaceTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiSpaceType[] | Prisma.ListEnumWikiSpaceTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiSpaceTypeFilter<$PrismaModel> | $Enums.WikiSpaceType
+}
+
 export type NestedEnumWikiVisibilityWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.WikiVisibility | Prisma.EnumWikiVisibilityFieldRefInput<$PrismaModel>
   in?: $Enums.WikiVisibility[] | Prisma.ListEnumWikiVisibilityFieldRefInput<$PrismaModel>
@@ -1980,6 +2004,16 @@ export type NestedEnumWikiVisibilityWithAggregatesFilter<$PrismaModel = never> =
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumWikiVisibilityFilter<$PrismaModel>
   _max?: Prisma.NestedEnumWikiVisibilityFilter<$PrismaModel>
+}
+
+export type NestedEnumWikiSpaceTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiSpaceType | Prisma.EnumWikiSpaceTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiSpaceType[] | Prisma.ListEnumWikiSpaceTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiSpaceType[] | Prisma.ListEnumWikiSpaceTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiSpaceTypeWithAggregatesFilter<$PrismaModel> | $Enums.WikiSpaceType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumWikiSpaceTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumWikiSpaceTypeFilter<$PrismaModel>
 }
 
 export type NestedEnumWikiSpaceRoleFilter<$PrismaModel = never> = {

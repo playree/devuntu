@@ -9,7 +9,7 @@ import { prisma } from '@/lib/prisma'
 import { assertWikiSpaceAccess } from '@/lib/wiki/wiki-access'
 import { restoreWikiPageRevision } from '@/lib/wiki/wiki-page'
 import { writeWikiPageRevision } from '@/lib/wiki/wiki-revision'
-import { MAX_WIKI_DEPTH, type WikiWriter } from '@/lib/wiki/wiki-rule'
+import { MAX_WIKI_DEPTH, WIKI_PAGE_TYPE_NOT_ALLOWED, type WikiWriter } from '@/lib/wiki/wiki-rule'
 import { findWikiTagsByNames, syncWikiPageTags } from '@/lib/wiki/wiki-tag'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -264,5 +264,29 @@ describe('restoreWikiPageRevision(拒否)', () => {
     expect(prisma.wikiPage.create).not.toHaveBeenCalled()
     expect(prisma.wikiPage.update).not.toHaveBeenCalled()
     expect(writeWikiPageRevision).not.toHaveBeenCalled()
+  })
+})
+
+describe('restoreWikiPageRevision(設計書スペース)', () => {
+  beforeEach(() => {
+    vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ key: 'SPEC', type: 'design_doc' } as never)
+  })
+
+  it.each([
+    ['存在するページ', existingPage({ type: 'design_doc' })],
+    ['削除済みのページ', null],
+  ])('通常のページの版は戻せない(%s)', async (_label, existing) => {
+    vi.mocked(prisma.wikiPage.findUnique).mockResolvedValue(existing as never)
+    vi.mocked(prisma.wikiPageRevision.findUnique).mockResolvedValue(revision({ type: 'page' }) as never)
+
+    expect(await errorTypeOf(restoreWikiPageRevision(actor, WEB, 'rev-1'))).toBe(WIKI_PAGE_TYPE_NOT_ALLOWED)
+    expect(prisma.wikiPage.update).not.toHaveBeenCalled()
+    expect(prisma.wikiPage.create).not.toHaveBeenCalled()
+    expect(writeWikiPageRevision).not.toHaveBeenCalled()
+  })
+
+  it('設計書の版は戻せる', async () => {
+    const result = await restoreWikiPageRevision(actor, WEB, 'rev-1')
+    expect(result.result).toBe('created')
   })
 })

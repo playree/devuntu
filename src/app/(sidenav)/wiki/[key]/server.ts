@@ -10,6 +10,7 @@ import {
   scMoveWikiPage,
   scWikiSpaceKey,
 } from '@/lib/schema/schema-wiki'
+import { getWikiDesignDocIndex as getWikiDesignDocIndexCore } from '@/lib/wiki/wiki-design-doc-index'
 import { designDocFrontMatter } from '@/lib/wiki/wiki-markdown'
 import {
   createWikiPage as createWikiPageCore,
@@ -130,6 +131,12 @@ export const getDeletedWikiPages = safeAuthAction
     retentionDays: envu.server.WIKI_REVISION_RETENTION_DAYS,
   }))
 export type GetDeletedWikiPagesReturnType = Awaited<ReturnType<typeof getDeletedWikiPages>>['data']
+
+/** 設計書スペースのトップの設計書一覧。`id` はスペース ID */
+export const getWikiDesignDocIndex = safeAuthAction
+  .metadata({ actionName: 'getWikiDesignDocIndex', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => getWikiDesignDocIndexCore(user, id))
 
 /** 版の内容へ戻す。存在するページは本文系だけ、削除済みのページは作り直す。`id` は版 ID */
 export const restoreWikiPageRevision = safeAuthAction

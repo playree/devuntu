@@ -9,6 +9,7 @@ import type { WikiPageType } from '@/generated/prisma/enums'
 import { parseAction } from '@/lib/action/action-client'
 import { MAX_WIKI_TITLE } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
+import { cn } from '@heroui/react'
 import { FC } from 'react'
 import { createWikiTag } from '../server'
 import { useWikiSpace } from '../space-context'
@@ -27,10 +28,12 @@ export const WikiPageEditHeader: FC<{
   const { t } = useLocale()
   const { space, tags: spaceTags, reloadSpace } = useWikiSpace()
   const typeOptions = useWikiPageTypeOptions()
+  // 設計書スペースのページは設計書だけなので選ばせない
+  const canChangeType = space.type === 'mixed'
 
   return (
     <Grid isSmart className='items-start'>
-      <div className='col-span-12 md:col-span-5'>
+      <div className={cn('col-span-12', canChangeType ? 'md:col-span-5' : 'md:col-span-6')}>
         <InputField
           label={t('wiki_page_title')}
           value={title}
@@ -39,16 +42,18 @@ export const WikiPageEditHeader: FC<{
           errorMessage={title.trim() === '' ? t('@invalid_wiki_title') : undefined}
         />
       </div>
-      <div className='col-span-12 md:col-span-2'>
-        <SingleSelectField
-          label={t('wiki_page_type')}
-          groupOptions={typeOptions}
-          value={type}
-          isDisabled={isTypeDisabled}
-          onChange={(key) => key && onTypeChange(key as WikiPageType)}
-        />
-      </div>
-      <div className='col-span-12 md:col-span-5'>
+      {canChangeType && (
+        <div className='col-span-12 md:col-span-2'>
+          <SingleSelectField
+            label={t('wiki_page_type')}
+            groupOptions={typeOptions}
+            value={type}
+            isDisabled={isTypeDisabled}
+            onChange={(key) => key && onTypeChange(key as WikiPageType)}
+          />
+        </div>
+      )}
+      <div className={cn('col-span-12', canChangeType ? 'md:col-span-5' : 'md:col-span-6')}>
         <TagIdSelectField
           options={spaceTags}
           value={tagIds}

@@ -30,6 +30,14 @@ enum WikiVia {
   mcp
 }
 
+/// Wiki スペースの区分。作れるページの種類と、トップの一覧が変わる
+enum WikiSpaceType {
+  /// 通常ページと設計書を混在できる
+  mixed
+  /// 設計書だけを置く。トップに設計書一覧を出す
+  design_doc
+}
+
 /// Wiki ページの種類。表示と編集のしかたが変わる
 enum WikiPageType {
   /// 通常の Markdown(リッチエディタで編集する)
@@ -64,6 +72,9 @@ model WikiSpace {
 
   /// 公開範囲
   visibility WikiVisibility @default(restricted)
+
+  /// 区分。design_doc にできるのは、削除されていない通常ページが無いときだけ
+  type WikiSpaceType @default(mixed)
 
   /// 採番済みページ番号の最大値。UPDATE の行ロックで採番を直列化する
   pageSeq Int @default(0)

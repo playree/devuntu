@@ -7,17 +7,18 @@ import { NoticePanel } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
 import { BookOpenIcon, Cog6ToothIcon, DocumentPlusIcon, TrashIcon } from '@/components/icon'
 import { ReloadButton } from '@/components/reload-button'
-import { WikiRoleChip, WikiVisibilityChip } from '@/components/wiki-chip'
+import { WikiRoleChip, WikiSpaceTypeChip, WikiVisibilityChip } from '@/components/wiki-chip'
 import { useLocale } from '@/locale/client'
 import { ButtonGroup } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
 import { ChildPages } from './child-pages'
 import { DeletedPagesModal } from './deleted-pages'
+import { WikiDesignDocIndex } from './design-doc-index'
 import { CreatePageModal } from './page-modals'
 import { useWikiSpace } from './space-context'
 
-/** スペースのトップ。説明とスペース直下のページ */
+/** スペースのトップ。説明とスペース直下のページ(設計書スペースでは設計書一覧) */
 export const WikiSpaceTopClient: FC = () => {
   const { t } = useLocale()
   const router = useRouter()
@@ -64,12 +65,15 @@ export const WikiSpaceTopClient: FC = () => {
       <div className='flex flex-wrap items-center gap-2 text-sm'>
         <span className='text-muted font-mono text-xs'>{space.key}</span>
         <WikiVisibilityChip value={space.visibility} />
+        <WikiSpaceTypeChip value={space.type} />
         {access.role && <WikiRoleChip value={access.role} />}
       </div>
       {space.description && <p className='text-sm whitespace-pre-wrap'>{space.description}</p>}
 
       {!access.canView ? (
         <NoticePanel>{t('msg_wiki_manage_only')}</NoticePanel>
+      ) : space.type === 'design_doc' ? (
+        <WikiDesignDocIndex />
       ) : tree.length === 0 ? (
         <p className='text-muted text-sm'>{t('msg_no_wiki_pages')}</p>
       ) : (

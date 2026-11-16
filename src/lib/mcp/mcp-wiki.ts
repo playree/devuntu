@@ -120,6 +120,7 @@ export const listWikiSpacesForMcp = async (auth: ResourceAuth, input: { includeA
     name: space.name,
     ...(space.description ? { description: space.description } : {}),
     visibility: space.visibility,
+    type: space.type,
     role: space.role,
     canWrite: space.canWrite,
     ...(space.archived ? { archived: true } : {}),
@@ -273,8 +274,9 @@ const createWikiPageForMcp = async (auth: ResourceAuth, input: McpSaveWikiPageIn
     {
       title: input.title,
       content: input.content,
-      // 省略時は本文の front matter から決める(markdown-design-doc スキルが書く設計書は type: design_doc を持つ)
-      type: input.type ?? (input.content && hasDesignDocFrontMatter(input.content) ? 'design_doc' : 'page'),
+      // 省略時は本文の front matter から設計書と分かればそうし(markdown-design-doc スキルが書く設計書は
+      // type: design_doc を持つ)、それ以外はスペースの区分から決めさせる(ロックを取ってから区分を読むため)
+      type: input.type ?? (input.content && hasDesignDocFrontMatter(input.content) ? 'design_doc' : undefined),
       parentId,
       position: toPosition(input.position),
       tagIds,
@@ -408,6 +410,7 @@ export const registerWikiTools = (server: McpServer, auth: ResourceAuth) => {
       annotations: TOOL_ANNOTATIONS.readOnly,
       description:
         'Returns the Wiki spaces you can read, with your role and whether you can write. ' +
+        'type design_doc means a design doc space: all its pages are design docs (type=design_doc). ' +
         'Spaces assigned to a board are also listed as wikiSpaces in get_ticket / get_board',
       inputSchema: z.strictObject({
         includeArchived: z.boolean().optional().describe('Include archived (read-only) spaces. Excluded by default'),
@@ -497,6 +500,7 @@ export const registerWikiTools = (server: McpServer, auth: ResourceAuth) => {
         'parent / position move the page within the space. tags replace all tags of the page and must be existing tag names of the space. ' +
         'type design_doc makes the page a design document in the Markdown Design Doc Viewer format (write it with the markdown-design-doc skill if you have it); ' +
         'when creating without type, a content whose front matter has type: design_doc becomes one. Omit type when updating to keep it. ' +
+        'In a design doc space (type design_doc in list_wiki_spaces), pages are always design docs: type page is an error, and creating without type makes a design doc. ' +
         'Write only what the user asked for or agreed to; every change is kept in the page history, from which users can restore it',
       inputSchema: z.strictObject({
         ref: zWikiPageRef.optional().describe('Page ref KEY/number to update. Omit to create a page'),

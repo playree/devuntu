@@ -145,7 +145,7 @@ describe('getTicketForMcp のボードノートの索引', () => {
 })
 
 describe('getTicketForMcp の Wiki スペースの索引', () => {
-  const INDEX = { wikiSpaces: [{ key: 'DOCS', name: '開発ドキュメント', canWrite: true }] }
+  const INDEX = { wikiSpaces: [{ key: 'DOCS', name: '開発ドキュメント', type: 'mixed' as const, canWrite: true }] }
 
   it('ボードのメンバーには、ボードに割り当てられたスペースを返す', async () => {
     vi.mocked(findBoardWikiSpaceIndex).mockResolvedValue(INDEX)

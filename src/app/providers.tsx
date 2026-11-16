@@ -76,6 +76,7 @@ const MyGeneralUiTextProvider: FC<{ children: ReactNode }> = ({ children }) => {
       sideNavResize: t('side_nav_resize'),
       treeExpand: (label) => t('tree_expand', { label }),
       treeCollapse: (label) => t('tree_collapse', { label }),
+      fieldHelp: (label) => t('field_help', { label }),
     }),
     [t],
   )

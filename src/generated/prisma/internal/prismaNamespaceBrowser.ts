@@ -1075,6 +1075,7 @@ export const WikiSpaceScalarFieldEnum = {
   name: 'name',
   description: 'description',
   visibility: 'visibility',
+  type: 'type',
   pageSeq: 'pageSeq',
   archived: 'archived',
   createdAt: 'createdAt',

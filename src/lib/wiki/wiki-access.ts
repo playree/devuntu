@@ -5,7 +5,7 @@
  * Wiki の Server Action / MCP はスペース単位の認可を `assertWikiSpaceAccess` に通す。
  */
 
-import type { WikiVisibility } from '@/generated/prisma/enums'
+import type { WikiSpaceType, WikiVisibility } from '@/generated/prisma/enums'
 import type { WikiSpaceWhereInput } from '@/generated/prisma/models'
 import { isAdminActor, type Actor } from '../board/board-access'
 import { boardVisibleWhere } from '../board/ticket-permission'
@@ -19,6 +19,8 @@ export type WikiSpaceAccess = WikiPermission & {
   /** 実効ロール。管理者が割り当て無しで管理操作をするときは null */
   role: WikiRole | null
   visibility: WikiVisibility
+  /** スペースの区分(作れるページの種類が変わる) */
+  type: WikiSpaceType
   archived: boolean
 }
 
@@ -70,7 +72,7 @@ export const getWikiSpaceAccess = async (
 ): Promise<WikiSpaceAccess | null> => {
   const space = await tx.wikiSpace.findUnique({
     where: { id: spaceId },
-    select: { id: true, key: true, archived: true, ...wikiRoleSelect(actor.id) },
+    select: { id: true, key: true, type: true, archived: true, ...wikiRoleSelect(actor.id) },
   })
   if (!space) {
     return null
@@ -81,6 +83,7 @@ export const getWikiSpaceAccess = async (
     key: space.key,
     role,
     visibility: space.visibility,
+    type: space.type,
     archived: space.archived,
     ...evaluateWikiAccess({ role, archived: space.archived, isAdmin: isAdminActor(actor) }),
   }

@@ -333,6 +333,7 @@ export const ja: DefaultLocaleItems = {
   export_html: 'HTML出力',
   export_markdown: 'Markdown出力',
   export_pdf: 'PDF出力(印刷)',
+  field_help: '${label} のヘルプ',
   filter: 'フィルタ',
   free_memory: '空きメモリ',
   git_repositories: '対応付けたリポジトリ',
@@ -654,9 +655,12 @@ export const ja: DefaultLocaleItems = {
   wiki_delete_revision: 'この版を削除',
   wiki_deleted_pages: '削除済みのページ',
   wiki_design_doc_editor: '設計書の編集',
+  wiki_design_doc_filter: 'タイトル・番号・メタ情報で絞り込み',
   wiki_design_doc_source: 'ソース',
+  wiki_design_docs: '設計書一覧',
   wiki_move: '移動',
   wiki_move_page: 'ページを移動',
+  wiki_page_number: '番号',
   wiki_page_ref: 'ページの指定',
   wiki_page_title: 'タイトル',
   wiki_page_type: '種類',
@@ -691,6 +695,9 @@ export const ja: DefaultLocaleItems = {
   wiki_space_profile: 'スペース情報',
   wiki_space_root: '${name}(スペース直下)',
   wiki_space_settings: 'スペース設定',
+  wiki_space_type: '区分',
+  wiki_space_type_design_doc: '設計書',
+  wiki_space_type_mixed: '混合',
   wiki_switch_space: 'スペースを切り替え',
   wiki_tree: 'Wikiツリー',
   wiki_updated_by: '${name} が ${at} に更新',
@@ -873,6 +880,7 @@ export const ja: DefaultLocaleItems = {
   msg_no_criteria: '受け入れ条件はありません',
   msg_no_tickets: 'チケットがありません。',
   msg_no_wiki_boards: '割り当てられたボードはありません。',
+  msg_no_wiki_design_docs: '設計書はまだありません。',
   msg_no_wiki_groups: '割り当てられたグループはありません。',
   msg_no_wiki_pages: 'ページはまだありません。',
   msg_no_wiki_search_results: '一致するページはありません。',
@@ -911,6 +919,7 @@ export const ja: DefaultLocaleItems = {
     'ボードのメンバー(直接・グループ経由)が、選んだロールでこのスペースを使えます。割り当てられるのは、あなたが参加しているボードです。',
   msg_wiki_deleted_pages_hint:
     '削除したページを復元できるのは、削除から ${days} 日のあいだだけです。配下ごと削除したページは1ページずつ復元します。',
+  msg_wiki_design_docs_load_failed: '設計書一覧を取得できませんでした。時間をおいてリロードしてください。',
   msg_wiki_manage_only:
     'このスペースに割り当てられていないため、設定だけを変更できます。ページを読むには、自分を割り当ててください。',
   msg_wiki_message_not_saved: '内容に変更が無いため、コミットメッセージは残りませんでした。',
@@ -918,6 +927,7 @@ export const ja: DefaultLocaleItems = {
   msg_wiki_page_has_children: '子ページがあるため削除できません。配下ごと削除してください。',
   msg_wiki_page_invalid_parent: 'そのページの下には移動できません(自分自身・子孫・別のスペースは選べません)。',
   msg_wiki_page_too_deep: '階層が深すぎます(10階層まで)。',
+  msg_wiki_page_type_not_allowed: '設計書スペースでは、通常のページは作れません(設計書だけです)。',
   msg_wiki_restore_unchanged: 'いまの内容と同じため、変更はありません。',
   msg_wiki_revision_retention:
     '版は最後の保存から ${days} 日残ります。それより古い版も、ページが残っていれば最新の版と直近の ${keep} 版、保持期間より前の状態を表す1版は残ります。ただし1ページに残るのは新しい ${max} 版までです。続けて保存した分は1つの版にまとまります。',
@@ -929,8 +939,12 @@ export const ja: DefaultLocaleItems = {
   msg_wiki_search_limit:
     '検索結果は最大${max}件まで表示します。見つからないときは語を増やすか、タグで絞り込んでください。',
   msg_wiki_space_archived: 'このスペースはアーカイブされているため、閲覧のみです。',
+  msg_wiki_space_has_normal_pages:
+    '通常のページがあるため、設計書スペースにできません。通常のページを削除するか、種類を設計書に変えてください。',
   msg_wiki_space_key: 'ページは「キー/番号」(例: DOCS/12)で指定します。キーは作成後に変更できません。',
   msg_wiki_space_no_owner: 'owner が1人もいなくなる変更はできません。先に別の owner を割り当ててください。',
+  msg_wiki_space_type:
+    '「設計書」にすると、作れるページは設計書だけになり、スペースのトップに設計書一覧を表示します。通常のページがあるスペースは「設計書」にできません。',
   msg_wiki_visibility:
     '「全員」にすると、ログインできる全員が閲覧できます。編集できるのは割り当てられた編集者以上です。',
   msg_within_a_day: '1日以内',
