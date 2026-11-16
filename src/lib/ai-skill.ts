@@ -45,8 +45,18 @@ export const findAiSkillFile = (name: string, path: string): string | undefined 
   return Object.hasOwn(files, path) ? files[path] : undefined
 }
 
+/** スキルの revision。配信で、手順を取得したときと同じ版かを確かめるのに使う */
+export const aiSkillRevision = (name: string): number | undefined =>
+  isSkillName(name) ? AI_SKILLS[name].skill.revision : undefined
+
+/**
+ * スキルのファイルの URL。手順を取得したときの revision を付け、取得の途中でサーバーが更新されても
+ * 違う版のファイルが混ざらないようにする(配信側で不一致を 409 にする)
+ */
 export const skillFileUrl = (name: SkillName, path: string) =>
-  makeUrl(`/api/skills/${name}/${path.split('/').map(encodeURIComponent).join('/')}`)
+  makeUrl(`/api/skills/${name}/${path.split('/').map(encodeURIComponent).join('/')}`, {
+    revision: String(AI_SKILLS[name].skill.revision),
+  })
 
 /**
  * 手順に埋め込むパスの文字。依存パッケージのファイル名をシェルの二重引用符に埋めるので、展開されうる文字(`$` など)を含む版を
@@ -54,9 +64,12 @@ export const skillFileUrl = (name: SkillName, path: string) =>
  */
 const SAFE_SKILL_PATH = /^[A-Za-z0-9._-]+(\/[A-Za-z0-9._-]+)*$/
 
+/** 入れ替えも戻すのも失敗したときに出す文。退避した既存のフォルダは消さずに残し、その場所を利用者へ伝えさせる */
+const KEPT_MESSAGE = 'Could not put back the previous skill. It is kept in'
+
 /**
  * sh の手順。スキルのフォルダの中の一時フォルダ(同じファイルシステムなので mv は名前の付け替えになる)へ全ファイルを取得し、
- * SKILL.md を確かめてから既存のフォルダと入れ替える。入れ替えに失敗したら既存のフォルダを戻す
+ * SKILL.md を確かめてから既存のフォルダと入れ替える。入れ替えに失敗したら既存のフォルダを戻し、戻せなければ退避先を残す
  */
 const shSteps = (name: SkillName, paths: string[]) =>
   [
@@ -65,41 +78,63 @@ const shSteps = (name: SkillName, paths: string[]) =>
     '  dest="<skills folder>"',
     '  mkdir -p "$dest"',
     `  stage="$(mktemp -d "$dest/.${name}-XXXXXX")"`,
-    `  trap 'rm -rf "$stage"' EXIT`,
+    `  trap 'rm -rf "$stage/new"; if [ ! -e "$stage/old" ]; then rm -rf "$stage"; fi' EXIT`,
     ...paths.flatMap((path) => [
       `  mkdir -p "$(dirname "$stage/new/${path}")"`,
       `  curl -fsSL -o "$stage/new/${path}" "${skillFileUrl(name, path)}"`,
     ]),
     '  test -f "$stage/new/SKILL.md"',
     `  if [ -e "$dest/${name}" ]; then mv "$dest/${name}" "$stage/old"; fi`,
-    `  mv "$stage/new" "$dest/${name}" || { if [ -e "$stage/old" ]; then mv "$stage/old" "$dest/${name}"; fi; exit 1; }`,
+    `  if mv "$stage/new" "$dest/${name}"; then`,
+    '    rm -rf "$stage/old"',
+    `  elif [ ! -e "$stage/old" ] || mv "$stage/old" "$dest/${name}"; then`,
+    '    exit 1',
+    '  else',
+    `    echo "${KEPT_MESSAGE} $stage/old" >&2`,
+    '    exit 1',
+    '  fi',
     ')',
   ].join('\n')
 
-/** PowerShell の手順。sh と同じ順で、失敗したら止める */
+/**
+ * PowerShell の手順。sh と同じ順で、失敗したら止める。
+ * フォルダ名の `[` `]` をワイルドカードとして解釈させないよう、パスは -LiteralPath と .NET の API で扱う
+ * (Windows PowerShell 5.1 の Invoke-WebRequest -OutFile にはリテラルの指定が無いので、取得した内容を自分で書く)
+ */
 const powershellSteps = (name: SkillName, paths: string[]) => {
   const win = (path: string) => path.replaceAll('/', '\\')
+  const dirs = [...new Set(paths.map((path) => path.split('/').slice(0, -1).join('/')).filter((dir) => dir !== ''))]
   return [
     '& {',
     "  $ErrorActionPreference = 'Stop'",
     '  $dest = "<skills folder>"',
-    '  New-Item -ItemType Directory -Force -Path $dest | Out-Null',
+    '  [void][IO.Directory]::CreateDirectory($dest)',
     `  $stage = Join-Path $dest (".${name}-" + [IO.Path]::GetRandomFileName())`,
+    '  $keep = $false',
     '  try {',
+    '    [void][IO.Directory]::CreateDirectory("$stage\\new")',
+    ...dirs.map((dir) => `    [void][IO.Directory]::CreateDirectory("$stage\\new\\${win(dir)}")`),
     ...paths.flatMap((path) => [
-      `    New-Item -ItemType Directory -Force -Path (Split-Path "$stage\\new\\${win(path)}") | Out-Null`,
-      `    Invoke-WebRequest -UseBasicParsing -Uri "${skillFileUrl(name, path)}" -OutFile "$stage\\new\\${win(path)}"`,
+      `    $res = Invoke-WebRequest -UseBasicParsing -Uri "${skillFileUrl(name, path)}"`,
+      `    [IO.File]::WriteAllBytes("$stage\\new\\${win(path)}", $res.RawContentStream.ToArray())`,
     ]),
-    `    if (-not (Test-Path "$stage\\new\\SKILL.md")) { throw 'SKILL.md was not downloaded' }`,
-    `    if (Test-Path "$dest\\${name}") { Move-Item "$dest\\${name}" "$stage\\old" }`,
+    `    if (-not (Test-Path -LiteralPath "$stage\\new\\SKILL.md")) { throw 'SKILL.md was not downloaded' }`,
+    `    if (Test-Path -LiteralPath "$dest\\${name}") { Move-Item -LiteralPath "$dest\\${name}" -Destination "$stage\\old" }`,
     '    try {',
-    `      Move-Item "$stage\\new" "$dest\\${name}"`,
+    `      Move-Item -LiteralPath "$stage\\new" -Destination "$dest\\${name}"`,
     '    } catch {',
-    `      if (Test-Path "$stage\\old") { Move-Item "$stage\\old" "$dest\\${name}" }`,
+    `      if (Test-Path -LiteralPath "$stage\\old") {`,
+    `        try { Move-Item -LiteralPath "$stage\\old" -Destination "$dest\\${name}" }`,
+    `        catch { $keep = $true; throw "${KEPT_MESSAGE} $stage\\old" }`,
+    '      }',
     '      throw',
     '    }',
     '  } finally {',
-    '    Remove-Item -Recurse -Force $stage -ErrorAction SilentlyContinue',
+    '    if ($keep) {',
+    '      Remove-Item -LiteralPath "$stage\\new" -Recurse -Force -ErrorAction SilentlyContinue',
+    '    } else {',
+    '      Remove-Item -LiteralPath $stage -Recurse -Force -ErrorAction SilentlyContinue',
+    '    }',
     '  }',
     '}',
   ].join('\n')
@@ -162,7 +197,10 @@ Windows (PowerShell):
 ${powershellSteps(name, paths)}
 \`\`\`
 
-If it fails, tell the user the error.
+If it fails, tell the user the error:
+
+- HTTP 409: this server was updated after you got these steps. Get them again with get_skill_install_guide and start over
+- \`${KEPT_MESSAGE} <path>\`: the previous skill could not be put back. Tell the user that path, so that they can move it back to \`<skills folder>/${name}\`
 
 ## 4. Check it
 

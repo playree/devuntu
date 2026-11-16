@@ -31,11 +31,13 @@ describe('skillInstallGuide', () => {
   const sh = guide.slice(guide.indexOf('```sh'), guide.indexOf('```powershell'))
   const ps = guide.slice(guide.indexOf('```powershell'))
 
-  it('同梱のすべてのファイルを、このサーバーの URL から取得させる', () => {
+  it('同梱のすべてのファイルを、このサーバーの URL から手順の revision を付けて取得させる', () => {
+    const query = `?revision=${agentSkill.revision}`
     for (const path of Object.keys(agentSkill.files)) {
-      expect(sh).toContain(`curl -fsSL -o "$stage/new/${path}" "${BASE}/${path}"`)
-      expect(ps).toContain(`Invoke-WebRequest -UseBasicParsing -Uri "${BASE}/${path}"`)
+      expect(sh).toContain(`curl -fsSL -o "$stage/new/${path}" "${BASE}/${path}${query}"`)
+      expect(ps).toContain(`Invoke-WebRequest -UseBasicParsing -Uri "${BASE}/${path}${query}"`)
     }
+    expect(guide).toContain('HTTP 409: this server was updated after you got these steps')
   })
 
   it('GitHub の zip は、ファイルを書けないクライアント向けの案内にだけ出す', () => {
@@ -60,8 +62,29 @@ describe('skillInstallGuide', () => {
     )
     expect(sh).toContain('mv "$stage/old" "$dest/markdown-design-doc"')
     expect(ps).toContain("$ErrorActionPreference = 'Stop'")
-    expect(ps.indexOf('SKILL.md was not downloaded')).toBeLessThan(ps.indexOf('Move-Item "$dest\\markdown-design-doc"'))
-    expect(ps).toContain('Move-Item "$stage\\old" "$dest\\markdown-design-doc"')
+    expect(ps.indexOf('SKILL.md was not downloaded')).toBeLessThan(
+      ps.indexOf('Move-Item -LiteralPath "$dest\\markdown-design-doc"'),
+    )
+    expect(ps).toContain('Move-Item -LiteralPath "$stage\\old" -Destination "$dest\\markdown-design-doc"')
+  })
+
+  it('既存のフォルダを戻せなかったときは、退避先を消さずにその場所を伝えさせる', () => {
+    // 退避先(old)があるうちは一時フォルダごとは消さない
+    expect(sh).toContain(`trap 'rm -rf "$stage/new"; if [ ! -e "$stage/old" ]; then rm -rf "$stage"; fi' EXIT`)
+    expect(sh).toContain('echo "Could not put back the previous skill. It is kept in $stage/old" >&2')
+    expect(ps).toContain('$keep = $true; throw "Could not put back the previous skill. It is kept in $stage\\old"')
+    expect(ps).toContain('if ($keep) {')
+    expect(guide).toContain('Tell the user that path')
+  })
+
+  it('PowerShell ではパスをワイルドカードとして解釈させない(フォルダ名の [ ] 対策)', () => {
+    for (const cmdlet of ['Test-Path', 'Move-Item', 'Remove-Item']) {
+      const uses = ps.split('\n').filter((line) => line.includes(`${cmdlet} `))
+      expect(uses.length, cmdlet).toBeGreaterThan(0)
+      uses.forEach((line) => expect(line).toContain(`${cmdlet} -LiteralPath`))
+    }
+    expect(ps).not.toContain('-OutFile')
+    expect(ps).not.toContain('New-Item')
   })
 
   it('revision は整数として比べさせる(front matter では引用符付きのため)', () => {
