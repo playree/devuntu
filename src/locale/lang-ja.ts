@@ -658,6 +658,8 @@ export const ja: DefaultLocaleItems = {
   wiki_design_doc_filter: 'タイトル・番号・メタ情報で絞り込み',
   wiki_design_doc_source: 'ソース',
   wiki_design_docs: '設計書一覧',
+  wiki_diff: '差分',
+  wiki_diff_compare_label: '${version} と比較',
   wiki_move: '移動',
   wiki_move_page: 'ページを移動',
   wiki_page_number: '番号',
@@ -920,6 +922,7 @@ export const ja: DefaultLocaleItems = {
   msg_wiki_deleted_pages_hint:
     '削除したページを復元できるのは、削除から ${days} 日のあいだだけです。配下ごと削除したページは1ページずつ復元します。',
   msg_wiki_design_docs_load_failed: '設計書一覧を取得できませんでした。時間をおいてリロードしてください。',
+  msg_wiki_diff_no_change: '本文に変更はありません。',
   msg_wiki_manage_only:
     'このスペースに割り当てられていないため、設定だけを変更できます。ページを読むには、自分を割り当ててください。',
   msg_wiki_message_not_saved: '内容に変更が無いため、コミットメッセージは残りませんでした。',
@@ -931,6 +934,7 @@ export const ja: DefaultLocaleItems = {
   msg_wiki_restore_unchanged: 'いまの内容と同じため、変更はありません。',
   msg_wiki_revision_retention:
     '版は最後の保存から ${days} 日残ります。それより古い版も、ページが残っていれば最新の版と直近の ${keep} 版、保持期間より前の状態を表す1版は残ります。ただし1ページに残るのは新しい ${max} 版までです。続けて保存した分は1つの版にまとまります。',
+  msg_wiki_viewing_diff: '過去の版(${target})から最新への差分を表示しています。',
   msg_wiki_viewing_revision: '過去の版(${target})を表示しています。',
   msg_wiki_role_note:
     '閲覧者は読むだけ、編集者はページの作成・編集・移動・削除、owner は設定も変更できます。owner は1人以上必要です。',

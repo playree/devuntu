@@ -62,6 +62,8 @@ export const useWikiPageRevisions = (page: Page, reloadPage: () => Promise<void>
 
   const revisions = isSynced && data ? data.revisions : []
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  // 選んだ過去の版から最新への差分を出すか。過去の版を選び直しても保ち、選択を外すと戻す
+  const [isDiffOn, setDiffOn] = useState(false)
   // 選び直すたびに本文を引き直す(同じ版を選び直したときも、前回の失敗を引きずらない)
   const [attempt, setAttempt] = useState(0)
   // 一覧から消えた版(削除・掃除)を選んでいたら最新に戻る
@@ -77,6 +79,7 @@ export const useWikiPageRevisions = (page: Page, reloadPage: () => Promise<void>
   if (contentKey && !content.isLoading && content.data === undefined && missingKey !== contentKey) {
     setMissingKey(contentKey)
     setSelectedId(null)
+    setDiffOn(false)
   }
   const onMissing = useEffectEvent(() => {
     notify.error(t('msg_invalid_operation'))
@@ -93,12 +96,17 @@ export const useWikiPageRevisions = (page: Page, reloadPage: () => Promise<void>
     retention: data,
     past,
     pastContent: past ? content.data : undefined,
+    isDiff: isDiffOn && !!past,
+    setDiff: setDiffOn,
     // 最新の版を選んだときは選択を外す(新しい版ができても最新を表示し続ける)
     select: (id: string | null) => {
       const next = id === revisions[0]?.id ? null : id
       if (next !== selectedId) {
         setSelectedId(next)
         setAttempt((n) => n + 1)
+      }
+      if (next === null) {
+        setDiffOn(false)
       }
     },
     reload,
@@ -115,6 +123,7 @@ export const usePastPageView = (past: Revision | undefined) => {
   }
   return {
     id: past.id,
+    number: past.number,
     title: past.title,
     type: past.type,
     tags: resolveWikiTagNames(past.tagNames, tags),
@@ -233,6 +242,27 @@ export const WikiRevisionSelect: FC<{ revisions: WikiPageRevisions; updatedText:
   )
 }
 
+/** 選んでいる過去の版から最新への差分の表示の切り替え。過去の版を選んでいる間だけ出す */
+export const WikiRevisionDiffToggle: FC<{ revisions: WikiPageRevisions }> = ({
+  revisions: { past, isDiff, setDiff },
+}) => {
+  const { t } = useLocale()
+  if (!past) {
+    return null
+  }
+  return (
+    <Button
+      variant={isDiff ? 'primary' : 'outline'}
+      size='sm'
+      aria-pressed={isDiff}
+      className={cn(revisionButton, 'shrink-0')}
+      onPress={() => setDiff(!isDiff)}
+    >
+      {t('wiki_diff')}
+    </Button>
+  )
+}
+
 /**
  * 過去の版のロールバックと削除(編集者以上)。ロールバックはタイトル・種類・本文・タグだけを戻し、位置は変えない。
  * どちらも終わったら最新の版の表示に戻す
@@ -296,14 +326,16 @@ export const WikiRevisionActions: FC<{ revisions: WikiPageRevisions }> = ({ revi
 }
 
 /** 過去の版を表示していることの注記。コミットメッセージ・チケット・版の保持期間も添える */
-export const WikiPastRevisionNotice: FC<{ revisions: WikiPageRevisions }> = ({ revisions: { past, retention } }) => {
+export const WikiPastRevisionNotice: FC<{ revisions: WikiPageRevisions }> = ({
+  revisions: { past, retention, isDiff },
+}) => {
   const { t } = useLocale()
   if (!past) {
     return null
   }
   return (
     <NoticePanel status='warning'>
-      {t('msg_wiki_viewing_revision', { target: `v${past.number}` })}
+      {t(isDiff ? 'msg_wiki_viewing_diff' : 'msg_wiki_viewing_revision', { target: `v${past.number}` })}
       {past.ticketDisplayId && (
         <>
           {' '}

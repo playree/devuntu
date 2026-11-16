@@ -659,6 +659,8 @@ export const en: DefaultLocaleItems = {
   wiki_design_doc_filter: 'Filter by title, number or metadata',
   wiki_design_doc_source: 'Source',
   wiki_design_docs: 'Design docs',
+  wiki_diff: 'Diff',
+  wiki_diff_compare_label: 'Compared with ${version}',
   wiki_move: 'Move',
   wiki_move_page: 'Move Page',
   wiki_page_number: 'No.',
@@ -923,6 +925,7 @@ Please copy and use the connection information above.
   msg_wiki_deleted_pages_hint:
     'Deleted pages can be restored only for ${days} days after deletion. Pages deleted together with their descendants are restored one page at a time.',
   msg_wiki_design_docs_load_failed: 'Failed to load the design doc list. Please wait a moment and reload.',
+  msg_wiki_diff_no_change: 'The content has not changed.',
   msg_wiki_manage_only:
     'You are not assigned to this space, so you can only change its settings. Assign yourself to read its pages.',
   msg_wiki_message_not_saved: 'Nothing changed, so the commit message was not kept.',
@@ -934,6 +937,7 @@ Please copy and use the connection information above.
   msg_wiki_restore_unchanged: 'No changes. The content is the same as the current one.',
   msg_wiki_revision_retention:
     'Versions are kept for ${days} days after the last save. While the page exists, older versions are still kept if they are the latest version, one of the ${keep} before it, or the one showing the state before the retention period. However, only the newest ${max} versions are kept per page. Consecutive saves are combined into one version.',
+  msg_wiki_viewing_diff: 'Showing the changes from a past version (${target}) to the latest.',
   msg_wiki_viewing_revision: 'Showing a past version (${target}).',
   msg_wiki_role_note:
     'Viewers can read, editors can create, edit, move and delete pages, and owners can also change settings. At least one owner is required.',
