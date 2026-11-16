@@ -5,7 +5,9 @@ import { CheckIcon, ChevronDownIcon } from '@/components/general/icons'
 import { NoticePanel } from '@/components/general/panel'
 import { ArrowUturnLeftIcon, TrashIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
+import { RevisionFieldChange } from '@/components/revision-diff'
 import { UpdatedBy } from '@/components/updated-by'
+import type { WikiPageType } from '@/generated/prisma/enums'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { ticketShortPath } from '@/lib/board/ticket-id'
@@ -105,7 +107,8 @@ export const useWikiPageRevisions = (page: Page, reloadPage: () => Promise<void>
         setSelectedId(next)
         setAttempt((n) => n + 1)
       }
-      if (next === null) {
+      // 最新の表示から(版が消えて戻った場合も含む)選んだときは、差分ではなく版の内容から始める
+      if (next === null || !past) {
         setDiffOn(false)
       }
     },
@@ -261,6 +264,36 @@ export const WikiRevisionDiffToggle: FC<{ revisions: WikiPageRevisions }> = ({
       {t('wiki_diff')}
     </Button>
   )
+}
+
+type RevisionFields = { title: string; type: WikiPageType; tags: readonly { name: string }[] }
+
+const tagText = (tags: RevisionFields['tags']) =>
+  tags
+    .map(({ name }) => name)
+    .sort()
+    .join(', ') || '-'
+
+/** 差分の表示中に、本文の差分とは別に、選んだ過去の版から最新までに変わったタイトル・種類・タグを出す */
+export const WikiRevisionFieldChanges: FC<{ before: RevisionFields; after: RevisionFields }> = ({ before, after }) => {
+  const { t } = useLocale()
+  const changes = [
+    before.title !== after.title && (
+      <RevisionFieldChange key='title' label={t('wiki_page_title')} before={before.title} after={after.title} />
+    ),
+    before.type !== after.type && (
+      <RevisionFieldChange
+        key='type'
+        label={t('wiki_page_type')}
+        before={t(`wiki_page_type_${before.type}`)}
+        after={t(`wiki_page_type_${after.type}`)}
+      />
+    ),
+    tagText(before.tags) !== tagText(after.tags) && (
+      <RevisionFieldChange key='tags' label={t('tags')} before={tagText(before.tags)} after={tagText(after.tags)} />
+    ),
+  ].filter(Boolean)
+  return changes.length > 0 && <div className='space-y-1'>{changes}</div>
 }
 
 /**

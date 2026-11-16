@@ -32,6 +32,7 @@ import {
   WikiPastRevisionNotice,
   WikiRevisionActions,
   WikiRevisionDiffToggle,
+  WikiRevisionFieldChanges,
   WikiRevisionSelect,
 } from './page-revision'
 import { GetWikiPageReturnType, updateWikiPage } from './server'
@@ -324,6 +325,12 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
         )}
       </div>
       {!isEditing && <WikiPastRevisionNotice revisions={revisions} />}
+      {isDiff && (
+        <WikiRevisionFieldChanges
+          before={shown}
+          after={{ title: page.title, type: page.type, tags: page.tags.map(({ tag }) => tag) }}
+        />
+      )}
 
       <div
         ref={contentRef}

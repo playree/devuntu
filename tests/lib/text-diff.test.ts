@@ -27,11 +27,25 @@ describe('diffLines', () => {
   })
 
   it('大きすぎる差分は全削除 + 全追加に倒す', () => {
-    const before = Array.from({ length: 600 }, (_, i) => `b${i}`).join('\n')
-    const after = Array.from({ length: 600 }, (_, i) => `a${i}`).join('\n')
+    const before = Array.from({ length: 2100 }, (_, i) => `b${i}`).join('\n')
+    const after = Array.from({ length: 2100 }, (_, i) => `a${i}`).join('\n')
     const lines = diffLines(before, after)
-    expect(lines.slice(0, 600).every(({ op }) => op === 'del')).toBe(true)
-    expect(lines.slice(600).every(({ op }) => op === 'add')).toBe(true)
+    expect(lines.slice(0, 2100).every(({ op }) => op === 'del')).toBe(true)
+    expect(lines.slice(2100).every(({ op }) => op === 'add')).toBe(true)
+  })
+
+  it('長い本文の離れた2か所の変更も行単位で比べる', () => {
+    const base = Array.from({ length: 1500 }, (_, i) => `line${i}`)
+    const after = [...base]
+    after[0] = 'first'
+    after[1499] = 'last'
+    const changed = diffLines(base.join('\n'), after.join('\n')).filter(({ op }) => op !== 'same')
+    expect(changed).toEqual([
+      { op: 'del', text: 'line0' },
+      { op: 'add', text: 'first' },
+      { op: 'del', text: 'line1499' },
+      { op: 'add', text: 'last' },
+    ])
   })
 })
 
