@@ -12,6 +12,7 @@ import {
   ANNOUNCEMENT_GUIDE,
   mcpInstructions,
 } from '@/lib/mcp/mcp-instructions'
+import { registerSkillTools } from '@/lib/mcp/mcp-skill'
 import {
   addTicketCommentForMcp,
   createTicketForMcp,
@@ -425,6 +426,9 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
   if (auth.kind === 'agent') {
     registerAgentTools(server, auth)
   } else {
+    // スキルを入れる場所は利用者に確かめさせるので、利用者のいないエージェントには出さない
+    registerSkillTools(server)
+
     // エージェントは finish_agent_task の criteria で申告するので、人の経路にだけ出す
     server.registerTool(
       'report_acceptance_criteria',

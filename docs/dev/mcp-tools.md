@@ -17,7 +17,7 @@ MCP サーバー(`/api/mcp`)が提供するツールと、その権限・入力�
 [ファイルの添付](#ファイルの添付)の `create_file_upload_token` / `get_file`、[Wiki](#wiki) の6ツールは
 接続の種類(人間 / AIエージェント)を問わず使える。
 人間の2経路(認可コードフロー / ユーザーの MCP トークン)は使えるツールも権限も同じ。
-`report_acceptance_criteria` は人間の経路でだけ、`get_agent_task` / `finish_agent_task` / `propose_child_tickets` はエージェント用トークンで
+`report_acceptance_criteria` / `get_skill_install_guide` は人間の経路でだけ、`get_agent_task` / `finish_agent_task` / `propose_child_tickets` はエージェント用トークンで
 接続した場合だけ使える。
 
 ツールの説明・エラーメッセージなど MCP 経由で返す文字列は英語。下の表の「用途」は日本語での要約。
@@ -70,11 +70,12 @@ MCP サーバー(`/api/mcp`)が提供するツールと、その権限・入力�
 ### 人間の経路専用のツール
 
 OAuth / ユーザーの MCP トークンで接続した場合だけ使える
-(エージェントは受け入れ条件の結果を `finish_agent_task` で申告する)。
+(エージェントは受け入れ条件の結果を `finish_agent_task` で申告する。スキルを入れる場所は利用者に確かめさせるので、利用者のいないエージェントには出さない)。
 
-| ツール                       | 用途                                                 | 入力                    |
-| ---------------------------- | ---------------------------------------------------- | ----------------------- |
-| `report_acceptance_criteria` | 受け入れ条件ごとの充足と根拠を自己申告として記録する | `ticketId` / `criteria` |
+| ツール                       | 用途                                                                                                                         | 入力                    |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `report_acceptance_criteria` | 受け入れ条件ごとの充足と根拠を自己申告として記録する                                                                         | `ticketId` / `criteria` |
+| `get_skill_install_guide`    | AI ツールのスキル(今は markdown-design-doc)を利用者のマシンへ入れる手順を返す([スキルのインストール](#スキルのインストール)) | `skill`                 |
 
 - `update_ticket` と同じ制限を受ける。`criteria` の `id` は `get_ticket` の `acceptanceCriteria` から取り、
   各項目の充足(`met`)と根拠(`evidence`)がチケット詳細に自己申告として表示される。報告しなかった項目は前回の申告のまま残り、
@@ -108,13 +109,13 @@ devuntu の外(GitHub など)へ書き込むツールは無いので、`openWorl
 MCP の仕様に合わせ、追加だけで済まない(既存の値を上書き・削除しうる)ものを destructive、
 同じ入力で繰り返しても結果が変わらないものを idempotent とする。
 
-| 分類                    | readOnly | destructive | idempotent | ツール                                                                                                                                                                                                                                               |
-| ----------------------- | -------- | ----------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `readOnly`              | true     | -           | -          | `ping` / `echo` / `list_boards` / `get_board` / `get_ticket` / `search_tickets` / `get_image` / `get_file` / `get_agent_setup_guide` / `get_agent_task` / `get_board_notes` / `list_wiki_spaces` / `get_wiki_tree` / `search_wiki` / `get_wiki_page` |
-| `additive`              | false    | false       | false      | `create_ticket` / `add_ticket_comment` / `create_image_upload_token` / `create_file_upload_token` / `upload_image` / `propose_child_tickets`                                                                                                         |
-| `additiveIdempotent`    | false    | false       | true       | `link_ticket_artifact` / `link_related_ticket`                                                                                                                                                                                                       |
-| `destructive`           | false    | true        | false      | `update_ticket` / `finish_agent_task` / `save_board_note` / `save_wiki_page`                                                                                                                                                                         |
-| `destructiveIdempotent` | false    | true        | true       | `update_ticket_comment` / `report_acceptance_criteria` / `delete_ticket` / `delete_ticket_comment` / `unlink_ticket_artifact` / `unlink_ticket_relation` / `delete_board_note` / `delete_wiki_page`                                                  |
+| 分類                    | readOnly | destructive | idempotent | ツール                                                                                                                                                                                                                                                                           |
+| ----------------------- | -------- | ----------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `readOnly`              | true     | -           | -          | `ping` / `echo` / `list_boards` / `get_board` / `get_ticket` / `search_tickets` / `get_image` / `get_file` / `get_agent_setup_guide` / `get_skill_install_guide` / `get_agent_task` / `get_board_notes` / `list_wiki_spaces` / `get_wiki_tree` / `search_wiki` / `get_wiki_page` |
+| `additive`              | false    | false       | false      | `create_ticket` / `add_ticket_comment` / `create_image_upload_token` / `create_file_upload_token` / `upload_image` / `propose_child_tickets`                                                                                                                                     |
+| `additiveIdempotent`    | false    | false       | true       | `link_ticket_artifact` / `link_related_ticket`                                                                                                                                                                                                                                   |
+| `destructive`           | false    | true        | false      | `update_ticket` / `finish_agent_task` / `save_board_note` / `save_wiki_page`                                                                                                                                                                                                     |
+| `destructiveIdempotent` | false    | true        | true       | `update_ticket_comment` / `report_acceptance_criteria` / `delete_ticket` / `delete_ticket_comment` / `unlink_ticket_artifact` / `unlink_ticket_relation` / `delete_board_note` / `delete_wiki_page`                                                                              |
 
 - `update_ticket` は値を上書きし、`acceptanceCriteria` は全件置き換え(含めなかった項目はチェックや申告ごと消える)、
   `parentId: null` で親子を外せる。id の無い受け入れ条件は呼ぶたびに作り直されて変更履歴も残るので、冪等にもしない
@@ -246,6 +247,7 @@ AI から Wiki のページを探して読み、書けるようにする6ツー�
   - `type` はページの種類(`page` / `design_doc`)。作成で省くと、`content` の先頭の front matter に `type: design_doc` があれば `design_doc`、
     無ければ `page` にする(markdown-design-doc スキルが書いた設計書をそのまま保存できるように)。更新で省くと種類は変えない。
     更新では本文から種類を推定しない(画面で通常に戻したページを、AI の本文の書き換えで設計書へ戻さないため)
+  - description で、markdown-design-doc スキルで書くよう促す。人の経路では、スキルが無ければ `get_skill_install_guide` で入れられることを利用者に提案させる
   - 設計書スペース(区分 `type` が `design_doc`)では、作成で `type` を省くと本文によらず `design_doc` にする。
     `type: page` での作成・更新と、通常ページの版の復元は `WIKI_PAGE_TYPE_NOT_ALLOWED` のエラーにする
   - `tags` はページのタグを丸ごと置き換える。スペースに既にあるタグの**名前**で渡し、無い名前は作らずに既存のタグ名を添えたエラーにする
@@ -261,6 +263,27 @@ AI から Wiki のページを探して読み、書けるようにする6ツー�
 instructions には `wikiSpaces` の読み方(関係する文書を `search_wiki` / `get_wiki_page` で探して読む)だけを載せ、
 書き込みの作法(読んだ `updatedAt` を `expectedUpdatedAt` に渡す・部分修正は `edits` にする・利用者の依頼か同意があるときだけ書く)は
 `save_wiki_page` の description で伝える([mcp-server-internals.md](mcp-server-internals.md#届く文言))。
+
+## スキルのインストール
+
+`get_skill_install_guide` は、AI ツールのスキル([Agent Skills](https://agentskills.io/))を利用者のマシンへ入れる手順を返す。
+今は Wiki の設計書ページの記法を教える markdown-design-doc だけを扱う(`skill` は列挙値なので、増やすときはここに足す)。
+実装は `src/lib/mcp/mcp-skill.ts`。
+
+- スキルの本体は Devuntu に持たない。配布元([Markdown Design Doc Viewer](https://github.com/playree/markdown-design-doc-viewer))の
+  GitHub リリースにある `markdown-design-doc-skill.zip` を、AI ツールが `curl` + `unzip`(Windows は `Invoke-WebRequest` + `Expand-Archive`)で
+  取得・展開する。サーバーは zip を取得しない(外部への通信も zip を扱うライブラリも要らない)
+- zip の URL は `releases/latest` ではなく、Wiki の表示に使っている `markdown-design-doc-viewer-embed` のバージョンのタグ
+  (`releases/download/v<version>/...`)に固定する
+  - ビューアが描ける記法とスキルが教える記法をそろえるため(embed を上げればスキルも同じ版になる)
+  - 同じリポジトリで Desktop app のリリース(`desktop-v*`)も作られ、それが Latest になると `latest/download` の zip が見つからないため
+- 入れる場所(Claude Code / Codex / OpenCode のユーザー全体かプロジェクトか)は AI に利用者へ確かめさせる。既にあれば置き換えることを伝えさせる。
+  ファイルを書けないクライアント(claude.ai など)には、zip の URL を利用者に渡してスキルの設定からアップロードしてもらうよう案内する
+- 手順は失敗したら止まり(`set -e` / `$ErrorActionPreference = 'Stop'`)、一時フォルダ(`mktemp -d` など)に展開して `SKILL.md` を確かめてから
+  既存のフォルダと置き換える。取得に失敗しても入っていたスキルは消えない
+- エージェントの経路には出さない(入れる場所を確かめる相手がいないため)。`save_wiki_page` の description も、人の経路でだけ
+  スキルが無ければこのツールで入れられることを利用者へ提案させる
+- `markdown-design-doc-viewer-embed` を上げるときは、そのバージョンのタグのリリースに `markdown-design-doc-skill.zip` があることを確かめる
 
 ## 画像の添付
 
