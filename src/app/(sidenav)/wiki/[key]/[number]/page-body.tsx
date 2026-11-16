@@ -30,9 +30,10 @@ import {
   usePastPageView,
   useWikiPageRevisions,
   WikiPastRevisionNotice,
-  WikiRevisionActions,
+  WikiRevisionDeleteButton,
   WikiRevisionDiffToggle,
   WikiRevisionFieldChanges,
+  WikiRevisionRestoreButton,
   WikiRevisionSelect,
 } from './page-revision'
 import { GetWikiPageReturnType, updateWikiPage } from './server'
@@ -304,13 +305,13 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
           <div className='flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1'>
             <h1 className='min-w-0 text-2xl font-bold wrap-break-word'>{shown.title}</h1>
             <WikiTagLinks spaceKey={space.key} tags={shown.tags} />
-            <div // 編集・戻す・削除は版の選択のすぐ右に置き、版に対する操作だと分かるようにする(折り返しても離さない)
+            <div // 差分・編集・戻す・出力・削除は版の選択のすぐ右に置き、版に対する操作だと分かるようにする(折り返しても離さない)
               className='flex items-center gap-2'
             >
               <WikiRevisionSelect revisions={revisions} updatedText={updatedText} />
               {!isEditing && <WikiRevisionDiffToggle revisions={revisions} />}
               {editAction}
-              {canWrite && !isEditing && <WikiRevisionActions revisions={revisions} />}
+              {canWrite && !isEditing && <WikiRevisionRestoreButton revisions={revisions} />}
               <WikiExportMenu // ページを移ったら作り直す(作っている途中の HTML 出力を打ち切り、移った先で保存しない)
                 key={page.id}
                 spaceKey={space.key}
@@ -320,6 +321,7 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
                 content={shownContent}
                 revision={revisions.past}
               />
+              {canWrite && !isEditing && <WikiRevisionDeleteButton revisions={revisions} />}
             </div>
           </div>
         )}

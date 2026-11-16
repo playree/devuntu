@@ -259,7 +259,7 @@ export const WikiRevisionDiffToggle: FC<{ revisions: WikiPageRevisions }> = ({
       variant={isDiff ? 'primary' : 'outline'}
       size='sm'
       aria-pressed={isDiff}
-      className={cn(revisionButton, 'shrink-0')}
+      className='shrink-0'
       onPress={() => setDiff(!isDiff)}
     >
       {t('wiki_diff')}
@@ -307,10 +307,11 @@ export const WikiRevisionFieldChanges: FC<{ before: RevisionFields; after: Revis
 }
 
 /**
- * 過去の版のロールバックと削除(編集者以上)。ロールバックはタイトル・種類・本文・タグだけを戻し、位置は変えない。
- * どちらも終わったら最新の版の表示に戻す
+ * 過去の版のロールバック(編集者以上)。タイトル・種類・本文・タグだけを戻し、位置は変えない。終わったら最新の版の表示に戻す
  */
-export const WikiRevisionActions: FC<{ revisions: WikiPageRevisions }> = ({ revisions: { past, select, reload } }) => {
+export const WikiRevisionRestoreButton: FC<{ revisions: WikiPageRevisions }> = ({
+  revisions: { past, select, reload },
+}) => {
   const { t } = useLocale()
   const confirmAction = useConfirmAction()
   const { space } = useWikiSpace()
@@ -333,6 +334,30 @@ export const WikiRevisionActions: FC<{ revisions: WikiPageRevisions }> = ({ revi
       },
     )
 
+  return (
+    <MultiButton
+      isIconOnly
+      size='sm'
+      variant='outline'
+      tooltip={t('wiki_restore_this')}
+      icon={<ArrowUturnLeftIcon width={16} />}
+      // 設計書スペースへ通常ページの版は戻せない(サーバーでも弾く)
+      isDisabled={!isWikiPageTypeAllowed(space.type, past.type)}
+      onPress={restore}
+    />
+  )
+}
+
+/** 過去の版の削除(編集者以上)。終わったら最新の版の表示に戻す */
+export const WikiRevisionDeleteButton: FC<{ revisions: WikiPageRevisions }> = ({
+  revisions: { past, select, reload },
+}) => {
+  const { t } = useLocale()
+  const confirmAction = useConfirmAction()
+  if (!past) {
+    return null
+  }
+
   const remove = () =>
     confirmAction(
       { title: t('delete'), text: t('msg_confirm_delete_wiki_revision', { target: `v${past.number}` }) },
@@ -345,26 +370,14 @@ export const WikiRevisionActions: FC<{ revisions: WikiPageRevisions }> = ({ revi
     )
 
   return (
-    <div className='flex shrink-0 gap-1'>
-      <MultiButton
-        isIconOnly
-        size='sm'
-        variant='outline'
-        tooltip={t('wiki_restore_this')}
-        icon={<ArrowUturnLeftIcon width={16} />}
-        // 設計書スペースへ通常ページの版は戻せない(サーバーでも弾く)
-        isDisabled={!isWikiPageTypeAllowed(space.type, past.type)}
-        onPress={restore}
-      />
-      <MultiButton
-        isIconOnly
-        size='sm'
-        variant='outline'
-        tooltip={t('wiki_delete_revision')}
-        icon={<TrashIcon width={16} />}
-        onPress={remove}
-      />
-    </div>
+    <MultiButton
+      isIconOnly
+      size='sm'
+      variant='danger-soft'
+      tooltip={t('wiki_delete_revision')}
+      icon={<TrashIcon width={16} />}
+      onPress={remove}
+    />
   )
 }
 
