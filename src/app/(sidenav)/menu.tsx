@@ -179,7 +179,9 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
       <AccordionSection // タスク管理メニュー
         id='group_task'
         title={t('task_management')}
-        bodyClassName='grid grid-cols-1 px-2'
+        // 見出しの下と中身の末尾は HeroUI 既定の 16px だと広いので詰める
+        triggerClassName='pb-1'
+        bodyClassName='grid grid-cols-1 px-2 pb-1'
       >
         <MenuButton // ボード
           to='/boards'
@@ -223,7 +225,9 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
         id='group_admin'
         hidden={session?.user.role !== 'admin'}
         title={t('admin')}
-        bodyClassName='grid grid-cols-1 px-2'
+        // 見出しの下と中身の末尾は HeroUI 既定の 16px だと広いので詰める
+        triggerClassName='pb-1'
+        bodyClassName='grid grid-cols-1 px-2 pb-1'
       >
         <MenuButton // ユーザー管理
           to='/admin/users'
