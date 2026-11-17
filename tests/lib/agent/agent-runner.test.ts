@@ -826,6 +826,23 @@ describe('startAgentRun', () => {
     expect(ticket.update).not.toHaveBeenCalled()
   })
 
+  it('先の要求が上限の最後の 1 件を使った再送は、上限ではなく先の実行を返す', async () => {
+    ticket.findFirst.mockResolvedValueOnce(openTicket() as never)
+    agentRun.count.mockResolvedValueOnce(5)
+    agentRun.findUnique.mockResolvedValueOnce({
+      id: 'run1',
+      ticketId: 't1',
+      ticketRef: 'ABC-42',
+      status: 'running',
+    } as never)
+
+    expect(await startAgentRun(runner({ dailyRunLimit: 5 }), 't1', 'plan', 'req-1', jst('14:00'))).toEqual({
+      ok: true,
+      run: { id: 'run1', displayId: 'ABC-42', status: 'running' },
+    })
+    expect(agentRun.create).not.toHaveBeenCalled()
+  })
+
   it('予算に達していれば実行を作成しない', async () => {
     ticket.findFirst.mockResolvedValueOnce(openTicket() as never)
     monthCost(10)

@@ -231,7 +231,8 @@ export const startAgentRun = async (
 
   try {
     const started = await createAgentRun(runner, target, action, requestId, now)
-    if (!started.ok && started.reason === 'ticket_not_available' && requestId) {
+    // 処理中の実行・上限(日次 / 月次予算)で開始できなかった場合も、照合の後に先の要求が確定していればそれを返す
+    if (!started.ok && requestId) {
       return (await findRequestedAgentRun(runner.id, requestId, ticketId)) ?? started
     }
     return started
@@ -511,7 +512,8 @@ export const finishAgentTask = async (
           select: { id: true, action: true, startedAt: true },
         })
       : null
-    if (runner && runId && !open) {
+    // runId を指定した報告は、その実行を閉じられないなら何も変えない(自動運用の設定が消えていても同じ)
+    if (runId && !open) {
       return { state: await currentAgentState(tx, ticketId, state), stale: true as const }
     }
     if (!open || !runner) {

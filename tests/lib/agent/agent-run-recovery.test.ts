@@ -151,6 +151,16 @@ describe('finishAgentTask(runId 指定)', () => {
     expect(ticket.update).not.toHaveBeenCalled()
   })
 
+  it('自動運用の設定が無くても、runId を指定した報告は閉じられないなら何も変えない', async () => {
+    ticket.findUnique.mockResolvedValueOnce({ agentState: 'failed' } as never)
+
+    expect(await finishAgentTask(null, 't1', 'completed', null, [], 'run-old')).toEqual({
+      state: 'failed',
+      stale: true,
+    })
+    expect(ticket.update).not.toHaveBeenCalled()
+  })
+
   it('runId 無しで停止直後に届いた報告は、failed を上書きしない', async () => {
     agentRun.findFirst
       .mockResolvedValueOnce(null as never)

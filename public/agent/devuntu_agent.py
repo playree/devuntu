@@ -297,7 +297,8 @@ def call_api(config: Config, method: str, path: str, body: dict | None = None) -
             location = e.headers.get("location", "")
             raise ApiError(
                 f"{method} {path} returned {e.code} (redirect to {location}). "
-                "Set base_url to the final URL (redirects are not followed)"
+                "Set base_url to the final URL (redirects are not followed)",
+                e.code,
             ) from e
         detail = e.read().decode("utf-8", errors="replace")[:200]
         # 中継(プロキシ)の 502 / 503 / 504 は devuntu まで届いたか分からないので、届かなかったものと同じに扱う
@@ -868,10 +869,11 @@ def start_run(config: Config, ticket_id: str, action: str) -> dict:
         try:
             return call_api(config, "POST", "/api/agent/runs", body)
         except ApiError as e:
-            # 届いたか分からない要求を一度でも送っていれば、開始されたかどうか分からない。
-            # CLI は起動せず、次の poll で照合して後始末する
-            unanswered = unanswered or isinstance(e, ApiUnreachable)
-            if not isinstance(e, ApiUnreachable) or attempt == START_ATTEMPTS:
+            # 届いたか分からない・応答を解釈できなかった(HTTP のステータスが無い)要求は、開始されたかどうか分からない。
+            # 同じ requestId で再送し、それでも確かめられなければ CLI は起動せず、次の poll で照合して後始末する
+            uncertain = isinstance(e, ApiUnreachable) or e.status is None
+            unanswered = unanswered or uncertain
+            if not uncertain or attempt == START_ATTEMPTS:
                 if unanswered:
                     save_pending_starts(
                         config, [*load_pending_starts(config), {"requestId": request_id, "ticketId": ticket_id}]
