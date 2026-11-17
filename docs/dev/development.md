@@ -106,13 +106,13 @@ pnpm exec prisma migrate status   # Database schema is up to date!
 
 ### Wiki のマイグレーションの統合(v1.2.0 の開発中の開発DBを持っている場合)
 
-Wiki のマイグレーションは、リリース前に `20261108062633_wiki` の1本へまとめた(サンプルスペースの投入もここで行う)。
-まとめる前の `20261108062633_wiki` 〜 `20261115003457_wiki_space_type` を適用済みの開発DBは、checksum が一致せず `prisma migrate` が失敗する。
+Wiki のマイグレーションは、リリース前に `20261117120207_wiki` の1本へまとめた(サンプルスペースの投入もここで行う)。
+まとめる前の `20261108062633_wiki` 〜 `20261115003457_wiki_space_type`(まとめた直後の名前 `20261108062633_wiki` を含む)を適用済みの開発DBは、checksum や履歴が一致せず `prisma migrate` が失敗する。
 データが要らなければ `pnpm exec prisma migrate reset` で作り直す。データを残す場合は、表の形は同じなので履歴だけを貼り替える(サンプルスペースは入らない)。
 
 ```sh
 echo "DELETE FROM \"_prisma_migrations\" WHERE migration_name IN ('20261108062633_wiki', '20261108123719_wiki_attachment', '20261110100313_wiki_revision_number', '20261112061422_wiki_page_type', '20261113232303_wiki_revision_message', '20261115003457_wiki_space_type');" | pnpm exec prisma db execute --stdin
-pnpm exec prisma migrate resolve --applied 20261108062633_wiki
+pnpm exec prisma migrate resolve --applied 20261117120207_wiki
 pnpm exec prisma migrate status   # Database schema is up to date!
 ```
 
