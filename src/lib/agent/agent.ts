@@ -97,6 +97,9 @@ export const agentStateWhere = (states: readonly AgentTaskState[]): TicketWhereI
     : { agentState: { in: [...states] } }
 }
 
+/** 承認者が再実行(処理待ちへ戻す)できる処理状態。画面のボタンの出し分けとサーバーの判定で共通に使う */
+export const AGENT_RETRYABLE_STATES: ReadonlySet<AgentTaskState> = new Set(['failed', 'skipped'])
+
 /**
  * 処理状態を変えても `agentStateAt` を動かさない状態。実行の開始と、実行の失敗・見送り。
  * 返答待ちに入った時刻を残しておき、その実行(revise)や再実行で、返答待ちの間に付いた返信・返答を拾えるようにする

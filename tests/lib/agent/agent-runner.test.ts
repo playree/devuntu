@@ -14,7 +14,13 @@ import {
   isWithinActiveWindow,
 } from '@/lib/agent/agent-activity'
 import { consumeAutoReviseTriggers, hasSettledAutoRevise, hasUnsettledAutoRevise } from '@/lib/agent/agent-auto-revise'
-import { failStaleAgentRuns, finishAgentRunById, finishAgentTask, startAgentRun } from '@/lib/agent/agent-run'
+import {
+  failStaleAgentRuns,
+  findRequestedAgentRun,
+  finishAgentRunById,
+  finishAgentTask,
+  startAgentRun,
+} from '@/lib/agent/agent-run'
 import { type AgentRunnerRow } from '@/lib/agent/agent-runner'
 import { pickAgentTasks, resolveAgentTask } from '@/lib/agent/agent-task'
 import { findWaitingTicketIds } from '@/lib/board/ticket-sequence'
@@ -571,6 +577,14 @@ describe('finishAgentRunById', () => {
     expect(notifyMock, '報告時に finishAgentTask が通知済みなので二重に送らない').not.toHaveBeenCalled()
   })
 
+  it('閉じ済みの実行の遅れた終了報告では、後から始まった実行の処理中を失敗にしない', async () => {
+    agentRun.findUnique.mockResolvedValueOnce({ ...openRun(), status: 'failed' } as never)
+    agentRun.updateMany.mockResolvedValueOnce({ count: 0 } as never)
+
+    expect(await finishAgentRunById(runner(), 'run1', 'failed')).toBe(true)
+    expect(ticket.updateMany).not.toHaveBeenCalled()
+  })
+
   it('報告と同時に走っても、閉じられなかった側は通知しない', async () => {
     // 報告(finishAgentTask)のコミット前に読み出すと status は running に見える。
     // それでも更新が当たらなければ、閉じたのは向こうなので通知は出さない
@@ -650,7 +664,64 @@ describe('startAgentRun', () => {
     expect(consumeAutoReviseTriggers).toHaveBeenCalledWith(expect.anything(), 't1', 'run1')
   })
 
-  it('同じ requestId の再送は、新しい実行を作らずに既存の実行を返す', async () => {
+  it('同じ requestId で開始済みの実行を引く(再送の照合)', async () => {
+    agentRun.findUnique.mockResolvedValueOnce({
+      id: 'run1',
+      ticketId: 't1',
+      ticketRef: 'ABC-42',
+      status: 'running',
+    } as never)
+
+    expect(await findRequestedAgentRun('r1', 'req-1', 't1')).toEqual({
+      ok: true,
+      run: { id: 'run1', displayId: 'ABC-42', status: 'running' },
+    })
+    expect(agentRun.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { runnerId_requestId: { runnerId: 'r1', requestId: 'req-1' } } }),
+    )
+  })
+
+  it('別のチケットに使われた requestId は衝突として扱う', async () => {
+    agentRun.findUnique.mockResolvedValueOnce({
+      id: 'run1',
+      ticketId: 't9',
+      ticketRef: 'ABC-9',
+      status: 'running',
+    } as never)
+
+    expect(await findRequestedAgentRun('r1', 'req-1', 't1')).toEqual({ ok: false, reason: 'request_id_conflict' })
+  })
+
+  it('requestId 付きの初回は requestId を記録して開始する', async () => {
+    ticket.findFirst.mockResolvedValueOnce(openTicket() as never)
+    agentRun.create.mockResolvedValueOnce({ id: 'run1', status: 'running' } as never)
+
+    expect(await startAgentRun(runner(), 't1', 'plan', 'req-1')).toMatchObject({ ok: true, run: { id: 'run1' } })
+    expect(agentRun.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ requestId: 'req-1' }) }),
+    )
+  })
+
+  it('再送が同時に届いて一意制約に当たったら、先に作られた実行を返す', async () => {
+    agentRun.findUnique.mockResolvedValueOnce({
+      id: 'run1',
+      ticketId: 't1',
+      ticketRef: 'ABC-42',
+      status: 'running',
+    } as never)
+    ticket.findFirst.mockResolvedValueOnce(openTicket() as never)
+    agentRun.create.mockRejectedValueOnce(Object.assign(new Error('unique'), { code: 'P2002' }))
+
+    expect(await startAgentRun(runner(), 't1', 'plan', 'req-1')).toEqual({
+      ok: true,
+      run: { id: 'run1', displayId: 'ABC-42', status: 'running' },
+    })
+  })
+
+  it('先の要求の実行が処理中のため開始できなかった再送は、先の実行を返す', async () => {
+    ticket.findFirst.mockResolvedValueOnce(openTicket() as never)
+    // 照合の後に先の要求が確定し、行ロックの後には処理中の実行がある
+    agentRun.findFirst.mockResolvedValueOnce({ id: 'run1' } as never)
     agentRun.findUnique.mockResolvedValueOnce({
       id: 'run1',
       ticketId: 't1',
@@ -662,47 +733,7 @@ describe('startAgentRun', () => {
       ok: true,
       run: { id: 'run1', displayId: 'ABC-42', status: 'running' },
     })
-    expect(agentRun.findUnique).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { runnerId_requestId: { runnerId: 'r1', requestId: 'req-1' } } }),
-    )
     expect(agentRun.create).not.toHaveBeenCalled()
-    expect(ticket.update).not.toHaveBeenCalled()
-  })
-
-  it('別のチケットに使われた requestId は衝突として扱う', async () => {
-    agentRun.findUnique.mockResolvedValueOnce({
-      id: 'run1',
-      ticketId: 't9',
-      ticketRef: 'ABC-9',
-      status: 'running',
-    } as never)
-
-    expect(await startAgentRun(runner(), 't1', 'plan', 'req-1')).toEqual({ ok: false, reason: 'request_id_conflict' })
-    expect(agentRun.create).not.toHaveBeenCalled()
-  })
-
-  it('requestId 付きの初回は requestId を記録して開始する', async () => {
-    agentRun.findUnique.mockResolvedValueOnce(null as never)
-    ticket.findFirst.mockResolvedValueOnce(openTicket() as never)
-    agentRun.create.mockResolvedValueOnce({ id: 'run1', status: 'running' } as never)
-
-    expect(await startAgentRun(runner(), 't1', 'plan', 'req-1')).toMatchObject({ ok: true, run: { id: 'run1' } })
-    expect(agentRun.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ requestId: 'req-1' }) }),
-    )
-  })
-
-  it('再送が同時に届いて一意制約に当たったら、先に作られた実行を返す', async () => {
-    agentRun.findUnique
-      .mockResolvedValueOnce(null as never)
-      .mockResolvedValueOnce({ id: 'run1', ticketId: 't1', ticketRef: 'ABC-42', status: 'running' } as never)
-    ticket.findFirst.mockResolvedValueOnce(openTicket() as never)
-    agentRun.create.mockRejectedValueOnce(Object.assign(new Error('unique'), { code: 'P2002' }))
-
-    expect(await startAgentRun(runner(), 't1', 'plan', 'req-1')).toEqual({
-      ok: true,
-      run: { id: 'run1', displayId: 'ABC-42', status: 'running' },
-    })
   })
 
   it.each(['backlog', 'todo'])('%s のチケットは、エージェントを変更者として対応中へ移す', async (status) => {

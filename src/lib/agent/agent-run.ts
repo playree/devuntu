@@ -213,8 +213,9 @@ export const findRequestedAgentRun = async (
  * 並行リクエストが上限チェックを両方すり抜けて `dailyRunLimit` を超過するのを防ぐ。
  * 予算(`monthlyBudgetUsd`)も同じロックの中で見る。
  *
- * `requestId` 付きの要求は、同じランナーの同じ値で開始済みの実行があればそれを返す(再送で二重に始めない)。
- * 再送が同時に届いて一意制約に当たった場合も、先に作られた実行を引き直して返す。
+ * `requestId` の再送の照合は、稼働条件より先に呼び出し側(`POST /api/agent/runs`)が {@link findRequestedAgentRun} で行う。
+ * ここでは、照合した後に先の要求が確定した場合(同時に届いて一意制約に当たった・先の実行が処理中のため開始できなかった)に、
+ * 先に作られた実行を引き直して返す。
  */
 export const startAgentRun = async (
   runner: AgentRunnerRow,
@@ -223,20 +224,17 @@ export const startAgentRun = async (
   requestId: string | null = null,
   now: Date = nowDate(),
 ): Promise<StartAgentRunResult> => {
-  if (requestId) {
-    const requested = await findRequestedAgentRun(runner.id, requestId, ticketId)
-    if (requested) {
-      return requested
-    }
-  }
-
   const target = await findAgentTicket(runner.userId, ticketId)
   if (!target) {
     return { ok: false, reason: 'ticket_not_available' }
   }
 
   try {
-    return await createAgentRun(runner, target, action, requestId, now)
+    const started = await createAgentRun(runner, target, action, requestId, now)
+    if (!started.ok && started.reason === 'ticket_not_available' && requestId) {
+      return (await findRequestedAgentRun(runner.id, requestId, ticketId)) ?? started
+    }
+    return started
   } catch (e) {
     const requested =
       requestId && isUniqueViolation(e) ? await findRequestedAgentRun(runner.id, requestId, ticketId) : null
@@ -376,7 +374,9 @@ export const finishAgentRunById = async (
       where: { id: run.id, status: 'running' },
       data: { status: finalStatus, summary: summary ?? undefined, finishedAt: now },
     })
-    if (run.ticketId) {
+    // こちらが閉じた実行のときだけ、チケットを失敗にする。閉じ済み(報告済み・時間切れ・停止)の実行の遅れた終了報告で、
+    // 後から始まった別の実行の処理中を失敗にしない
+    if (count > 0 && run.ticketId) {
       // エージェントが結果を報告済みならその状態を尊重し、running のままの場合だけ失敗にする
       await tx.ticket.updateMany({
         where: { id: run.ticketId, agentState: 'running' },
@@ -546,7 +546,9 @@ export const finishAgentTask = async (
       },
     })
     if (count === 0) {
-      return { state: await currentAgentState(tx, ticketId, state) }
+      const current = await currentAgentState(tx, ticketId, state)
+      // runId を指定した報告は、読み出しから更新までの間に停止・時間切れで閉じられた場合も止めさせる
+      return runId ? { state: current, stale: true as const } : { state: current }
     }
 
     const ticket = await tx.ticket.update({

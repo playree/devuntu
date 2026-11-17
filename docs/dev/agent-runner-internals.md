@@ -402,9 +402,11 @@ CodeRabbit は push のたびに再レビューするので、指摘が続くと
 - `--dry-run` / `--debug` でも `/api/agent/status` への問い合わせ(最終ポーリング時刻の更新)と自動更新は行い、
   実行の記録(`/api/agent/runs`)はしない
 - 実行の開始(`POST /api/agent/runs`)には poll ごとに作る `requestId`(uuid4)を付ける。届かなかった(`ApiUnreachable`:
-  接続できない・時間切れ・中継の 502 / 503 / 504)ときは同じ `requestId` で再送する(計 3 回)。それでも応答が無ければ
-  `pending-start.json` に残して CLI を起動せず、次の poll の先頭で `GET /api/agent/runs?requestId=` を引いて、開始されていた実行を停止する
-  (照合できなければ記録を残して次回また試す)
+  接続できない・時間切れ・中継の 502 / 503 / 504)ときは同じ `requestId` で再送する(計 3 回)。それでも応答が無いとき、
+  または再送が別のエラーで終わったとき(届かなかった要求を一度でも送っていれば、開始されたかどうか分からない)は、
+  `pending-start.json` に追記して CLI を起動せず、次の poll の先頭で `GET /api/agent/runs?requestId=` を引いて、開始されていた実行を停止する
+  (照合できなかった要求は記録に残して次回また試す)。サーバー側も、照合の後に先の要求が確定した再送には先の実行を返す
+  (一意制約に当たった場合と、先の実行が処理中のため開始できなかった場合)
 - CLI へは実行の ID を環境変数 `DEVUNTU_AGENT_RUN_ID` とプロンプトで渡し、`finish_agent_task` の `runId` に指定させる
 - サブコマンド `runs` / `cancel` は中断後の確認と後始末用。`poll` と並行して使えるようロックを取らない
 

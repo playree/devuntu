@@ -139,6 +139,18 @@ describe('finishAgentTask(runId 指定)', () => {
     expect(notifyMock).not.toHaveBeenCalled()
   })
 
+  it('読み出しの後に停止で閉じられた実行への報告も stale を返す', async () => {
+    agentRun.findFirst.mockResolvedValueOnce({ id: 'run2', action: 'execute' } as never)
+    agentRun.updateMany.mockResolvedValueOnce({ count: 0 } as never)
+    ticket.findUnique.mockResolvedValueOnce({ agentState: 'failed' } as never)
+
+    expect(await finishAgentTask(runner(), 't1', 'completed', null, [], 'run2')).toEqual({
+      state: 'failed',
+      stale: true,
+    })
+    expect(ticket.update).not.toHaveBeenCalled()
+  })
+
   it('runId 無しで停止直後に届いた報告は、failed を上書きしない', async () => {
     agentRun.findFirst
       .mockResolvedValueOnce(null as never)
@@ -152,7 +164,7 @@ describe('finishAgentTask(runId 指定)', () => {
 
 describe('retryAgentTicket', () => {
   const setup = (agentState: string | null, latest: unknown, running: unknown = null) => {
-    ticket.findUniqueOrThrow.mockResolvedValueOnce({ agentMode: 'plan', agentState } as never)
+    ticket.findUniqueOrThrow.mockResolvedValueOnce({ agentMode: 'plan', agentState, agentStateAt: new Date() } as never)
     agentRun.findFirst.mockResolvedValueOnce(running as never).mockResolvedValueOnce(latest as never)
   }
 
@@ -180,6 +192,24 @@ describe('retryAgentTicket', () => {
     expect(trigger.updateMany).toHaveBeenCalledWith({
       where: { runId: 'run1' },
       data: { runId: null, consumed: false },
+    })
+  })
+
+  it('返答待ちの時刻が無い(導入前の)チケットは、revise の実行の開始時刻を返答待ちの時刻とみなす', async () => {
+    const startedAt = new Date('2026-08-25T00:00:00Z')
+    ticket.findUniqueOrThrow.mockResolvedValueOnce({
+      agentMode: 'plan',
+      agentState: 'failed',
+      agentStateAt: null,
+    } as never)
+    agentRun.findFirst
+      .mockResolvedValueOnce(null as never)
+      .mockResolvedValueOnce({ id: 'run1', action: 'revise', startedAt } as never)
+
+    expect(await retryAgentTicket({ id: 'u1' }, 't1')).toEqual({ state: 'planned' })
+    expect(ticket.update).toHaveBeenCalledWith({
+      where: { id: 't1' },
+      data: { agentState: 'planned', agentStateAt: startedAt },
     })
   })
 

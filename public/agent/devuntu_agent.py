@@ -804,9 +804,28 @@ def pending_start_path(config: Config) -> Path:
     return config.path.parent / PENDING_START_FILE
 
 
-def save_pending_start(config: Config, pending: dict) -> None:
+def load_pending_starts(config: Config) -> list[dict]:
+    """照合待ちの開始要求。読めない記録は捨てる(照合できないまま残しても意味が無い)"""
+    path = pending_start_path(config)
+    if not path.is_file():
+        return []
     try:
-        pending_start_path(config).write_text(json.dumps(pending) + "\n", encoding="utf-8")
+        pending = json.loads(path.read_text(encoding="utf-8"))
+        requests = pending["requests"]
+        return [{"requestId": str(r["requestId"]), "ticketId": str(r.get("ticketId", ""))} for r in requests]
+    except (OSError, ValueError, KeyError, TypeError) as e:
+        log.warning("discarding the unreadable start request record: %s (%s)", path, e)
+        path.unlink(missing_ok=True)
+        return []
+
+
+def save_pending_starts(config: Config, requests: list[dict]) -> None:
+    path = pending_start_path(config)
+    try:
+        if requests:
+            path.write_text(json.dumps({"requests": requests}) + "\n", encoding="utf-8")
+        else:
+            path.unlink(missing_ok=True)
     except OSError as e:
         log.error("cannot record the unanswered start request: %s", e)
 
@@ -814,49 +833,49 @@ def save_pending_start(config: Config, pending: dict) -> None:
 def reconcile_pending_start(config: Config) -> None:
     """応答を得られなかった開始要求を照合し、開始されていた実行を停止する(CLI は起動していない)。
 
-    照合できなかった(通信できない)場合は記録を残し、次の poll でもう一度試す。
+    照合できなかった(通信できない)要求は記録に残し、次の poll でもう一度試す。
     """
-    path = pending_start_path(config)
-    if not path.is_file():
-        return
-    try:
-        pending = json.loads(path.read_text(encoding="utf-8"))
-        request_id = str(pending["requestId"])
-    except (OSError, ValueError, KeyError, TypeError) as e:
-        log.warning("discarding the unreadable start request record: %s (%s)", path, e)
-        path.unlink(missing_ok=True)
-        return
-
-    query = urllib.parse.urlencode({"requestId": request_id})
-    try:
-        runs = call_api(config, "GET", f"/api/agent/runs?{query}").get("runs") or []
-        for run in runs:
-            if run.get("status") != "running":
-                continue
-            try:
-                call_api(config, "POST", f"/api/agent/runs/{run['id']}/cancel")
-                log.warning("canceled the run started without a response: run=%s ticket=%s", run["id"], run.get("ticketRef"))
-            except ApiError as e:
-                # 既に閉じた(時間切れなど)なら何もしなくてよい
-                if e.status != 409:
-                    raise
-    except ApiError as e:
-        log.warning("cannot reconcile the unanswered start request yet: %s", e)
-        return
-    path.unlink(missing_ok=True)
+    remaining: list[dict] = []
+    for pending in load_pending_starts(config):
+        query = urllib.parse.urlencode({"requestId": pending["requestId"]})
+        try:
+            runs = call_api(config, "GET", f"/api/agent/runs?{query}").get("runs") or []
+            for run in runs:
+                if run.get("status") != "running":
+                    continue
+                try:
+                    call_api(config, "POST", f"/api/agent/runs/{run['id']}/cancel")
+                    log.warning(
+                        "canceled the run started without a response: run=%s ticket=%s", run["id"], run.get("ticketRef")
+                    )
+                except ApiError as e:
+                    # 既に閉じた(時間切れなど)なら何もしなくてよい
+                    if e.status != 409:
+                        raise
+        except ApiError as e:
+            log.warning("cannot reconcile the unanswered start request yet: %s", e)
+            remaining.append(pending)
+    if remaining or pending_start_path(config).is_file():
+        save_pending_starts(config, remaining)
 
 
 def start_run(config: Config, ticket_id: str, action: str) -> dict:
     """実行の開始を記録する。通信エラーなら同じ requestId で再送し、サーバーに開始済みの実行を返させる"""
     request_id = str(uuid.uuid4())
     body = {"ticketId": ticket_id, "action": action, "requestId": request_id}
+    unanswered = False
     for attempt in range(1, START_ATTEMPTS + 1):
         try:
             return call_api(config, "POST", "/api/agent/runs", body)
-        except ApiUnreachable as e:
-            if attempt == START_ATTEMPTS:
-                # 開始されたかどうか分からない。CLI は起動せず、次の poll で照合して後始末する
-                save_pending_start(config, {"requestId": request_id, "ticketId": ticket_id})
+        except ApiError as e:
+            # 届いたか分からない要求を一度でも送っていれば、開始されたかどうか分からない。
+            # CLI は起動せず、次の poll で照合して後始末する
+            unanswered = unanswered or isinstance(e, ApiUnreachable)
+            if not isinstance(e, ApiUnreachable) or attempt == START_ATTEMPTS:
+                if unanswered:
+                    save_pending_starts(
+                        config, [*load_pending_starts(config), {"requestId": request_id, "ticketId": ticket_id}]
+                    )
                 raise
             log.warning("start request failed (attempt %d/%d), retrying: %s", attempt, START_ATTEMPTS, e)
             time.sleep(START_RETRY_WAIT_SEC)

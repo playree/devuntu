@@ -31,6 +31,7 @@ vi.mock('@/lib/agent/agent-activity', () => ({
   activeWindowLabel: () => null,
 }))
 vi.mock('@/lib/agent/agent-run', () => ({
+  CANCELED_SUMMARY: 'canceled',
   startAgentRun: mocks.startAgentRun,
   findRequestedAgentRun: mocks.findRequestedAgentRun,
   cancelAgentRun: mocks.cancelAgentRun,

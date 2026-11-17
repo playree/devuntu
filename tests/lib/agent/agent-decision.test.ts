@@ -134,6 +134,8 @@ describe('findPendingAgentDecision', () => {
     expect(await findPendingAgentDecision(ticket, fakeTx as never)).toMatchObject({ commentId: 'plan-1' })
     const [sql, ...values] = fakeTx.$queryRaw.mock.calls[0]
     expect((sql as string[]).join('?')).toContain('c."type"::text = v."type"')
+    // 前の回に返答されないまま残ったものは対象にしない(直近の実行の開始以降に限る)
+    expect((sql as string[]).join('?')).toContain('SELECT MAX(r."startedAt")')
     expect(values).toEqual([expect.objectContaining({ values: ['t1', AGENT, 'plan'] })])
   })
 

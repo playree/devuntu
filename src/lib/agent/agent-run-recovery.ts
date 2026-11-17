@@ -6,14 +6,14 @@
  */
 
 import type { Prisma } from '@/generated/prisma/client'
-import type { AgentRunStatus, AgentTaskState } from '@/generated/prisma/enums'
+import type { AgentRunStatus } from '@/generated/prisma/enums'
 import { assertTicketAccess, type Actor } from '../board/board-access'
 import { lockTicketRow } from '../board/row-lock'
 import { nowDate } from '../day'
 import { errInvalidOperation } from '../error'
 import { logger } from '../logger'
 import { prisma, type Db } from '../prisma'
-import { agentStateData } from './agent'
+import { AGENT_RETRYABLE_STATES, agentStateData } from './agent'
 import { cancelAgentRun } from './agent-run'
 
 /** ランナーへ返す実行の項目 */
@@ -73,9 +73,6 @@ export const findRunningAgentRunId = async (
   return run?.id ?? null
 }
 
-/** 再実行できる処理状態 */
-const RETRYABLE_STATES: ReadonlySet<AgentTaskState> = new Set(['failed', 'skipped'])
-
 /** 承認者の操作の共通の確認。担当がエージェントでなければ操作の意味が無い */
 const assertAgentOperator = async (actor: Actor, ticketId: string, tx: Db) => {
   const access = await assertTicketAccess(actor, ticketId, 'agentMode', tx)
@@ -99,9 +96,9 @@ export const retryAgentTicket = async (actor: Actor, ticketId: string, now: Date
     await lockTicketRow(tx, ticketId)
     const ticket = await tx.ticket.findUniqueOrThrow({
       where: { id: ticketId },
-      select: { agentMode: true, agentState: true },
+      select: { agentMode: true, agentState: true, agentStateAt: true },
     })
-    if (!ticket.agentMode || !ticket.agentState || !RETRYABLE_STATES.has(ticket.agentState)) {
+    if (!ticket.agentMode || !ticket.agentState || !AGENT_RETRYABLE_STATES.has(ticket.agentState)) {
       throw errInvalidOperation()
     }
     if (await findRunningAgentRunId(ticketId, undefined, tx)) {
@@ -111,15 +108,19 @@ export const retryAgentTicket = async (actor: Actor, ticketId: string, now: Date
     const latest = await tx.agentRun.findFirst({
       where: { ticketId, runner: { userId: access.assigneeId ?? undefined } },
       orderBy: { startedAt: 'desc' },
-      select: { id: true, action: true },
+      select: { id: true, action: true, startedAt: true },
     })
     if (latest?.action === 'revise') {
       await tx.agentAutoReviseTrigger.updateMany({
         where: { runId: latest.id },
         data: { runId: null, consumed: false },
       })
-      // agentStateData を通すと agentStateAt が今になり、返答待ちの間に付いた返信を拾えなくなるので、状態だけを戻す
-      await tx.ticket.update({ where: { id: ticketId }, data: { agentState: 'planned' } })
+      // agentStateData を通すと agentStateAt が今になり、返答待ちの間に付いた返信を拾えなくなるので、状態だけを戻す。
+      // 導入前から返答待ちだった(時刻の無い)チケットは、その実行の開始時刻を返答待ちの時刻とみなす
+      await tx.ticket.update({
+        where: { id: ticketId },
+        data: { agentState: 'planned', ...(ticket.agentStateAt === null && { agentStateAt: latest.startedAt }) },
+      })
       return 'planned' as const
     }
     await tx.ticket.update({ where: { id: ticketId }, data: agentStateData('queued', now) })

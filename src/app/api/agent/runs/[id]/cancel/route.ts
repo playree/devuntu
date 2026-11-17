@@ -1,5 +1,5 @@
 import { agentError, agentJson, authenticateRunner } from '@/lib/agent/agent-api'
-import { cancelAgentRun } from '@/lib/agent/agent-run'
+import { CANCELED_SUMMARY, cancelAgentRun } from '@/lib/agent/agent-run'
 
 /**
  * 自分の実行中の実行を停止する。failed(要約 `canceled`)で閉じ、チケットの処理状態を失敗にする。
@@ -25,5 +25,5 @@ export const POST = async (request: Request, { params }: { params: Promise<{ id:
   if (canceled === 'not_running') {
     return agentError(409, 'not_running')
   }
-  return agentJson({ id, status: 'failed', summary: 'canceled' })
+  return agentJson({ id, status: 'failed', summary: CANCELED_SUMMARY })
 }

@@ -5,13 +5,11 @@ import { ArrowPathIcon, StopIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import type { AgentTaskState } from '@/generated/prisma/enums'
 import { parseAction } from '@/lib/action/action-client'
+import { AGENT_RETRYABLE_STATES } from '@/lib/agent/agent'
 import { useConfirmAction } from '@/lib/use-confirm-action'
 import { useLocale } from '@/locale/client'
 import { FC } from 'react'
 import { cancelAgentTicketRun, retryAgentTicket } from './server'
-
-/** 再実行できる処理状態(サーバー側の判定と同じ) */
-const RETRYABLE_STATES: ReadonlySet<AgentTaskState> = new Set(['failed', 'skipped'])
 
 /**
  * エージェントの処理の停止・再実行ボタン(承認者だけに出す)。
@@ -50,7 +48,7 @@ export const AgentRunControl: FC<{
       </MultiButton>
     )
   }
-  if (state && RETRYABLE_STATES.has(state)) {
+  if (state && AGENT_RETRYABLE_STATES.has(state)) {
     return (
       <MultiButton size='sm' variant='outline' isSmart icon={<ArrowPathIcon width={14} />} onPress={retry}>
         {t('agent_retry')}

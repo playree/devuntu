@@ -46,6 +46,7 @@ const AWAITING_TYPE: Partial<Record<AgentTaskState, TicketCommentType>> = {
  * 処理状態に対応する種別(planned → plan / done → report)のうち担当エージェントの最新のもので、その後に誰の返信も無いこと
  * (アナウンスは返信に数えない)。後からエージェントが通常コメントを足しても対象は変わらない。
  * 既に誰かが返信した後(質問への回答・revise 中の質問を含む)は対象にしない。
+ * ランナーで動かしている場合は、そのエージェントの直近の実行で投稿したものに限る(前の回に返答されないまま残った plan / report を蒸し返さない)。
  */
 export const findPendingAgentDecisions = async (
   tickets: DecisionTicket[],
@@ -73,6 +74,15 @@ export const findPendingAgentDecisions = async (
       ),
     )}) AS v("ticketId", "authorId", "type")
       ON c."ticketId" = v."ticketId" AND c."authorId" = v."authorId" AND c."type"::text = v."type"
+    WHERE c."createdAt" >= COALESCE(
+      (
+        SELECT MAX(r."startedAt")
+        FROM "agent_run" AS r
+        JOIN "agent_runner" AS ar ON ar."id" = r."runnerId"
+        WHERE r."ticketId" = c."ticketId" AND ar."userId" = c."authorId"
+      ),
+      '-infinity'::timestamp
+    )
     ORDER BY c."ticketId", c."createdAt" DESC, c."id" DESC
   `
   const candidates = lasts.flatMap((last) => {
