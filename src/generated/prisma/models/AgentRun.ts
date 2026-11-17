@@ -50,6 +50,7 @@ export type AgentRunMinAggregateOutputType = {
   action: $Enums.AgentRunAction | null
   status: $Enums.AgentRunStatus | null
   summary: string | null
+  requestId: string | null
   startedAt: Date | null
   finishedAt: Date | null
   model: string | null
@@ -69,6 +70,7 @@ export type AgentRunMaxAggregateOutputType = {
   action: $Enums.AgentRunAction | null
   status: $Enums.AgentRunStatus | null
   summary: string | null
+  requestId: string | null
   startedAt: Date | null
   finishedAt: Date | null
   model: string | null
@@ -88,6 +90,7 @@ export type AgentRunCountAggregateOutputType = {
   action: number
   status: number
   summary: number
+  requestId: number
   startedAt: number
   finishedAt: number
   model: number
@@ -125,6 +128,7 @@ export type AgentRunMinAggregateInputType = {
   action?: true
   status?: true
   summary?: true
+  requestId?: true
   startedAt?: true
   finishedAt?: true
   model?: true
@@ -144,6 +148,7 @@ export type AgentRunMaxAggregateInputType = {
   action?: true
   status?: true
   summary?: true
+  requestId?: true
   startedAt?: true
   finishedAt?: true
   model?: true
@@ -163,6 +168,7 @@ export type AgentRunCountAggregateInputType = {
   action?: true
   status?: true
   summary?: true
+  requestId?: true
   startedAt?: true
   finishedAt?: true
   model?: true
@@ -269,6 +275,7 @@ export type AgentRunGroupByOutputType = {
   action: $Enums.AgentRunAction
   status: $Enums.AgentRunStatus
   summary: string | null
+  requestId: string | null
   startedAt: Date
   finishedAt: Date | null
   model: string | null
@@ -311,6 +318,7 @@ export type AgentRunWhereInput = {
   action?: Prisma.EnumAgentRunActionFilter<"AgentRun"> | $Enums.AgentRunAction
   status?: Prisma.EnumAgentRunStatusFilter<"AgentRun"> | $Enums.AgentRunStatus
   summary?: Prisma.StringNullableFilter<"AgentRun"> | string | null
+  requestId?: Prisma.StringNullableFilter<"AgentRun"> | string | null
   startedAt?: Prisma.DateTimeFilter<"AgentRun"> | Date | string
   finishedAt?: Prisma.DateTimeNullableFilter<"AgentRun"> | Date | string | null
   model?: Prisma.StringNullableFilter<"AgentRun"> | string | null
@@ -333,6 +341,7 @@ export type AgentRunOrderByWithRelationInput = {
   action?: Prisma.SortOrder
   status?: Prisma.SortOrder
   summary?: Prisma.SortOrderInput | Prisma.SortOrder
+  requestId?: Prisma.SortOrderInput | Prisma.SortOrder
   startedAt?: Prisma.SortOrder
   finishedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   model?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -349,6 +358,7 @@ export type AgentRunOrderByWithRelationInput = {
 
 export type AgentRunWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  runnerId_requestId?: Prisma.AgentRunRunnerIdRequestIdCompoundUniqueInput
   AND?: Prisma.AgentRunWhereInput | Prisma.AgentRunWhereInput[]
   OR?: Prisma.AgentRunWhereInput[]
   NOT?: Prisma.AgentRunWhereInput | Prisma.AgentRunWhereInput[]
@@ -358,6 +368,7 @@ export type AgentRunWhereUniqueInput = Prisma.AtLeast<{
   action?: Prisma.EnumAgentRunActionFilter<"AgentRun"> | $Enums.AgentRunAction
   status?: Prisma.EnumAgentRunStatusFilter<"AgentRun"> | $Enums.AgentRunStatus
   summary?: Prisma.StringNullableFilter<"AgentRun"> | string | null
+  requestId?: Prisma.StringNullableFilter<"AgentRun"> | string | null
   startedAt?: Prisma.DateTimeFilter<"AgentRun"> | Date | string
   finishedAt?: Prisma.DateTimeNullableFilter<"AgentRun"> | Date | string | null
   model?: Prisma.StringNullableFilter<"AgentRun"> | string | null
@@ -370,7 +381,7 @@ export type AgentRunWhereUniqueInput = Prisma.AtLeast<{
   runner?: Prisma.XOR<Prisma.AgentRunnerScalarRelationFilter, Prisma.AgentRunnerWhereInput>
   ticket?: Prisma.XOR<Prisma.TicketNullableScalarRelationFilter, Prisma.TicketWhereInput> | null
   autoReviseTriggers?: Prisma.AgentAutoReviseTriggerListRelationFilter
-}, "id">
+}, "id" | "runnerId_requestId">
 
 export type AgentRunOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -380,6 +391,7 @@ export type AgentRunOrderByWithAggregationInput = {
   action?: Prisma.SortOrder
   status?: Prisma.SortOrder
   summary?: Prisma.SortOrderInput | Prisma.SortOrder
+  requestId?: Prisma.SortOrderInput | Prisma.SortOrder
   startedAt?: Prisma.SortOrder
   finishedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   model?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -407,6 +419,7 @@ export type AgentRunScalarWhereWithAggregatesInput = {
   action?: Prisma.EnumAgentRunActionWithAggregatesFilter<"AgentRun"> | $Enums.AgentRunAction
   status?: Prisma.EnumAgentRunStatusWithAggregatesFilter<"AgentRun"> | $Enums.AgentRunStatus
   summary?: Prisma.StringNullableWithAggregatesFilter<"AgentRun"> | string | null
+  requestId?: Prisma.StringNullableWithAggregatesFilter<"AgentRun"> | string | null
   startedAt?: Prisma.DateTimeWithAggregatesFilter<"AgentRun"> | Date | string
   finishedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"AgentRun"> | Date | string | null
   model?: Prisma.StringNullableWithAggregatesFilter<"AgentRun"> | string | null
@@ -424,6 +437,7 @@ export type AgentRunCreateInput = {
   action: $Enums.AgentRunAction
   status?: $Enums.AgentRunStatus
   summary?: string | null
+  requestId?: string | null
   startedAt?: Date | string
   finishedAt?: Date | string | null
   model?: string | null
@@ -446,6 +460,7 @@ export type AgentRunUncheckedCreateInput = {
   action: $Enums.AgentRunAction
   status?: $Enums.AgentRunStatus
   summary?: string | null
+  requestId?: string | null
   startedAt?: Date | string
   finishedAt?: Date | string | null
   model?: string | null
@@ -464,6 +479,7 @@ export type AgentRunUpdateInput = {
   action?: Prisma.EnumAgentRunActionFieldUpdateOperationsInput | $Enums.AgentRunAction
   status?: Prisma.EnumAgentRunStatusFieldUpdateOperationsInput | $Enums.AgentRunStatus
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -486,6 +502,7 @@ export type AgentRunUncheckedUpdateInput = {
   action?: Prisma.EnumAgentRunActionFieldUpdateOperationsInput | $Enums.AgentRunAction
   status?: Prisma.EnumAgentRunStatusFieldUpdateOperationsInput | $Enums.AgentRunStatus
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -506,6 +523,7 @@ export type AgentRunCreateManyInput = {
   action: $Enums.AgentRunAction
   status?: $Enums.AgentRunStatus
   summary?: string | null
+  requestId?: string | null
   startedAt?: Date | string
   finishedAt?: Date | string | null
   model?: string | null
@@ -523,6 +541,7 @@ export type AgentRunUpdateManyMutationInput = {
   action?: Prisma.EnumAgentRunActionFieldUpdateOperationsInput | $Enums.AgentRunAction
   status?: Prisma.EnumAgentRunStatusFieldUpdateOperationsInput | $Enums.AgentRunStatus
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -542,6 +561,7 @@ export type AgentRunUncheckedUpdateManyInput = {
   action?: Prisma.EnumAgentRunActionFieldUpdateOperationsInput | $Enums.AgentRunAction
   status?: Prisma.EnumAgentRunStatusFieldUpdateOperationsInput | $Enums.AgentRunStatus
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -563,6 +583,11 @@ export type AgentRunOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
+export type AgentRunRunnerIdRequestIdCompoundUniqueInput = {
+  runnerId: string
+  requestId: string
+}
+
 export type AgentRunCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   runnerId?: Prisma.SortOrder
@@ -571,6 +596,7 @@ export type AgentRunCountOrderByAggregateInput = {
   action?: Prisma.SortOrder
   status?: Prisma.SortOrder
   summary?: Prisma.SortOrder
+  requestId?: Prisma.SortOrder
   startedAt?: Prisma.SortOrder
   finishedAt?: Prisma.SortOrder
   model?: Prisma.SortOrder
@@ -598,6 +624,7 @@ export type AgentRunMaxOrderByAggregateInput = {
   action?: Prisma.SortOrder
   status?: Prisma.SortOrder
   summary?: Prisma.SortOrder
+  requestId?: Prisma.SortOrder
   startedAt?: Prisma.SortOrder
   finishedAt?: Prisma.SortOrder
   model?: Prisma.SortOrder
@@ -617,6 +644,7 @@ export type AgentRunMinOrderByAggregateInput = {
   action?: Prisma.SortOrder
   status?: Prisma.SortOrder
   summary?: Prisma.SortOrder
+  requestId?: Prisma.SortOrder
   startedAt?: Prisma.SortOrder
   finishedAt?: Prisma.SortOrder
   model?: Prisma.SortOrder
@@ -763,6 +791,7 @@ export type AgentRunCreateWithoutRunnerInput = {
   action: $Enums.AgentRunAction
   status?: $Enums.AgentRunStatus
   summary?: string | null
+  requestId?: string | null
   startedAt?: Date | string
   finishedAt?: Date | string | null
   model?: string | null
@@ -783,6 +812,7 @@ export type AgentRunUncheckedCreateWithoutRunnerInput = {
   action: $Enums.AgentRunAction
   status?: $Enums.AgentRunStatus
   summary?: string | null
+  requestId?: string | null
   startedAt?: Date | string
   finishedAt?: Date | string | null
   model?: string | null
@@ -832,6 +862,7 @@ export type AgentRunScalarWhereInput = {
   action?: Prisma.EnumAgentRunActionFilter<"AgentRun"> | $Enums.AgentRunAction
   status?: Prisma.EnumAgentRunStatusFilter<"AgentRun"> | $Enums.AgentRunStatus
   summary?: Prisma.StringNullableFilter<"AgentRun"> | string | null
+  requestId?: Prisma.StringNullableFilter<"AgentRun"> | string | null
   startedAt?: Prisma.DateTimeFilter<"AgentRun"> | Date | string
   finishedAt?: Prisma.DateTimeNullableFilter<"AgentRun"> | Date | string | null
   model?: Prisma.StringNullableFilter<"AgentRun"> | string | null
@@ -849,6 +880,7 @@ export type AgentRunCreateWithoutAutoReviseTriggersInput = {
   action: $Enums.AgentRunAction
   status?: $Enums.AgentRunStatus
   summary?: string | null
+  requestId?: string | null
   startedAt?: Date | string
   finishedAt?: Date | string | null
   model?: string | null
@@ -870,6 +902,7 @@ export type AgentRunUncheckedCreateWithoutAutoReviseTriggersInput = {
   action: $Enums.AgentRunAction
   status?: $Enums.AgentRunStatus
   summary?: string | null
+  requestId?: string | null
   startedAt?: Date | string
   finishedAt?: Date | string | null
   model?: string | null
@@ -903,6 +936,7 @@ export type AgentRunUpdateWithoutAutoReviseTriggersInput = {
   action?: Prisma.EnumAgentRunActionFieldUpdateOperationsInput | $Enums.AgentRunAction
   status?: Prisma.EnumAgentRunStatusFieldUpdateOperationsInput | $Enums.AgentRunStatus
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -924,6 +958,7 @@ export type AgentRunUncheckedUpdateWithoutAutoReviseTriggersInput = {
   action?: Prisma.EnumAgentRunActionFieldUpdateOperationsInput | $Enums.AgentRunAction
   status?: Prisma.EnumAgentRunStatusFieldUpdateOperationsInput | $Enums.AgentRunStatus
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -941,6 +976,7 @@ export type AgentRunCreateWithoutTicketInput = {
   action: $Enums.AgentRunAction
   status?: $Enums.AgentRunStatus
   summary?: string | null
+  requestId?: string | null
   startedAt?: Date | string
   finishedAt?: Date | string | null
   model?: string | null
@@ -961,6 +997,7 @@ export type AgentRunUncheckedCreateWithoutTicketInput = {
   action: $Enums.AgentRunAction
   status?: $Enums.AgentRunStatus
   summary?: string | null
+  requestId?: string | null
   startedAt?: Date | string
   finishedAt?: Date | string | null
   model?: string | null
@@ -1006,6 +1043,7 @@ export type AgentRunCreateManyRunnerInput = {
   action: $Enums.AgentRunAction
   status?: $Enums.AgentRunStatus
   summary?: string | null
+  requestId?: string | null
   startedAt?: Date | string
   finishedAt?: Date | string | null
   model?: string | null
@@ -1023,6 +1061,7 @@ export type AgentRunUpdateWithoutRunnerInput = {
   action?: Prisma.EnumAgentRunActionFieldUpdateOperationsInput | $Enums.AgentRunAction
   status?: Prisma.EnumAgentRunStatusFieldUpdateOperationsInput | $Enums.AgentRunStatus
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1043,6 +1082,7 @@ export type AgentRunUncheckedUpdateWithoutRunnerInput = {
   action?: Prisma.EnumAgentRunActionFieldUpdateOperationsInput | $Enums.AgentRunAction
   status?: Prisma.EnumAgentRunStatusFieldUpdateOperationsInput | $Enums.AgentRunStatus
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1062,6 +1102,7 @@ export type AgentRunUncheckedUpdateManyWithoutRunnerInput = {
   action?: Prisma.EnumAgentRunActionFieldUpdateOperationsInput | $Enums.AgentRunAction
   status?: Prisma.EnumAgentRunStatusFieldUpdateOperationsInput | $Enums.AgentRunStatus
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1080,6 +1121,7 @@ export type AgentRunCreateManyTicketInput = {
   action: $Enums.AgentRunAction
   status?: $Enums.AgentRunStatus
   summary?: string | null
+  requestId?: string | null
   startedAt?: Date | string
   finishedAt?: Date | string | null
   model?: string | null
@@ -1097,6 +1139,7 @@ export type AgentRunUpdateWithoutTicketInput = {
   action?: Prisma.EnumAgentRunActionFieldUpdateOperationsInput | $Enums.AgentRunAction
   status?: Prisma.EnumAgentRunStatusFieldUpdateOperationsInput | $Enums.AgentRunStatus
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1117,6 +1160,7 @@ export type AgentRunUncheckedUpdateWithoutTicketInput = {
   action?: Prisma.EnumAgentRunActionFieldUpdateOperationsInput | $Enums.AgentRunAction
   status?: Prisma.EnumAgentRunStatusFieldUpdateOperationsInput | $Enums.AgentRunStatus
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1136,6 +1180,7 @@ export type AgentRunUncheckedUpdateManyWithoutTicketInput = {
   action?: Prisma.EnumAgentRunActionFieldUpdateOperationsInput | $Enums.AgentRunAction
   status?: Prisma.EnumAgentRunStatusFieldUpdateOperationsInput | $Enums.AgentRunStatus
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   finishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   model?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1186,6 +1231,7 @@ export type AgentRunSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   action?: boolean
   status?: boolean
   summary?: boolean
+  requestId?: boolean
   startedAt?: boolean
   finishedAt?: boolean
   model?: boolean
@@ -1209,6 +1255,7 @@ export type AgentRunSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   action?: boolean
   status?: boolean
   summary?: boolean
+  requestId?: boolean
   startedAt?: boolean
   finishedAt?: boolean
   model?: boolean
@@ -1230,6 +1277,7 @@ export type AgentRunSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   action?: boolean
   status?: boolean
   summary?: boolean
+  requestId?: boolean
   startedAt?: boolean
   finishedAt?: boolean
   model?: boolean
@@ -1251,6 +1299,7 @@ export type AgentRunSelectScalar = {
   action?: boolean
   status?: boolean
   summary?: boolean
+  requestId?: boolean
   startedAt?: boolean
   finishedAt?: boolean
   model?: boolean
@@ -1262,7 +1311,7 @@ export type AgentRunSelectScalar = {
   measuredAt?: boolean
 }
 
-export type AgentRunOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "runnerId" | "ticketId" | "ticketRef" | "action" | "status" | "summary" | "startedAt" | "finishedAt" | "model" | "inputTokens" | "cachedInputTokens" | "outputTokens" | "costUsd" | "exitCode" | "measuredAt", ExtArgs["result"]["agentRun"]>
+export type AgentRunOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "runnerId" | "ticketId" | "ticketRef" | "action" | "status" | "summary" | "requestId" | "startedAt" | "finishedAt" | "model" | "inputTokens" | "cachedInputTokens" | "outputTokens" | "costUsd" | "exitCode" | "measuredAt", ExtArgs["result"]["agentRun"]>
 export type AgentRunInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   runner?: boolean | Prisma.AgentRunnerDefaultArgs<ExtArgs>
   ticket?: boolean | Prisma.AgentRun$ticketArgs<ExtArgs>
@@ -1314,6 +1363,10 @@ export type $AgentRunPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
      * エージェントが報告した結果の要約
      */
     summary: string | null
+    /**
+     * 開始要求の再送を見分けるためにランナーが付ける識別子。同じランナーの同じ値は既存の実行を返す
+     */
+    requestId: string | null
     /**
      * 実行の開始時刻
      */
@@ -1783,6 +1836,7 @@ export interface AgentRunFieldRefs {
   readonly action: Prisma.FieldRef<"AgentRun", 'AgentRunAction'>
   readonly status: Prisma.FieldRef<"AgentRun", 'AgentRunStatus'>
   readonly summary: Prisma.FieldRef<"AgentRun", 'String'>
+  readonly requestId: Prisma.FieldRef<"AgentRun", 'String'>
   readonly startedAt: Prisma.FieldRef<"AgentRun", 'DateTime'>
   readonly finishedAt: Prisma.FieldRef<"AgentRun", 'DateTime'>
   readonly model: Prisma.FieldRef<"AgentRun", 'String'>

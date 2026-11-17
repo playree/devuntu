@@ -144,6 +144,9 @@ model AgentRun {
   /// エージェントが報告した結果の要約
   summary String?
 
+  /// 開始要求の再送を見分けるためにランナーが付ける識別子。同じランナーの同じ値は既存の実行を返す
+  requestId String?
+
   /// 実行の開始時刻
   startedAt DateTime @default(now())
 
@@ -178,6 +181,7 @@ model AgentRun {
 
   // 保持期間とランナーごとの件数で `maintenance-sweep.ts` が打ち切る
 
+  @@unique([runnerId, requestId])
   @@index([runnerId, startedAt])
   @@index([ticketId])
   @@map("agent_run")

@@ -5013,6 +5013,7 @@ export const AgentRunScalarFieldEnum = {
   action: 'action',
   status: 'status',
   summary: 'summary',
+  requestId: 'requestId',
   startedAt: 'startedAt',
   finishedAt: 'finishedAt',
   model: 'model',
@@ -5775,6 +5776,7 @@ export const TicketScalarFieldEnum = {
   mentionedUserIds: 'mentionedUserIds',
   agentMode: 'agentMode',
   agentState: 'agentState',
+  agentStateAt: 'agentStateAt',
   agentAutoReviseCount: 'agentAutoReviseCount',
   childAdvance: 'childAdvance'
 } as const
