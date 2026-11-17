@@ -104,6 +104,18 @@ pnpm exec prisma migrate status   # Database schema is up to date!
 データが要らないなら `pnpm exec prisma migrate reset` で作り直してもよい。
 新しく作るDBは `pnpm migrate` を1回流すだけでよく、この作業は不要。
 
+### Wiki のマイグレーションの統合(v1.2.0 の開発中の開発DBを持っている場合)
+
+Wiki のマイグレーションは、リリース前に `20261108062633_wiki` の1本へまとめた(サンプルスペースの投入もここで行う)。
+まとめる前の `20261108062633_wiki` 〜 `20261115003457_wiki_space_type` を適用済みの開発DBは、checksum が一致せず `prisma migrate` が失敗する。
+データが要らなければ `pnpm exec prisma migrate reset` で作り直す。データを残す場合は、表の形は同じなので履歴だけを貼り替える(サンプルスペースは入らない)。
+
+```sh
+echo "DELETE FROM \"_prisma_migrations\" WHERE migration_name LIKE '202611%wiki%';" | pnpm exec prisma db execute --stdin
+pnpm exec prisma migrate resolve --applied 20261108062633_wiki
+pnpm exec prisma migrate status   # Database schema is up to date!
+```
+
 ## 同一PCでの並行clone(エージェント開発用など)
 
 DB・S3のコンテナは増やさず共有したまま、`git clone` したもう一つのディレクトリで別ポートの `next dev` を並行稼働できる。
