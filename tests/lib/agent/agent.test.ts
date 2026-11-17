@@ -13,6 +13,7 @@ import {
   agentHandle,
   agentRunDuration,
   agentRunnerStatus,
+  agentStateData,
   agentStateWhere,
 } from '@/lib/agent/agent'
 import { zEmail } from '@/lib/schema/schema'
@@ -137,4 +138,19 @@ describe('agentRunDuration: 実行の所要時間', () => {
   it('終了が開始より前でも負の時間にしない', () => {
     expect(agentRunDuration(startedAt, new Date(startedAt.getTime() - 5_000))).toBe('00:00')
   })
+})
+
+describe('agentStateData', () => {
+  const at = new Date('2026-08-25T00:00:00Z')
+
+  it.each(['planned', 'done', 'queued', null] as const)('%s へ移すときは返答待ちの起点の時刻も書く', (state) => {
+    expect(agentStateData(state, at)).toEqual({ agentState: state, agentStateAt: at })
+  })
+
+  it.each(['running', 'failed', 'skipped'] as const)(
+    '%s へ移すときは時刻を残す(revise の実行中・再実行で、返答待ちの間の返信を拾えるように)',
+    (state) => {
+      expect(agentStateData(state, at)).toEqual({ agentState: state })
+    },
+  )
 })

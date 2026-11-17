@@ -14,5 +14,6 @@ reviews:
     - '!src/generated/**'
     - '!prisma/migrations/**'
     - '!**/*.lock'
+    - '!.claude/**'
 chat:
   auto_reply: true

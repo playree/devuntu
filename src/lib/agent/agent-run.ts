@@ -17,8 +17,8 @@ import { logger } from '../logger'
 import { MAX_NOTIFY_RECIPIENTS } from '../notify/notify'
 import type { AgentRunNotifyState } from '../notify/notify-payload'
 import { type AgentRunNotification, enqueueAgentRunFinished, enqueueTicketMoved } from '../notify/notify-trigger'
-import { prisma } from '../prisma'
-import { AGENT_UNLIMITED_DAILY_RUNS } from './agent'
+import { isUniqueViolation, prisma } from '../prisma'
+import { AGENT_UNLIMITED_DAILY_RUNS, agentStateData } from './agent'
 import {
   type AgentBudgetUsage,
   type AgentRunUsage,
@@ -29,7 +29,7 @@ import {
 import { consumeAutoReviseTriggers, hasUnsettledAutoRevise } from './agent-auto-revise'
 import { awaitsPlanReply, errAgentPlanOnly, findAwaitsPlanReply } from './agent-plan-guard'
 import type { AgentRunnerRow } from './agent-runner'
-import { findAgentTicket } from './agent-task'
+import { type AgentTicket, findAgentTicket } from './agent-task'
 import { type AgentRunMetrics, lockAgentRunner, recordAgentRunMetrics } from './agent-usage'
 
 /**
@@ -40,6 +40,12 @@ const LATE_REPORT_GUARD_MIN = 60
 
 /** 時間切れで閉じた実行の要約。ランナーが何も報告せずに消えたことを履歴と通知で示す */
 const TIMEOUT_SUMMARY = 'timeout'
+
+/** 停止(`cancelAgentRun`)で閉じた実行の要約。状態は時間切れと同じく failed で持つ */
+export const CANCELED_SUMMARY = 'canceled'
+
+/** サーバー側の判断(時間切れ・停止)で閉じた実行の要約。遅れて届いた報告で結果を上書きさせない */
+const FORCE_CLOSED_SUMMARIES: ReadonlySet<string> = new Set([TIMEOUT_SUMMARY, CANCELED_SUMMARY])
 
 /**
  * 実行結果の通知に要るチケットの項目。宛先(ボードのチャンネル)もここから引く。
@@ -128,7 +134,7 @@ export const failStaleAgentRuns = async (runnerId: string, now: Date = nowDate()
     if (ticketIds.length > 0) {
       await tx.ticket.updateMany({
         where: { id: { in: ticketIds }, agentState: 'running' },
-        data: { agentState: 'failed' },
+        data: agentStateData('failed', now),
       })
     }
 
@@ -166,13 +172,36 @@ export const failStaleAgentRuns = async (runnerId: string, now: Date = nowDate()
 }
 
 export type StartAgentRunResult =
-  | { ok: true; run: { id: string; displayId: string } }
+  | { ok: true; run: { id: string; displayId: string; status: AgentRunStatus } }
   | { ok: false; reason: 'ticket_not_available' }
+  | { ok: false; reason: 'request_id_conflict' }
   | { ok: false; reason: 'daily_limit'; usage: AgentRunUsage }
   | { ok: false; reason: 'monthly_budget'; budget: AgentBudgetUsage }
 
 /** エージェントが処理を始めたときに対応中(doing)へ移すステータス。doing / done は触らない */
 const AGENT_START_STATUSES: ReadonlySet<TicketStatus> = new Set(['backlog', 'todo'])
+
+/**
+ * 同じランナーの同じ `requestId` で開始済みの実行。開始要求の応答を失ったランナーの再送に既存の実行を返すために使う。
+ * 別のチケットに使われた `requestId` なら衝突として扱う。
+ */
+export const findRequestedAgentRun = async (
+  runnerId: string,
+  requestId: string,
+  ticketId: string,
+): Promise<StartAgentRunResult | null> => {
+  const run = await prisma.agentRun.findUnique({
+    where: { runnerId_requestId: { runnerId, requestId } },
+    select: { id: true, ticketId: true, ticketRef: true, status: true },
+  })
+  if (!run) {
+    return null
+  }
+  if (run.ticketId !== ticketId) {
+    return { ok: false, reason: 'request_id_conflict' }
+  }
+  return { ok: true, run: { id: run.id, displayId: run.ticketRef ?? '', status: run.status } }
+}
 
 /**
  * 実行の開始を記録し、チケットを処理中にする。
@@ -183,11 +212,16 @@ const AGENT_START_STATUSES: ReadonlySet<TicketStatus> = new Set(['backlog', 'tod
  * 上限チェックと実行作成を同一トランザクション内で行い、対象ランナーの行をロックすることで、
  * 並行リクエストが上限チェックを両方すり抜けて `dailyRunLimit` を超過するのを防ぐ。
  * 予算(`monthlyBudgetUsd`)も同じロックの中で見る。
+ *
+ * `requestId` の再送の照合は、稼働条件より先に呼び出し側(`POST /api/agent/runs`)が {@link findRequestedAgentRun} で行う。
+ * ここでは、照合した後に先の要求が確定した場合(同時に届いて一意制約に当たった・先の実行が処理中のため開始できなかった)に、
+ * 先に作られた実行を引き直して返す。
  */
 export const startAgentRun = async (
   runner: AgentRunnerRow,
   ticketId: string,
   action: AgentRunAction,
+  requestId: string | null = null,
   now: Date = nowDate(),
 ): Promise<StartAgentRunResult> => {
   const target = await findAgentTicket(runner.userId, ticketId)
@@ -195,7 +229,32 @@ export const startAgentRun = async (
     return { ok: false, reason: 'ticket_not_available' }
   }
 
-  return prisma.$transaction(async (tx) => {
+  try {
+    const started = await createAgentRun(runner, target, action, requestId, now)
+    // 処理中の実行・上限(日次 / 月次予算)で開始できなかった場合も、照合の後に先の要求が確定していればそれを返す
+    if (!started.ok && requestId) {
+      return (await findRequestedAgentRun(runner.id, requestId, ticketId)) ?? started
+    }
+    return started
+  } catch (e) {
+    const requested =
+      requestId && isUniqueViolation(e) ? await findRequestedAgentRun(runner.id, requestId, ticketId) : null
+    if (requested) {
+      return requested
+    }
+    throw e
+  }
+}
+
+/** 実行を作り、チケットを処理中にする({@link startAgentRun} の本体) */
+const createAgentRun = async (
+  runner: AgentRunnerRow,
+  target: AgentTicket,
+  action: AgentRunAction,
+  requestId: string | null,
+  now: Date,
+): Promise<StartAgentRunResult> =>
+  prisma.$transaction(async (tx) => {
     /**
      * 対応中へ移すときのレーンの並べ替えを直列にする。ランナー行・チケット行より先に取る(lockKanbanLane を参照)。
      * ランナー行を握ったままレーンを待つと、レーン → チケット行(並べ替え)・チケット行 → ランナー行(終了報告)と循環して待ち合う。
@@ -235,17 +294,19 @@ export const startAgentRun = async (
     }
 
     const created = await tx.agentRun.create({
-      data: { runnerId: runner.id, ticketId: target.id, ticketRef: target.displayId, action },
-      select: { id: true },
+      data: { runnerId: runner.id, ticketId: target.id, ticketRef: target.displayId, action, requestId },
+      select: { id: true, status: true },
     })
-    await tx.ticket.update({ where: { id: target.id }, data: { agentState: 'running' } })
+    await tx.ticket.update({ where: { id: target.id }, data: agentStateData('running', now) })
     await moveAgentTicketToDoing(tx, runner.userId, target.id)
     await consumeAutoReviseTriggers(tx, target.id, created.id)
 
-    logger.info({ runnerId: runner.id, runId: created.id, ticketRef: target.displayId, action }, 'agent run started')
-    return { ok: true, run: { id: created.id, displayId: target.displayId } }
+    logger.info(
+      { runnerId: runner.id, runId: created.id, ticketRef: target.displayId, action, requestId },
+      'agent run started',
+    )
+    return { ok: true, run: { id: created.id, displayId: target.displayId, status: created.status } }
   })
-}
 
 /**
  * 処理を始めたチケットを対応中へ移す。Claude への指示に頼らず、古いランナーのままでも確実に移すためサーバー側で行う。
@@ -314,11 +375,13 @@ export const finishAgentRunById = async (
       where: { id: run.id, status: 'running' },
       data: { status: finalStatus, summary: summary ?? undefined, finishedAt: now },
     })
-    if (run.ticketId) {
+    // こちらが閉じた実行のときだけ、チケットを失敗にする。閉じ済み(報告済み・時間切れ・停止)の実行の遅れた終了報告で、
+    // 後から始まった別の実行の処理中を失敗にしない
+    if (count > 0 && run.ticketId) {
       // エージェントが結果を報告済みならその状態を尊重し、running のままの場合だけ失敗にする
       await tx.ticket.updateMany({
         where: { id: run.ticketId, agentState: 'running' },
-        data: { agentState: 'failed' },
+        data: agentStateData('failed', now),
       })
     }
 
@@ -361,13 +424,13 @@ export const finishAgentRunById = async (
 }
 
 /**
- * 時間切れで閉じられたばかりの実行がまだ結果を確定させている場合、その状態を返す。
+ * 時間切れ・停止で閉じられたばかりの実行がまだ結果を確定させている場合、その状態を返す。
  *
- * 時間切れの後も Claude は動き続けていることがあり、遅れて届いた報告で `failed` を黙って
- * 上書きしないようにする。人が待ち行列へ戻した(状態が変わった)後の報告や、時間切れから
+ * 時間切れ・停止の後も Claude は動き続けていることがあり、遅れて届いた報告で `failed` を黙って
+ * 上書きしないようにする。人が待ち行列へ戻した(状態が変わった)後の報告や、閉じてから
  * 十分経った後に MCP だけで動かした報告は従来どおり受け付ける。
  */
-const findTimedOutAgentState = async (
+const findForceClosedAgentState = async (
   tx: Prisma.TransactionClient,
   runnerId: string,
   ticketId: string,
@@ -381,12 +444,12 @@ const findTimedOutAgentState = async (
     }),
     tx.ticket.findUnique({ where: { id: ticketId }, select: { agentState: true } }),
   ])
-  const closedByTimeout =
+  const forceClosed =
     latest?.status === 'failed' &&
-    latest.summary === TIMEOUT_SUMMARY &&
+    FORCE_CLOSED_SUMMARIES.has(latest.summary ?? '') &&
     !!latest.finishedAt &&
     latest.finishedAt > msBefore(now, Math.max(envu.server.AGENT_RUN_TIMEOUT_MIN, LATE_REPORT_GUARD_MIN) * MINUTE_MS)
-  return closedByTimeout && ticket?.agentState === 'failed' ? 'failed' : null
+  return forceClosed && ticket?.agentState === 'failed' ? 'failed' : null
 }
 
 /** エージェントが報告する処理結果 */
@@ -422,6 +485,10 @@ const settleAction = (action: AgentRunAction, outcome: AgentOutcome): AgentRunAc
  * そのチケットに無い項目が混ざっていたら、何も閉じずに throw する(エージェントが直して呼び直せる)。
  * プランへの返信を待つべきとき(`awaitsPlanReply`)に `completed` を報告した場合も同じく throw する。
  * `planned` で閉じた後の返信待ちでは、`skipped` / `failed` で返信待ちを解くこともできない。
+ *
+ * `runId`(ランナーが CLI に渡した実行)を指定した場合は、その実行だけを閉じる。既に閉じた実行・別のチケットの実行なら、
+ * チケットの状態も実行も変えずに今の状態を返す(`stale: true`)。中断後に始めた新しい実行を、生き残った古い CLI の
+ * 遅れた報告が閉じてしまわないようにするため。
  */
 export const finishAgentTask = async (
   runner: AgentRunnerRow | null,
@@ -429,7 +496,8 @@ export const finishAgentTask = async (
   outcome: AgentOutcome,
   summary?: string | null,
   criteria: AgentCriterionReport[] = [],
-): Promise<{ state: AgentTaskState }> => {
+  runId?: string | null,
+): Promise<{ state: AgentTaskState; stale?: true }> => {
   const { state, run } = OUTCOME_MAP[outcome]
   const now = nowDate()
 
@@ -439,23 +507,27 @@ export const finishAgentTask = async (
     // 自動運用の設定が無い(ランナーを介さず MCP だけで動かした)場合は閉じる実行が無い
     const open = runner
       ? await tx.agentRun.findFirst({
-          where: { runnerId: runner.id, ticketId, status: 'running' },
+          where: { runnerId: runner.id, ticketId, status: 'running', ...(runId && { id: runId }) },
           orderBy: { startedAt: 'desc' },
           select: { id: true, action: true, startedAt: true },
         })
       : null
+    // runId を指定した報告は、その実行を閉じられないなら何も変えない(自動運用の設定が消えていても同じ)
+    if (runId && !open) {
+      return { state: await currentAgentState(tx, ticketId, state), stale: true as const }
+    }
     if (!open || !runner) {
-      // ランナーが開始した実行を時間切れなどが先に閉じていた場合は、向こうが確定させた状態を尊重する
-      const timedOut = runner ? await findTimedOutAgentState(tx, runner.id, ticketId, now) : null
-      if (timedOut) {
-        return { state: timedOut }
+      // ランナーが開始した実行を時間切れ・停止が先に閉じていた場合は、向こうが確定させた状態を尊重する
+      const forceClosed = runner ? await findForceClosedAgentState(tx, runner.id, ticketId, now) : null
+      if (forceClosed) {
+        return { state: forceClosed }
       }
       // planned で閉じた後は、返信を待たずに完了へ進むのも、別の結果で返信待ちを解くのも止める
       if (runner && outcome !== 'planned' && (await findAwaitsPlanReply(tx, runner.id, ticketId))) {
         throw errAgentPlanOnly()
       }
       // 実行履歴が無いので通知もしない。チケットが無ければここで例外になる
-      await tx.ticket.update({ where: { id: ticketId }, data: { agentState: state }, select: { id: true } })
+      await tx.ticket.update({ where: { id: ticketId }, data: agentStateData(state, now), select: { id: true } })
       await writeAgentCriteria(tx, criteria)
       return { state }
     }
@@ -476,13 +548,14 @@ export const finishAgentTask = async (
       },
     })
     if (count === 0) {
-      const current = await tx.ticket.findUnique({ where: { id: ticketId }, select: { agentState: true } })
-      return { state: current?.agentState ?? state }
+      const current = await currentAgentState(tx, ticketId, state)
+      // runId を指定した報告は、読み出しから更新までの間に停止・時間切れで閉じられた場合も止めさせる
+      return runId ? { state: current, stale: true as const } : { state: current }
     }
 
     const ticket = await tx.ticket.update({
       where: { id: ticketId },
-      data: { agentState: state },
+      data: agentStateData(state, now),
       select: agentRunNotifySelect,
     })
     await writeAgentCriteria(tx, criteria)
@@ -507,6 +580,88 @@ export const finishAgentTask = async (
     return { state }
   })
 
-  logger.info({ runnerId: runner?.id ?? null, ticketId, outcome, state: result.state }, 'agent task finished')
-  return { state: result.state }
+  logger.info(
+    { runnerId: runner?.id ?? null, ticketId, runId: runId ?? null, outcome, ...result },
+    'agent task finished',
+  )
+  return result
+}
+
+/** 報告を反映しなかったときに返す、いまのチケットの状態。読めなければ報告どおりの状態を返す */
+const currentAgentState = async (
+  tx: Prisma.TransactionClient,
+  ticketId: string,
+  fallback: AgentTaskState,
+): Promise<AgentTaskState> => {
+  const current = await tx.ticket.findUnique({ where: { id: ticketId }, select: { agentState: true } })
+  return current?.agentState ?? fallback
+}
+
+/**
+ * 実行中の実行を停止する(ランナーの `POST /api/agent/runs/:id/cancel`、承認者のチケット詳細の「停止」)。
+ *
+ * 時間切れと同じく `status: 'running'` の条件付き更新で掴めたときだけ、`failed`(要約 `canceled`)で閉じ、
+ * チケットを `running → failed` にして通知する。ランナー側の CLI プロセスは止めない(止めるのはランナーの役割)。
+ * 停止後に届いた報告は {@link findForceClosedAgentState} で受け付けない。
+ *
+ * `runnerId` / `ticketId` を指定した場合、それに一致しない実行は `not_found` として扱う(他のランナーの実行を見せない)。
+ */
+export const cancelAgentRun = async (
+  target: { runId: string; runnerId?: string; ticketId?: string },
+  now: Date = nowDate(),
+): Promise<'canceled' | 'not_running' | 'not_found'> => {
+  const run = await prisma.agentRun.findUnique({
+    where: { id: target.runId },
+    select: {
+      id: true,
+      runnerId: true,
+      ticketId: true,
+      action: true,
+      startedAt: true,
+      ticket: { select: agentRunNotifySelect },
+      runner: { select: { user: { select: { name: true } } } },
+    },
+  })
+  if (
+    !run ||
+    (target.runnerId !== undefined && run.runnerId !== target.runnerId) ||
+    (target.ticketId !== undefined && run.ticketId !== target.ticketId)
+  ) {
+    return 'not_found'
+  }
+
+  const canceled = await prisma.$transaction(async (tx) => {
+    const { count } = await tx.agentRun.updateMany({
+      where: { id: run.id, status: 'running' },
+      data: { status: 'failed', finishedAt: now, summary: CANCELED_SUMMARY },
+    })
+    if (count === 0) {
+      return false
+    }
+    if (run.ticketId) {
+      await tx.ticket.updateMany({
+        where: { id: run.ticketId, agentState: 'running' },
+        data: agentStateData('failed', now),
+      })
+    }
+    const notification = buildAgentRunNotification({
+      runId: run.id,
+      agentName: run.runner.user.name,
+      ticket: run.ticket,
+      action: run.action,
+      status: 'failed',
+      state: 'failed',
+      summary: CANCELED_SUMMARY,
+      startedAt: run.startedAt,
+      finishedAt: now,
+    })
+    // 実行を閉じるのと同じトランザクションで投入する(コミット後に落ちると通知だけが消える)
+    if (notification) {
+      await enqueueAgentRunFinished(notification, tx)
+    }
+    return true
+  })
+
+  logger.info({ runnerId: run.runnerId, runId: run.id, canceled }, 'agent run cancel')
+  return canceled ? 'canceled' : 'not_running'
 }

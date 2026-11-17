@@ -27,6 +27,7 @@ import { useLocale } from '@/locale/client'
 import { FC } from 'react'
 import { createTicketTag } from '../server'
 import { type BoardAssignee, type TicketFormOptions } from '../use-ticket-form'
+import { AgentRunControl } from './agent-run-control'
 import { GetTicketReturnType } from './server'
 
 /** 保存中の項目。同時に複数の項目は保存させない */
@@ -68,6 +69,8 @@ export const TicketFieldPanel: FC<{
   changeStatus: (status: TicketStatus) => Promise<void>
   changeAgentMode: (agentMode: AgentTaskMode | null) => Promise<void>
   onRemove: () => void
+  /** 停止・再実行の後の再取得 */
+  refresh: () => Promise<void>
 }> = ({
   ticket,
   draft,
@@ -80,6 +83,7 @@ export const TicketFieldPanel: FC<{
   changeStatus,
   changeAgentMode,
   onRemove: remove,
+  refresh,
 }) => {
   const { t, fet } = useLocale()
   const tz = useUserTimezone()
@@ -258,6 +262,14 @@ export const TicketFieldPanel: FC<{
             <div className='col-span-6 md:col-span-3'>
               <MetaText label={t('agent_state')}>
                 <AgentProgressChip state={ticket.agentState} isWaiting={ticket.isWaiting && !!agentMode} />
+                {ticket.canEditAgentMode && (
+                  <AgentRunControl
+                    ticketId={ticket.id}
+                    state={ticket.agentState}
+                    isRunning={ticket.agentRunning}
+                    refresh={refresh}
+                  />
+                )}
                 {ticket.autoRevise && (
                   <span className='text-muted text-xs'>
                     {t('agent_auto_revise_count')}{' '}

@@ -2,7 +2,7 @@
  * エージェントの plan / report への承認・差し戻し(サーバー専用)
  *
  * 返答は通常の返信コメントとして投稿し、`TicketComment.decision` で種別を持たせる。
- * plan への返答は既存の再開条件(エージェントの最新コメントより後の返信 = revise)にそのまま乗る。
+ * plan への返答は既存の再開条件(返答の起点 `findAgentReplyAnchor` より後の返信 = revise)にそのまま乗る。
  * report は処理を終えた後なので、差し戻しのときだけ `agentState` を `planned` へ戻して revise で再開させる。
  */
 
@@ -12,12 +12,14 @@ import { assertTicketAccess, type Actor } from '../board/board-access'
 import { lockBoardRow, lockTicketRow } from '../board/row-lock'
 import { insertComment } from '../board/ticket-mutation'
 import { lockKanbanLane, moveTicketToLane } from '../board/ticket-write'
+import { nowDate } from '../day'
 import { errInvalidOperation } from '../error'
 import { enqueueTicketMoved } from '../notify/notify-trigger'
 import { prisma, type Db } from '../prisma'
 import { parseChildProposal } from '../schema/schema-ticket'
+import { agentStateData } from './agent'
 import { applyChildProposal } from './agent-proposal'
-import { agentReplyWhere } from './agent-task'
+import { agentReplyWhere, findAgentReplyAnchor } from './agent-task'
 
 /** 返答待ちの plan / report。`proposedChildren` は plan に付いた起票案の子チケット数(無ければ 0) */
 export type PendingAgentDecision = { commentId: string; type: TicketCommentType; proposedChildren: number }
@@ -41,8 +43,10 @@ const AWAITING_TYPE: Partial<Record<AgentTaskState, TicketCommentType>> = {
 /**
  * 承認/差し戻しボタンを出す対象を、チケットの件数によらず最大 2 クエリでまとめて引く。対象のチケットだけが Map に入る。
  *
- * 担当エージェントの最新コメントが、処理状態に対応する plan / report で、その後に誰の返信も無いこと(アナウンスは返信に数えない)。
- * 質問(通常コメント)で返答待ちになっている場合や、既に誰かが返信した後は対象にしない。
+ * 処理状態に対応する種別(planned → plan / done → report)のうち担当エージェントの最新のもので、その後に誰の返信も無いこと
+ * (アナウンスは返信に数えない)。後からエージェントが通常コメントを足しても対象は変わらない。
+ * 既に誰かが返信した後(質問への回答・revise 中の質問を含む)は対象にしない。
+ * ランナーで動かしている場合は、そのエージェントの直近の実行で投稿したものに限る(前の回に返答されないまま残った plan / report を蒸し返さない)。
  */
 export const findPendingAgentDecisions = async (
   tickets: DecisionTicket[],
@@ -65,14 +69,25 @@ export const findPendingAgentDecisions = async (
     SELECT DISTINCT ON (c."ticketId") c."id", c."ticketId", c."type", c."createdAt", c."proposal"
     FROM "ticket_comment" AS c
     JOIN (VALUES ${Prisma.join(
-      [...awaiting].map(([ticketId, { agentId }]) => Prisma.sql`(${ticketId}::text, ${agentId}::text)`),
-    )}) AS v("ticketId", "authorId")
-      ON c."ticketId" = v."ticketId" AND c."authorId" = v."authorId"
+      [...awaiting].map(
+        ([ticketId, { agentId, expected }]) => Prisma.sql`(${ticketId}::text, ${agentId}::text, ${expected}::text)`,
+      ),
+    )}) AS v("ticketId", "authorId", "type")
+      ON c."ticketId" = v."ticketId" AND c."authorId" = v."authorId" AND c."type"::text = v."type"
+    WHERE c."createdAt" >= COALESCE(
+      (
+        SELECT MAX(r."startedAt")
+        FROM "agent_run" AS r
+        JOIN "agent_runner" AS ar ON ar."id" = r."runnerId"
+        WHERE r."ticketId" = c."ticketId" AND ar."userId" = c."authorId"
+      ),
+      '-infinity'::timestamp
+    )
     ORDER BY c."ticketId", c."createdAt" DESC, c."id" DESC
   `
   const candidates = lasts.flatMap((last) => {
     const target = awaiting.get(last.ticketId)
-    return target && last.type === target.expected ? [{ ...last, ...target }] : []
+    return target ? [{ ...last, ...target }] : []
   })
   if (candidates.length === 0) {
     return pending
@@ -190,7 +205,7 @@ export const decideAgentComment = async (actor: Actor, input: DecideAgentComment
           tx,
         )
       } else {
-        await tx.ticket.update({ where: { id: target.ticketId }, data: { agentState: 'planned' } })
+        await tx.ticket.update({ where: { id: target.ticketId }, data: agentStateData('planned', nowDate()) })
       }
     }
 
@@ -204,21 +219,18 @@ export const decideAgentComment = async (actor: Actor, input: DecideAgentComment
   })
 
 /**
- * エージェントの最新コメント以降に付いた、最新の承認/差し戻し。revise で再開したエージェントへ渡す。
+ * 返答の起点({@link findAgentReplyAnchor})以降に付いた、最新の承認/差し戻し。revise で再開したエージェントへ渡す。
  * ボタンを使わずに書かれた返信だけの場合は null(返信の内容はコメントから読ませる)。
  */
 export const findLatestAgentDecision = async (ticketId: string, agentUserId: string, tx: Db = prisma) => {
-  const last = await tx.ticketComment.findFirst({
-    where: { ticketId, authorId: agentUserId },
-    orderBy: { createdAt: 'desc' },
-    select: { createdAt: true },
-  })
+  const ticket = await tx.ticket.findUnique({ where: { id: ticketId }, select: { agentStateAt: true } })
+  const anchor = ticket ? await findAgentReplyAnchor(ticketId, agentUserId, ticket.agentStateAt, tx) : null
   // 担当が替わった直後などでエージェント自身のコメントが無ければ、残っている返答は別の相手へのもの
-  if (!last) {
+  if (!anchor) {
     return null
   }
   return await tx.ticketComment.findFirst({
-    where: { ticketId, decision: { not: null }, createdAt: { gt: last.createdAt } },
+    where: { ticketId, decision: { not: null }, createdAt: { gt: anchor } },
     orderBy: { createdAt: 'desc' },
     select: { id: true, decision: true, content: true },
   })

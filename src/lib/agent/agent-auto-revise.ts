@@ -18,6 +18,7 @@ import { MINUTE_MS, msBefore, nowDate } from '../day'
 import type { GitLinkedBoard, GitRepoKey } from '../git/git-webhook'
 import { logger } from '../logger'
 import { prisma, type Db } from '../prisma'
+import { agentStateData } from './agent'
 
 /** 最後のきっかけから、エージェントに拾わせるまでの待ち時間 */
 export const AUTO_REVISE_SETTLE_MS = 2 * MINUTE_MS
@@ -100,7 +101,7 @@ const applyTrigger = async (
   await tx.agentAutoReviseTrigger.create({ data: { ...data, ticketId } })
   await tx.ticket.update({
     where: { id: ticketId },
-    data: { agentState: 'planned', agentAutoReviseCount: { increment: 1 } },
+    data: { ...agentStateData('planned', nowDate()), agentAutoReviseCount: { increment: 1 } },
     select: { id: true },
   })
   return 'revised'

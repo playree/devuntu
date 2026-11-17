@@ -9,8 +9,10 @@
 import type { Prisma } from '@/generated/prisma/client'
 import { assertTicketAccess, type Actor, type TicketAccess } from '../board/board-access'
 import { insertComment, insertTicket } from '../board/ticket-mutation'
+import { nowDate } from '../day'
 import { prisma } from '../prisma'
 import type { ChildProposal } from '../schema/schema-ticket'
+import { agentStateData } from './agent'
 
 /** 起票案付きの plan を投稿する。担当・オプトインの確認は呼び出し側(MCP ツール)で済ませる */
 export const postChildProposal = async (actor: Actor, ticketId: string, content: string, proposal: ChildProposal) =>
@@ -41,6 +43,7 @@ export const applyChildProposal = async (
     select: { priority: true, tags: { select: { tagId: true } } },
   })
 
+  const now = nowDate()
   const created = []
   for (const child of proposal.children) {
     const ticket = await insertTicket(tx, actor, {
@@ -56,14 +59,17 @@ export const applyChildProposal = async (
       childOrder: child.order,
     })
     if (child.mode && access.canEditAgentMode) {
-      await tx.ticket.update({ where: { id: ticket.id }, data: { agentMode: child.mode, agentState: null } })
+      await tx.ticket.update({
+        where: { id: ticket.id },
+        data: { agentMode: child.mode, ...agentStateData(null, now) },
+      })
     }
     created.push(ticket)
   }
 
   await tx.ticket.update({
     where: { id: access.ticketId },
-    data: { ...(proposal.advance && { childAdvance: proposal.advance }), agentState: 'done' },
+    data: { ...(proposal.advance && { childAdvance: proposal.advance }), ...agentStateData('done', now) },
   })
   return created
 }
