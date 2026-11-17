@@ -458,6 +458,7 @@ export const ModelName = {
   Group: 'Group',
   UserGroup: 'UserGroup',
   WikiSpace: 'WikiSpace',
+  WikiSpaceKeyHistory: 'WikiSpaceKeyHistory',
   WikiSpaceMember: 'WikiSpaceMember',
   WikiSpaceGroup: 'WikiSpaceGroup',
   WikiSpaceBoard: 'WikiSpaceBoard',
@@ -480,7 +481,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "agentToken" | "mcpToken" | "agentRunner" | "agentRun" | "agentAutoReviseTrigger" | "agentUsage" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "boardNote" | "boardNoteRevision" | "board" | "boardKeyHistory" | "ticketTemplate" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "calendarShare" | "calendarBusyTime" | "commandTargetMember" | "commandTargetGroup" | "commandRun" | "commandRunChunk" | "ticketLink" | "boardRepository" | "boardGitSetting" | "gitCheckSuite" | "userNotifySetting" | "webPushSubscription" | "boardNotifySetting" | "notifyOutbox" | "notifyDelivery" | "ticketDueReminder" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "uploadNonce" | "keyValueStore" | "appVersion" | "ticket" | "ticketComment" | "ticketCriterion" | "ticketRelation" | "ticketActivity" | "user" | "group" | "userGroup" | "wikiSpace" | "wikiSpaceMember" | "wikiSpaceGroup" | "wikiSpaceBoard" | "wikiPage" | "wikiTag" | "wikiPageTag" | "wikiPageRevision"
+    modelProps: "agentToken" | "mcpToken" | "agentRunner" | "agentRun" | "agentAutoReviseTrigger" | "agentUsage" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "boardNote" | "boardNoteRevision" | "board" | "boardKeyHistory" | "ticketTemplate" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "calendarShare" | "calendarBusyTime" | "commandTargetMember" | "commandTargetGroup" | "commandRun" | "commandRunChunk" | "ticketLink" | "boardRepository" | "boardGitSetting" | "gitCheckSuite" | "userNotifySetting" | "webPushSubscription" | "boardNotifySetting" | "notifyOutbox" | "notifyDelivery" | "ticketDueReminder" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "uploadNonce" | "keyValueStore" | "appVersion" | "ticket" | "ticketComment" | "ticketCriterion" | "ticketRelation" | "ticketActivity" | "user" | "group" | "userGroup" | "wikiSpace" | "wikiSpaceKeyHistory" | "wikiSpaceMember" | "wikiSpaceGroup" | "wikiSpaceBoard" | "wikiPage" | "wikiTag" | "wikiPageTag" | "wikiPageRevision"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -4998,6 +4999,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    WikiSpaceKeyHistory: {
+      payload: Prisma.$WikiSpaceKeyHistoryPayload<ExtArgs>
+      fields: Prisma.WikiSpaceKeyHistoryFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.WikiSpaceKeyHistoryFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceKeyHistoryPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.WikiSpaceKeyHistoryFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceKeyHistoryPayload>
+        }
+        findFirst: {
+          args: Prisma.WikiSpaceKeyHistoryFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceKeyHistoryPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.WikiSpaceKeyHistoryFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceKeyHistoryPayload>
+        }
+        findMany: {
+          args: Prisma.WikiSpaceKeyHistoryFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceKeyHistoryPayload>[]
+        }
+        create: {
+          args: Prisma.WikiSpaceKeyHistoryCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceKeyHistoryPayload>
+        }
+        createMany: {
+          args: Prisma.WikiSpaceKeyHistoryCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.WikiSpaceKeyHistoryCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceKeyHistoryPayload>[]
+        }
+        delete: {
+          args: Prisma.WikiSpaceKeyHistoryDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceKeyHistoryPayload>
+        }
+        update: {
+          args: Prisma.WikiSpaceKeyHistoryUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceKeyHistoryPayload>
+        }
+        deleteMany: {
+          args: Prisma.WikiSpaceKeyHistoryDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.WikiSpaceKeyHistoryUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.WikiSpaceKeyHistoryUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceKeyHistoryPayload>[]
+        }
+        upsert: {
+          args: Prisma.WikiSpaceKeyHistoryUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceKeyHistoryPayload>
+        }
+        aggregate: {
+          args: Prisma.WikiSpaceKeyHistoryAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateWikiSpaceKeyHistory>
+        }
+        groupBy: {
+          args: Prisma.WikiSpaceKeyHistoryGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WikiSpaceKeyHistoryGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.WikiSpaceKeyHistoryCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WikiSpaceKeyHistoryCountAggregateOutputType> | number
+        }
+      }
+    }
     WikiSpaceMember: {
       payload: Prisma.$WikiSpaceMemberPayload<ExtArgs>
       fields: Prisma.WikiSpaceMemberFieldRefs
@@ -6505,6 +6580,14 @@ export const WikiSpaceScalarFieldEnum = {
 export type WikiSpaceScalarFieldEnum = (typeof WikiSpaceScalarFieldEnum)[keyof typeof WikiSpaceScalarFieldEnum]
 
 
+export const WikiSpaceKeyHistoryScalarFieldEnum = {
+  key: 'key',
+  createdAt: 'createdAt'
+} as const
+
+export type WikiSpaceKeyHistoryScalarFieldEnum = (typeof WikiSpaceKeyHistoryScalarFieldEnum)[keyof typeof WikiSpaceKeyHistoryScalarFieldEnum]
+
+
 export const WikiSpaceMemberScalarFieldEnum = {
   id: 'id',
   spaceId: 'spaceId',
@@ -7521,6 +7604,7 @@ export type GlobalOmitConfig = {
   group?: Prisma.GroupOmit
   userGroup?: Prisma.UserGroupOmit
   wikiSpace?: Prisma.WikiSpaceOmit
+  wikiSpaceKeyHistory?: Prisma.WikiSpaceKeyHistoryOmit
   wikiSpaceMember?: Prisma.WikiSpaceMemberOmit
   wikiSpaceGroup?: Prisma.WikiSpaceGroupOmit
   wikiSpaceBoard?: Prisma.WikiSpaceBoardOmit

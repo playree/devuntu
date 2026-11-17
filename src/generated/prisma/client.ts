@@ -411,6 +411,12 @@ export type UserGroup = Prisma.UserGroupModel
  */
 export type WikiSpace = Prisma.WikiSpaceModel
 /**
+ * Model WikiSpaceKeyHistory
+ * 過去に使われた Wiki スペースのキー。スペースを消しても行を残し、同じキーを別のスペースへ渡さない
+ * (共有済みの `KEY/番号` やページの URL が、別のスペースの同じ番号のページを指さないようにする)
+ */
+export type WikiSpaceKeyHistory = Prisma.WikiSpaceKeyHistoryModel
+/**
  * Model WikiSpaceMember
  * Wiki スペースへのユーザーの直接割り当て
  */

@@ -314,6 +314,7 @@ export const en: DefaultLocaleItems = {
   delete: 'Delete',
   delete_board: 'Delete Board',
   delete_image: 'Delete image',
+  delete_wiki_space: 'Delete Space',
   description: 'Description',
   direct: 'Direct',
   disable: 'Disable',
@@ -807,6 +808,8 @@ Please copy and use the connection information above.
   msg_confirm_archive_wiki_space: 'Archive ${target}.',
   msg_confirm_delete_wiki_page_with_children: 'Delete ${target}. Its ${count} descendant page(s) will also be deleted.',
   msg_confirm_delete_wiki_revision: 'Delete ${target} from the history. A deleted version cannot be recovered.',
+  msg_confirm_delete_wiki_space:
+    'Delete ${target}. All pages, versions and attachments in this space will also be deleted.',
   msg_confirm_wiki_type_to_page:
     'A page is edited in the rich editor, which may change how the design doc is written, such as its front matter and HTML comments. Make it a page?',
   msg_confirm_deletion: 'Delete ${target}.',
@@ -827,6 +830,8 @@ Please copy and use the connection information above.
   msg_consent_unverified_client:
     'This app registered itself automatically and has not been approved by an administrator. Authorize it only if you started this from an action you recognize.',
   msg_delete_board: 'All tickets and comments in the board are deleted as well. This cannot be undone.',
+  msg_delete_wiki_space:
+    'All pages, versions and attachments in the space are deleted as well. This cannot be undone, and the key cannot be used for another space.',
   msg_decision_sent: 'Response sent',
   msg_deleted_target: 'Deleted ${target}.',
   msg_deleted_wiki_pages: 'Deleted ${target} (${count} page(s)).',

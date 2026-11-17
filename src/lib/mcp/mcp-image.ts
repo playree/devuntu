@@ -22,12 +22,13 @@ import { prisma } from '../prisma'
 import { assertRateLimit } from '../rate-limit'
 import { ACCEPTED_IMAGE_TYPES, zImageFile } from '../schema/schema'
 import { makeUrl } from '../server-utils'
+import type { AttachmentTarget } from '../storage/attachment'
 import { saveContentImage } from '../storage/attachment'
 import { canViewAttachment } from '../storage/attachment-access'
 import { resizeWebp, WEBP_MIME } from '../storage/image'
 import { getObject } from '../storage/storage'
 import { isValidUploadKey, toUploadKey, UPLOAD_URL_PREFIX } from '../storage/upload'
-import { signUploadToken, UPLOAD_TOKEN_TTL_SECONDS, type UploadTokenTarget } from '../storage/upload-token'
+import { signUploadToken, UPLOAD_TOKEN_TTL_SECONDS } from '../storage/upload-token'
 import { jsonResult, TOOL_ANNOTATIONS } from './mcp'
 import { resolveBoardId } from './mcp-board'
 import { resolveTicketId } from './mcp-ticket'
@@ -84,7 +85,7 @@ export type UploadTargetInput = { ticketId?: string; boardId?: string; wikiPage?
 const resolveUploadTarget = async (
   auth: ResourceAuth,
   { ticketId, boardId, wikiPage }: UploadTargetInput,
-): Promise<UploadTokenTarget> => {
+): Promise<AttachmentTarget> => {
   if ([ticketId, boardId, wikiPage].filter(Boolean).length !== 1) {
     throw errValidation('Specify exactly one of ticketId, boardId or wikiPage')
   }
@@ -106,7 +107,7 @@ const resolveUploadTarget = async (
 }
 
 /** 応答とログに載せる添付先(boardId か wikiSpaceId のどちらか) */
-const targetFields = (target: UploadTokenTarget) =>
+const targetFields = (target: AttachmentTarget) =>
   target.boardId ? { boardId: target.boardId } : { wikiSpaceId: target.wikiSpaceId }
 
 /** `data:image/png;base64,...` 形式で渡されることが多いので接頭辞を許容する */

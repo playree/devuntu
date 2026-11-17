@@ -313,6 +313,7 @@ export const ja: DefaultLocaleItems = {
   delete: '削除',
   delete_board: 'ボードの削除',
   delete_image: '画像を削除',
+  delete_wiki_space: 'スペースの削除',
   description: '説明',
   direct: '直接',
   disable: '無効化',
@@ -807,6 +808,7 @@ export const ja: DefaultLocaleItems = {
   msg_confirm_archive_wiki_space: '${target} をアーカイブします。',
   msg_confirm_delete_wiki_page_with_children: '${target} を削除します。配下の ${count} ページもまとめて削除されます。',
   msg_confirm_delete_wiki_revision: '${target} を履歴から削除します。削除した版は元に戻せません。',
+  msg_confirm_delete_wiki_space: '${target} を削除します。スペース内のページ・版・添付もすべて削除されます。',
   msg_confirm_wiki_type_to_page:
     '通常のページはリッチエディタで編集するため、front matter や HTML コメントなど、設計書の書き方が変わることがあります。通常のページにしますか?',
   msg_confirm_deletion: '${target} を削除します。',
@@ -827,6 +829,8 @@ export const ja: DefaultLocaleItems = {
   msg_consent_unverified_client:
     'このアプリは自動登録されたものです。管理者が承認したものではないため、心当たりのある操作から遷移した場合のみ許可してください。',
   msg_delete_board: 'ボード内のチケットとコメントもすべて削除されます。この操作は取り消せません。',
+  msg_delete_wiki_space:
+    'スペース内のページ・版・添付もすべて削除されます。この操作は取り消せません。キーは別のスペースで使えなくなります。',
   msg_decision_sent: '返答しました',
   msg_deleted_target: '${target} を削除しました。',
   msg_deleted_wiki_pages: '${target} を削除しました(${count} ページ)。',

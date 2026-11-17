@@ -23,8 +23,8 @@ const mocks = vi.hoisted(() => ({
   listSlackChannels: vi.fn(),
   getBoardNotifySetting: vi.fn(),
   setBoardNotifySetting: vi.fn(),
-  detachBoardAttachments: vi.fn(),
-  listBoardAttachmentKeys: vi.fn(),
+  detachAttachmentsOf: vi.fn(),
+  listAttachmentKeysOf: vi.fn(),
   removeAttachmentByKey: vi.fn(),
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }))
@@ -54,8 +54,8 @@ vi.mock('@/lib/notify/notify-board-setting', () => ({
   setBoardNotifySetting: mocks.setBoardNotifySetting,
 }))
 vi.mock('@/lib/storage/attachment', () => ({
-  detachBoardAttachments: mocks.detachBoardAttachments,
-  listBoardAttachmentKeys: mocks.listBoardAttachmentKeys,
+  detachAttachmentsOf: mocks.detachAttachmentsOf,
+  listAttachmentKeysOf: mocks.listAttachmentKeysOf,
   removeAttachmentByKey: mocks.removeAttachmentByKey,
 }))
 
@@ -98,7 +98,7 @@ beforeEach(() => {
   mocks.getSlackSettings.mockResolvedValue({ enabled: true, allowedGroupIds: [] })
   mocks.isGitlabVisible.mockResolvedValue(false)
   mocks.listSlackChannels.mockResolvedValue([{ id: 'C1', name: 'general' }])
-  mocks.listBoardAttachmentKeys.mockResolvedValue([])
+  mocks.listAttachmentKeysOf.mockResolvedValue([])
   board.findUnique.mockResolvedValue(boardRow as never)
   board.update.mockResolvedValue({ id: 'b1', name: 'ボード' } as never)
   board.delete.mockResolvedValue({} as never)
@@ -400,11 +400,11 @@ describe('setBoardNotify', () => {
 describe('deleteBoard', () => {
   it('キーを控えてから紐付けを外し、ボードを消す', async () => {
     const order: string[] = []
-    mocks.listBoardAttachmentKeys.mockImplementation(async () => {
+    mocks.listAttachmentKeysOf.mockImplementation(async () => {
       order.push('list')
       return []
     })
-    mocks.detachBoardAttachments.mockImplementation(async () => {
+    mocks.detachAttachmentsOf.mockImplementation(async () => {
       order.push('detach')
     })
     board.delete.mockImplementation((async () => {
@@ -418,7 +418,7 @@ describe('deleteBoard', () => {
   })
 
   it('コミット後に添付の実体を 1 つずつ消し、消せた数をログに残す', async () => {
-    mocks.listBoardAttachmentKeys.mockResolvedValue(['k1', 'k2', 'k3'])
+    mocks.listAttachmentKeysOf.mockResolvedValue(['k1', 'k2', 'k3'])
     mocks.removeAttachmentByKey.mockResolvedValueOnce(true).mockResolvedValueOnce(false).mockResolvedValueOnce(true)
 
     await deleteBoard(user, 'b1')
@@ -432,7 +432,7 @@ describe('deleteBoard', () => {
 
   it('ボードの削除に失敗したら実体は消さない', async () => {
     const error = new Error('db')
-    mocks.listBoardAttachmentKeys.mockResolvedValue(['k1'])
+    mocks.listAttachmentKeysOf.mockResolvedValue(['k1'])
     board.delete.mockRejectedValue(error)
 
     await expect(deleteBoard(user, 'b1')).rejects.toBe(error)
@@ -446,7 +446,7 @@ describe('deleteBoard', () => {
     arrange()
 
     await expect(deleteBoard(user, 'b1')).rejects.toBe(denied)
-    expect(mocks.detachBoardAttachments).not.toHaveBeenCalled()
+    expect(mocks.detachAttachmentsOf).not.toHaveBeenCalled()
     expect(board.delete).not.toHaveBeenCalled()
   })
 })

@@ -22,6 +22,7 @@ import {
   upsertWikiSpaceMember as upsertWikiSpaceMemberCore,
 } from '@/lib/wiki/wiki-assignment'
 import {
+  deleteWikiSpace as deleteWikiSpaceCore,
   setWikiSpaceArchived as setWikiSpaceArchivedCore,
   updateWikiSpace as updateWikiSpaceCore,
 } from '@/lib/wiki/wiki-space'
@@ -47,6 +48,15 @@ export const setWikiSpaceArchived = safeAuthAction
   .inputSchema(scSetWikiSpaceArchived)
   .action(async ({ ctx: { user }, parsedInput: { id, archived } }) => {
     await setWikiSpaceArchivedCore(user, id, archived)
+    return { id }
+  })
+
+/** スペースの削除。ページ・版・添付もすべて消え、キーは再利用できない */
+export const deleteWikiSpace = safeAuthAction
+  .metadata({ actionName: 'deleteWikiSpace', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => {
+    await deleteWikiSpaceCore(user, id)
     return { id }
   })
 

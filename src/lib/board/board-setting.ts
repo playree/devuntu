@@ -12,7 +12,7 @@ import { getBoardNotifySetting, setBoardNotifySetting } from '../notify/notify-b
 import { prisma, type Db } from '../prisma'
 import { getSlackSettings, hasSlackCredentials } from '../slack/slack-account'
 import { listSlackChannels } from '../slack/slack-server'
-import { detachBoardAttachments, listBoardAttachmentKeys, removeAttachmentByKey } from '../storage/attachment'
+import { detachAttachmentsOf, listAttachmentKeysOf, removeAttachmentByKey } from '../storage/attachment'
 import { countTicketsByBoard } from './board'
 import { assertBoardAccess, assertTeamBoard, isAdminActor, type Actor } from './board-access'
 import { reserveBoardKey, rethrowDuplicatedBoardKey } from './board-key'
@@ -212,8 +212,8 @@ export const deleteBoard = async (actor: Actor, id: string) => {
     await assertBoardAccess(actor, id, 'manage', tx)
     await assertTeamBoard(tx, id)
     // 紐付けを外すとボードから辿れなくなるので、キーはここで控える
-    const keys = await listBoardAttachmentKeys(tx, id)
-    await detachBoardAttachments(tx, id)
+    const keys = await listAttachmentKeysOf(tx, { boardId: id })
+    await detachAttachmentsOf(tx, { boardId: id })
     await tx.board.delete({ where: { id } })
     return keys
   })
