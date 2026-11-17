@@ -108,8 +108,9 @@ export const WikiPageClient: FC<{ spaceKey: string; number: number }> = ({ space
             <>
               <WikiBreadcrumbs detail={data} />
               <CopyableField // `KEY/番号` は改名・移動で変わらないので、AI やチケットからの参照に使える
-                className='w-28 shrink-0'
+                className='shrink-0'
                 isSmart
+                isFitContent
                 text={wikiPageRef({ key: space.key, number: page.number })}
                 aria-label={t('wiki_page_ref')}
               />
