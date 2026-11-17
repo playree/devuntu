@@ -98,9 +98,20 @@ export const agentStateWhere = (states: readonly AgentTaskState[]): TicketWhereI
 }
 
 /**
- * 処理状態の書き込み内容。返答待ち・再開判定の起点(`findAgentReplyAnchor`)に使うので、変えた時刻も必ず一緒に書く
+ * 処理状態を変えても `agentStateAt` を動かさない状態。実行の開始と、実行の失敗・見送り。
+ * 返答待ちに入った時刻を残しておき、その実行(revise)や再実行で、返答待ちの間に付いた返信・返答を拾えるようにする
  */
-export const agentStateData = (agentState: AgentTaskState | null, at: Date) => ({ agentState, agentStateAt: at })
+const AGENT_STATE_AT_KEPT: ReadonlySet<AgentTaskState> = new Set(['running', 'failed', 'skipped'])
+
+/**
+ * 処理状態の書き込み内容。返答待ち・再開判定の起点(`findAgentReplyAnchor`)に使う `agentStateAt` も一緒に書く
+ * ({@link AGENT_STATE_AT_KEPT} の状態へ移すときは書かない)。処理状態は必ずこれを通して書く
+ */
+export const agentStateData = (
+  agentState: AgentTaskState | null,
+  at: Date,
+): { agentState: AgentTaskState | null; agentStateAt?: Date } =>
+  agentState && AGENT_STATE_AT_KEPT.has(agentState) ? { agentState } : { agentState, agentStateAt: at }
 
 export const AGENT_TASK_STATE_LOCALE = {
   queued: 'agent_state_queued',

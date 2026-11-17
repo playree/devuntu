@@ -63,6 +63,7 @@ export const ja: DefaultLocaleItems = {
   agent_monthly_budget: '月の予算上限(USD)',
   agent_poll_interval: 'ポーリング間隔(分)',
   agent_profile: 'エージェント概要',
+  agent_retry: '再実行',
   agent_rule: 'ルール',
   agent_run_failed: '失敗',
   agent_run_history: '実行履歴',
@@ -85,6 +86,7 @@ export const ja: DefaultLocaleItems = {
   agent_state_running: '処理中',
   agent_state_skipped: '見送り',
   agent_state_waiting: '順番待ち',
+  agent_stop: '停止',
   agent_token: 'トークン',
   agent_tokens: 'トークン(入力 / 出力)',
   agent_unlimited: '無制限',
@@ -668,6 +670,12 @@ export const ja: DefaultLocaleItems = {
     '担当チケットを定期的に取りに来る常駐エージェントの設定です。稼働条件を満たすときだけAIエージェントが起動します。\n開始・終了はどちらか未指定なら終日稼働、開始が終了より後の場合は日跨ぎ(夜間のみ)として扱います。\n1日の処理上限は起動1回ごとに数え、0を指定すると無制限です。カウントは上限リセット時刻(タイムゾーン設定に従う)を境に0へ戻ります。\n月の予算上限は今月のコストが達すると新しい実行を開始しなくなります(実行中のものは止めません)。0を指定すると無制限です。',
   msg_agent_usage_desc:
     'CLI の出力から取得したトークン数とコストの今月の合計です。集計は毎月1日の上限リセット時刻(タイムゾーン設定に従う)を境に切り替わります。コストを返さない CLI(Codex CLI)の実行は、コストに含まれません。',
+  msg_agent_retried: '処理待ちへ戻しました',
+  msg_agent_stopped: '実行を停止しました',
+  msg_confirm_agent_retry:
+    'エージェントの処理を処理待ちへ戻し、次のポーリングでもう一度処理させます。返信を受けた修正(revise)で止まっていた場合は、その返信への対応からやり直します。',
+  msg_confirm_agent_stop:
+    '実行中の処理を失敗として閉じます。ランナー側の CLI のプロセスは止まらないため、動き続けている場合はランナーのホストで止めてください。停止後に届いた報告は反映されません。',
   msg_announced: 'アナウンスを投稿しました。Slack チャンネルへも送ります。',
   msg_announcement_recorded_only:
     'アナウンスをチケットに記録しました。Slack チャンネルには送られていません(通知先の設定が無い、送信が制限された、本文が画像だけ、のいずれか)。',

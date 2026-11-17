@@ -3,6 +3,11 @@
 import { safeAuthAction } from '@/lib/action/action-server'
 import { agentStateData } from '@/lib/agent/agent'
 import { decideAgentComment as decideAgentCommentCore, findPendingAgentDecision } from '@/lib/agent/agent-decision'
+import {
+  cancelAgentTicketRun as cancelAgentTicketRunCore,
+  findRunningAgentRunId,
+  retryAgentTicket as retryAgentTicketCore,
+} from '@/lib/agent/agent-run-recovery'
 import { assertTicketAccess } from '@/lib/board/board-access'
 import { TAG_SELECT } from '@/lib/board/tag'
 import { listTicketActivities } from '@/lib/board/ticket-activity'
@@ -133,23 +138,26 @@ export const getTicket = safeAuthAction
     const attachmentKeys = extractUploadKeys(
       [ticket.content ?? '', ...ticket.comments.map((comment) => comment.content)].join('\n'),
     )
-    const [links, criteria, activities, relations, pendingDecision, waiting, attachments] = await Promise.all([
-      listTicketLinks(id),
-      listTicketCriteria(id),
-      listTicketActivities(id, TICKET_ACTIVITY_LIMIT),
-      // 関係の相手は同じボードのチケットなので、ボードのメンバーでない承認者には見せない
-      access.boardRole ? listTicketRelations(id) : EMPTY_TICKET_RELATIONS,
-      findPendingAgentDecision({
-        id,
-        assigneeId: ticket.assigneeId,
-        assigneeIsAgent: ticket.assignee?.isAgent ?? false,
-        agentState: ticket.agentState,
-        status: ticket.status,
-      }),
-      // 順番待ちは兄弟の状態から出すので、関係と同じくボードのメンバーでない承認者には見せない
-      findWaitingTicketIds(access.boardRole ? [id] : []),
-      listContentAttachments(attachmentKeys, ticket.boardId),
-    ])
+    const [links, criteria, activities, relations, pendingDecision, waiting, attachments, runningRunId] =
+      await Promise.all([
+        listTicketLinks(id),
+        listTicketCriteria(id),
+        listTicketActivities(id, TICKET_ACTIVITY_LIMIT),
+        // 関係の相手は同じボードのチケットなので、ボードのメンバーでない承認者には見せない
+        access.boardRole ? listTicketRelations(id) : EMPTY_TICKET_RELATIONS,
+        findPendingAgentDecision({
+          id,
+          assigneeId: ticket.assigneeId,
+          assigneeIsAgent: ticket.assignee?.isAgent ?? false,
+          agentState: ticket.agentState,
+          status: ticket.status,
+        }),
+        // 順番待ちは兄弟の状態から出すので、関係と同じくボードのメンバーでない承認者には見せない
+        findWaitingTicketIds(access.boardRole ? [id] : []),
+        listContentAttachments(attachmentKeys, ticket.boardId),
+        // 停止・再実行の操作は承認者だけなので、それ以外には引かない
+        access.canEditAgentMode && ticket.assignee?.isAgent ? findRunningAgentRunId(id) : null,
+      ])
 
     const { board, assignee, createdBy, comments, tags, mentionedUserIds, agentAutoReviseCount, ...rest } = ticket
     const displayId = ticketDisplayId({ key: board.key, number: rest.number })
@@ -209,6 +217,8 @@ export const getTicket = safeAuthAction
       canEdit: access.canEdit,
       canDelete: access.canDelete,
       canEditAgentMode: access.canEditAgentMode,
+      /** エージェントの実行中の実行があるか(承認者にだけ判定する)。停止・再実行の出し分けに使う */
+      agentRunning: runningRunId !== null,
     }
   })
 export type GetTicketReturnType = Awaited<ReturnType<typeof getTicket>>['data']
@@ -261,6 +271,22 @@ export const updateTicketAgentMode = safeAuthAction
     logger.info({ userId: user.id, id, agentMode }, 'ticket agent mode updated')
     return { id, agentMode }
   })
+
+/**
+ * 失敗・見送りになったエージェントの処理を、処理待ちへ戻して再実行させる(承認者のみ)
+ */
+export const retryAgentTicket = safeAuthAction
+  .metadata({ actionName: 'retryAgentTicket', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => ({ id, ...(await retryAgentTicketCore(user, id)) }))
+
+/**
+ * エージェントの実行中の実行を停止する(承認者のみ)。ランナー側の CLI プロセスは止まらない
+ */
+export const cancelAgentTicketRun = safeAuthAction
+  .metadata({ actionName: 'cancelAgentTicketRun', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => ({ id, ...(await cancelAgentTicketRunCore(user, id)) }))
 
 /**
  * ステータスのみの更新(詳細画面・かんばんのカード内メニューから使う)

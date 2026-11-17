@@ -12,6 +12,12 @@
     3. claude -p "..." / codex exec "..." / opencode run "..." ... CLI を起動してチケットを処理させる
     4. PATCH /api/agent/runs/<id> ... 実行の終了と、CLI の出力から取れた計測値(トークン数・コスト)を記録する
 
+2 は requestId を付けて送り、通信エラーなら同じ requestId で再送する(サーバーは開始済みの実行を返す)。
+それでも応答を得られなければ pending-start.json に残し、次の poll の先頭で照合して、CLI を起動していない実行を停止する。
+CLI には実行の ID を環境変数 DEVUNTU_AGENT_RUN_ID とプロンプトで渡し、finish_agent_task の runId に指定させる。
+
+中断後の確認・後始末には、サブコマンド runs(自分の実行の一覧)/ cancel <runId>(実行中の実行の停止)を使う。
+
 チケットの状態そのものは CLI 側のエージェントが devuntu-agent MCP の finish_agent_task で報告する。
 このスクリプトは CLI の終了コードしか知らないので、4 は保険として扱われる
 (報告が無いまま終わった実行はサーバー側で失敗として閉じられる)。
@@ -37,12 +43,14 @@ import socket
 import subprocess
 import sys
 import tempfile
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import uuid
 from pathlib import Path
 
-__version__ = "1.0.5"
+__version__ = "1.0.6"
 
 # 1 Agent の構成を作業ディレクトリだけで完結させるため、config・ログ・ロックは本体と同じ
 # <作業ディレクトリ>/.devuntu-agent へ置く。作業ディレクトリを分ければ同一ホストに複数の Agent を並べられる
@@ -85,6 +93,16 @@ CLI_OUTPUT_FLAGS: dict[str, dict[str, object]] = {
 # 設定ファイルへ平文で書かせず、トークンの在処を config.json だけに保つために CLI へ渡す
 AGENT_TOKEN_ENV = "DEVUNTU_AGENT_TOKEN"
 
+# CLI へ実行の ID を渡す環境変数。エージェントは finish_agent_task の runId に指定する
+AGENT_RUN_ID_ENV = "DEVUNTU_AGENT_RUN_ID"
+
+# 実行の開始要求の送信回数と、通信エラー時に再送するまでの待ち時間
+START_ATTEMPTS = 3
+START_RETRY_WAIT_SEC = 5
+
+# 応答を得られなかった開始要求の記録。config と同じディレクトリに置き、次の poll の先頭で照合する
+PENDING_START_FILE = "pending-start.json"
+
 # cron から起動されると PATH は最小(/usr/bin:/bin 程度)で、ログインシェルの rc も読まれない。
 # 主なインストール先を PATH の先頭に足して、CLI 本体と CLI が呼ぶコマンドの両方を見つけられるようにする
 DEFAULT_PATH_DIRS = (
@@ -115,7 +133,15 @@ class ConfigError(Exception):
 
 
 class ApiError(Exception):
-    """devuntu への問い合わせ失敗"""
+    """devuntu への問い合わせ失敗。HTTP の応答があった場合は status にそのステータスを持つ"""
+
+    def __init__(self, message: str, status: int | None = None):
+        super().__init__(message)
+        self.status = status
+
+
+class ApiUnreachable(ApiError):
+    """devuntu へ届かなかった・応答を得られなかった(サーバー側で処理されたかは分からない)"""
 
 
 # ---------------------------------------------------------------------------
@@ -250,7 +276,7 @@ class NoRedirectHandler(urllib.request.HTTPRedirectHandler):
 
 def call_api(config: Config, method: str, path: str, body: dict | None = None) -> dict:
     """devuntu の軽量 API を叩く。応答は必ず JSON オブジェクト"""
-    data = json.dumps(body or {}).encode("utf-8")
+    data = None if method == "GET" else json.dumps(body or {}).encode("utf-8")
     request = urllib.request.Request(
         f"{config.base_url}{path}",
         data=data,
@@ -274,9 +300,11 @@ def call_api(config: Config, method: str, path: str, body: dict | None = None) -
                 "Set base_url to the final URL (redirects are not followed)"
             ) from e
         detail = e.read().decode("utf-8", errors="replace")[:200]
-        raise ApiError(f"{method} {path} returned {e.code}: {detail}") from e
-    except (urllib.error.URLError, TimeoutError, socket.timeout) as e:
-        raise ApiError(f"{method} {path} is unreachable: {e}") from e
+        # 中継(プロキシ)の 502 / 503 / 504 は devuntu まで届いたか分からないので、届かなかったものと同じに扱う
+        error = ApiUnreachable if e.code in (502, 503, 504) else ApiError
+        raise error(f"{method} {path} returned {e.code}: {detail}", e.code) from e
+    except (urllib.error.URLError, TimeoutError, socket.timeout, ConnectionError) as e:
+        raise ApiUnreachable(f"{method} {path} is unreachable: {e}") from e
     except json.JSONDecodeError as e:
         raise ApiError(f"{method} {path} response is not JSON: {e}") from e
 
@@ -397,7 +425,7 @@ def build_path_dirs(config: Config) -> list[str]:
     return dirs
 
 
-def build_env(config: Config) -> dict[str, str]:
+def build_env(config: Config, run_id: str | None = None) -> dict[str, str]:
     """CLI へ渡す環境変数。cron の最小 PATH では CLI も CLI が呼ぶコマンドも見つからないので補う"""
     env = dict(os.environ)
     path_dirs = build_path_dirs(config)
@@ -407,6 +435,8 @@ def build_env(config: Config) -> dict[str, str]:
     # MCP の設定ファイルはトークンをこの環境変数から読む。cli.env で明示された場合はそちらを優先する
     env[AGENT_TOKEN_ENV] = config.token
     env.update(config.cli_env)
+    if run_id:
+        env[AGENT_RUN_ID_ENV] = run_id
     return env
 
 
@@ -438,11 +468,20 @@ def print_env(config: Config) -> int:
     return 0
 
 
-def build_prompt(task: dict) -> str:
+def build_prompt(task: dict, run_id: str | None = None) -> str:
     """CLI へ渡す指示。作業内容そのものは MCP 側(ルール / チケット本文)から読ませるので CLI によらず共通"""
+    run_note = (
+        f"この実行の runId は {run_id}(環境変数 {AGENT_RUN_ID_ENV} と同じ)。"
+        "finish_agent_task には必ず runId に指定する。\n"
+        "finish_agent_task が stale=true を返した場合は、この実行が既に停止されているので、それ以上の作業をせずに終了する。\n"
+        "\n"
+        if run_id
+        else ""
+    )
     return (
         f"devuntu のチケット {task['displayId']} を担当エージェントとして処理する。\n"
         "\n"
+        f"{run_note}"
         "手順:\n"
         f"1. devuntu-agent MCP の get_agent_task を ticketId='{task['displayId']}' で呼ぶ。\n"
         "   active が false、または task が null の場合は、何もせずに終了する。\n"
@@ -497,9 +536,9 @@ def build_prompt(task: dict) -> str:
     )
 
 
-def build_command(config: Config, task: dict, cli_bin: str | None = None) -> list[str]:
+def build_command(config: Config, task: dict, cli_bin: str | None = None, run_id: str | None = None) -> list[str]:
     """CLI を起動するコマンド全量。CLI ごとの流儀の違いはここに閉じる"""
-    prompt = build_prompt(task)
+    prompt = build_prompt(task, run_id)
     model = ["--model", config.cli_model] if config.cli_model else []
     command = [cli_bin or config.cli_bin]
     output_flags = CLI_OUTPUT_FLAGS[config.cli_kind]
@@ -699,16 +738,16 @@ def parse_cli_output(config: Config, stdout: str) -> tuple[str, dict]:
     return (message if message is not None else stdout).strip(), metrics
 
 
-def run_cli(config: Config, task: dict) -> tuple[str, str, dict]:
+def run_cli(config: Config, task: dict, run_id: str | None = None) -> tuple[str, str, dict]:
     """CLI を起動する。戻り値は (実行の結果, 実行履歴に残す要約, 計測値)"""
-    env = build_env(config)
+    env = build_env(config, run_id)
     cli_bin = resolve_cli_bin(config, env)
     if not cli_bin:
         message = cli_not_found_message(config, env)
         log.error("%s", message)
         return "failed", message, {}
 
-    command = build_command(config, task, cli_bin)
+    command = build_command(config, task, cli_bin, run_id)
     log.info(
         "starting %s: ticket=%s action=%s cwd=%s bin=%s",
         config.cli_kind,
@@ -761,7 +800,73 @@ def run_cli(config: Config, task: dict) -> tuple[str, str, dict]:
 # ---------------------------------------------------------------------------
 
 
+def pending_start_path(config: Config) -> Path:
+    return config.path.parent / PENDING_START_FILE
+
+
+def save_pending_start(config: Config, pending: dict) -> None:
+    try:
+        pending_start_path(config).write_text(json.dumps(pending) + "\n", encoding="utf-8")
+    except OSError as e:
+        log.error("cannot record the unanswered start request: %s", e)
+
+
+def reconcile_pending_start(config: Config) -> None:
+    """応答を得られなかった開始要求を照合し、開始されていた実行を停止する(CLI は起動していない)。
+
+    照合できなかった(通信できない)場合は記録を残し、次の poll でもう一度試す。
+    """
+    path = pending_start_path(config)
+    if not path.is_file():
+        return
+    try:
+        pending = json.loads(path.read_text(encoding="utf-8"))
+        request_id = str(pending["requestId"])
+    except (OSError, ValueError, KeyError, TypeError) as e:
+        log.warning("discarding the unreadable start request record: %s (%s)", path, e)
+        path.unlink(missing_ok=True)
+        return
+
+    query = urllib.parse.urlencode({"requestId": request_id})
+    try:
+        runs = call_api(config, "GET", f"/api/agent/runs?{query}").get("runs") or []
+        for run in runs:
+            if run.get("status") != "running":
+                continue
+            try:
+                call_api(config, "POST", f"/api/agent/runs/{run['id']}/cancel")
+                log.warning("canceled the run started without a response: run=%s ticket=%s", run["id"], run.get("ticketRef"))
+            except ApiError as e:
+                # 既に閉じた(時間切れなど)なら何もしなくてよい
+                if e.status != 409:
+                    raise
+    except ApiError as e:
+        log.warning("cannot reconcile the unanswered start request yet: %s", e)
+        return
+    path.unlink(missing_ok=True)
+
+
+def start_run(config: Config, ticket_id: str, action: str) -> dict:
+    """実行の開始を記録する。通信エラーなら同じ requestId で再送し、サーバーに開始済みの実行を返させる"""
+    request_id = str(uuid.uuid4())
+    body = {"ticketId": ticket_id, "action": action, "requestId": request_id}
+    for attempt in range(1, START_ATTEMPTS + 1):
+        try:
+            return call_api(config, "POST", "/api/agent/runs", body)
+        except ApiUnreachable as e:
+            if attempt == START_ATTEMPTS:
+                # 開始されたかどうか分からない。CLI は起動せず、次の poll で照合して後始末する
+                save_pending_start(config, {"requestId": request_id, "ticketId": ticket_id})
+                raise
+            log.warning("start request failed (attempt %d/%d), retrying: %s", attempt, START_ATTEMPTS, e)
+            time.sleep(START_RETRY_WAIT_SEC)
+    raise AssertionError("unreachable")
+
+
 def poll(config: Config, dry_run: bool, debug: bool = False) -> int:
+    if not dry_run and not debug:
+        reconcile_pending_start(config)
+
     status = call_api(
         config,
         "POST",
@@ -811,14 +916,18 @@ def poll(config: Config, dry_run: bool, debug: bool = False) -> int:
             log.error("dry-run: would process %s as %s, but %s", display_id, action, cli_not_found_message(config, env))
         return 0
 
-    run = call_api(config, "POST", "/api/agent/runs", {"ticketId": ticket_id, "action": action})
+    run = start_run(config, ticket_id, action)
     run_id = run.get("runId")
     if not run_id:
         raise ApiError(f"POST /api/agent/runs response is missing runId: {run}")
+    # 再送で既存の実行が返り、それが既に閉じていた(停止・時間切れ)場合は CLI を起動しない
+    if run.get("status", "running") != "running":
+        log.warning("the run is already closed: run=%s status=%s", run_id, run.get("status"))
+        return 1
 
     metrics: dict = {}
     try:
-        result, summary, metrics = run_cli(config, task)
+        result, summary, metrics = run_cli(config, task, run_id)
     except Exception as e:  # noqa: BLE001 (実行の記録を必ず閉じるため、想定外の例外も拾う)
         log.exception("unexpected exception while launching %s", config.cli_kind)
         result, summary = "failed", f"unexpected error: {e}"[:SUMMARY_LIMIT]
@@ -838,6 +947,52 @@ def poll(config: Config, dry_run: bool, debug: bool = False) -> int:
     log.info("recorded the end of the run: run=%s status=%s", run_id, result)
 
     return 0 if result == "succeeded" else 1
+
+
+# ---------------------------------------------------------------------------
+# 中断後の確認・後始末
+# ---------------------------------------------------------------------------
+
+
+def list_runs(config: Config, running_only: bool) -> int:
+    """自分の実行を新しい順に表示する(稼働条件に関係なく使える)"""
+    query = urllib.parse.urlencode({"status": "running"} if running_only else {})
+    runs = call_api(config, "GET", f"/api/agent/runs{'?' + query if query else ''}").get("runs") or []
+    if not runs:
+        print("no runs")
+        return 0
+    for run in runs:
+        summary = (run.get("summary") or "").replace("\n", " ")[:60]
+        print(
+            "\t".join(
+                [
+                    str(run.get("id")),
+                    str(run.get("status")),
+                    str(run.get("action")),
+                    str(run.get("ticketRef") or "-"),
+                    str(run.get("startedAt")),
+                    str(run.get("finishedAt") or "-"),
+                    summary or "-",
+                ]
+            )
+        )
+    return 0
+
+
+def cancel_run(config: Config, run_id: str) -> int:
+    """実行中の実行を停止する。サーバー側で閉じるだけで、動いている CLI のプロセスは止めない"""
+    try:
+        call_api(config, "POST", f"/api/agent/runs/{urllib.parse.quote(run_id, safe='')}/cancel")
+    except ApiError as e:
+        if e.status == 404:
+            print(f"run not found: {run_id}")
+            return 1
+        if e.status == 409:
+            print(f"run is not running: {run_id}")
+            return 1
+        raise
+    print(f"canceled: {run_id}")
+    return 0
 
 
 # ---------------------------------------------------------------------------
@@ -883,12 +1038,15 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Devuntu Agent")
     parser.add_argument(
         "command",
-        choices=["poll", "save-path", "env"],
+        choices=["poll", "save-path", "env", "runs", "cancel"],
         help=(
             "poll: 担当チケットを 1 件処理する / save-path: 今のシェルの PATH を設定に保存する / "
-            "env: CLI へ渡している環境変数を export 形式で出す"
+            "env: CLI へ渡している環境変数を export 形式で出す / runs: 自分の実行の一覧を出す / "
+            "cancel <runId>: 実行中の実行を停止する"
         ),
     )
+    parser.add_argument("run_id", nargs="?", help="cancel で停止する実行の ID")
+    parser.add_argument("--running", action="store_true", help="runs で実行中のものだけを出す")
     parser.add_argument("--config", type=Path, default=None, help=f"設定ファイル(既定 {DEFAULT_CONFIG_PATH})")
     parser.add_argument("--dry-run", action="store_true", help="CLI を起動せず、何を処理するかだけを出す")
     parser.add_argument(
@@ -917,6 +1075,15 @@ def main(argv: list[str] | None = None) -> int:
         return save_path(config)
     if args.command == "env":
         return print_env(config)
+    # 中断後の確認・後始末は、poll が動いている間にも使えるようロックを取らない
+    if args.command in ("runs", "cancel"):
+        if args.command == "cancel" and not args.run_id:
+            parser.error("cancel requires a run ID (see the runs subcommand)")
+        try:
+            return list_runs(config, args.running) if args.command == "runs" else cancel_run(config, args.run_id)
+        except ApiError as e:
+            log.error("%s", e)
+            return 1
 
     lock = acquire_lock(args.lock)
     if lock is None:

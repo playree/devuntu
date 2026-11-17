@@ -1,11 +1,12 @@
 import { agentError, agentJson, authenticateRunner, readJsonBody } from '@/lib/agent/agent-api'
 import { finishAgentRunById } from '@/lib/agent/agent-run'
+import { findRunnerAgentRun } from '@/lib/agent/agent-run-recovery'
 import { z } from 'zod'
 
 /**
- * 実行の終了を記録する。
+ * 自分の実行を 1 件返す(GET。他のランナーの実行は 404。稼働条件に関係なく使える)/ 実行の終了を記録する(PATCH)。
  *
- * Claude が `finish_agent_task` を呼ばずに落ちた場合の保険も兼ねており、チケットが処理中のまま
+ * 終了の記録は、Claude が `finish_agent_task` を呼ばずに落ちた場合の保険も兼ねており、チケットが処理中のまま
  * 残っていれば失敗として閉じる(`finishAgentRunById`)。ランナーは Claude の終了コードしか
  * 知らないので、チケットの状態そのものはエージェントの報告を優先する。
  *
@@ -28,6 +29,24 @@ const scBody = z.object({
     })
     .optional(),
 })
+
+export const GET = async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
+  const result = await authenticateRunner(request)
+  if (!result.ok) {
+    return result.response
+  }
+  const { runner } = result.ctx
+  if (!runner) {
+    return agentError(409, 'no_runner')
+  }
+
+  const { id } = await params
+  const run = await findRunnerAgentRun(runner.id, id)
+  if (!run) {
+    return agentError(404, 'run_not_found')
+  }
+  return agentJson(run)
+}
 
 export const PATCH = async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
   const result = await authenticateRunner(request)

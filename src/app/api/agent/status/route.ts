@@ -13,6 +13,8 @@ import { z } from 'zod'
  * 5分おきに叩かれる前提なので、チケットの本文やコメントは返さず MCP 側に任せる。
  *
  * ランナーの自己申告(ホスト名・版)は稼働状況の表示にしか使わない。認可には一切関与しない。
+ *
+ * 時間切れの実行の回収は稼働条件(無効・時間外)に関係なく行う。止めている間に処理中のまま残さないため。
  */
 
 const scBody = z.object({
@@ -38,6 +40,7 @@ export const POST = async (request: Request) => {
       where: { id: runner.id },
       data: { lastPolledAt: now, hostname: parsed.data.hostname, version: parsed.data.version },
     })
+    await failStaleAgentRuns(runner.id, now)
   }
 
   const activity = await evaluateRunnerActivity(runner, now)
@@ -51,8 +54,6 @@ export const POST = async (request: Request) => {
       tasks: [],
     })
   }
-
-  await failStaleAgentRuns(runner.id, now)
 
   return agentJson({
     agent: { id: auth.user.id, name: auth.user.name, email: auth.user.email },

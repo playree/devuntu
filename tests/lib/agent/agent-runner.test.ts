@@ -432,7 +432,7 @@ describe('failStaleAgentRuns', () => {
     expect(prisma.$transaction).toHaveBeenCalled()
     expect(ticket.updateMany).toHaveBeenCalledWith({
       where: { id: { in: ['t1'] }, agentState: 'running' },
-      data: { agentState: 'failed', agentStateAt: expect.any(Date) },
+      data: { agentState: 'failed' },
     })
   })
 
@@ -480,7 +480,7 @@ describe('failStaleAgentRuns', () => {
     expect(await failStaleAgentRuns('r1')).toBe(1)
     expect(ticket.updateMany).toHaveBeenCalledWith({
       where: { id: { in: ['t2'] }, agentState: 'running' },
-      data: { agentState: 'failed', agentStateAt: expect.any(Date) },
+      data: { agentState: 'failed' },
     })
     expect(notifyMock).toHaveBeenCalledTimes(1)
     expect(notifyMock).toHaveBeenCalledWith(expect.objectContaining({ runId: 'run2' }), expect.anything())
@@ -552,7 +552,7 @@ describe('finishAgentRunById', () => {
     })
     expect(ticket.updateMany).toHaveBeenCalledWith({
       where: { id: 't1', agentState: 'running' },
-      data: { agentState: 'failed', agentStateAt: expect.any(Date) },
+      data: { agentState: 'failed' },
     })
     expect(notifyMock, '閉じたのはこの経路なので通知もここから出す').toHaveBeenCalledWith(
       expect.objectContaining({ runId: 'run1', status: 'failed', state: 'failed', summary: 'exit 0' }),
@@ -631,23 +631,78 @@ describe('startAgentRun', () => {
 
   it('実行を記録してチケットを処理中にする', async () => {
     ticket.findFirst.mockResolvedValueOnce(openTicket() as never)
-    agentRun.create.mockResolvedValueOnce({ id: 'run1' } as never)
+    agentRun.create.mockResolvedValueOnce({ id: 'run1', status: 'running' } as never)
 
     expect(await startAgentRun(runner(), 't1', 'plan')).toEqual({
       ok: true,
-      run: { id: 'run1', displayId: 'ABC-42' },
+      run: { id: 'run1', displayId: 'ABC-42', status: 'running' },
     })
     expect(agentRun.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: { runnerId: 'r1', ticketId: 't1', ticketRef: 'ABC-42', action: 'plan' },
+        data: { runnerId: 'r1', ticketId: 't1', ticketRef: 'ABC-42', action: 'plan', requestId: null },
       }),
     )
     expect(ticket.update).toHaveBeenCalledWith({
       where: { id: 't1' },
-      data: { agentState: 'running', agentStateAt: expect.any(Date) },
+      data: { agentState: 'running' },
     })
     // 未消化の自動差し戻しのきっかけは、この実行で引き受ける
     expect(consumeAutoReviseTriggers).toHaveBeenCalledWith(expect.anything(), 't1', 'run1')
+  })
+
+  it('同じ requestId の再送は、新しい実行を作らずに既存の実行を返す', async () => {
+    agentRun.findUnique.mockResolvedValueOnce({
+      id: 'run1',
+      ticketId: 't1',
+      ticketRef: 'ABC-42',
+      status: 'running',
+    } as never)
+
+    expect(await startAgentRun(runner(), 't1', 'plan', 'req-1')).toEqual({
+      ok: true,
+      run: { id: 'run1', displayId: 'ABC-42', status: 'running' },
+    })
+    expect(agentRun.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { runnerId_requestId: { runnerId: 'r1', requestId: 'req-1' } } }),
+    )
+    expect(agentRun.create).not.toHaveBeenCalled()
+    expect(ticket.update).not.toHaveBeenCalled()
+  })
+
+  it('別のチケットに使われた requestId は衝突として扱う', async () => {
+    agentRun.findUnique.mockResolvedValueOnce({
+      id: 'run1',
+      ticketId: 't9',
+      ticketRef: 'ABC-9',
+      status: 'running',
+    } as never)
+
+    expect(await startAgentRun(runner(), 't1', 'plan', 'req-1')).toEqual({ ok: false, reason: 'request_id_conflict' })
+    expect(agentRun.create).not.toHaveBeenCalled()
+  })
+
+  it('requestId 付きの初回は requestId を記録して開始する', async () => {
+    agentRun.findUnique.mockResolvedValueOnce(null as never)
+    ticket.findFirst.mockResolvedValueOnce(openTicket() as never)
+    agentRun.create.mockResolvedValueOnce({ id: 'run1', status: 'running' } as never)
+
+    expect(await startAgentRun(runner(), 't1', 'plan', 'req-1')).toMatchObject({ ok: true, run: { id: 'run1' } })
+    expect(agentRun.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ requestId: 'req-1' }) }),
+    )
+  })
+
+  it('再送が同時に届いて一意制約に当たったら、先に作られた実行を返す', async () => {
+    agentRun.findUnique
+      .mockResolvedValueOnce(null as never)
+      .mockResolvedValueOnce({ id: 'run1', ticketId: 't1', ticketRef: 'ABC-42', status: 'running' } as never)
+    ticket.findFirst.mockResolvedValueOnce(openTicket() as never)
+    agentRun.create.mockRejectedValueOnce(Object.assign(new Error('unique'), { code: 'P2002' }))
+
+    expect(await startAgentRun(runner(), 't1', 'plan', 'req-1')).toEqual({
+      ok: true,
+      run: { id: 'run1', displayId: 'ABC-42', status: 'running' },
+    })
   })
 
   it.each(['backlog', 'todo'])('%s のチケットは、エージェントを変更者として対応中へ移す', async (status) => {
@@ -728,7 +783,7 @@ describe('startAgentRun', () => {
     ticket.findFirst.mockResolvedValueOnce(openTicket() as never)
     agentRun.count.mockResolvedValueOnce(5)
 
-    const result = await startAgentRun(runner({ dailyRunLimit: 5 }), 't1', 'plan', jst('14:00'))
+    const result = await startAgentRun(runner({ dailyRunLimit: 5 }), 't1', 'plan', null, jst('14:00'))
 
     expect(result).toEqual({
       ok: false,
@@ -744,7 +799,13 @@ describe('startAgentRun', () => {
     ticket.findFirst.mockResolvedValueOnce(openTicket() as never)
     monthCost(10)
 
-    const result = await startAgentRun(runner({ monthlyBudgetUsd: new Prisma.Decimal(10) }), 't1', 'plan', jst('14:00'))
+    const result = await startAgentRun(
+      runner({ monthlyBudgetUsd: new Prisma.Decimal(10) }),
+      't1',
+      'plan',
+      null,
+      jst('14:00'),
+    )
 
     expect(result).toEqual({
       ok: false,
@@ -760,7 +821,7 @@ describe('startAgentRun', () => {
     agentRun.count.mockResolvedValueOnce(4)
     agentRun.create.mockResolvedValueOnce({ id: 'run1' } as never)
 
-    const result = await startAgentRun(runner({ dailyRunLimit: 5 }), 't1', 'plan', jst('14:00'))
+    const result = await startAgentRun(runner({ dailyRunLimit: 5 }), 't1', 'plan', null, jst('14:00'))
 
     expect(result).toEqual({ ok: true, run: { id: 'run1', displayId: 'ABC-42' } })
     expect(prisma.$transaction).toHaveBeenCalledTimes(1)
@@ -787,7 +848,13 @@ describe('finishAgentTask', () => {
 
     expect(await finishAgentTask(runner(), 't1', outcome, '要約')).toEqual({ state })
     expect(ticket.update).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: 't1' }, data: { agentState: state, agentStateAt: expect.any(Date) } }),
+      expect.objectContaining({
+        where: { id: 't1' },
+        data: {
+          agentState: state,
+          ...(state === 'planned' || state === 'done' ? { agentStateAt: expect.any(Date) } : {}),
+        },
+      }),
     )
     expect(agentRun.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({

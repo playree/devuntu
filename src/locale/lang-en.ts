@@ -63,6 +63,7 @@ export const en: DefaultLocaleItems = {
   agent_monthly_budget: 'Monthly Budget (USD)',
   agent_poll_interval: 'Poll Interval (min)',
   agent_profile: 'Agent Overview',
+  agent_retry: 'Retry',
   agent_rule: 'Rule',
   agent_run_failed: 'Failed',
   agent_run_history: 'Run History',
@@ -85,6 +86,7 @@ export const en: DefaultLocaleItems = {
   agent_state_running: 'Running',
   agent_state_skipped: 'Skipped',
   agent_state_waiting: 'Waiting for turn',
+  agent_stop: 'Stop',
   agent_token: 'Token',
   agent_tokens: 'Tokens (In / Out)',
   agent_unlimited: 'Unlimited',
@@ -669,6 +671,12 @@ Please copy and use the connection information above.
     "Settings for the runner that polls for assigned tickets. The AI agent starts only while these conditions are met. Leaving either start or end unset means all day; a start later than the end crosses midnight (nights only). The daily run limit counts every start, and 0 means unlimited; the count returns to 0 at the reset time, based on the timezone setting.\nOnce this month's cost reaches the monthly budget, no new runs start (runs in progress are not stopped). 0 means unlimited.",
   msg_agent_usage_desc:
     'Totals this month of the tokens and cost reported by the CLI. The month switches at the reset time on the 1st (in the configured time zone). Runs whose CLI does not report cost (Codex CLI) are not included in the cost.',
+  msg_agent_retried: 'Moved back to the queue',
+  msg_agent_stopped: 'Stopped the run',
+  msg_confirm_agent_retry:
+    'Move the agent task back to the queue so that it is processed again at the next poll. If it stopped while revising after a reply, it starts over from that reply.',
+  msg_confirm_agent_stop:
+    'Close the running task as failed. The CLI process on the runner is not stopped: if it keeps running, stop it on the runner host. Reports that arrive after this are not applied.',
   msg_announced: 'Posted the announcement. It will also be sent to the Slack channel.',
   msg_announcement_recorded_only:
     'Recorded the announcement on the ticket. It was not sent to the Slack channel (no channel is set up, sending was throttled, or the body has only images).',
