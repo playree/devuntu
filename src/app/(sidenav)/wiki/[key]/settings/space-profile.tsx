@@ -4,19 +4,18 @@ import { MultiButton } from '@/components/general/button'
 import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input'
 import { RadioCtrl } from '@/components/general/radio'
-import { ArchiveBoxIcon, CheckIcon } from '@/components/icon'
+import { CheckIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { useWikiSpaceTypeOptions, useWikiVisibilityOptions } from '@/components/wiki-chip'
 import { parseAction } from '@/lib/action/action-client'
 import { ClientError } from '@/lib/error'
 import { scUpdateWikiSpace, type UpdateWikiSpace } from '@/lib/schema/schema-wiki'
-import { useConfirmAction } from '@/lib/use-confirm-action'
 import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FC } from 'react'
 import { useForm } from 'react-hook-form'
 import { type WikiSpaceContextValue } from '../space-context'
-import { setWikiSpaceArchived, updateWikiSpace } from './server'
+import { updateWikiSpace } from './server'
 
 type Space = WikiSpaceContextValue['space']
 
@@ -107,40 +106,5 @@ export const WikiSpaceProfile: FC<{ space: Space; reload: () => Promise<void> }>
         </div>
       </GridBox>
     </form>
-  )
-}
-
-/** アーカイブの切り替え。アーカイブ中は閲覧のみになるが、設定は変えられるので解除もここで行う */
-export const WikiSpaceArchive: FC<{ space: Space; reload: () => Promise<void> }> = ({ space, reload }) => {
-  const { t } = useLocale()
-  const confirmAction = useConfirmAction()
-
-  const toggleArchive = async () => {
-    const next = !space.archived
-    await confirmAction(
-      {
-        title: t('confirm_archive'),
-        text: next
-          ? t('msg_confirm_archive_wiki_space', { target: space.name })
-          : t('msg_confirm_unarchive_wiki_space', { target: space.name }),
-      },
-      async () => {
-        await parseAction(setWikiSpaceArchived({ id: space.id, archived: next }))
-        notify.success(t('msg_saved'))
-        await reload()
-      },
-    )
-  }
-
-  return (
-    <div className='flex flex-wrap items-center gap-2 py-3'>
-      <div className='min-w-0 flex-1'>
-        <div className='text-sm font-semibold'>{t('archived')}</div>
-        <div className='text-muted text-xs'>{t('msg_archive_wiki_space')}</div>
-      </div>
-      <MultiButton size='sm' variant='danger-soft' icon={<ArchiveBoxIcon />} onPress={toggleArchive}>
-        {space.archived ? t('unarchive') : t('archive')}
-      </MultiButton>
-    </div>
   )
 }

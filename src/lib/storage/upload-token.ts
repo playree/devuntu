@@ -21,7 +21,7 @@ import { parseBearerToken } from '../oauth/oauth-resource'
 import { isUniqueViolation, prisma } from '../prisma'
 import { makeUrl } from '../server-utils'
 import { getWikiSpaceAccess } from '../wiki/wiki-access'
-import type { AttachmentOwner } from './attachment'
+import type { AttachmentOwner, AttachmentTarget } from './attachment'
 import { toUploadUrl, UPLOAD_URL_PREFIX } from './upload'
 
 /**
@@ -37,8 +37,7 @@ const secret = () => new TextEncoder().encode(envu.server.BETTER_AUTH_SECRET)
 const issuer = () => envu.server.BETTER_AUTH_URL
 const audience = () => makeUrl(UPLOAD_URL_PREFIX).toString()
 
-/** 添付先。ボードか Wiki スペースのどちらか一方 */
-export type UploadTokenTarget = { boardId: string; wikiSpaceId?: never } | { wikiSpaceId: string; boardId?: never }
+export type UploadTokenTarget = AttachmentTarget
 
 /** 戻り値の平文は発行時にしか取得できない(保存もしない) */
 export const signUploadToken = async ({ userId, ...target }: { userId: string } & UploadTokenTarget): Promise<string> =>

@@ -236,21 +236,30 @@ export const removeOwnedImageAttachment = async (url: string, userId: string): P
   await removeAttachmentByKey(key)
 }
 
+/** 添付先。ボードか Wiki スペースのどちらか一方 */
+export type AttachmentTarget = { boardId: string; wikiSpaceId?: never } | { wikiSpaceId: string; boardId?: never }
+
 /**
- * ボードに属する添付のキー。紐付けを外すとボードから辿れなくなるので、
+ * ボード / Wiki スペースに属する添付のキー。紐付けを外すと辿れなくなるので、
  * 実体を消すには**外す前に**控えておく必要がある。
  */
-export const listBoardAttachmentKeys = async (tx: Prisma.TransactionClient, boardId: string): Promise<string[]> => {
-  const rows = await tx.attachment.findMany({ where: { boardId }, select: { key: true } })
+export const listAttachmentKeysOf = async (
+  tx: Prisma.TransactionClient,
+  target: AttachmentTarget,
+): Promise<string[]> => {
+  const rows = await tx.attachment.findMany({ where: target, select: { key: true } })
   return rows.map(({ key }) => key)
 }
 
 /**
- * ボードに属する添付の紐付けを外す。ボード削除の直前に呼ぶ。
+ * ボード / Wiki スペースに属する添付の紐付けを外す。ボード / スペースの削除の直前に呼ぶ。
  *
  * Cascade でレコードごと消すと、実体の削除に失敗した分がどこからも辿れなくなる。
  * 行を残しておけば未参照の添付として掃除が拾い直すので、失敗しても収束する。
  */
-export const detachBoardAttachments = async (tx: Prisma.TransactionClient, boardId: string): Promise<void> => {
-  await tx.attachment.updateMany({ where: { boardId }, data: { boardId: null } })
+export const detachAttachmentsOf = async (tx: Prisma.TransactionClient, target: AttachmentTarget): Promise<void> => {
+  await tx.attachment.updateMany({
+    where: target,
+    data: target.boardId !== undefined ? { boardId: null } : { wikiSpaceId: null },
+  })
 }

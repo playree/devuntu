@@ -2,6 +2,8 @@
 
 import { prisma } from '@/lib/prisma'
 import {
+  detachAttachmentsOf,
+  listAttachmentKeysOf,
   listContentAttachments,
   OCTET_STREAM_MIME,
   removeOwnedImageAttachment,
@@ -13,7 +15,9 @@ import { toUploadUrl } from '@/lib/storage/upload'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/prisma', async () =>
-  (await import('../../helpers/prisma')).mockPrisma({ attachment: ['count', 'deleteMany', 'create', 'findMany'] }),
+  (await import('../../helpers/prisma')).mockPrisma({
+    attachment: ['count', 'deleteMany', 'create', 'findMany', 'updateMany'],
+  }),
 )
 vi.mock('@/lib/storage/storage', () => ({ deleteObject: vi.fn(), putObject: vi.fn() }))
 vi.mock('@/lib/logger', () => ({
@@ -171,5 +175,22 @@ describe('listContentAttachments', () => {
   it('キーが無ければ DB を引かない', async () => {
     expect(await listContentAttachments([], 'board1')).toEqual([])
     expect(prisma.attachment.findMany).not.toHaveBeenCalled()
+  })
+})
+
+describe('listAttachmentKeysOf / detachAttachmentsOf', () => {
+  it('ボード / Wiki スペースに属する添付のキーを引く', async () => {
+    vi.mocked(prisma.attachment.findMany).mockResolvedValue([{ key: 'k1' }, { key: 'k2' }] as never)
+
+    expect(await listAttachmentKeysOf(prisma, { wikiSpaceId: 's1' })).toEqual(['k1', 'k2'])
+    expect(prisma.attachment.findMany).toHaveBeenCalledWith({ where: { wikiSpaceId: 's1' }, select: { key: true } })
+  })
+
+  it.each([
+    [{ boardId: 'b1' }, { boardId: null }],
+    [{ wikiSpaceId: 's1' }, { wikiSpaceId: null }],
+  ])('添付先 %o の紐付けだけを外す', async (target, data) => {
+    await detachAttachmentsOf(prisma, target)
+    expect(prisma.attachment.updateMany).toHaveBeenCalledWith({ where: target, data })
   })
 })

@@ -9,9 +9,9 @@ import { FlexCol } from '@/components/general/flex'
 import { usePagingList } from '@/components/general/paging'
 import { ContentHeader } from '@/components/header'
 import {
-  ArchiveBoxIcon,
   ArrowLeftCircleIcon,
   Cog6ToothIcon,
+  ExclamationTriangleIcon,
   InformationCircleIcon,
   TagIcon,
   UserGroupIcon,
@@ -30,6 +30,7 @@ import { useRouter } from 'next/navigation'
 import { FC } from 'react'
 import { createWikiTag } from '../server'
 import { useWikiSpace } from '../space-context'
+import { WikiSpaceDangerZone } from './danger-zone'
 import {
   deleteWikiTag,
   getWikiSpaceAssignments,
@@ -43,7 +44,7 @@ import {
   upsertWikiSpaceGroup,
   upsertWikiSpaceMember,
 } from './server'
-import { WikiSpaceArchive, WikiSpaceProfile } from './space-profile'
+import { WikiSpaceProfile } from './space-profile'
 
 const defaultExpandedKeys = new Set(['wiki_space_profile', 'wiki_space_members'])
 
@@ -209,8 +210,12 @@ export const WikiSpaceSettingsClient: FC = () => {
           )}
         </AccordionSection>
 
-        <AccordionSection id='wiki_space_archive' icon={<ArchiveBoxIcon />} title={t('archived')}>
-          <WikiSpaceArchive space={space} reload={reloadSpace} />
+        <AccordionSection
+          id='danger_zone'
+          icon={<ExclamationTriangleIcon className='text-danger' />}
+          title={t('danger_zone')}
+        >
+          <WikiSpaceDangerZone space={space} reload={reloadSpace} />
         </AccordionSection>
       </Accordion>
     </FlexCol>

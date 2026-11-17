@@ -61,7 +61,7 @@ model WikiSpace {
   id String @id @default(uuid(7))
 
   /// ページ指定(`KEY/番号`)と URL に使う。大文字英数(WIKI_SPACE_KEY_PATTERN)で一意。
-  /// 共有済みの指定が別のページを指さないよう、作成後は変更しない
+  /// 共有済みの指定が別のページを指さないよう、作成後は変更しない。削除後も WikiSpaceKeyHistory で予約したままにする
   key String @unique
 
   /// スペース名
@@ -95,6 +95,17 @@ model WikiSpace {
   attachments Attachment[]
 
   @@map("wiki_space")
+}
+
+/// 過去に使われた Wiki スペースのキー。スペースを消しても行を残し、同じキーを別のスペースへ渡さない
+/// (共有済みの `KEY/番号` やページの URL が、別のスペースの同じ番号のページを指さないようにする)
+model WikiSpaceKeyHistory {
+  key String @id
+
+  // メタデータ
+  createdAt DateTime @default(now())
+
+  @@map("wiki_space_key_history")
 }
 
 /// Wiki スペースへのユーザーの直接割り当て

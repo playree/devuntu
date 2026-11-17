@@ -2,7 +2,7 @@
  * Wiki スペースの作成・更新・一覧(サーバー専用)
  *
  * スペースはログインユーザーなら誰でも作れ、作成者が owner になる。
- * 設定の変更(名前・説明・公開範囲・アーカイブ)は owner と管理者。割り当ての変更は画面側のチケットで扱う。
+ * 設定の変更(名前・説明・公開範囲・アーカイブ)と削除は owner と管理者。
  */
 
 import type { WikiSpaceType, WikiVisibility } from '@/generated/prisma/enums'
@@ -10,6 +10,7 @@ import { isAdminActor, type Actor } from '../board/board-access'
 import { ClientError, errInvalidOperation, errValidation } from '../error'
 import { logger } from '../logger'
 import { isUniqueViolation, prisma } from '../prisma'
+import { detachAttachmentsOf, listAttachmentKeysOf, removeAttachmentByKey } from '../storage/attachment'
 import {
   assertWikiSpaceAccess,
   getWikiSpaceAccess,
@@ -66,7 +67,11 @@ const SPACE_SELECT = {
   updatedAt: true,
 } as const
 
-/** スペースを作り、作成者を owner として割り当てる */
+/**
+ * スペースを作り、作成者を owner として割り当てる。
+ * キーは履歴(WikiSpaceKeyHistory)へ登録して占有する。消したスペースのキーも履歴に残るので、
+ * 共有済みの `KEY/番号` が別のスペースのページを指すことはない
+ */
 export const createWikiSpace = async (actor: Actor, input: WikiSpaceInput) => {
   const key = input.key.trim().toUpperCase()
   if (!WIKI_SPACE_KEY_PATTERN.test(key)) {
@@ -75,17 +80,20 @@ export const createWikiSpace = async (actor: Actor, input: WikiSpaceInput) => {
   assertName(input.name)
   assertDescription(input.description)
 
-  const space = await prisma.wikiSpace
-    .create({
-      data: {
-        key,
-        name: input.name.trim(),
-        description: input.description?.trim() || null,
-        visibility: input.visibility ?? 'restricted',
-        type: input.type ?? 'mixed',
-        members: { create: { userId: actor.id, role: 'owner' } },
-      },
-      select: SPACE_SELECT,
+  const space = await prisma
+    .$transaction(async (tx) => {
+      await tx.wikiSpaceKeyHistory.create({ data: { key }, select: { key: true } })
+      return tx.wikiSpace.create({
+        data: {
+          key,
+          name: input.name.trim(),
+          description: input.description?.trim() || null,
+          visibility: input.visibility ?? 'restricted',
+          type: input.type ?? 'mixed',
+          members: { create: { userId: actor.id, role: 'owner' } },
+        },
+        select: SPACE_SELECT,
+      })
     })
     .catch((e: unknown) => {
       throw isUniqueViolation(e) ? errDuplicatedKey() : e
@@ -134,6 +142,35 @@ export const setWikiSpaceArchived = async (actor: Actor, spaceId: string, archiv
   await assertWikiSpaceAccess(actor, spaceId, 'manage')
   await prisma.wikiSpace.update({ where: { id: spaceId }, data: { archived }, select: { id: true } })
   logger.info({ userId: actor.id, spaceId, archived }, 'wiki space archived changed')
+}
+
+/**
+ * スペースの削除(owner または管理者)。ページ・版・タグ・割り当ては Cascade で消え、キーは履歴に残る。
+ *
+ * 添付はボード削除(`deleteBoard`)と同じく、レコードを Cascade に任せず紐付けだけを外して残し、
+ * コミット後に実体ごと消す。実体の削除に失敗した分は、参照の外れた添付として掃除が回収する。
+ * スペースの行ロックを取ってから消すので、ページの書き込み(同じロックを取る)と入れ違わない
+ */
+export const deleteWikiSpace = async (actor: Actor, spaceId: string) => {
+  const keys = await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT "id" FROM "wiki_space" WHERE "id" = ${spaceId} FOR UPDATE`
+    await assertWikiSpaceAccess(actor, spaceId, 'manage', tx)
+    // 紐付けを外すとスペースから辿れなくなるので、キーはここで控える
+    const keys = await listAttachmentKeysOf(tx, { wikiSpaceId: spaceId })
+    await detachAttachmentsOf(tx, { wikiSpaceId: spaceId })
+    await tx.wikiSpace.delete({ where: { id: spaceId }, select: { id: true } })
+    return keys
+  })
+
+  // ロールバックで実データを失わないよう、コミットしてから実体を消す
+  let removed = 0
+  for (const key of keys) {
+    if (await removeAttachmentByKey(key)) {
+      removed += 1
+    }
+  }
+
+  logger.info({ userId: actor.id, spaceId, attachments: keys.length, removed }, 'wiki space deleted')
 }
 
 /** 閲覧できるスペースの一覧(名前順)と、それぞれでの自分の権限 */

@@ -4,10 +4,12 @@
 
 import { VALIDATION_ERROR } from '@/lib/error'
 import { prisma } from '@/lib/prisma'
+import { detachAttachmentsOf, listAttachmentKeysOf, removeAttachmentByKey } from '@/lib/storage/attachment'
 import { assertWikiSpaceAccess } from '@/lib/wiki/wiki-access'
 import { DUPLICATED_WIKI_SPACE_KEY, WIKI_SPACE_HAS_NORMAL_PAGES } from '@/lib/wiki/wiki-rule'
 import {
   createWikiSpace,
+  deleteWikiSpace,
   findBoardWikiSpaceIndex,
   listWikiSpaces,
   setWikiSpaceArchived,
@@ -17,10 +19,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/prisma', async () =>
   (await import('../../helpers/prisma')).mockPrisma({
-    wikiSpace: ['create', 'update', 'findMany', 'findUnique'],
+    wikiSpace: ['create', 'update', 'delete', 'findMany', 'findUnique'],
+    wikiSpaceKeyHistory: ['create'],
     wikiPage: ['count'],
   }),
 )
+vi.mock('@/lib/storage/attachment', () => ({
+  listAttachmentKeysOf: vi.fn(),
+  detachAttachmentsOf: vi.fn(),
+  removeAttachmentByKey: vi.fn(),
+}))
 vi.mock('@/lib/wiki/wiki-access', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/wiki/wiki-access')>()),
   assertWikiSpaceAccess: vi.fn(),
@@ -41,6 +49,8 @@ beforeEach(() => {
   vi.clearAllMocks()
   vi.mocked(prisma.wikiSpace.create).mockResolvedValue({ id: 's1' } as never)
   vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ type: 'mixed' } as never)
+  vi.mocked(listAttachmentKeysOf).mockResolvedValue([])
+  vi.mocked(removeAttachmentByKey).mockResolvedValue(true)
 })
 
 describe('createWikiSpace', () => {
@@ -62,9 +72,24 @@ describe('createWikiSpace', () => {
     expect(vi.mocked(prisma.wikiSpace.create).mock.calls[0][0].data).toMatchObject({ type: 'design_doc' })
   })
 
+  it('キーを履歴に登録してからスペースを作る', async () => {
+    await createWikiSpace(actor, { key: 'docs', name: 'x' })
+
+    expect(prisma.wikiSpaceKeyHistory.create).toHaveBeenCalledWith({ data: { key: 'DOCS' }, select: { key: true } })
+    expect(vi.mocked(prisma.wikiSpaceKeyHistory.create).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(prisma.wikiSpace.create).mock.invocationCallOrder[0],
+    )
+  })
+
   it('キーの重複は DUPLICATED_WIKI_SPACE_KEY', async () => {
     vi.mocked(prisma.wikiSpace.create).mockRejectedValue({ code: 'P2002' })
     expect(await errorTypeOf(createWikiSpace(actor, { key: 'DOCS', name: 'x' }))).toBe(DUPLICATED_WIKI_SPACE_KEY)
+  })
+
+  it('削除したスペースのキー(履歴の重複)も DUPLICATED_WIKI_SPACE_KEY で、スペースを作らない', async () => {
+    vi.mocked(prisma.wikiSpaceKeyHistory.create).mockRejectedValue({ code: 'P2002' })
+    expect(await errorTypeOf(createWikiSpace(actor, { key: 'DOCS', name: 'x' }))).toBe(DUPLICATED_WIKI_SPACE_KEY)
+    expect(prisma.wikiSpace.create).not.toHaveBeenCalled()
   })
 
   it.each(['D', '1DOC', 'DOCS-1', 'ABCDEFGHI'])('キーの形式外は検証エラー (%s)', async (key) => {
@@ -128,6 +153,65 @@ describe('updateWikiSpace / setWikiSpaceArchived', () => {
     vi.mocked(assertWikiSpaceAccess).mockRejectedValue(new Error('denied'))
     await expect(updateWikiSpace(actor, 's1', { name: 'x' })).rejects.toThrow('denied')
     expect(prisma.wikiSpace.update).not.toHaveBeenCalled()
+  })
+})
+
+describe('deleteWikiSpace', () => {
+  it('スペース行のロック → manage の判定 → 添付のキーを控えて紐付けを外す → スペースを消す、の順に行う', async () => {
+    const order: string[] = []
+    vi.mocked(prisma.$queryRaw).mockImplementation((async () => {
+      order.push('lock')
+      return []
+    }) as never)
+    vi.mocked(assertWikiSpaceAccess).mockImplementation((async () => {
+      order.push('assert')
+    }) as never)
+    vi.mocked(listAttachmentKeysOf).mockImplementation(async () => {
+      order.push('list')
+      return []
+    })
+    vi.mocked(detachAttachmentsOf).mockImplementation(async () => {
+      order.push('detach')
+    })
+    vi.mocked(prisma.wikiSpace.delete).mockImplementation((async () => {
+      order.push('delete')
+    }) as never)
+
+    await deleteWikiSpace(actor, 's1')
+
+    expect(order).toEqual(['lock', 'assert', 'list', 'detach', 'delete'])
+    expect(assertWikiSpaceAccess).toHaveBeenCalledWith(actor, 's1', 'manage', expect.anything())
+    expect(listAttachmentKeysOf).toHaveBeenCalledWith(expect.anything(), { wikiSpaceId: 's1' })
+    expect(detachAttachmentsOf).toHaveBeenCalledWith(expect.anything(), { wikiSpaceId: 's1' })
+    expect(prisma.wikiSpace.delete).toHaveBeenCalledWith({ where: { id: 's1' }, select: { id: true } })
+  })
+
+  it('コミット後に添付の実体を 1 つずつ消す', async () => {
+    vi.mocked(listAttachmentKeysOf).mockResolvedValue(['k1', 'k2'])
+
+    await deleteWikiSpace(actor, 's1')
+
+    expect(vi.mocked(removeAttachmentByKey).mock.calls).toEqual([['k1'], ['k2']])
+    expect(vi.mocked(prisma.wikiSpace.delete).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(removeAttachmentByKey).mock.invocationCallOrder[0],
+    )
+  })
+
+  it('スペースの削除に失敗したら添付の実体は消さない', async () => {
+    vi.mocked(listAttachmentKeysOf).mockResolvedValue(['k1'])
+    vi.mocked(prisma.wikiSpace.delete).mockRejectedValue(new Error('db'))
+
+    await expect(deleteWikiSpace(actor, 's1')).rejects.toThrow('db')
+    expect(removeAttachmentByKey).not.toHaveBeenCalled()
+  })
+
+  it('管理権限が無ければ何も消さない', async () => {
+    vi.mocked(assertWikiSpaceAccess).mockRejectedValue(new Error('denied'))
+
+    await expect(deleteWikiSpace(actor, 's1')).rejects.toThrow('denied')
+    expect(detachAttachmentsOf).not.toHaveBeenCalled()
+    expect(prisma.wikiSpace.delete).not.toHaveBeenCalled()
+    expect(removeAttachmentByKey).not.toHaveBeenCalled()
   })
 })
 

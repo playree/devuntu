@@ -1445,7 +1445,7 @@ export type $WikiSpacePayload<ExtArgs extends runtime.Types.Extensions.InternalA
     id: string
     /**
      * ページ指定(`KEY/番号`)と URL に使う。大文字英数(WIKI_SPACE_KEY_PATTERN)で一意。
-     * 共有済みの指定が別のページを指さないよう、作成後は変更しない
+     * 共有済みの指定が別のページを指さないよう、作成後は変更しない。削除後も WikiSpaceKeyHistory で予約したままにする
      */
     key: string
     /**

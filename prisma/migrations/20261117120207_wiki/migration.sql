@@ -39,6 +39,14 @@ CREATE TABLE "wiki_space" (
 );
 
 -- CreateTable
+CREATE TABLE "wiki_space_key_history" (
+    "key" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "wiki_space_key_history_pkey" PRIMARY KEY ("key")
+);
+
+-- CreateTable
 CREATE TABLE "wiki_space_member" (
     "id" TEXT NOT NULL,
     "spaceId" TEXT NOT NULL,
@@ -268,6 +276,8 @@ VALUES (
   7,
   CURRENT_TIMESTAMP
 );
+
+INSERT INTO "wiki_space_key_history" ("key") VALUES ('SAMPLE');
 
 INSERT INTO "wiki_tag" ("id", "spaceId", "name", "color", "order", "updatedAt")
 VALUES

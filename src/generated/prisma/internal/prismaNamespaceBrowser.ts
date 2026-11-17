@@ -112,6 +112,7 @@ export const ModelName = {
   Group: 'Group',
   UserGroup: 'UserGroup',
   WikiSpace: 'WikiSpace',
+  WikiSpaceKeyHistory: 'WikiSpaceKeyHistory',
   WikiSpaceMember: 'WikiSpaceMember',
   WikiSpaceGroup: 'WikiSpaceGroup',
   WikiSpaceBoard: 'WikiSpaceBoard',
@@ -1085,6 +1086,14 @@ export const WikiSpaceScalarFieldEnum = {
 } as const
 
 export type WikiSpaceScalarFieldEnum = (typeof WikiSpaceScalarFieldEnum)[keyof typeof WikiSpaceScalarFieldEnum]
+
+
+export const WikiSpaceKeyHistoryScalarFieldEnum = {
+  key: 'key',
+  createdAt: 'createdAt'
+} as const
+
+export type WikiSpaceKeyHistoryScalarFieldEnum = (typeof WikiSpaceKeyHistoryScalarFieldEnum)[keyof typeof WikiSpaceKeyHistoryScalarFieldEnum]
 
 
 export const WikiSpaceMemberScalarFieldEnum = {
