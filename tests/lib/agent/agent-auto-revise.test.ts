@@ -96,7 +96,9 @@ describe('requestAutoRevise', () => {
       }),
     })
     expect(prisma.ticket.update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: { agentState: 'planned', agentAutoReviseCount: { increment: 1 } } }),
+      expect.objectContaining({
+        data: { agentState: 'planned', agentStateAt: expect.any(Date), agentAutoReviseCount: { increment: 1 } },
+      }),
     )
   })
 

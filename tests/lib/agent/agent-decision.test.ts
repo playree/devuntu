@@ -20,7 +20,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const fakeTx = vi.hoisted(() => ({
   $queryRaw: vi.fn(),
-  ticket: { findUniqueOrThrow: vi.fn(), update: vi.fn() },
+  ticket: { findUnique: vi.fn(), findUniqueOrThrow: vi.fn(), update: vi.fn() },
   ticketComment: { findFirst: vi.fn(), findUnique: vi.fn(), groupBy: vi.fn() },
 }))
 
@@ -57,7 +57,7 @@ const PROPOSAL = {
   advance: 'reported',
 }
 
-/** チケットごとのエージェントの最新コメント(DISTINCT ON の生 SQL)。行ロックの `$queryRaw` には何も返さない */
+/** チケットごとの、処理状態に対応する種別のエージェントの最新コメント(DISTINCT ON の生 SQL)。行ロックの `$queryRaw` には何も返さない */
 const mockLastComments = (rows: unknown[]) => {
   fakeTx.$queryRaw.mockImplementation(async (sql: string[]) => (sql.join('').includes('DISTINCT ON') ? rows : []))
 }
@@ -66,11 +66,8 @@ const mockLastComments = (rows: unknown[]) => {
 const lockQueries = () =>
   fakeTx.$queryRaw.mock.calls.map(([sql]) => (sql as string[]).join('?')).filter((sql) => sql.includes('FOR UPDATE'))
 
-/** エージェントの最新コメントと、その後の返信の有無を返す */
-const mockComments = (
-  last: { id: string; type: 'plan' | 'report' | null; proposal?: unknown } | null,
-  hasReply = false,
-) => {
+/** 対象の plan / report と、その後の返信の有無を返す */
+const mockComments = (last: { id: string; type: 'plan' | 'report'; proposal?: unknown } | null, hasReply = false) => {
   mockLastComments(last ? [{ proposal: null, ...last, ticketId: 't1', createdAt: PLAN_AT }] : [])
   fakeTx.ticketComment.groupBy.mockResolvedValueOnce(hasReply ? [{ ticketId: 't1' }] : [])
 }
@@ -132,8 +129,18 @@ describe('findPendingAgentDecision', () => {
     })
   })
 
-  it('質問(通常コメント)で返答待ちになっている場合は対象にしない', async () => {
-    mockComments({ id: 'question-1', type: null })
+  it('処理状態に対応する種別のコメントだけを引く(後から足した通常コメントでは対象がずれない)', async () => {
+    mockComments({ id: 'plan-1', type: 'plan' })
+    expect(await findPendingAgentDecision(ticket, fakeTx as never)).toMatchObject({ commentId: 'plan-1' })
+    const [sql, ...values] = fakeTx.$queryRaw.mock.calls[0]
+    expect((sql as string[]).join('?')).toContain('c."type"::text = v."type"')
+    // 前の回に返答されないまま残ったものは対象にしない(直近の実行の開始以降に限る)
+    expect((sql as string[]).join('?')).toContain('SELECT MAX(r."startedAt")')
+    expect(values).toEqual([expect.objectContaining({ values: ['t1', AGENT, 'plan'] })])
+  })
+
+  it('対象の種別のコメントが無ければ(質問だけで返答待ちなど)対象にしない', async () => {
+    mockComments(null)
     expect(await findPendingAgentDecision(ticket, fakeTx as never)).toBeNull()
     expect(fakeTx.ticketComment.groupBy).not.toHaveBeenCalled()
   })
@@ -159,7 +166,6 @@ describe('findPendingAgentDecisions', () => {
       { id: 'plan-1', ticketId: 't1', type: 'plan', createdAt: PLAN_AT, proposal: PROPOSAL },
       { id: 'report-2', ticketId: 't2', type: 'report', createdAt: PLAN_AT, proposal: null },
       { id: 'plan-3', ticketId: 't3', type: 'plan', createdAt: PLAN_AT, proposal: null },
-      { id: 'question-4', ticketId: 't4', type: null, createdAt: PLAN_AT, proposal: null },
     ])
     fakeTx.ticketComment.groupBy.mockResolvedValueOnce([{ ticketId: 't3' }])
 
@@ -171,7 +177,9 @@ describe('findPendingAgentDecisions', () => {
     ])
     expect(fakeTx.$queryRaw).toHaveBeenCalledTimes(1)
     expect(fakeTx.$queryRaw.mock.calls[0].slice(1)).toEqual([
-      expect.objectContaining({ values: ['t1', AGENT, 't2', AGENT, 't3', AGENT, 't4', AGENT] }),
+      expect.objectContaining({
+        values: ['t1', AGENT, 'plan', 't2', AGENT, 'report', 't3', AGENT, 'plan', 't4', AGENT, 'plan'],
+      }),
     ])
     expect(fakeTx.ticketComment.groupBy).toHaveBeenCalledTimes(1)
     expect(fakeTx.ticketComment.groupBy.mock.calls[0][0].where.OR.map((w: { ticketId: string }) => w.ticketId)).toEqual(
@@ -300,7 +308,10 @@ describe('decideAgentComment', () => {
 
     await decideAgentComment({ id: 'u1' }, { commentId: 'c1', decision: 'rejected', content: '理由' })
 
-    expect(fakeTx.ticket.update).toHaveBeenCalledWith({ where: { id: 't1' }, data: { agentState: 'planned' } })
+    expect(fakeTx.ticket.update).toHaveBeenCalledWith({
+      where: { id: 't1' },
+      data: { agentState: 'planned', agentStateAt: expect.any(Date) },
+    })
     expect(moveTicketToLane).not.toHaveBeenCalled()
     expect(lockKanbanLane).not.toHaveBeenCalled()
   })
@@ -327,7 +338,10 @@ describe('decideAgentComment', () => {
 })
 
 describe('findLatestAgentDecision', () => {
-  it('エージェントの最新コメントより後の返答だけを探す', async () => {
+  const STATE_AT = new Date('2026-09-26T01:00:00Z')
+
+  it('処理状態を変えた時刻以前のエージェントの最新コメントより後の返答を探す', async () => {
+    fakeTx.ticket.findUnique.mockResolvedValueOnce({ agentStateAt: STATE_AT })
     fakeTx.ticketComment.findFirst
       .mockResolvedValueOnce({ createdAt: PLAN_AT })
       .mockResolvedValueOnce({ id: 'd1', decision: 'approved', content: '承認' })
@@ -337,12 +351,30 @@ describe('findLatestAgentDecision', () => {
       decision: 'approved',
       content: '承認',
     })
+    // 返答の後にエージェントが通常コメントを足しても(STATE_AT より後)、起点は動かない
+    expect(fakeTx.ticketComment.findFirst).toHaveBeenNthCalledWith(1, {
+      where: { ticketId: 't1', authorId: AGENT, createdAt: { lte: STATE_AT } },
+      orderBy: { createdAt: 'desc' },
+      select: { createdAt: true },
+    })
     expect(fakeTx.ticketComment.findFirst).toHaveBeenLastCalledWith(
       expect.objectContaining({ where: { ticketId: 't1', decision: { not: null }, createdAt: { gt: PLAN_AT } } }),
     )
   })
 
+  it('処理状態の時刻が無い(導入前の)チケットはエージェントの最新コメントを起点にする', async () => {
+    fakeTx.ticket.findUnique.mockResolvedValueOnce({ agentStateAt: null })
+    fakeTx.ticketComment.findFirst.mockResolvedValueOnce({ createdAt: PLAN_AT }).mockResolvedValueOnce(null)
+
+    expect(await findLatestAgentDecision('t1', AGENT, fakeTx as never)).toBeNull()
+    expect(fakeTx.ticketComment.findFirst).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ where: { ticketId: 't1', authorId: AGENT } }),
+    )
+  })
+
   it('エージェント自身のコメントが無ければ、残っている返答を渡さない', async () => {
+    fakeTx.ticket.findUnique.mockResolvedValueOnce({ agentStateAt: STATE_AT })
     fakeTx.ticketComment.findFirst.mockResolvedValueOnce(null)
 
     expect(await findLatestAgentDecision('t1', AGENT, fakeTx as never)).toBeNull()

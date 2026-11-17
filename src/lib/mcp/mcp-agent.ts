@@ -17,6 +17,7 @@ import { listRunAutoRevise } from '../agent/agent-auto-revise'
 import { findLatestAgentDecision } from '../agent/agent-decision'
 import { postChildProposal } from '../agent/agent-proposal'
 import { AGENT_OUTCOMES, finishAgentTask } from '../agent/agent-run'
+import { findRunningAgentRunId } from '../agent/agent-run-recovery'
 import { findAgentRunner } from '../agent/agent-runner'
 import { agentSetupCliPrompt, agentSetupGuide } from '../agent/agent-setup'
 import { findAgentTicket, pickAgentTasks, resolveAgentTask } from '../agent/agent-task'
@@ -158,10 +159,11 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
         })
       }
 
-      const [criteria, decision, autoRevise, { boardContext, noteIndex, wikiIndex }] = await Promise.all([
+      const [criteria, decision, autoRevise, runId, { boardContext, noteIndex, wikiIndex }] = await Promise.all([
         listTicketCriteria(id),
         task.action === 'revise' ? findLatestAgentDecision(id, auth.user.id) : null,
         task.action === 'revise' ? listRunAutoRevise(runner.id, id) : [],
+        task.state === 'running' ? findRunningAgentRunId(id, runner.id) : null,
         findMemberBoardContext(auth, id),
       ])
       return jsonResult({
@@ -178,6 +180,8 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
           decision: decision ? { kind: decision.decision, commentId: decision.id, content: decision.content } : null,
           /** revise のきっかけになった CI の失敗・PR / MR のレビュー指摘(自動差し戻し)。無ければ空 */
           autoRevise,
+          /** 実行中の実行。finish_agent_task の runId に渡す(ランナーを介さず動かしている場合は null) */
+          runId,
           /** チケットが属するボードの AI 向けコンテキスト。未設定なら項目ごと載せない */
           ...(boardContext ? { boardContext } : {}),
           /** ボードノートの索引(boardKnowledge / boardMemory)。本文は get_board_notes で読む */
@@ -199,7 +203,9 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
         'Reports the result of processing a ticket and closes the run. ' +
         'planned=plan posted and waiting for a reply, completed=done, skipped=skipped, failed=failed. ' +
         'If the ticket has acceptance criteria, completed must report every item as met with evidence in criteria. ' +
-        'A plan run cannot finish with completed: finish it with planned (or skipped / failed)',
+        'A plan run cannot finish with completed: finish it with planned (or skipped / failed). ' +
+        'When the runner gave you a run ID (DEVUNTU_AGENT_RUN_ID or the prompt), always pass it as runId. ' +
+        'If that run is already closed (canceled or timed out), the result is not recorded and stale=true is returned: stop working',
       inputSchema: z.strictObject({
         ticketId: z.string().min(1),
         outcome: z.enum(AGENT_OUTCOMES),
@@ -207,9 +213,15 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
         criteria: zCriterionReports('id from acceptanceCriteria in get_agent_task')
           .optional()
           .describe('Self-check result for each acceptance criterion'),
+        runId: z
+          .string()
+          .min(1)
+          .max(100)
+          .optional()
+          .describe('Run ID given by the runner (task.runId in get_agent_task). Only that run is closed'),
       }),
     },
-    async ({ ticketId, outcome, summary, criteria }) => {
+    async ({ ticketId, outcome, summary, criteria, runId }) => {
       const { runner } = await loadContext(auth)
       const id = await resolveTicketId(auth, ticketId)
       await assertTicketAccess(auth.user, id, 'edit')
@@ -220,8 +232,8 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
         throw errInvalidOperation()
       }
 
-      const { state } = await finishAgentTask(runner, id, outcome, summary, criteria)
-      return jsonResult({ displayId: ticket.displayId, outcome, state })
+      const { state, stale } = await finishAgentTask(runner, id, outcome, summary, criteria, runId)
+      return jsonResult({ displayId: ticket.displayId, outcome, state, ...(stale && { stale }) })
     },
   )
   server.registerTool(

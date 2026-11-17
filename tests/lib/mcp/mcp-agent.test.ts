@@ -11,6 +11,7 @@ import { listRunAutoRevise } from '@/lib/agent/agent-auto-revise'
 import { findLatestAgentDecision } from '@/lib/agent/agent-decision'
 import { postChildProposal } from '@/lib/agent/agent-proposal'
 import { finishAgentTask } from '@/lib/agent/agent-run'
+import { findRunningAgentRunId } from '@/lib/agent/agent-run-recovery'
 import { findAgentRunner } from '@/lib/agent/agent-runner'
 import { findAgentTicket, pickAgentTasks, resolveAgentTask } from '@/lib/agent/agent-task'
 import { findBoardNoteIndex } from '@/lib/board-note/board-note'
@@ -45,6 +46,10 @@ vi.mock('@/lib/agent/agent-task', async (importOriginal) => ({
 vi.mock('@/lib/agent/agent-run', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/agent/agent-run')>()),
   finishAgentTask: vi.fn(),
+}))
+
+vi.mock('@/lib/agent/agent-run-recovery', () => ({
+  findRunningAgentRunId: vi.fn(async () => 'run-1'),
 }))
 
 vi.mock('@/lib/board/board-access', () => ({
@@ -222,7 +227,9 @@ describe('get_agent_task', () => {
     expect(resolveAgentTask).toHaveBeenCalledWith(runnerRow, 't1')
     expect(pickAgentTasks).not.toHaveBeenCalled()
     const body = parseResult(result.content)
-    expect(body).toMatchObject({ task: { ...task, acceptanceCriteria: [], decision: null } })
+    expect(body).toMatchObject({ task: { ...task, acceptanceCriteria: [], decision: null, runId: 'run-1' } })
+    // 実行中の実行はこのランナーのものに限る
+    expect(findRunningAgentRunId).toHaveBeenCalledWith('t1', runnerRow.id)
     expect(body.note, 'plan ではプランだけ投稿して planned で終えるよう念を押す').toContain('outcome=planned')
     // revise 以外では返答を引かない
     expect(findLatestAgentDecision).not.toHaveBeenCalled()
@@ -373,8 +380,26 @@ describe('finish_agent_task', () => {
     ).callTool({ name: 'finish_agent_task', arguments: { ticketId: 'ABC-42', outcome: 'planned', summary: '要約' } })
 
     expect(assertTicketAccess).toHaveBeenCalledWith(agentAuth.user, 't1', 'edit')
-    expect(finishAgentTask).toHaveBeenCalledWith(runnerRow, 't1', 'planned', '要約', undefined)
+    expect(finishAgentTask).toHaveBeenCalledWith(runnerRow, 't1', 'planned', '要約', undefined, undefined)
     expect(parseResult(result.content)).toEqual({ displayId: 'ABC-42', outcome: 'planned', state: 'planned' })
+  })
+
+  it('runId を実行を閉じる処理へ渡し、閉じ済みの実行への報告は stale を返す', async () => {
+    vi.mocked(resolveTicketId).mockResolvedValue('t1')
+    vi.mocked(findAgentTicket).mockResolvedValue({ id: 't1', displayId: 'ABC-42', mode: 'auto', state: 'running' })
+    vi.mocked(finishAgentTask).mockResolvedValue({ state: 'failed', stale: true })
+
+    const result = await (
+      await connectDevuntuMcp(agentAuth)
+    ).callTool({ name: 'finish_agent_task', arguments: { ticketId: 'ABC-42', outcome: 'completed', runId: 'run-old' } })
+
+    expect(finishAgentTask).toHaveBeenCalledWith(runnerRow, 't1', 'completed', undefined, undefined, 'run-old')
+    expect(parseResult(result.content)).toEqual({
+      displayId: 'ABC-42',
+      outcome: 'completed',
+      state: 'failed',
+      stale: true,
+    })
   })
 
   const CRITERION_ID = '01a0dd3b-e65b-71aa-bec7-3412abca25f7'
@@ -389,7 +414,7 @@ describe('finish_agent_task', () => {
       await connectDevuntuMcp(agentAuth)
     ).callTool({ name: 'finish_agent_task', arguments: { ticketId: 'ABC-42', outcome: 'completed', criteria } })
 
-    expect(finishAgentTask).toHaveBeenCalledWith(runnerRow, 't1', 'completed', undefined, criteria)
+    expect(finishAgentTask).toHaveBeenCalledWith(runnerRow, 't1', 'completed', undefined, criteria, undefined)
   })
 
   it('自己チェックの対象が誤っていればエラーを返す(エージェントが直して呼び直せる)', async () => {

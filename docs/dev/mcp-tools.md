@@ -96,6 +96,8 @@ OAuth / ユーザーの MCP トークンで接続した場合だけ使える
 - エージェントが処理を始めたチケットは、`backlog` / `todo` ならサーバーが対応中(`doing`)へ移す
 - 受け入れ条件が空なら、エージェントは plan の投稿時(execute は着手時)に `update_ticket` で設定する。既存の項目は削除・書き換えしない
 - plan の実行中と、`planned` で閉じて返信待ちの間は、`finish_agent_task` の `completed` と `add_ticket_comment` の `type=report` をエラーにする(プランへの返信を待たずに完了・報告させない。返信待ちの間は `skipped` / `failed` もエラー)
+- `get_agent_task` の `task.runId` は実行中の実行の ID。ランナーが渡した ID(`DEVUNTU_AGENT_RUN_ID`)を `finish_agent_task` の `runId` に指定すると、その実行だけを閉じる。
+  既に閉じた(停止・時間切れ)実行なら何も変えずに `stale: true` を返す
 
 入力と応答の詳細は [agent-runner-internals.md](agent-runner-internals.md#エージェント専用の-mcp-ツール) を参照。
 
@@ -119,8 +121,8 @@ MCP の仕様に合わせ、追加だけで済まない(既存の値を上書き
 
 - `update_ticket` は値を上書きし、`acceptanceCriteria` は全件置き換え(含めなかった項目はチェックや申告ごと消える)、
   `parentId: null` で親子を外せる。id の無い受け入れ条件は呼ぶたびに作り直されて変更履歴も残るので、冪等にもしない
-- `finish_agent_task` は受け入れ条件の申告を上書きする。実行がタイムアウトで閉じられた後に繰り返すと、
-  タイムアウトで付いた状態を上書きしてしまうので冪等にしない
+- `finish_agent_task` は受け入れ条件の申告を上書きする。実行がタイムアウト・停止で閉じられた後に `runId` 無しで繰り返すと、
+  閉じた後の状態を上書きしうるので冪等にしない
 - `update_ticket_comment` / `report_acceptance_criteria` は履歴を残さずに本文・申告を上書きする
 - `link_ticket_artifact` は同じ URL なら既存の紐付けを戻すだけ、`link_related_ticket` は2回目がエラーになるだけで状態は変わらない
 - `save_board_note` は既存のノートを上書きする(版は残る)。同じ内容なら版を作らないが、作成と更新を名前で兼ねるので冪等にはしない。

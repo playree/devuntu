@@ -75,6 +75,9 @@ model Ticket {
   agentMode  AgentTaskMode?
   agentState AgentTaskState?
 
+  /// agentState を最後に変えた時刻。返答待ち・再開判定の起点(この時刻以前のエージェントの最新コメント)に使う。null は導入前の行
+  agentStateAt DateTime?
+
   /// CI 失敗・レビュー指摘による自動差し戻しの回数。きっかけの provider の上限(BoardGitSetting.autoReviseLimit)と比べる。担当が替わったら 0 に戻す
   agentAutoReviseCount Int @default(0)
 

@@ -174,6 +174,7 @@ export const TicketDetailClient: FC<{
         changeStatus={changeStatus}
         changeAgentMode={changeAgentMode}
         onRemove={remove}
+        refresh={refreshAll}
       />
 
       <TicketBody ticket={ticket} boardAssignees={boardAssignees} refresh={refreshAll} />
