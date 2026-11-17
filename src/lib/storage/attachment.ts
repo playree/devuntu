@@ -240,6 +240,16 @@ export const removeOwnedImageAttachment = async (url: string, userId: string): P
 export type AttachmentTarget = { boardId: string; wikiSpaceId?: never } | { wikiSpaceId: string; boardId?: never }
 
 /**
+ * 添付先をそのまま where に使う前の確認。ID が空だと Prisma は条件を落とし、全添付が対象になってしまう
+ */
+const attachmentTargetWhere = (target: AttachmentTarget) => {
+  if (!target.boardId === !target.wikiSpaceId) {
+    throw new Error('attachment target must have exactly one of boardId / wikiSpaceId')
+  }
+  return target.boardId ? { boardId: target.boardId } : { wikiSpaceId: target.wikiSpaceId }
+}
+
+/**
  * ボード / Wiki スペースに属する添付のキー。紐付けを外すと辿れなくなるので、
  * 実体を消すには**外す前に**控えておく必要がある。
  */
@@ -247,7 +257,7 @@ export const listAttachmentKeysOf = async (
   tx: Prisma.TransactionClient,
   target: AttachmentTarget,
 ): Promise<string[]> => {
-  const rows = await tx.attachment.findMany({ where: target, select: { key: true } })
+  const rows = await tx.attachment.findMany({ where: attachmentTargetWhere(target), select: { key: true } })
   return rows.map(({ key }) => key)
 }
 
@@ -258,8 +268,6 @@ export const listAttachmentKeysOf = async (
  * 行を残しておけば未参照の添付として掃除が拾い直すので、失敗しても収束する。
  */
 export const detachAttachmentsOf = async (tx: Prisma.TransactionClient, target: AttachmentTarget): Promise<void> => {
-  await tx.attachment.updateMany({
-    where: target,
-    data: target.boardId !== undefined ? { boardId: null } : { wikiSpaceId: null },
-  })
+  const where = attachmentTargetWhere(target)
+  await tx.attachment.updateMany({ where, data: 'boardId' in where ? { boardId: null } : { wikiSpaceId: null } })
 }

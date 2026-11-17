@@ -36,7 +36,10 @@ export type WikiSpaceInput = {
 }
 
 const errDuplicatedKey = () =>
-  new ClientError(DUPLICATED_WIKI_SPACE_KEY, 'A wiki space with this key already exists. Choose another key')
+  new ClientError(
+    DUPLICATED_WIKI_SPACE_KEY,
+    'This key is already used by a wiki space (including deleted ones). Choose another key',
+  )
 const errHasNormalPages = (count: number) =>
   new ClientError(
     WIKI_SPACE_HAS_NORMAL_PAGES,
@@ -149,6 +152,8 @@ export const setWikiSpaceArchived = async (actor: Actor, spaceId: string, archiv
  *
  * 添付はボード削除(`deleteBoard`)と同じく、レコードを Cascade に任せず紐付けだけを外して残し、
  * コミット後に実体ごと消す。実体の削除に失敗した分は、参照の外れた添付として掃除が回収する。
+ * 回収までの間は全ログインユーザーへ配信してよい扱いになるが、キーは推測できず、URL を知っているのは
+ * スペースを閲覧できた人と、その URL を貼った本文の閲覧者だけなので、ボード削除と同じく許容する。
  * スペースの行ロックを取ってから消すので、ページの書き込み(同じロックを取る)と入れ違わない
  */
 export const deleteWikiSpace = async (actor: Actor, spaceId: string) => {

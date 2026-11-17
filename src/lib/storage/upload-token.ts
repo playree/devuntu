@@ -37,10 +37,8 @@ const secret = () => new TextEncoder().encode(envu.server.BETTER_AUTH_SECRET)
 const issuer = () => envu.server.BETTER_AUTH_URL
 const audience = () => makeUrl(UPLOAD_URL_PREFIX).toString()
 
-export type UploadTokenTarget = AttachmentTarget
-
 /** 戻り値の平文は発行時にしか取得できない(保存もしない) */
-export const signUploadToken = async ({ userId, ...target }: { userId: string } & UploadTokenTarget): Promise<string> =>
+export const signUploadToken = async ({ userId, ...target }: { userId: string } & AttachmentTarget): Promise<string> =>
   new SignJWT(target.boardId ? { boardId: target.boardId } : { wikiSpaceId: target.wikiSpaceId })
     .setProtectedHeader({ alg: ALGORITHM })
     .setSubject(userId)
@@ -88,7 +86,7 @@ const consumeUploadNonce = async (jti: string, expiresAt: Date): Promise<boolean
 }
 
 /** トークンが主張する添付先。ボードか Wiki スペースのちょうど一方でなければ null */
-const targetOf = ({ boardId, wikiSpaceId }: JWTPayload): UploadTokenTarget | null => {
+const targetOf = ({ boardId, wikiSpaceId }: JWTPayload): AttachmentTarget | null => {
   if (typeof boardId === 'string' && wikiSpaceId === undefined) {
     return { boardId }
   }

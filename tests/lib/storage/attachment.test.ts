@@ -193,4 +193,11 @@ describe('listAttachmentKeysOf / detachAttachmentsOf', () => {
     await detachAttachmentsOf(prisma, target)
     expect(prisma.attachment.updateMany).toHaveBeenCalledWith({ where: target, data })
   })
+
+  it('添付先の ID が空なら、全添付を対象にしないよう例外にする', async () => {
+    await expect(detachAttachmentsOf(prisma, { wikiSpaceId: '' })).rejects.toThrow()
+    await expect(listAttachmentKeysOf(prisma, { boardId: undefined } as never)).rejects.toThrow()
+    expect(prisma.attachment.updateMany).not.toHaveBeenCalled()
+    expect(prisma.attachment.findMany).not.toHaveBeenCalled()
+  })
 })
