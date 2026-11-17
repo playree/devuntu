@@ -111,7 +111,7 @@ Wiki のマイグレーションは、リリース前に `20261108062633_wiki` �
 データが要らなければ `pnpm exec prisma migrate reset` で作り直す。データを残す場合は、表の形は同じなので履歴だけを貼り替える(サンプルスペースは入らない)。
 
 ```sh
-echo "DELETE FROM \"_prisma_migrations\" WHERE migration_name LIKE '202611%wiki%';" | pnpm exec prisma db execute --stdin
+echo "DELETE FROM \"_prisma_migrations\" WHERE migration_name IN ('20261108062633_wiki', '20261108123719_wiki_attachment', '20261110100313_wiki_revision_number', '20261112061422_wiki_page_type', '20261113232303_wiki_revision_message', '20261115003457_wiki_space_type');" | pnpm exec prisma db execute --stdin
 pnpm exec prisma migrate resolve --applied 20261108062633_wiki
 pnpm exec prisma migrate status   # Database schema is up to date!
 ```
