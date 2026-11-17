@@ -1,6 +1,7 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action/action-server'
+import { agentStateData } from '@/lib/agent/agent'
 import { decideAgentComment as decideAgentCommentCore, findPendingAgentDecision } from '@/lib/agent/agent-decision'
 import { assertTicketAccess } from '@/lib/board/board-access'
 import { TAG_SELECT } from '@/lib/board/tag'
@@ -23,6 +24,7 @@ import {
 } from '@/lib/board/ticket-relation'
 import { MAX_TICKET_CANDIDATES, TICKET_CANDIDATE_ORDER_BY, ticketCandidateWhere } from '@/lib/board/ticket-search'
 import { findWaitingTicketIds } from '@/lib/board/ticket-sequence'
+import { nowDate } from '@/lib/day'
 import { errInvalidOperation } from '@/lib/error'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
@@ -249,7 +251,7 @@ export const updateTicketAgentMode = safeAuthAction
       // 承認者かどうかは担当者ごとに決まるので、判定した担当者を更新条件に含め、確認〜更新の間に担当者が替わったら更新しない
       const result = await tx.ticket.updateMany({
         where: { id, assigneeId: access.assigneeId, assignee: { isAgent: true } },
-        data: { agentMode, ...(agentMode === null && { agentState: null }) },
+        data: { agentMode, ...(agentMode === null && agentStateData(null, nowDate())) },
       })
       if (result.count === 0) {
         throw errInvalidOperation()

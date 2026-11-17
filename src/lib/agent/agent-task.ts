@@ -8,7 +8,7 @@ import { OPEN_TICKET_STATUSES } from '../board/ticket-enum'
 import { ticketDisplayId } from '../board/ticket-id'
 import { boardVisibleWhere } from '../board/ticket-permission'
 import { findWaitingTicketIds } from '../board/ticket-sequence'
-import { prisma } from '../prisma'
+import { prisma, type Db } from '../prisma'
 import { hasSettledAutoRevise } from './agent-auto-revise'
 import type { AgentRunnerRow } from './agent-runner'
 
@@ -42,18 +42,36 @@ export const agentReplyWhere = (
   ],
 })
 
-/** プラン投稿後に利用者からの返信が来ているか(条件は {@link agentReplyWhere}) */
-const hasReplyAfterPlan = async (ticketId: string, agentUserId: string): Promise<boolean> => {
-  const lastAgentComment = await prisma.ticketComment.findFirst({
-    where: { ticketId, authorId: agentUserId },
+/**
+ * 利用者の返信・返答を数え始める起点の時刻。処理状態を最後に変えた時刻(`stateAt`)以前の、担当エージェントの最新コメント。
+ *
+ * 返答待ちに入った後のエージェントの発言(補足など)で起点が進んで、それより前の返信を見落とすことがないようにする。
+ * revise で質問を投稿して planned で終えた場合は、その質問が起点になる(質問への返信が来るまで再開しない)。
+ * `stateAt` が無い(導入前の)チケットは、従来どおりエージェントの最新コメントを起点にする。
+ * エージェント自身のコメントが無ければ null。
+ */
+export const findAgentReplyAnchor = async (
+  ticketId: string,
+  agentUserId: string,
+  stateAt: Date | null,
+  tx: Db = prisma,
+): Promise<Date | null> => {
+  const anchor = await tx.ticketComment.findFirst({
+    where: { ticketId, authorId: agentUserId, ...(stateAt && { createdAt: { lte: stateAt } }) },
     orderBy: { createdAt: 'desc' },
     select: { createdAt: true },
   })
-  if (!lastAgentComment) {
+  return anchor?.createdAt ?? null
+}
+
+/** プラン投稿後に利用者からの返信が来ているか(起点は {@link findAgentReplyAnchor}、条件は {@link agentReplyWhere}) */
+const hasReplyAfterPlan = async (ticketId: string, agentUserId: string, stateAt: Date | null): Promise<boolean> => {
+  const anchor = await findAgentReplyAnchor(ticketId, agentUserId, stateAt)
+  if (!anchor) {
     return false
   }
   const reply = await prisma.ticketComment.findFirst({
-    where: agentReplyWhere(ticketId, agentUserId, lastAgentComment.createdAt),
+    where: agentReplyWhere(ticketId, agentUserId, anchor),
     select: { id: true },
   })
   return reply !== null
@@ -68,6 +86,7 @@ const agentTicketSelect = {
   assigneeId: true,
   agentMode: true,
   agentState: true,
+  agentStateAt: true,
   board: { select: { key: true } },
 } as const satisfies Prisma.TicketSelect
 
@@ -97,7 +116,9 @@ const deriveAction = async (
 
   if (ticket.agentState === 'planned') {
     // 返信か、CI 失敗・レビュー指摘による自動差し戻しが来るまでは待つ。どう従うかは Claude 側の判断
-    const revise = (await hasReplyAfterPlan(ticket.id, runner.userId)) || (await hasSettledAutoRevise(ticket.id))
+    const revise =
+      (await hasReplyAfterPlan(ticket.id, runner.userId, ticket.agentStateAt)) ||
+      (await hasSettledAutoRevise(ticket.id))
     return revise ? 'revise' : null
   }
 

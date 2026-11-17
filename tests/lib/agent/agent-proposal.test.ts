@@ -71,18 +71,21 @@ describe('applyChildProposal', () => {
 
     expect(fakeTx.ticket.update).toHaveBeenCalledWith({
       where: { id: 'id-A' },
-      data: { agentMode: 'auto', agentState: null },
+      data: { agentMode: 'auto', agentState: null, agentStateAt: expect.any(Date) },
     })
     expect(fakeTx.ticket.update).toHaveBeenCalledWith({
       where: { id: 'parent' },
-      data: { childAdvance: 'reported', agentState: 'done' },
+      data: { childAdvance: 'reported', agentState: 'done', agentStateAt: expect.any(Date) },
     })
   })
 
   it('次へ進む条件の指定が無ければ、親の設定を書き換えない', async () => {
     await applyChildProposal(fakeTx as never, { id: 'u1' }, access(true), { ...proposal, advance: undefined })
 
-    expect(fakeTx.ticket.update).toHaveBeenCalledWith({ where: { id: 'parent' }, data: { agentState: 'done' } })
+    expect(fakeTx.ticket.update).toHaveBeenCalledWith({
+      where: { id: 'parent' },
+      data: { agentState: 'done', agentStateAt: expect.any(Date) },
+    })
   })
 
   it('承認者でなければ処理方式は付けない(担当の割り当てだけ)', async () => {

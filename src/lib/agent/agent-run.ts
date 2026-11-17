@@ -18,7 +18,7 @@ import { MAX_NOTIFY_RECIPIENTS } from '../notify/notify'
 import type { AgentRunNotifyState } from '../notify/notify-payload'
 import { type AgentRunNotification, enqueueAgentRunFinished, enqueueTicketMoved } from '../notify/notify-trigger'
 import { prisma } from '../prisma'
-import { AGENT_UNLIMITED_DAILY_RUNS } from './agent'
+import { AGENT_UNLIMITED_DAILY_RUNS, agentStateData } from './agent'
 import {
   type AgentBudgetUsage,
   type AgentRunUsage,
@@ -128,7 +128,7 @@ export const failStaleAgentRuns = async (runnerId: string, now: Date = nowDate()
     if (ticketIds.length > 0) {
       await tx.ticket.updateMany({
         where: { id: { in: ticketIds }, agentState: 'running' },
-        data: { agentState: 'failed' },
+        data: agentStateData('failed', now),
       })
     }
 
@@ -238,7 +238,7 @@ export const startAgentRun = async (
       data: { runnerId: runner.id, ticketId: target.id, ticketRef: target.displayId, action },
       select: { id: true },
     })
-    await tx.ticket.update({ where: { id: target.id }, data: { agentState: 'running' } })
+    await tx.ticket.update({ where: { id: target.id }, data: agentStateData('running', now) })
     await moveAgentTicketToDoing(tx, runner.userId, target.id)
     await consumeAutoReviseTriggers(tx, target.id, created.id)
 
@@ -318,7 +318,7 @@ export const finishAgentRunById = async (
       // エージェントが結果を報告済みならその状態を尊重し、running のままの場合だけ失敗にする
       await tx.ticket.updateMany({
         where: { id: run.ticketId, agentState: 'running' },
-        data: { agentState: 'failed' },
+        data: agentStateData('failed', now),
       })
     }
 
@@ -455,7 +455,7 @@ export const finishAgentTask = async (
         throw errAgentPlanOnly()
       }
       // 実行履歴が無いので通知もしない。チケットが無ければここで例外になる
-      await tx.ticket.update({ where: { id: ticketId }, data: { agentState: state }, select: { id: true } })
+      await tx.ticket.update({ where: { id: ticketId }, data: agentStateData(state, now), select: { id: true } })
       await writeAgentCriteria(tx, criteria)
       return { state }
     }
@@ -482,7 +482,7 @@ export const finishAgentTask = async (
 
     const ticket = await tx.ticket.update({
       where: { id: ticketId },
-      data: { agentState: state },
+      data: agentStateData(state, now),
       select: agentRunNotifySelect,
     })
     await writeAgentCriteria(tx, criteria)

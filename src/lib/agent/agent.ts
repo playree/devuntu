@@ -97,6 +97,11 @@ export const agentStateWhere = (states: readonly AgentTaskState[]): TicketWhereI
     : { agentState: { in: [...states] } }
 }
 
+/**
+ * 処理状態の書き込み内容。返答待ち・再開判定の起点(`findAgentReplyAnchor`)に使うので、変えた時刻も必ず一緒に書く
+ */
+export const agentStateData = (agentState: AgentTaskState | null, at: Date) => ({ agentState, agentStateAt: at })
+
 export const AGENT_TASK_STATE_LOCALE = {
   queued: 'agent_state_queued',
   running: 'agent_state_running',
