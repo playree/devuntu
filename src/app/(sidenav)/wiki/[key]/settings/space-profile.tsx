@@ -81,7 +81,7 @@ export const WikiSpaceProfile: FC<{ space: Space; reload: () => Promise<void> }>
             errorMessage={fet(errors.description)}
           />
         </div>
-        <div className='col-span-12'>
+        <div className='col-span-6'>
           <RadioCtrl
             control={control}
             name='visibility'
@@ -90,7 +90,7 @@ export const WikiSpaceProfile: FC<{ space: Space; reload: () => Promise<void> }>
             options={Object.entries(visibilityOptions).map(([value, label]) => ({ value, label }))}
           />
         </div>
-        <div className='col-span-12'>
+        <div className='col-span-6'>
           <RadioCtrl
             control={control}
             name='type'
