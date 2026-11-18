@@ -1,10 +1,8 @@
 'use client'
 
-import { cn } from '@heroui/react'
 import Link from 'next/link'
 import { CSSProperties, FC, ReactNode, RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import { tv } from 'tailwind-variants'
-import { ChevronDownIcon } from './icons'
 import { useGeneralUiText } from './ui-text'
 
 export type TreeViewItem = {
@@ -51,7 +49,18 @@ const guideStyles = tv({
       // 自分へつなぐ横線
       branch: 'top-1/2 border-t',
       // 開いている親の開閉ボタンの下から、子の縦線へつなぐ
-      stem: 'top-[calc(50%+7px)] bottom-0 border-l',
+      stem: 'top-[calc(50%+5px)] bottom-0 border-l',
+    },
+  },
+})
+
+/** 開閉ボタンの山形。Markdown 設計書の表と同じく、箱の右と下の線を回して描く(開くと ∨、閉じると >) */
+const toggleMarkStyles = tv({
+  base: 'size-1.5 border-r-[1.5px] border-b-[1.5px] border-current transition-transform',
+  variants: {
+    isExpanded: {
+      true: '-mt-[3px] rotate-45',
+      false: '-ml-[3px] -rotate-45',
     },
   },
 })
@@ -76,7 +85,7 @@ const TreeGuides: FC<{ path: readonly boolean[]; hasChildren: boolean; isExpande
           return isLast ? null : line(`v${k}`, 'pipe', { left })
         }
         // 開閉ボタンのある行はボタンの手前まで、葉はラベルの手前まで横線を伸ばす
-        const width = INDENT - LINE_X + (hasChildren ? 4 : 22)
+        const width = INDENT - LINE_X + (hasChildren ? 6 : 22)
         return [line(`v${k}`, isLast ? 'elbow' : 'pipe', { left }), line(`h${k}`, 'branch', { left, width })]
       })}
       {hasChildren && isExpanded && line('stem', 'stem', { left: depth * INDENT + LINE_X })}
@@ -195,12 +204,12 @@ const TreeLevel: FC<{
               {hasChildren ? (
                 <button
                   type='button'
-                  className='text-muted hover:text-foreground flex size-6 shrink-0 items-center justify-center rounded'
+                  className='text-muted hover:text-foreground hover:bg-accent-soft flex size-6 shrink-0 items-center justify-center rounded-[3px]'
                   aria-expanded={isExpanded}
                   aria-label={isExpanded ? uiText.treeCollapse(item.label) : uiText.treeExpand(item.label)}
                   onClick={() => toggle(item.id)}
                 >
-                  <ChevronDownIcon width={14} className={cn('transition-transform', !isExpanded && '-rotate-90')} />
+                  <span aria-hidden className={toggleMarkStyles({ isExpanded })} />
                 </button>
               ) : (
                 <span className='size-6 shrink-0' />
