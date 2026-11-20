@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { CSSProperties, FC, ReactNode, RefObject, useEffect, useMemo, useRef, useState } from 'react'
+import { CSSProperties, FC, Fragment, ReactNode, RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import { tv } from 'tailwind-variants'
 import { useGeneralUiText } from './ui-text'
 
@@ -86,7 +86,12 @@ const TreeGuides: FC<{ path: readonly boolean[]; hasChildren: boolean; isExpande
         }
         // 開閉ボタンのある行はボタンの手前まで、葉はラベルの手前まで横線を伸ばす
         const width = INDENT - LINE_X + (hasChildren ? 6 : 22)
-        return [line(`v${k}`, isLast ? 'elbow' : 'pipe', { left }), line(`h${k}`, 'branch', { left, width })]
+        return (
+          <Fragment key={k}>
+            {line('v', isLast ? 'elbow' : 'pipe', { left })}
+            {line('h', 'branch', { left, width })}
+          </Fragment>
+        )
       })}
       {hasChildren && isExpanded && line('stem', 'stem', { left: depth * INDENT + LINE_X })}
     </>
@@ -204,7 +209,8 @@ const TreeLevel: FC<{
               {hasChildren ? (
                 <button
                   type='button'
-                  className='text-muted hover:text-foreground hover:bg-accent-soft flex size-6 shrink-0 items-center justify-center rounded-[3px]'
+                  // relative: 線(absolute)より手前に出し、ホバーの背景で線の端を隠す。背景は選択行(bg-accent-soft)の上でも見える色にする
+                  className='text-muted hover:text-foreground hover:bg-default relative flex size-6 shrink-0 items-center justify-center rounded-[3px]'
                   aria-expanded={isExpanded}
                   aria-label={isExpanded ? uiText.treeCollapse(item.label) : uiText.treeExpand(item.label)}
                   onClick={() => toggle(item.id)}
