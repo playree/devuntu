@@ -1,10 +1,8 @@
 'use client'
 
-import { cn } from '@heroui/react'
 import Link from 'next/link'
-import { FC, ReactNode, RefObject, useEffect, useMemo, useRef, useState } from 'react'
+import { CSSProperties, FC, Fragment, ReactNode, RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import { tv } from 'tailwind-variants'
-import { ChevronDownIcon } from './icons'
 import { useGeneralUiText } from './ui-text'
 
 export type TreeViewItem = {
@@ -22,7 +20,7 @@ export type TreeViewItem = {
 export type TreeViewItemPlace = { index: number; siblingCount: number }
 
 const rowStyles = tv({
-  base: 'flex min-h-6 items-center gap-0.5 rounded-lg pr-1 text-sm',
+  base: 'relative flex min-h-6 items-center gap-0.5 rounded-lg pr-1 text-sm',
   variants: {
     isSelected: {
       true: 'bg-accent-soft text-accent-soft-foreground font-semibold',
@@ -30,6 +28,75 @@ const rowStyles = tv({
     },
   },
 })
+
+/** 1階層あたりの字下げ(px) */
+const INDENT = 16
+/** 開閉ボタン(size-6)の中心。親の縦線をこの位置に揃える */
+const LINE_X = 12
+
+const guideStyles = tv({
+  /**
+   * Markdown 設計書の表と同じく border で描く(背景の箱で描くと、表示倍率が整数でない環境で線ごとに太さが揃わない)。
+   * 線どうしが重なった所(交点・行の境目)が濃くならないよう、半透明ではなく背景と混ぜた不透明色にする
+   */
+  base: 'pointer-events-none absolute border-[color-mix(in_oklab,var(--muted)_40%,var(--background))]',
+  variants: {
+    kind: {
+      // 兄弟が続く縦線(│)。行間の gap-px で途切れないよう上に 1px はみ出させる
+      pipe: '-top-px bottom-0 border-l',
+      // 末尾の兄弟の縦線(└ の縦)
+      elbow: '-top-px bottom-1/2 border-l',
+      // 自分へつなぐ横線
+      branch: 'top-1/2 border-t',
+      // 開いている親の開閉ボタンの下から、子の縦線へつなぐ
+      stem: 'top-[calc(50%+5px)] bottom-0 border-l',
+    },
+  },
+})
+
+/** 開閉ボタンの山形。Markdown 設計書の表と同じく、箱の右と下の線を回して描く(開くと ∨、閉じると >) */
+const toggleMarkStyles = tv({
+  base: 'size-1.5 border-r-[1.5px] border-b-[1.5px] border-current transition-transform',
+  variants: {
+    isExpanded: {
+      true: '-mt-[3px] rotate-45',
+      false: '-ml-[3px] -rotate-45',
+    },
+  },
+})
+
+/**
+ * 親子をつなぐ線。`path[k]` は深さ k+1 の祖先(最後の要素は自分)が兄弟の末尾かどうか
+ */
+const TreeGuides: FC<{ path: readonly boolean[]; hasChildren: boolean; isExpanded: boolean }> = ({
+  path,
+  hasChildren,
+  isExpanded,
+}) => {
+  const depth = path.length
+  const line = (key: string, kind: 'pipe' | 'elbow' | 'branch' | 'stem', style: CSSProperties) => (
+    <span key={key} aria-hidden className={guideStyles({ kind })} style={style} />
+  )
+  return (
+    <>
+      {path.map((isLast, k) => {
+        const left = k * INDENT + LINE_X
+        if (k < depth - 1) {
+          return isLast ? null : line(`v${k}`, 'pipe', { left })
+        }
+        // 開閉ボタンのある行はボタンの手前まで、葉はラベルの手前まで横線を伸ばす
+        const width = INDENT - LINE_X + (hasChildren ? 6 : 22)
+        return (
+          <Fragment key={k}>
+            {line('v', isLast ? 'elbow' : 'pipe', { left })}
+            {line('h', 'branch', { left, width })}
+          </Fragment>
+        )
+      })}
+      {hasChildren && isExpanded && line('stem', 'stem', { left: depth * INDENT + LINE_X })}
+    </>
+  )
+}
 
 /**
  * 階層を持つ項目の一覧(サイドメニューのツリーなど)。
@@ -94,7 +161,7 @@ export const TreeView: FC<{
     <nav aria-label={ariaLabel} className={className}>
       <TreeLevel
         parentId={null}
-        depth={0}
+        path={[]}
         nodes={children}
         expanded={expanded}
         selectedId={selectedId}
@@ -109,7 +176,8 @@ export const TreeView: FC<{
 
 const TreeLevel: FC<{
   parentId: string | null
-  depth: number
+  /** 親の TreeGuides の path(ルート直下は空) */
+  path: readonly boolean[]
   nodes: Map<string | null, TreeViewItem[]>
   expanded: ReadonlySet<string>
   selectedId?: string | null
@@ -118,7 +186,7 @@ const TreeLevel: FC<{
   onNavigate?: () => void
   toggle: (id: string) => void
 }> = (props) => {
-  const { parentId, depth, nodes, expanded, selectedId, selectedRef, renderActions, onNavigate, toggle } = props
+  const { parentId, path, nodes, expanded, selectedId, selectedRef, renderActions, onNavigate, toggle } = props
   const uiText = useGeneralUiText()
   const siblings = nodes.get(parentId) ?? []
 
@@ -128,22 +196,26 @@ const TreeLevel: FC<{
         const hasChildren = (nodes.get(item.id)?.length ?? 0) > 0
         const isExpanded = expanded.has(item.id)
         const isSelected = item.id === selectedId
+        // ルート直下どうしは線でつながない
+        const itemPath = parentId === null ? [] : [...path, index === siblings.length - 1]
         return (
           <li key={item.id}>
             <div
               className={rowStyles({ isSelected })}
               // 階層ごとに字下げする(Tailwind のクラスは動的に作れないので style で渡す)
-              style={{ paddingLeft: `${depth * 12}px` }}
+              style={{ paddingLeft: `${itemPath.length * INDENT}px` }}
             >
+              <TreeGuides path={itemPath} hasChildren={hasChildren} isExpanded={isExpanded} />
               {hasChildren ? (
                 <button
                   type='button'
-                  className='text-muted hover:text-foreground flex size-6 shrink-0 items-center justify-center rounded'
+                  // relative: 線(absolute)より手前に出し、ホバーの背景で線の端を隠す。背景は選択行(bg-accent-soft)の上でも見える色にする
+                  className='text-muted hover:text-foreground hover:bg-default relative flex size-6 shrink-0 items-center justify-center rounded-[3px]'
                   aria-expanded={isExpanded}
                   aria-label={isExpanded ? uiText.treeCollapse(item.label) : uiText.treeExpand(item.label)}
                   onClick={() => toggle(item.id)}
                 >
-                  <ChevronDownIcon width={14} className={cn('transition-transform', !isExpanded && '-rotate-90')} />
+                  <span aria-hidden className={toggleMarkStyles({ isExpanded })} />
                 </button>
               ) : (
                 <span className='size-6 shrink-0' />
@@ -167,7 +239,7 @@ const TreeLevel: FC<{
               {item.suffix}
               {renderActions?.(item, { index, siblingCount: siblings.length })}
             </div>
-            {hasChildren && isExpanded && <TreeLevel {...props} parentId={item.id} depth={depth + 1} />}
+            {hasChildren && isExpanded && <TreeLevel {...props} parentId={item.id} path={itemPath} />}
           </li>
         )
       })}
