@@ -416,6 +416,7 @@ export const ja: DefaultLocaleItems = {
   msg_diff_unchanged_lines: '… 変更のない ${count} 行 …',
   msg_duplicated_board_note_name: '同じ名前のノートが既に存在します。',
   msg_moved_board_note: '${target} を${kind}に移しました。',
+  msg_moved_target: '${target} を移動しました。',
   msg_no_board_note_revisions: '履歴はありません。',
   msg_no_board_notes: 'まだありません。',
   msg_no_deleted_board_notes: '削除済みのものはありません。',

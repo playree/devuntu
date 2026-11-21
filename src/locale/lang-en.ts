@@ -418,6 +418,7 @@ export const en: DefaultLocaleItems = {
   msg_diff_unchanged_lines: '… ${count} unchanged lines …',
   msg_duplicated_board_note_name: 'A note with the same name already exists.',
   msg_moved_board_note: 'Moved ${target} to ${kind}.',
+  msg_moved_target: 'Moved ${target}.',
   msg_no_board_note_revisions: 'No history.',
   msg_no_board_notes: 'Nothing yet.',
   msg_no_deleted_board_notes: 'Nothing has been deleted.',
