@@ -118,14 +118,15 @@ export const MovePageModal: FC<ModalBaseProps & { page: { id: string; title: str
   const { space, tree } = useWikiSpace()
   const index = useMemo(() => indexWikiTree(tree), [tree])
 
-  // 開いた時点の兄弟の並び(自分を含む)。位置の初期値と、確定しても変わらないかの判定に使う
-  const currentIds = useMemo(() => index.children.get(page.parentId) ?? [], [index, page.parentId])
+  // 今の親と兄弟の並び(自分を含む)は木から取る。ページ詳細の page は、ツリー側での移動の後に古いままになりうるため
+  const currentParentId = index.byId.has(page.id) ? (index.byId.get(page.id)?.parentId ?? null) : page.parentId
+  const currentIds = useMemo(() => index.children.get(currentParentId) ?? [], [index, currentParentId])
   const initialPositionKey = useMemo(() => {
     const at = currentIds.indexOf(page.id)
     return at > 0 ? currentIds[at - 1] : FIRST_KEY
   }, [currentIds, page.id])
 
-  const [parentKey, setParentKey] = useState(page.parentId ?? ROOT_KEY)
+  const [parentKey, setParentKey] = useState(currentParentId ?? ROOT_KEY)
   const [positionKey, setPositionKey] = useState(initialPositionKey)
   const [isPending, setPending] = useState(false)
 
@@ -151,15 +152,14 @@ export const MovePageModal: FC<ModalBaseProps & { page: { id: string; title: str
     ...Object.fromEntries(siblings.map((item) => [item.id, t('wiki_position_after', { title: item.title })])),
   }
 
+  // 選んだ「◯◯ の後」が再読み込みで兄弟から消えていたら、先頭ではなく末尾として扱う
+  const afterIndex = siblings.findIndex((item) => item.id === positionKey)
   const position =
-    positionKey === FIRST_KEY
-      ? 0
-      : positionKey === LAST_KEY
-        ? undefined
-        : siblings.findIndex((item) => item.id === positionKey) + 1
+    positionKey === FIRST_KEY ? 0 : positionKey === LAST_KEY || afterIndex < 0 ? undefined : afterIndex + 1
   // サーバーと同じく、並べた結果の id の列で比べる(末尾のページで「末尾」を選んだときなども変化なしになる)
   const isUnchanged =
-    parentId === page.parentId && placeInSiblings(currentIds, page.id, position).every((id, i) => currentIds[i] === id)
+    parentId === currentParentId &&
+    placeInSiblings(currentIds, page.id, position).every((id, i) => currentIds[i] === id)
 
   const submit = async () => {
     setPending(true)
@@ -196,7 +196,7 @@ export const MovePageModal: FC<ModalBaseProps & { page: { id: string; title: str
             onChange={(key) => {
               const nextKey = key ?? ROOT_KEY
               setParentKey(nextKey)
-              setPositionKey(nextKey === (page.parentId ?? ROOT_KEY) ? initialPositionKey : LAST_KEY)
+              setPositionKey(nextKey === (currentParentId ?? ROOT_KEY) ? initialPositionKey : LAST_KEY)
             }}
           />
         </div>
