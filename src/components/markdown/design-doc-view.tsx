@@ -112,6 +112,8 @@ export const DesignDocView: FC<{
         compareWith={compareWith}
         compareLabel={compareLabel}
         onCloseDiff={onCloseDiff}
+        // 本文は他の利用者も書けるので、生 HTML がアプリの画面に効かないよう制限する
+        restrictHtml
       />
     </div>
   )

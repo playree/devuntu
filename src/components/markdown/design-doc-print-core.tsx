@@ -29,6 +29,7 @@ const DesignDocPrintCore: FC<{ markdown: string; lang: 'ja' | 'en' }> = ({ markd
       stickyTableHeader: false,
       readFile: readNoFile,
       resolveResource,
+      restrictHtml: true,
     })
     // ready は描き終えたときだけ解決する。描画に失敗して解決しなければ、useWhenRendered の待つ上限で打ち切られる
     const done = () => {

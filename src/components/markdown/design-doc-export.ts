@@ -29,6 +29,13 @@ export const exportDesignDocHtml = async ({
     import('markdown-design-doc-viewer-embed/export'),
     import('markdown-design-doc-viewer-embed/viewer.css'),
   ])
-  const html = await exportHtml({ markdown, title, lang, readFile: readNoFile, resolveImage: embedImage })
+  const html = await exportHtml({
+    markdown,
+    title,
+    lang,
+    readFile: readNoFile,
+    resolveImage: embedImage,
+    restrictHtml: true,
+  })
   return absolutizeRootLinks(html, window.location.origin)
 }
