@@ -174,6 +174,22 @@ describe('restoreWikiPageRevision(ページが存在する)', () => {
     expect(writeWikiPageRevision).not.toHaveBeenCalled()
   })
 
+  it('削除済みのページの一覧からの復元(deletedOnly)では、ページが存在すれば上書きせず unchanged を返す', async () => {
+    const result = await restoreWikiPageRevision(actor, WEB, 'rev-1', { deletedOnly: true })
+
+    expect(result).toMatchObject({ result: 'unchanged', id: 'x', ref: 'DOCS/7', number: 7, updatedAt: UPDATED_AT })
+    expect(assertWikiSpaceAccess, '権限はロックの後に確かめる').toHaveBeenCalledWith(
+      actor,
+      SPACE_ID,
+      'write',
+      expect.anything(),
+    )
+    expect(prisma.wikiPage.update).not.toHaveBeenCalled()
+    expect(prisma.wikiPage.create).not.toHaveBeenCalled()
+    expect(syncWikiPageTags).not.toHaveBeenCalled()
+    expect(writeWikiPageRevision).not.toHaveBeenCalled()
+  })
+
   it('種類だけが違っても戻す', async () => {
     vi.mocked(prisma.wikiPage.findUnique).mockResolvedValue(
       existingPage({
@@ -230,6 +246,13 @@ describe('restoreWikiPageRevision(削除済みのページ)', () => {
       restoredFromId: 'rev-1',
       snapshot: { parentId: 'a', order: 1, type: 'design_doc', tags: [{ id: 'tag-a', name: '設計' }] },
     })
+  })
+
+  it('削除済みのページの一覧からの復元(deletedOnly)でも、削除済みなら作り直す', async () => {
+    const result = await restoreWikiPageRevision(actor, WEB, 'rev-1', { deletedOnly: true })
+
+    expect(result).toMatchObject({ result: 'created', id: 'x', number: 7 })
+    expect(prisma.wikiPage.create).toHaveBeenCalled()
   })
 
   it('親が無ければスペース直下の末尾に戻す', async () => {

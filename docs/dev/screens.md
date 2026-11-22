@@ -96,7 +96,11 @@ Proxy は通るリクエストのボディを既定 10MB まで複製して溜�
   保存時のコミットメッセージ(`WikiPageRevision.message`)が付いた版は、連続保存のまとめ(`shouldMergeWikiRevision`)の対象にしない。
   復元(`restoreWikiPageRevision`)は、存在するページならタイトル・本文・種類・タグだけを戻して位置を変えず、削除済みなら同じ id・番号で作り直す(親が無い・深さの上限を超えるならスペース直下)。
   版のタグは ID と書いたときの名前を同じ並びで持ち(`tagIds` / `tagNames`)、表示・出力・復元では ID で今のタグに引き当てる(`resolveWikiRevisionTags` / `findWikiTagsByIds`)。改名しても外れず、削除したタグは同名で作り直しても引き当てない。名前は差分で削除済みのタグを出すためだけに使う(`wikiRevisionTagLabels`)。
-  スペースのトップの「削除済みのページ」は、ページごとに最後の `deleted` の版を引き、いま存在するページを除いて出す
+  スペースのトップの「削除済みのページ」は、ページごとに最後の `deleted` の版を引き、いま存在するページを除いて出す。
+  版の `parentId` / `order` で元の親 → 子の前順に並べ(`arrangeDeletedWikiPages`)、元の親の状態(スペース直下 / 存在する親のパンくず / 削除済み / 残っていない)を添える。
+  上から順に復元すれば親が先に作り直され、子も元の親の下に戻る(ただし元の親の下で深さの上限を超えるならスペース直下。親を先に戻しても変わらない)。
+  一覧からの復元は `restoreDeletedWikiPage`(`deletedOnly`)で、ロックの後にページが存在すれば上書きせず unchanged を返す(一覧を開いた後に別の人が戻して編集したページを、削除の版で戻さないため)。
+  「配下ごと」は画面から一覧の順に1ページずつ呼ぶ(まとめたトランザクションにはしない)。設計書スペースでは戻せない通常のページを、その配下ごと飛ばす
 - ページの種類(`WikiPageType`)が `design_doc` のページは、`markdown-design-doc-viewer-embed` のビューアで表示し(`src/components/markdown/design-doc-view.tsx`)、
   CodeMirror のソースとプレビューで編集する(`design-doc-editor.tsx`)。ビューアの本体と `viewer.css` は `design-doc-viewer-core.tsx` を `next/dynamic` で読むので、
   通常のページではチャンクも CSS も読み込まない。ワイヤーフレームの別ファイルは扱わない(`readFile` は常に undefined を返し、`baseUrl` は渡さない)。

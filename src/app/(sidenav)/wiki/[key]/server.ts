@@ -157,3 +157,14 @@ export const restoreWikiPageRevision = safeAuthAction
   .metadata({ actionName: 'restoreWikiPageRevision', role: 'user' })
   .inputSchema(scUUID)
   .action(async ({ ctx: { user }, parsedInput: { id } }) => restoreWikiPageRevisionCore(user, WEB, id))
+
+/**
+ * 削除済みのページの一覧からの復元。`id` は最後の削除の版 ID。
+ * 一覧を開いた後に別の人が戻したページは上書きせず unchanged を返す
+ */
+export const restoreDeletedWikiPage = safeAuthAction
+  .metadata({ actionName: 'restoreDeletedWikiPage', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ ctx: { user }, parsedInput: { id } }) =>
+    restoreWikiPageRevisionCore(user, WEB, id, { deletedOnly: true }),
+  )

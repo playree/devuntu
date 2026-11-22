@@ -4,6 +4,7 @@
 
 import {
   ancestorIds,
+  arrangeDeletedWikiPages,
   depthOf,
   descendantIds,
   indexWikiTree,
@@ -122,5 +123,49 @@ describe('nestWikiTree', () => {
       { id: 'z', parentId: 'y', title: 'Z' },
     ]
     expect(nestWikiTree(broken, toNode, { rootId: 'y' })).toEqual([{ title: 'Z', children: [] }])
+  })
+})
+
+describe('arrangeDeletedWikiPages', () => {
+  const node = (pageId: string, parentId: string | null, order = 0, pageNumber = 0) => ({
+    pageId,
+    parentId,
+    order,
+    pageNumber,
+  })
+  const arranged = (rows: ReturnType<typeof node>[]) =>
+    arrangeDeletedWikiPages(rows).map(({ pageId, depth }) => [pageId, depth])
+
+  it('親の下に子・孫を前順で並べ、段数を付ける', () => {
+    expect(arranged([node('c', 'b'), node('a', null), node('b', 'a')])).toEqual([
+      ['a', 0],
+      ['b', 1],
+      ['c', 2],
+    ])
+  })
+
+  it('親が一覧に無いものは先頭の段にし、入力の順を保つ', () => {
+    expect(arranged([node('x', 'alive'), node('y', null), node('z', 'alive')])).toEqual([
+      ['x', 0],
+      ['y', 0],
+      ['z', 0],
+    ])
+  })
+
+  it('兄弟は削除時の並び順、同じなら番号順', () => {
+    expect(arranged([node('p', null), node('c3', 'p', 1, 9), node('c2', 'p', 0, 5), node('c1', 'p', 0, 4)])).toEqual([
+      ['p', 0],
+      ['c1', 1],
+      ['c2', 1],
+      ['c3', 1],
+    ])
+  })
+
+  it('循環していても止まり、すべての行を一度ずつ返す', () => {
+    expect(arranged([node('a', 'b'), node('b', 'a'), node('s', 's')])).toEqual([
+      ['s', 0],
+      ['a', 0],
+      ['b', 1],
+    ])
   })
 })

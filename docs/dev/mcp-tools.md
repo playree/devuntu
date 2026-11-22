@@ -265,7 +265,7 @@ everyone は全員に公開する文書として作るものなので、エー�
 - 削除したページは、保持期間(`WIKI_REVISION_RETENTION_DAYS`)の間は画面(スペースのトップの「削除済みのページ」)から復元できる
 - エージェントのトークンでは `recursive: true` を受け付けない(`WIKI_AGENT_RECURSIVE_DELETE_DENIED`。ページを引く前に弾く)。
   description の「配下を消す前に利用者に確かめる」は確かめる相手のいないエージェントには効かず、プロンプトインジェクションで配下ごと消されると
-  1ページずつしか戻せないため。ボードのナレッジをエージェントに変えさせないのと同じ考えで、description もエージェントには「報告で提案する」と出し分ける(子ありで `recursive` なしのときの `WIKI_PAGE_HAS_CHILDREN` の文言も同じ)。
+  利用者が気づいて画面から戻すまで失われたままになるため。ボードのナレッジをエージェントに変えさせないのと同じ考えで、description もエージェントには「報告で提案する」と出し分ける(子ありで `recursive` なしのときの `WIKI_PAGE_HAS_CHILDREN` の文言も同じ)。
   葉から1ページずつ消すことまでは防がない(1回で配下を消させないことが目的で、1ページずつの削除はそれぞれ `deleted` の版に残る)
 - エラーは `errorType` 付きで返す。`WIKI_PAGE_CONFLICT`(読んだ後に更新された)/ `WIKI_PAGE_HAS_CHILDREN`(子孫があり `recursive` が無い)/
   `WIKI_PAGE_TOO_DEEP`(深さの上限10を超える)/ `WIKI_PAGE_INVALID_PARENT`(自分自身・子孫の下へは移せない)
