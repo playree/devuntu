@@ -412,8 +412,8 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
       {!isEditing && <WikiPastRevisionNotice revisions={revisions} />}
       {isDiff && pastView && (
         <WikiRevisionFieldChanges
-          before={pastView}
-          after={{ title: page.title, type: page.type, tagNames: page.tags.map(({ tag }) => tag.name) }}
+          before={{ ...pastView, tags: pastView.revisionTags }}
+          after={{ title: page.title, type: page.type, tags: page.tags.map(({ tag }) => tag) }}
         />
       )}
 

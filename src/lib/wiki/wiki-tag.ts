@@ -52,7 +52,7 @@ export const listWikiTagsForManage = async (actor: Actor, spaceId: string): Prom
 
 /**
  * 付与するタグがすべてそのスペースのものかを確かめる。NG なら errInvalidOperation()。
- * 戻り値は重複を除いたタグを表示順に並べたもの(版の tagNames に使う)
+ * 戻り値は重複を除いたタグを表示順に並べたもの(版のタグに使う)
  */
 export const assertWikiTagIdsInSpace = async (
   tx: Db,
@@ -77,16 +77,16 @@ export const assertWikiTagIdsInSpace = async (
   return tags
 }
 
-/** 版の復元用。版はタグを名前で持つので、スペースに残っているものだけを引き当てる(表示順) */
-export const findWikiTagsByNames = async (
+/** 版の復元用。版のタグの ID のうち、スペースに残っているものだけを今の名前で引く(表示順) */
+export const findWikiTagsByIds = async (
   tx: Db,
   spaceId: string,
-  names: readonly string[],
+  ids: readonly string[],
 ): Promise<{ id: string; name: string }[]> =>
-  names.length === 0
+  ids.length === 0
     ? []
     : tx.wikiTag.findMany({
-        where: { spaceId, name: { in: [...names] } },
+        where: { spaceId, id: { in: [...ids] } },
         select: { id: true, name: true },
         orderBy: [...WIKI_TAG_ORDER_BY],
       })

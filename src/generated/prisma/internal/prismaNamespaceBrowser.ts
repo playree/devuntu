@@ -1183,6 +1183,7 @@ export const WikiPageRevisionScalarFieldEnum = {
   title: 'title',
   content: 'content',
   type: 'type',
+  tagIds: 'tagIds',
   tagNames: 'tagNames',
   actorId: 'actorId',
   via: 'via',

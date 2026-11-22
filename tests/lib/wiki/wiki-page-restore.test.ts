@@ -10,7 +10,7 @@ import { assertWikiSpaceAccess } from '@/lib/wiki/wiki-access'
 import { restoreWikiPageRevision } from '@/lib/wiki/wiki-page'
 import { writeWikiPageRevision } from '@/lib/wiki/wiki-revision'
 import { MAX_WIKI_DEPTH, WIKI_PAGE_TYPE_NOT_ALLOWED, type WikiWriter } from '@/lib/wiki/wiki-rule'
-import { findWikiTagsByNames, syncWikiPageTags } from '@/lib/wiki/wiki-tag'
+import { findWikiTagsByIds, syncWikiPageTags } from '@/lib/wiki/wiki-tag'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/prisma', async () =>
@@ -25,7 +25,7 @@ vi.mock('@/lib/wiki/wiki-space', () => ({ getWikiSpaceByKey: vi.fn() }))
 vi.mock('@/lib/board/board-access', () => ({ getTicketAccess: vi.fn() }))
 vi.mock('@/lib/wiki/wiki-tag', () => ({
   assertWikiTagIdsInSpace: vi.fn(),
-  findWikiTagsByNames: vi.fn(),
+  findWikiTagsByIds: vi.fn(),
   syncWikiPageTags: vi.fn(),
 }))
 
@@ -34,7 +34,7 @@ const WEB: WikiWriter = { via: 'web' }
 const SPACE_ID = 's1'
 const UPDATED_AT = new Date('2026-11-01T00:00:00.000Z')
 
-/** スペースに残っているタグ(「廃止」は消えている) */
+/** スペースに残っているタグ(tag-a は版の後で「旧設計」から改名、tag-gone は削除済み) */
 const TAGS = [
   { id: 'tag-a', name: '設計' },
   { id: 'tag-b', name: '運用' },
@@ -64,7 +64,8 @@ const revision = (override: Record<string, unknown> = {}) => ({
   title: '戻すタイトル',
   content: '戻す本文',
   type: 'design_doc',
-  tagNames: ['設計', '廃止'],
+  tagIds: ['tag-a', 'tag-gone'],
+  tagNames: ['旧設計', '廃止'],
   ...override,
 })
 
@@ -110,8 +111,8 @@ beforeEach(() => {
   vi.mocked(prisma.wikiPage.update).mockResolvedValue({ updatedAt: new Date() } as never)
   vi.mocked(prisma.wikiPage.create).mockResolvedValue({ updatedAt: new Date() } as never)
   vi.mocked(prisma.$queryRaw).mockResolvedValue([] as never)
-  vi.mocked(findWikiTagsByNames).mockImplementation(async (_tx, _spaceId, names) =>
-    TAGS.filter(({ name }) => names.includes(name)),
+  vi.mocked(findWikiTagsByIds).mockImplementation(async (_tx, _spaceId, ids) =>
+    TAGS.filter(({ id }) => ids.includes(id)),
   )
 })
 
@@ -120,7 +121,7 @@ describe('restoreWikiPageRevision(ページが存在する)', () => {
     vi.mocked(prisma.wikiPage.findUnique).mockResolvedValue(existingPage() as never)
   })
 
-  it('タイトル・本文・種類・タグを版の内容に戻し、restored の版を残す。位置は変えない', async () => {
+  it('タイトル・本文・種類・タグを版の内容に戻し、restored の版を残す。位置は変えない(改名したタグは今の名前で付く)', async () => {
     const result = await restoreWikiPageRevision(actor, WEB, 'rev-1')
 
     expect(result).toMatchObject({ result: 'updated', id: 'x', ref: 'DOCS/7', number: 7 })
@@ -148,7 +149,7 @@ describe('restoreWikiPageRevision(ページが存在する)', () => {
         title: '戻すタイトル',
         content: '戻す本文',
         type: 'design_doc',
-        tagNames: ['設計'],
+        tags: [{ id: 'tag-a', name: '設計' }],
       },
       actorId: 'u1',
       via: 'web',
@@ -196,6 +197,15 @@ describe('restoreWikiPageRevision(ページが存在する)', () => {
     await restoreWikiPageRevision(actor, WEB, 'rev-1')
     expect(syncWikiPageTags).not.toHaveBeenCalled()
   })
+
+  it('削除したタグは、同じ名前で作り直したタグがあっても付けない', async () => {
+    vi.mocked(findWikiTagsByIds).mockImplementation(async (_tx, _spaceId, ids) =>
+      [...TAGS, { id: 'tag-new', name: '廃止' }].filter(({ id }) => ids.includes(id)),
+    )
+    await restoreWikiPageRevision(actor, WEB, 'rev-1')
+    expect(findWikiTagsByIds).toHaveBeenCalledWith(expect.anything(), SPACE_ID, ['tag-a', 'tag-gone'])
+    expect(syncWikiPageTags).toHaveBeenCalledWith(expect.anything(), 'x', ['tag-b'], ['tag-a'])
+  })
 })
 
 describe('restoreWikiPageRevision(削除済みのページ)', () => {
@@ -218,7 +228,7 @@ describe('restoreWikiPageRevision(削除済みのページ)', () => {
     expect(vi.mocked(writeWikiPageRevision).mock.calls[0][1]).toMatchObject({
       action: 'restored',
       restoredFromId: 'rev-1',
-      snapshot: { parentId: 'a', order: 1, type: 'design_doc', tagNames: ['設計'] },
+      snapshot: { parentId: 'a', order: 1, type: 'design_doc', tags: [{ id: 'tag-a', name: '設計' }] },
     })
   })
 

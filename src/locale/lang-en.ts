@@ -663,6 +663,7 @@ export const en: DefaultLocaleItems = {
   wiki_conflict_title: 'Save Conflict',
   wiki_delete_revision: 'Delete this version',
   wiki_deleted_pages: 'Deleted pages',
+  wiki_deleted_tag: '${name} (deleted)',
   wiki_design_doc_editor: 'Design doc editor',
   wiki_design_doc_filter: 'Filter by title, number or metadata',
   wiki_design_doc_source: 'Source',

@@ -114,6 +114,9 @@ export const evaluateWikiAccess = (input: {
 /** 書き込みの経路 */
 export type WikiWriter = { via: WikiVia }
 
+/** 版に残すタグ。今のタグへは ID で引き当て、名前は削除済みのタグを差分に出すときに使う */
+export type WikiRevisionTag = { id: string; name: string }
+
 /** 版として残す項目 */
 export type WikiPageSnapshot = {
   parentId: string | null
@@ -121,8 +124,23 @@ export type WikiPageSnapshot = {
   title: string
   content: string
   type: WikiPageType
-  tagNames: string[]
+  tags: WikiRevisionTag[]
 }
+
+/** 版のタグを DB の列(同じ並びの ID と名前)にする */
+export const revisionTagColumns = (tags: readonly WikiRevisionTag[]): { tagIds: string[]; tagNames: string[] } => ({
+  tagIds: tags.map(({ id }) => id),
+  tagNames: tags.map(({ name }) => name),
+})
+
+/** DB の列(同じ並びの ID と名前)から版のタグにする */
+export const revisionTagsOf = ({
+  tagIds,
+  tagNames,
+}: {
+  tagIds: readonly string[]
+  tagNames: readonly string[]
+}): WikiRevisionTag[] => tagIds.map((id, index) => ({ id, name: tagNames[index] ?? '' }))
 
 /** 版の書き込み元の情報(まとめてよいかの判定に使う) */
 export type WikiRevisionOrigin = {
@@ -185,11 +203,30 @@ export const pickExpiredWikiRevisionIds = (
   return ids
 }
 
-/** 版が名前で持つタグを、いまスペースに残っているタグに引き当てる(消えたタグは出さない。復元時と同じ扱い) */
-export const resolveWikiTagNames = <T extends { name: string }>(
-  names: readonly string[],
+/**
+ * 版のタグを、いまスペースに残っているタグに ID で引き当てる(スペースの表示順)。
+ * 改名したタグは今の名前で出し、削除したタグは(同じ名前で作り直していても)出さない。復元時と同じ扱い
+ */
+export const resolveWikiRevisionTags = <T extends { id: string }>(
+  tags: readonly WikiRevisionTag[],
   spaceTags: readonly T[],
-): T[] => names.flatMap((name) => spaceTags.filter((tag) => tag.name === name))
+): T[] => {
+  const ids = new Set(tags.map(({ id }) => id))
+  return spaceTags.filter(({ id }) => ids.has(id))
+}
+
+/**
+ * 差分に出す版のタグ名。スペースに残っていれば今の名前、削除済みなら版に残る名前を `deletedLabel` で印を付けて出す
+ * (削除したタグと同じ名前のタグを作り直したときに、別のタグだと分かるようにする)
+ */
+export const wikiRevisionTagLabels = (
+  tags: readonly WikiRevisionTag[],
+  spaceTags: readonly WikiRevisionTag[],
+  deletedLabel: (name: string) => string,
+): string[] => {
+  const nameById = new Map(spaceTags.map(({ id, name }) => [id, name]))
+  return tags.map(({ id, name }) => nameById.get(id) ?? deletedLabel(name))
+}
 
 /** ページの指定(`KEY/番号`) */
 export const wikiPageRef = ({ key, number }: { key: string; number: number }): string => `${key}/${number}`

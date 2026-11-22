@@ -13,6 +13,7 @@ import {
   assertWikiTagIdsInSpace,
   createWikiTag,
   deleteWikiTag,
+  findWikiTagsByIds,
   listWikiTagsForManage,
   resolveWikiTagIdsByName,
   syncWikiPageTags,
@@ -183,6 +184,22 @@ describe('assertWikiTagIdsInSpace', () => {
 
   it('空なら引かない', async () => {
     expect(await assertWikiTagIdsInSpace(prisma, SPACE_ID, [])).toEqual([])
+    expect(prisma.wikiTag.findMany).not.toHaveBeenCalled()
+  })
+})
+
+describe('findWikiTagsByIds', () => {
+  it('版のタグの ID のうち、そのスペースに残っているものを今の名前で表示順に引く', async () => {
+    vi.mocked(prisma.wikiTag.findMany).mockResolvedValue([{ id: 'a', name: '改名後' }] as never)
+    expect(await findWikiTagsByIds(prisma, SPACE_ID, ['a', 'gone'])).toEqual([{ id: 'a', name: '改名後' }])
+    expect(vi.mocked(prisma.wikiTag.findMany).mock.calls[0][0]).toMatchObject({
+      where: { spaceId: SPACE_ID, id: { in: ['a', 'gone'] } },
+      orderBy: [{ order: 'asc' }, { name: 'asc' }],
+    })
+  })
+
+  it('空なら引かない', async () => {
+    expect(await findWikiTagsByIds(prisma, SPACE_ID, [])).toEqual([])
     expect(prisma.wikiTag.findMany).not.toHaveBeenCalled()
   })
 })

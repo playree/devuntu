@@ -12,11 +12,14 @@ import {
   parseWikiPageRef,
   parseWikiSearchParams,
   pickExpiredWikiRevisionIds,
+  resolveWikiRevisionTags,
   resolveWikiRole,
-  resolveWikiTagNames,
+  revisionTagColumns,
+  revisionTagsOf,
   shouldMergeWikiRevision,
   strongestWikiRole,
   wikiPageRef,
+  wikiRevisionTagLabels,
   wikiSearchHref,
   type WikiRevisionOrigin,
 } from '@/lib/wiki/wiki-rule'
@@ -113,13 +116,35 @@ describe('shouldMergeWikiRevision', () => {
   })
 })
 
-describe('resolveWikiTagNames', () => {
-  it('名前の順にいまのタグへ引き当て、消えたタグは出さない', () => {
-    const tags = [
-      { id: 't1', name: 'A' },
-      { id: 't2', name: 'B' },
-    ]
-    expect(resolveWikiTagNames(['B', '消えた', 'A'], tags)).toEqual([tags[1], tags[0]])
+describe('版のタグ', () => {
+  // t1 は版の後で「旧A」から「A」に改名、t9 は削除済みで、同じ名前の t3 を作り直している
+  const revisionTags = [
+    { id: 't2', name: 'B' },
+    { id: 't9', name: '消えた' },
+    { id: 't1', name: '旧A' },
+  ]
+  const spaceTags = [
+    { id: 't1', name: 'A' },
+    { id: 't2', name: 'B' },
+    { id: 't3', name: '消えた' },
+  ]
+
+  it('DB の列(同じ並びの ID と名前)と行き来できる', () => {
+    const columns = revisionTagColumns(revisionTags)
+    expect(columns).toEqual({ tagIds: ['t2', 't9', 't1'], tagNames: ['B', '消えた', '旧A'] })
+    expect(revisionTagsOf(columns)).toEqual(revisionTags)
+  })
+
+  it('resolveWikiRevisionTags: ID でスペースのタグに引き当て、改名後の名前・スペースの表示順で返す。削除したタグは同じ名前があっても出さない', () => {
+    expect(resolveWikiRevisionTags(revisionTags, spaceTags)).toEqual([spaceTags[0], spaceTags[1]])
+  })
+
+  it('wikiRevisionTagLabels: 残っているタグは今の名前、削除したタグは版の名前に印を付ける(同じ名前で作り直したタグと区別する)', () => {
+    expect(wikiRevisionTagLabels(revisionTags, spaceTags, (name) => `${name}(削除済み)`)).toEqual([
+      'B',
+      '消えた(削除済み)',
+      'A',
+    ])
   })
 })
 

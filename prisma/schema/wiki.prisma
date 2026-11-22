@@ -292,8 +292,10 @@ model WikiPageRevision {
   title    String
   content  String
   type     WikiPageType @default(page)
-  /// タグは削除されうるので名前で持つ
-  tagNames String[] @default([])
+  /// タグの ID。今のタグへの引き当てに使う(改名しても外れない)
+  tagIds   String[]     @default([])
+  /// tagIds と同じ並びの、書いたときのタグ名。削除済みのタグを差分に出すために持つ
+  tagNames String[]     @default([])
 
   /// 変更者。退会しても変更の事実は残すので SetNull
   actorId String?

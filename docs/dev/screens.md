@@ -92,6 +92,7 @@ Proxy は通るリクエストのボディを既定 10MB まで複製して溜�
   設計書は `DesignDocView` に最新の本文と `compareWith`(選んだ版の本文)を渡して embed の差分表示を使い(差分バーの × は `onCloseDiff` で切り替えを戻す)、通常のページは `TextDiffView` で行単位に出す(タイトル・種類・タグの変化は `WikiRevisionFieldChanges` で本文の上に出す)。出力メニューは差分中も選んだ版の内容が対象。
   保存時のコミットメッセージ(`WikiPageRevision.message`)が付いた版は、連続保存のまとめ(`shouldMergeWikiRevision`)の対象にしない。
   復元(`restoreWikiPageRevision`)は、存在するページならタイトル・本文・種類・タグだけを戻して位置を変えず、削除済みなら同じ id・番号で作り直す(親が無い・深さの上限を超えるならスペース直下)。
+  版のタグは ID と書いたときの名前を同じ並びで持ち(`tagIds` / `tagNames`)、表示・出力・復元では ID で今のタグに引き当てる(`resolveWikiRevisionTags` / `findWikiTagsByIds`)。改名しても外れず、削除したタグは同名で作り直しても引き当てない。名前は差分で削除済みのタグを出すためだけに使う(`wikiRevisionTagLabels`)。
   スペースのトップの「削除済みのページ」は、ページごとに最後の `deleted` の版を引き、いま存在するページを除いて出す
 - ページの種類(`WikiPageType`)が `design_doc` のページは、`markdown-design-doc-viewer-embed` のビューアで表示し(`src/components/markdown/design-doc-view.tsx`)、
   CodeMirror のソースとプレビューで編集する(`design-doc-editor.tsx`)。ビューアの本体と `viewer.css` は `design-doc-viewer-core.tsx` を `next/dynamic` で読むので、
