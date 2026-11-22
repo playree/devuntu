@@ -5,7 +5,7 @@
 import { findAiSkillFile, skillInstallGuide } from '@/lib/ai-skill'
 import designDocViewerPkg from 'markdown-design-doc-viewer-embed/package.json'
 import { agentSkill } from 'markdown-design-doc-viewer-embed/skill'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const JAPANESE = /[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/u
 
@@ -104,5 +104,33 @@ describe('skillInstallGuide', () => {
 
   it('英語で書く', () => {
     expect(guide).not.toMatch(JAPANESE)
+  })
+})
+
+describe('skillInstallGuide: 依存パッケージのパスの検査', () => {
+  afterEach(() => {
+    vi.doUnmock('markdown-design-doc-viewer-embed/skill')
+    vi.resetModules()
+  })
+
+  /** 依存パッケージのスキルのファイルを差し替えて、手順を作らせる */
+  const guideWith = async (path: string) => {
+    vi.resetModules()
+    vi.doMock('markdown-design-doc-viewer-embed/skill', () => ({
+      agentSkill: { ...agentSkill, files: { 'SKILL.md': '', [path]: '' } },
+    }))
+    const { skillInstallGuide: guideOf } = await import('@/lib/ai-skill')
+    return () => guideOf('markdown-design-doc')
+  }
+
+  it.each(['../outside.md', 'references/../../outside.md', '..', './SKILL.md', 'references/./cli.md'])(
+    '%s のように . / .. のセグメントがあれば、手順を作らずにエラー',
+    async (path) => {
+      expect(await guideWith(path)).toThrow(`unsafe path in the skill markdown-design-doc: ${path}`)
+    },
+  )
+
+  it('. を含むファイル名やフォルダ名は通す', async () => {
+    expect((await guideWith('references/.hidden/a..b.md'))()).toContain('references/.hidden/a..b.md')
   })
 })

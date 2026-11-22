@@ -105,10 +105,10 @@ describe('applyTextEdits', () => {
     expect(error.message).toContain('edits[1].oldText was not found')
   })
 
-  it('複数箇所に一致する oldText は件数を添えたエラー', () => {
+  it('複数箇所に一致する oldText は、件数ではなく複数ある旨のエラー', () => {
     const error = errorTypeOf(() => applyTextEdits('aa-aa', [{ oldText: 'aa', newText: 'b' }]))
     expect(error.type).toBe(VALIDATION_ERROR)
-    expect(error.message).toContain('matches 2 places')
+    expect(error.message).toContain('matches more than one place')
   })
 
   it('空の oldText はエラー', () => {
@@ -149,7 +149,16 @@ describe('境界のケース', () => {
   })
 
   it('重なって現れる oldText も複数として数える', () => {
-    expect(() => applyTextEdits('aaa', [{ oldText: 'aa', newText: 'b' }])).toThrow('matches 2 places')
+    expect(() => applyTextEdits('aaa', [{ oldText: 'aa', newText: 'b' }])).toThrow('matches more than one place')
+  })
+
+  it('長い本文に長い oldText が重なって何度も現れても、2 件見つかった時点でやめる', () => {
+    const content = 'a'.repeat(200_000)
+    const started = Date.now()
+    expect(() => applyTextEdits(content, [{ oldText: 'a'.repeat(100_000), newText: 'b' }])).toThrow(
+      'matches more than one place',
+    )
+    expect(Date.now() - started).toBeLessThan(500)
   })
 })
 
