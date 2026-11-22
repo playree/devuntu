@@ -2,8 +2,10 @@
 
 import { MultiButton, SubmitButtons } from '@/components/general/button'
 import { InputField } from '@/components/general/input'
-import { useConfirmModal } from '@/components/general/modal'
+import { useLeaveGuard } from '@/components/general/leave-guard'
+import { type ConfirmParam, useConfirmModal, useModalState } from '@/components/general/modal'
 import { PanelSpinner } from '@/components/general/panel'
+import { useSaveShortcut } from '@/components/general/use-save-shortcut'
 import { CheckIcon, PencilSquareIcon } from '@/components/icon'
 import { DesignDocEditor } from '@/components/markdown/design-doc-editor'
 import { DesignDocView } from '@/components/markdown/design-doc-view'
@@ -17,13 +19,15 @@ import { parseAction } from '@/lib/action/action-client'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { dayformat } from '@/lib/day'
 import { ClientError } from '@/lib/error'
+import { isWikiDraftChanged, type WikiPageDraft } from '@/lib/wiki/wiki-draft'
 import { designDocFrontMatter, hasFrontMatter } from '@/lib/wiki/wiki-markdown'
-import { MAX_WIKI_CONTENT, MAX_WIKI_REVISION_MESSAGE, MAX_WIKI_TITLE } from '@/lib/wiki/wiki-rule'
+import { MAX_WIKI_CONTENT, MAX_WIKI_REVISION_MESSAGE, MAX_WIKI_TITLE, WIKI_PAGE_CONFLICT } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { FC, useEffect, useRef, useState } from 'react'
+import { FC, useCallback, useEffect, useRef, useState } from 'react'
 import { EDIT_QUERY } from '../page-modals'
 import { useWikiSpace } from '../space-context'
+import { WikiPageConflictModal, type WikiPageConflictTarget } from './page-conflict-modal'
 import { WikiPageEditHeader } from './page-edit-header'
 import { WikiExportMenu } from './page-export'
 import {
@@ -36,7 +40,7 @@ import {
   WikiRevisionRestoreButton,
   WikiRevisionSelect,
 } from './page-revision'
-import { GetWikiPageReturnType, updateWikiPage } from './server'
+import { getWikiPage, GetWikiPageReturnType, updateWikiPage } from './server'
 
 type Page = NonNullable<GetWikiPageReturnType>['page']
 
@@ -46,7 +50,9 @@ type Page = NonNullable<GetWikiPageReturnType>['page']
  * 設計書のページは Markdown Design Doc Viewer で表示し、ソースとプレビューで編集する(幅の制限を外す)。
  * 表示中は更新者・日時から版を選べ、過去の版はその時点の内容で表示する(編集はできず、ロールバックと削除だけ)。
  * 過去の版からは最新への差分も出せる(設計書はビューアの差分表示、通常のページは行単位の差分)。
- * 表示中の版は PDF / HTML / Markdown に出力できる
+ * 表示中の版は PDF / HTML / Markdown に出力できる。
+ * 編集中に変更があれば、キャンセル・画面の移動・タブを閉じる前に確認する。Ctrl/Cmd+S で保存できる。
+ * 保存が競合したら、下書きを残したまま最新の確認・下書きのコピー・上書き保存を選べる
  */
 export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Promise<void> }> = ({
   page,
@@ -57,6 +63,7 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
   const tz = useUserTimezone()
   const { space } = useWikiSpace()
   const { confirmModal } = useConfirmModal()
+  const conflictState = useModalState<WikiPageConflictTarget>()
   const revisions = useWikiPageRevisions(page, onSaved)
   const router = useRouter()
   const pathname = usePathname()
@@ -84,6 +91,31 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
   const contentRef = useRef<HTMLDivElement>(null)
   // 最新の下書き。種類の切り替えで確認を待つ間に本文が変わっても、承認した時点の本文を引き継ぐ
   const contentDraftRef = useRef(page.content)
+  // 編集を始めた時点の値。下書きに変更があるかをこれと比べる(作成直後の編集は、マウント時の値から始まる)
+  const [draftBase, setDraftBase] = useState<WikiPageDraft>(() => ({
+    title: page.title,
+    content: page.content,
+    type: page.type,
+    tagIds: pageTagIds(),
+  }))
+  // 確認のモーダルを待っている間。Ctrl/Cmd+S で裏から保存しない
+  const isAskingRef = useRef(false)
+
+  const ask = useCallback(
+    async (param: ConfirmParam) => {
+      isAskingRef.current = true
+      try {
+        return await confirmModal().confirm(param)
+      } finally {
+        isAskingRef.current = false
+      }
+    },
+    [confirmModal],
+  )
+  const confirmDiscard = useCallback(
+    () => ask({ title: t('wiki_discard_draft'), text: t('msg_confirm_wiki_discard_draft') }),
+    [ask, t],
+  )
 
   const changeContent = (content: string) => {
     contentDraftRef.current = content
@@ -98,6 +130,7 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
   }, [hasEditQuery, pathname, router])
 
   const startEditing = () => {
+    setDraftBase({ title: page.title, content: page.content, type: page.type, tagIds: pageTagIds() })
     setTitleDraft(page.title)
     changeContent(page.content)
     setTypeDraft(page.type)
@@ -117,7 +150,7 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
     }
     if (
       type === 'page' &&
-      !(await confirmModal().confirm({ title: t('wiki_change_page_type'), text: t('msg_confirm_wiki_type_to_page') }))
+      !(await ask({ title: t('wiki_change_page_type'), text: t('msg_confirm_wiki_type_to_page') }))
     ) {
       return
     }
@@ -132,10 +165,26 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
     setTypeDraft(type)
   }
 
-  const save = async () => {
+  /** 競合したら最新を取り直し、選択肢のモーダルを出す(取れなくても、最新の確認と下書きのコピーはできる) */
+  const openConflict = async () => {
+    const latest = await parseAction(getWikiPage({ key: space.key, number: page.number }), { handled: 'all' }).catch(
+      () => undefined,
+    )
+    conflictState.open({
+      latest: latest && {
+        updatedAt: latest.page.updatedAt,
+        updatedByName: latest.page.updatedBy?.name ?? latest.page.createdBy?.name,
+      },
+    })
+  }
+
+  /**
+   * 編集を始めた時点の更新日時を渡し、その後に他の人が保存していれば競合として止める(下書きは残る)。
+   * 上書き保存では、競合の後に取り直した最新の更新日時を渡す
+   */
+  const save = async (expectedUpdatedAt = baseUpdatedAt) => {
     setSaving(true)
     try {
-      // 編集を始めた時点の更新日時を渡し、その後に他の人が保存していれば競合として止める(下書きは残る)
       const result = await parseAction(
         updateWikiPage({
           id: page.id,
@@ -143,9 +192,10 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
           content: contentDraft,
           type: typeDraft,
           tagIds: tagIdsDraft,
-          expectedUpdatedAt: baseUpdatedAt.toISOString(),
+          expectedUpdatedAt: expectedUpdatedAt.toISOString(),
           message: messageDraft,
         }),
+        { handled: [WIKI_PAGE_CONFLICT] },
       )
       // 変更が無ければ版を作らないので、コミットメッセージも残らない
       if (result.result === 'unchanged' && messageDraft.trim()) {
@@ -155,14 +205,30 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
       }
       // 表示モードへ戻すのはサーバー値が届いた後。先に戻すと旧本文が一瞬見える
       await onSaved()
+      conflictState.close()
       setEditing(false)
     } catch (e) {
-      // エラー表示は parseAction 側で済んでいる。編集中の内容を失わせないため編集状態は維持する
+      // 競合以外のエラー表示は parseAction 側で済んでいる。編集中の内容を失わせないため編集状態は維持する
       if (!(e instanceof ClientError)) {
         throw e
       }
+      if (e.errorType === WIKI_PAGE_CONFLICT) {
+        await openConflict()
+      }
     } finally {
       setSaving(false)
+    }
+  }
+
+  const overwrite = async (expectedUpdatedAt: Date) => {
+    if (await ask({ title: t('wiki_conflict_overwrite'), text: t('msg_confirm_wiki_overwrite') })) {
+      await save(expectedUpdatedAt)
+    }
+  }
+
+  const cancelEditing = async () => {
+    if (!isDirty || (await confirmDiscard())) {
+      setEditing(false)
     }
   }
 
@@ -172,6 +238,20 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
     titleDraft.length <= MAX_WIKI_TITLE &&
     contentDraft.length <= MAX_WIKI_CONTENT &&
     messageDraft.length <= MAX_WIKI_REVISION_MESSAGE
+  const isDirty =
+    isEditing &&
+    isWikiDraftChanged(draftBase, { title: titleDraft, content: contentDraft, type: typeDraft, tagIds: tagIdsDraft })
+
+  // リンク・メニュー・子ページの作成などで画面を移る前と、タブを閉じる前に確認する
+  useLeaveGuard({ isActive: isDirty, confirmLeave: confirmDiscard })
+  useSaveShortcut({
+    isActive: isEditing,
+    onSave: () => {
+      if (isSubmittable && !isSaving && !conflictState.isOpen && !isAskingRef.current) {
+        void save()
+      }
+    },
+  })
   const updatedBy = page.updatedBy?.name ?? page.createdBy?.name
   // 過去の版は表示中だけ(編集はいまの内容から始める)
   const pastView = usePastPageView(isEditing ? undefined : revisions.past)
@@ -215,8 +295,8 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
         icon={<CheckIcon width={16} />}
         isPending={isSaving}
         isDisabled={!isSubmittable}
-        onPress={save}
-        onCancel={() => setEditing(false)}
+        onPress={() => save()}
+        onCancel={cancelEditing}
       />
     </div>
   )
@@ -343,6 +423,13 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
         {body}
       </div>
       {!isEditing && !isDesignDoc && !isDiff && <MarkdownToc targetRef={contentRef} />}
+      <WikiPageConflictModal
+        state={conflictState}
+        href={`/wiki/${space.key}/${page.number}`}
+        content={contentDraft}
+        isSaving={isSaving}
+        onOverwrite={overwrite}
+      />
     </>
   )
 }

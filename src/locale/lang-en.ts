@@ -657,6 +657,10 @@ export const en: DefaultLocaleItems = {
   wiki_child_count: '${count} children',
   wiki_change_page_type: 'Change Type',
   wiki_child_pages: 'Child Pages',
+  wiki_conflict_copy_draft: 'Copy Draft',
+  wiki_conflict_open_latest: 'Open Latest in New Tab',
+  wiki_conflict_overwrite: 'Overwrite',
+  wiki_conflict_title: 'Save Conflict',
   wiki_delete_revision: 'Delete this version',
   wiki_deleted_pages: 'Deleted pages',
   wiki_design_doc_editor: 'Design doc editor',
@@ -665,6 +669,7 @@ export const en: DefaultLocaleItems = {
   wiki_design_docs: 'Design docs',
   wiki_diff: 'Diff',
   wiki_diff_compare_label: 'Compared with ${version}',
+  wiki_discard_draft: 'Discard Draft',
   wiki_move: 'Move',
   wiki_move_page: 'Move Page',
   wiki_page_number: 'No.',
@@ -811,6 +816,9 @@ Please copy and use the connection information above.
   msg_confirm_delete_wiki_revision: 'Delete ${target} from the history. A deleted version cannot be recovered.',
   msg_confirm_delete_wiki_space:
     'Delete ${target}. All pages, versions and attachments in this space will also be deleted.',
+  msg_confirm_wiki_discard_draft: 'You have unsaved changes. Discard them?',
+  msg_confirm_wiki_overwrite:
+    'The content someone else saved will be replaced with your draft (their revision stays in the history). Overwrite?',
   msg_confirm_wiki_type_to_page:
     'A page is edited in the rich editor, which may change how the design doc is written, such as its front matter and HTML comments. Make it a page?',
   msg_confirm_deletion: 'Delete ${target}.',
@@ -940,10 +948,12 @@ Please copy and use the connection information above.
     'Deleted pages can be restored only for ${days} days after deletion. Pages deleted together with their descendants are restored one page at a time.',
   msg_wiki_design_docs_load_failed: 'Failed to load the design doc list. Please wait a moment and reload.',
   msg_wiki_diff_no_change: 'The content has not changed.',
+  msg_wiki_draft_copied: 'Copied the draft content (Markdown).',
+  msg_wiki_draft_copy_failed: 'Could not copy. Allow the browser to access the clipboard.',
   msg_wiki_manage_only:
     'You are not assigned to this space, so you can only change its settings. Assign yourself to read its pages.',
   msg_wiki_message_not_saved: 'Nothing changed, so the commit message was not kept.',
-  msg_wiki_page_conflict: 'Someone else updated it first. Copy your changes, then reopen the page and edit again.',
+  msg_wiki_page_conflict: 'Someone else saved this page after you started editing. Your draft is kept.',
   msg_wiki_page_has_children: 'The page has child pages. Delete it together with its descendants.',
   msg_wiki_page_invalid_parent: 'The page cannot be moved there (not under itself, its descendants, or another space).',
   msg_wiki_page_too_deep: 'Pages can be nested at most 10 levels deep.',

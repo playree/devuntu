@@ -2,6 +2,7 @@
 
 import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input'
+import { usePushIfLeavable } from '@/components/general/leave-guard'
 import { DialogModal, FormModal, type ModalBaseProps } from '@/components/general/modal'
 import { SingleSelectCtrl, SingleSelectField } from '@/components/general/select'
 import { DocumentPlusIcon, FolderArrowRightIcon } from '@/components/icon'
@@ -38,8 +39,8 @@ export const CreatePageModal: FC<ModalBaseProps & { parent: { id: string; title:
   parent,
 }) => {
   const { t, fet } = useLocale()
-  const router = useRouter()
   const { space } = useWikiSpace()
+  const pushIfLeavable = usePushIfLeavable()
   const typeOptions = useWikiPageTypeOptions()
 
   const {
@@ -66,7 +67,8 @@ export const CreatePageModal: FC<ModalBaseProps & { parent: { id: string; title:
           notify.success(t('msg_added_target', { target: req.title }))
           reload()
           state.close()
-          router.push(`/wiki/${space.key}/${res.number}?${EDIT_QUERY}=1`)
+          // 編集中のページから子ページを作ったときは、下書きを捨てて移るかを確かめる(断ればページだけ作られる)
+          await pushIfLeavable(`/wiki/${space.key}/${res.number}?${EDIT_QUERY}=1`)
         } catch (e) {
           // 深さの上限などは parseAction が通知済み。入力し直してもらうため画面はそのまま残す
           if (!(e instanceof ClientError)) {
