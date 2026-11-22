@@ -214,6 +214,8 @@ AI向けコンテキストと合わせて、AI 向けの情報を3層で持つ�
 
 AI から Wiki のページを探して読み、書けるようにする6ツール。人の経路もエージェントも使え、
 権限はスペースの割り当て(直接・グループ・ボード経由)で決まる(画面と同じ)。everyone のスペースは全ログインユーザーが閲覧でき、editor 以上の割り当てがあれば編集もできる。
+エージェントのユーザーも全ログインユーザーに含めるので、担当ボードに割り当てていない everyone のスペースも `search_wiki` / `get_wiki_page` で読める。
+everyone は全員に公開する文書として作るものなので、エージェントだけを外すことはしない(読ませたくない文書は restricted のスペースに置く)。
 スペースの作成・設定・割り当て、タグの作成、版の復元は画面で行う。
 
 | ツール             | 用途                                                                                                            | 入力                                                                                                                                     |
@@ -223,7 +225,7 @@ AI から Wiki のページを探して読み、書けるようにする6ツー�
 | `search_wiki`      | 閲覧できるページを検索し、ref・タイトル・パンくず・タグ・一致箇所の抜粋を返す                                   | `keyword` / `space` / `tags` / `limit`                                                                                                   |
 | `get_wiki_page`    | ページを読む(種類・本文・パンくず・子ページ・タグ・`updatedAt`・貼られた添付のキー)。`section` で節だけを読める | `ref` / `section`                                                                                                                        |
 | `save_wiki_page`   | `ref` が無ければ作成、あれば渡した項目だけを更新する。`edits` で部分更新、`parent` / `position` で移動する      | `ref` / `space` / `title` / `content` / `type` / `edits` / `parent` / `position` / `tags` / `expectedUpdatedAt` / `ticketId` / `message` |
-| `delete_wiki_page` | ページを削除する。子孫を持つページは `recursive: true` のときだけ配下ごと消す                                   | `ref` / `recursive` / `ticketId`                                                                                                         |
+| `delete_wiki_page` | ページを削除する。子孫を持つページは `recursive: true` のときだけ配下ごと消す(エージェントは不可)               | `ref` / `recursive` / `ticketId`                                                                                                         |
 
 - ページは `ref`(`<スペースキー>/<番号>`、例: `DOCS/12`)で指定する。番号はスペース内の連番で、改名や移動では変わらない。
   キーは大文字小文字を問わない
@@ -261,6 +263,10 @@ AI から Wiki のページを探して読み、書けるようにする6ツー�
 - `save_wiki_page` の `message` は版に残すコミットメッセージ(任意、200文字まで。前後の空白は除き、空なら付けない)。
   作成と、タイトル・本文・種類・タグの更新の版に残る(移動だけでは残らない)。付けた版は連続保存のまとめの対象にしない
 - 削除したページは、保持期間(`WIKI_REVISION_RETENTION_DAYS`)の間は画面(スペースのトップの「削除済みのページ」)から復元できる
+- エージェントのトークンでは `recursive: true` を受け付けない(`WIKI_AGENT_RECURSIVE_DELETE_DENIED`。ページを引く前に弾く)。
+  description の「配下を消す前に利用者に確かめる」は確かめる相手のいないエージェントには効かず、プロンプトインジェクションで配下ごと消されると
+  1ページずつしか戻せないため。ボードのナレッジをエージェントに変えさせないのと同じ考えで、description もエージェントには「報告で提案する」と出し分ける(子ありで `recursive` なしのときの `WIKI_PAGE_HAS_CHILDREN` の文言も同じ)。
+  葉から1ページずつ消すことまでは防がない(1回で配下を消させないことが目的で、1ページずつの削除はそれぞれ `deleted` の版に残る)
 - エラーは `errorType` 付きで返す。`WIKI_PAGE_CONFLICT`(読んだ後に更新された)/ `WIKI_PAGE_HAS_CHILDREN`(子孫があり `recursive` が無い)/
   `WIKI_PAGE_TOO_DEEP`(深さの上限10を超える)/ `WIKI_PAGE_INVALID_PARENT`(自分自身・子孫の下へは移せない)
 

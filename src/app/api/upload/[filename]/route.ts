@@ -49,7 +49,7 @@ export const GET = async (req: Request, { params }: { params: Promise<{ filename
   // 存在しないキーはストレージを叩かずに返す
   const attachment = await prisma.attachment.findUnique({
     where: { key: filename },
-    select: { mimeType: true, boardId: true, wikiSpaceId: true, originalName: true },
+    select: { mimeType: true, boardId: true, wikiSpaceId: true, detachedAt: true, originalName: true },
   })
   if (!attachment) {
     return new Response(null, { status: 404 })
@@ -61,6 +61,7 @@ export const GET = async (req: Request, { params }: { params: Promise<{ filename
       key: filename,
       boardId: attachment.boardId,
       wikiSpaceId: attachment.wikiSpaceId,
+      detachedAt: attachment.detachedAt,
     }))
   ) {
     return new Response(null, { status: 404 })

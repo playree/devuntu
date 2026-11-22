@@ -359,7 +359,7 @@ export const WikiRevisionRestoreButton: FC<{ revisions: WikiPageRevisions }> = (
   )
 }
 
-/** 過去の版の削除(編集者以上)。終わったら最新の版の表示に戻す */
+/** 過去の版の削除(`canDeleteWikiRevision`)。終わったら最新の版の表示に戻す */
 export const WikiRevisionDeleteButton: FC<{ revisions: WikiPageRevisions }> = ({
   revisions: { past, select, reload },
 }) => {

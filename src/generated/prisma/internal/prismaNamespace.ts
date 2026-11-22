@@ -6394,6 +6394,7 @@ export const AttachmentScalarFieldEnum = {
   originalName: 'originalName',
   boardId: 'boardId',
   wikiSpaceId: 'wikiSpaceId',
+  detachedAt: 'detachedAt',
   createdById: 'createdById',
   createdAt: 'createdAt'
 } as const

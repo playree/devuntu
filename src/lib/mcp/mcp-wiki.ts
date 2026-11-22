@@ -49,6 +49,7 @@ import {
   MAX_WIKI_SPACE_KEY,
   MAX_WIKI_TITLE,
   parseWikiPageRef,
+  WIKI_PAGE_HAS_CHILDREN,
   wikiPagePath,
   wikiPageRef,
   type WikiWriter,
@@ -377,17 +378,43 @@ export const saveWikiPageForMcp = async (auth: ResourceAuth, input: McpSaveWikiP
     : createWikiPageForMcp(auth, input, ticketId)
 }
 
-/** 同じ入力で繰り返しても結果が変わらないよう、無いページは deleted: 0 で返す */
+/** エージェントのトークンからの配下ごとの削除。MCP だけの制限なので画面のエラー文言(action-error)には載せない */
+export const WIKI_AGENT_RECURSIVE_DELETE_DENIED = 'WIKI_AGENT_RECURSIVE_DELETE_DENIED'
+
+/**
+ * 同じ入力で繰り返しても結果が変わらないよう、無いページは deleted: 0 で返す。
+ *
+ * エージェントには配下ごとの削除をさせない。プロンプトインジェクションを受けうるうえ、確認する相手がいないので
+ * description の「消す前に利用者に確かめる」が効かず、配下ごと消したページは1ページずつしか戻せないため
+ * (ボードのナレッジをエージェントに変えさせないのと同じ考え)
+ */
 export const deleteWikiPageForMcp = async (
   auth: ResourceAuth,
   input: { ref: string; recursive?: boolean; ticketId?: string },
 ) => {
+  if (auth.kind === 'agent' && input.recursive) {
+    throw new ClientError(
+      WIKI_AGENT_RECURSIVE_DELETE_DENIED,
+      'Agents cannot delete a page together with its descendants. Propose the deletion to the user in your report',
+    )
+  }
   const { page } = await resolveWikiPageRef(auth, input.ref, 'write')
   if (!page) {
     return { deleted: 0 }
   }
   const ticketId = input.ticketId ? await resolveTicketId(auth, input.ticketId) : null
-  return deleteWikiPage(auth.user, WRITER, page.id, { recursive: input.recursive, ticketId })
+  try {
+    return await deleteWikiPage(auth.user, WRITER, page.id, { recursive: input.recursive, ticketId })
+  } catch (error) {
+    // 共通の文言は recursive=true を勧めるので、使えないエージェントには別の道を示す
+    if (auth.kind === 'agent' && error instanceof ClientError && error.errorType === WIKI_PAGE_HAS_CHILDREN) {
+      throw new ClientError(
+        WIKI_PAGE_HAS_CHILDREN,
+        'The page has descendant pages, and agents cannot delete them together. Propose the deletion to the user in your report',
+      )
+    }
+    throw error
+  }
 }
 
 export const zWikiPageRef = z.string().trim().min(1).max(30)
@@ -399,6 +426,12 @@ const zWikiTicketId = z
   .min(1)
   .optional()
   .describe('Ticket you are working on (display ID allowed). Recorded in the page history')
+
+const deleteDescendantsNote = (auth: ResourceAuth) =>
+  auth.kind === 'agent'
+    ? 'Agent connections cannot use recursive=true: propose deleting pages with descendants in your report. '
+    : 'A page with child pages is deleted only with recursive=true, together with all its descendants; ' +
+      'confirm with the user before deleting descendants. '
 
 /**
  * 設計書を書くスキルの案内。スキルを入れるのは利用者のマシンへの変更なので、人の経路でだけ入れ方のツールを勧める
@@ -564,8 +597,9 @@ export const registerWikiTools = (server: McpServer, auth: ResourceAuth) => {
       title: 'Delete wiki page',
       annotations: TOOL_ANNOTATIONS.destructiveIdempotent,
       description:
-        'Deletes a Wiki page. A page with child pages is deleted only with recursive=true, together with all its descendants; ' +
-        'confirm with the user before deleting descendants. Users can restore deleted pages from the deleted pages list of the space for a limited period',
+        'Deletes a Wiki page. ' +
+        deleteDescendantsNote(auth) +
+        'Users can restore deleted pages from the deleted pages list of the space for a limited period',
       inputSchema: z.strictObject({
         ref: zWikiPageRef.describe('Page ref KEY/number'),
         recursive: z.boolean().optional().describe('Also delete all descendant pages'),

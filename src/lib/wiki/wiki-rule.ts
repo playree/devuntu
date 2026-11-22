@@ -111,6 +111,13 @@ export const evaluateWikiAccess = (input: {
   canManage: input.role === 'owner' || input.isAdmin,
 })
 
+/**
+ * 過去の版を消せるか。版はページを戻す唯一の手がかりなので、編集者ではなく owner と管理者に限る。
+ * 本文を読めない管理者には消させず、アーカイブ済みは他の書き込みと同じく閉じる
+ */
+export const canDeleteWikiRevision = (access: WikiPermission & { archived: boolean }): boolean =>
+  access.canView && access.canManage && !access.archived
+
 /** 書き込みの経路 */
 export type WikiWriter = { via: WikiVia }
 

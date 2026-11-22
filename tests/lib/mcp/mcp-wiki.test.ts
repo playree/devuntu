@@ -11,6 +11,7 @@ import {
   registerWikiTools,
   saveWikiPageForMcp,
   searchWikiForMcp,
+  WIKI_AGENT_RECURSIVE_DELETE_DENIED,
 } from '@/lib/mcp/mcp-wiki'
 import {
   createWikiPage,
@@ -356,6 +357,28 @@ describe('deleteWikiPageForMcp', () => {
     expect(deleteWikiPage).not.toHaveBeenCalled()
   })
 
+  it('エージェントの recursive はページを引く前に拒否し、何も消さない', async () => {
+    const error = await errorOf(deleteWikiPageForMcp(agentAuth(), { ref: 'DOCS/12', recursive: true }))
+
+    expect(error.errorType).toBe(WIKI_AGENT_RECURSIVE_DELETE_DENIED)
+    expect(getWikiSpaceByKey).not.toHaveBeenCalled()
+    expect(deleteWikiPage).not.toHaveBeenCalled()
+  })
+
+  it('エージェントでも recursive なしなら1ページを消せる', async () => {
+    expect(await deleteWikiPageForMcp(agentAuth(), { ref: 'DOCS/12', recursive: false })).toEqual({ deleted: 1 })
+    expect(vi.mocked(deleteWikiPage).mock.calls[0][3]).toEqual({ recursive: false, ticketId: null })
+  })
+
+  it('エージェントが子を持つページを消そうとしたら、recursive ではなく報告での提案を案内する', async () => {
+    vi.mocked(deleteWikiPage).mockRejectedValue(new ClientError('WIKI_PAGE_HAS_CHILDREN', 'delete with recursive=true'))
+
+    const error = await errorOf(deleteWikiPageForMcp(agentAuth(), { ref: 'DOCS/12' }))
+    expect(error.errorType).toBe('WIKI_PAGE_HAS_CHILDREN')
+    expect(error.message).not.toContain('recursive=true')
+    expect(error.message).toContain('in your report')
+  })
+
   it('子を持つページを recursive なしで消そうとしたエラーはそのまま返す', async () => {
     vi.mocked(deleteWikiPage).mockRejectedValue(new ClientError('WIKI_PAGE_HAS_CHILDREN', 'has children'))
 
@@ -571,6 +594,20 @@ describe('registerWikiTools', () => {
     expect(props('get_wiki_tree').toSorted()).toEqual(['depth', 'root', 'space'])
     expect(props('search_wiki').toSorted()).toEqual(['keyword', 'limit', 'space', 'tags'])
     expect(props('list_wiki_spaces')).toEqual(['includeArchived'])
+  })
+
+  it('delete_wiki_page の配下の削除の案内は、エージェントには recursive を使えないことを伝える', async () => {
+    const descriptionOf = async (auth: typeof human) => {
+      const server = new McpServer({ name: 'devuntu', version: '1.0.0' })
+      registerWikiTools(server, auth)
+      const { tools } = await (await connectMcpServer(server)).listTools()
+      return tools.find((tool) => tool.name === 'delete_wiki_page')?.description ?? ''
+    }
+
+    expect(await descriptionOf(human)).toContain('confirm with the user before deleting descendants')
+    const agent = await descriptionOf(agentAuth())
+    expect(agent).toContain('cannot use recursive=true')
+    expect(agent).not.toContain('confirm with the user')
   })
 
   it('未知の項目・範囲外の position は入力エラーにする', async () => {

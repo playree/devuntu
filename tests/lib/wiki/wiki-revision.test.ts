@@ -439,14 +439,19 @@ describe('deleteWikiPageRevision', () => {
       .mocked(prisma.wikiPageRevision.findUnique)
       .mockResolvedValueOnce({ spaceId: 's1' } as never)
       .mockResolvedValueOnce({ pageId: 'p1' } as never)
+  const owner = { key: 'DOCS', canView: true, canManage: true, archived: false }
 
-  it('書き込み権限を確かめ、最新でない版を消す', async () => {
+  beforeEach(() => {
+    vi.mocked(assertWikiSpaceAccess).mockResolvedValue(owner as never)
+  })
+
+  it('管理権限を確かめ、最新でない版を消す', async () => {
     found()
     vi.mocked(prisma.wikiPageRevision.findFirst).mockResolvedValue({ id: 'r-latest' } as never)
 
     await deleteWikiPageRevision({ id: 'u1' }, 'r2')
     expect(prisma.$queryRaw).toHaveBeenCalled()
-    expect(assertWikiSpaceAccess).toHaveBeenCalledWith({ id: 'u1' }, 's1', 'write', prisma)
+    expect(assertWikiSpaceAccess).toHaveBeenCalledWith({ id: 'u1' }, 's1', 'manage', prisma)
     expect(vi.mocked(prisma.wikiPageRevision.findFirst).mock.calls[0][0]).toMatchObject({
       where: { pageId: 'p1' },
       orderBy: { number: 'desc' },
@@ -462,7 +467,18 @@ describe('deleteWikiPageRevision', () => {
     expect(prisma.wikiPageRevision.deleteMany).not.toHaveBeenCalled()
   })
 
-  it('書き込み権限が無ければ消さない', async () => {
+  it.each([
+    ['アーカイブ済み', { archived: true }],
+    ['本文を読めない管理者', { canView: false }],
+  ])('%s は消せない', async (_, access) => {
+    vi.mocked(prisma.wikiPageRevision.findUnique).mockResolvedValueOnce({ spaceId: 's1' } as never)
+    vi.mocked(assertWikiSpaceAccess).mockResolvedValueOnce({ ...owner, ...access } as never)
+
+    await expect(deleteWikiPageRevision({ id: 'u1' }, 'r2')).rejects.toThrow()
+    expect(prisma.wikiPageRevision.deleteMany).not.toHaveBeenCalled()
+  })
+
+  it('管理権限が無ければ(編集者でも)消さない', async () => {
     vi.mocked(prisma.wikiPageRevision.findUnique).mockResolvedValueOnce({ spaceId: 's1' } as never)
     vi.mocked(assertWikiSpaceAccess).mockRejectedValueOnce(new Error('forbidden'))
 

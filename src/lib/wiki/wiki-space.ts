@@ -150,10 +150,8 @@ export const setWikiSpaceArchived = async (actor: Actor, spaceId: string, archiv
 /**
  * スペースの削除(owner または管理者)。ページ・版・タグ・割り当ては Cascade で消え、キーは履歴に残る。
  *
- * 添付はボード削除(`deleteBoard`)と同じく、レコードを Cascade に任せず紐付けだけを外して残し、
- * コミット後に実体ごと消す。実体の削除に失敗した分は、参照の外れた添付として掃除が回収する。
- * 回収までの間は全ログインユーザーへ配信してよい扱いになるが、キーは推測できず、URL を知っているのは
- * スペースを閲覧できた人と、その URL を貼った本文の閲覧者だけなので、ボード削除と同じく許容する。
+ * 添付はボード削除(`deleteBoard`)と同じく、レコードを Cascade に任せず紐付けを外して削除待ちにし、
+ * コミット後に実体ごと消す。実体の削除に失敗した分は、回収されるまで配信せず、掃除が回収する。
  * スペースの行ロックを取ってから消すので、ページの書き込み(同じロックを取る)と入れ違わない
  */
 export const deleteWikiSpace = async (actor: Actor, spaceId: string) => {

@@ -3,6 +3,8 @@
  *
  * 書き込みはページの書き込みと同じトランザクションで呼ぶ。同じ人が続けて保存した分は `WIKI_REVISION_MERGE_MINUTES` 以内なら
  * 最新の版へまとめ、1ページあたり `WIKI_REVISION_MAX_PER_PAGE` を超えた古い版を消す。
+ * 編集者は上限まで保存を重ねれば古い版を押し出せるが、その保存は本人の名前で版に残り追跡できるので許容する
+ * (手での版の削除は owner と管理者に限る)。
  * 保持期間(`WIKI_REVISION_RETENTION_DAYS`)を過ぎた版は自動メンテナンス(`sweepWikiPageRevisions`)で消す。
  * ただし存在するページの最新の版と直近の `WIKI_REVISION_KEEP_RECENT` 版は残す。
  * 復元は `wiki-page.ts` の `restoreWikiPageRevision`。
@@ -21,6 +23,7 @@ import { logger } from '../logger'
 import { prisma, type Db } from '../prisma'
 import { assertWikiSpaceAccess } from './wiki-access'
 import {
+  canDeleteWikiRevision,
   resolveWikiRevisionTags,
   revisionTagColumns,
   revisionTagsOf,
@@ -273,7 +276,8 @@ export const getWikiPageRevisionSnapshot = async (
 }
 
 /**
- * 版を消す(編集者以上)。最新の版はいまの内容そのもの(削除済みのページなら復元の元)なので消せない。
+ * 版を消す(`canDeleteWikiRevision`: 閲覧できる owner と管理者、未アーカイブ)。
+ * 最新の版はいまの内容そのもの(削除済みのページなら復元の元)なので消せない。
  * 掃除や上限で先に消えていれば何もしない
  */
 export const deleteWikiPageRevision = async (actor: Actor, revisionId: string): Promise<void> => {
@@ -284,7 +288,10 @@ export const deleteWikiPageRevision = async (actor: Actor, revisionId: string): 
   await prisma.$transaction(async (tx) => {
     // 本文の更新と同じロック。アーカイブとは直列にする
     await tx.$queryRaw`SELECT "id" FROM "wiki_space" WHERE "id" = ${source.spaceId} FOR SHARE`
-    await assertWikiSpaceAccess(actor, source.spaceId, 'write', tx)
+    const access = await assertWikiSpaceAccess(actor, source.spaceId, 'manage', tx)
+    if (!canDeleteWikiRevision(access)) {
+      throw errInvalidOperation()
+    }
     const revision = await tx.wikiPageRevision.findUnique({ where: { id: revisionId }, select: { pageId: true } })
     if (!revision) {
       return

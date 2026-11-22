@@ -1,5 +1,5 @@
 /**
- * 添付の配信可否(attachment-access.ts)のうち、Wiki スペースの添付
+ * 添付の配信可否(attachment-access.ts)のうち、Wiki スペースの添付と削除待ちの添付
  *
  * Wiki の添付はスペースの閲覧権限だけで決まり、ボードの判定(承認者の扱いを含む)には落ちないことを確かめる。
  * ボードの添付は `tests/lib/board/board-access.test.ts` / `board-approver-access.test.ts` で見ている。
@@ -23,7 +23,7 @@ const KEY = '019eef64-6cc1-78f1-8f50-1ef86986289a.webp'
 const SPACE_ID = 's1'
 const user = { id: 'u1', role: 'user' }
 const admin = { id: 'u1', role: 'admin' }
-const attachment = { key: KEY, boardId: null, wikiSpaceId: SPACE_ID }
+const attachment = { key: KEY, boardId: null, wikiSpaceId: SPACE_ID, detachedAt: null }
 
 const mockSpace = (fixture: { visibility?: 'restricted' | 'everyone'; direct?: WikiRole; archived?: boolean } | null) =>
   vi.mocked(prisma.wikiSpace.findUnique).mockResolvedValue(
@@ -73,5 +73,20 @@ describe('canViewAttachment(Wiki スペースの添付)', () => {
   it('スペースが無ければ読めない(全ログインユーザー向けとして扱わない)', async () => {
     mockSpace(null)
     expect(await canViewAttachment(user, attachment)).toBe(false)
+  })
+})
+
+describe('canViewAttachment(削除待ちの添付)', () => {
+  const detachedAt = new Date('2026-11-22T10:00:00.000Z')
+
+  it('ボード / スペースの削除で外した添付は、全ログインユーザー向けとして扱わず誰にも配信しない', async () => {
+    expect(await canViewAttachment(user, { key: KEY, boardId: null, wikiSpaceId: null, detachedAt })).toBe(false)
+    expect(await canViewAttachment(admin, { key: KEY, boardId: null, wikiSpaceId: null, detachedAt })).toBe(false)
+    expect(prisma.wikiSpace.findUnique).not.toHaveBeenCalled()
+    expect(prisma.ticket.count).not.toHaveBeenCalled()
+  })
+
+  it('印の無いどこにも属さない添付(お知らせのアイコンなど)は配信する', async () => {
+    expect(await canViewAttachment(user, { key: KEY, boardId: null, wikiSpaceId: null, detachedAt: null })).toBe(true)
   })
 })
