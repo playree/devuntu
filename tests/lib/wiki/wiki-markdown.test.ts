@@ -13,7 +13,7 @@ import {
   listMarkdownHeadings,
   startsWithFrontMatter,
 } from '@/lib/wiki/wiki-markdown'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { parse } from 'yaml'
 
 const errorTypeOf = (fn: () => unknown) => {
@@ -152,13 +152,17 @@ describe('境界のケース', () => {
     expect(() => applyTextEdits('aaa', [{ oldText: 'aa', newText: 'b' }])).toThrow('matches more than one place')
   })
 
-  it('長い本文に長い oldText が重なって何度も現れても、2 件見つかった時点でやめる', () => {
-    const content = 'a'.repeat(200_000)
-    const started = Date.now()
-    expect(() => applyTextEdits(content, [{ oldText: 'a'.repeat(100_000), newText: 'b' }])).toThrow(
-      'matches more than one place',
-    )
-    expect(Date.now() - started).toBeLessThan(500)
+  it('重なって何度も現れる oldText は、2 件見つかった時点で探すのをやめる', () => {
+    const oldText = 'a'.repeat(10)
+    const indexOf = vi.spyOn(String.prototype, 'indexOf')
+    try {
+      expect(() => applyTextEdits('a'.repeat(1_000), [{ oldText, newText: 'b' }])).toThrow(
+        'matches more than one place',
+      )
+      expect(indexOf.mock.calls.filter(([search]) => search === oldText)).toHaveLength(2)
+    } finally {
+      indexOf.mockRestore()
+    }
   })
 })
 

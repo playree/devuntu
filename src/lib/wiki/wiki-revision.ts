@@ -10,8 +10,10 @@
 
 import type { Prisma } from '@/generated/prisma/client'
 import type { WikiPageRevisionAction, WikiVia } from '@/generated/prisma/enums'
-import { getTicketAccess, type Actor } from '../board/board-access'
+import { approvableAgentWhere } from '../agent/agent-approver'
+import type { Actor } from '../board/board-access'
 import { ticketDisplayId } from '../board/ticket-id'
+import { boardVisibleWhere } from '../board/ticket-permission'
 import { DAY_MS, msBefore } from '../day'
 import { envu } from '../env-util'
 import { errInvalidOperation } from '../error'
@@ -132,13 +134,22 @@ export type WikiPageRevisionSummary = Omit<RevisionSummaryRow, 'actor' | 'ticket
 }
 
 /**
- * 版のチケットのうち閲覧者が見られるもの。紐づけたときは書き手が見られるかしか確かめていないので、表示ID も返すたびに確かめる。
- * 判定は版の数ではなくチケットの数だけ行う
+ * 版のチケットのうち閲覧者が見られるもの。紐づけたときは書き手が見られるかしか確かめていないので、返すたびに閲覧者で確かめる。
+ * 条件は `getTicketAccess` の canView と同じ(ボードのメンバーか、担当エージェントの承認者)
  */
 const viewableTicketIds = async (actor: Actor, rows: readonly Pick<RevisionSummaryRow, 'ticket'>[]) => {
   const ids = [...new Set(rows.flatMap(({ ticket }) => (ticket ? [ticket.id] : [])))]
-  const viewable = await Promise.all(ids.map(async (id) => (await getTicketAccess(actor, id))?.canView ?? false))
-  return new Set(ids.filter((_, i) => viewable[i]))
+  if (ids.length === 0) {
+    return new Set<string>()
+  }
+  const viewable = await prisma.ticket.findMany({
+    where: {
+      id: { in: ids },
+      OR: [{ board: boardVisibleWhere(actor.id) }, { assignee: approvableAgentWhere(actor.id) }],
+    },
+    select: { id: true },
+  })
+  return new Set(viewable.map(({ id }) => id))
 }
 
 const toRevisionSummary = (

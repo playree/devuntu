@@ -95,8 +95,11 @@ export type TextEdit = { oldText: string; newText: string }
  */
 const findOccurrences = (text: string, search: string, limit: number): number[] => {
   const found: number[] = []
-  for (let at = text.indexOf(search); at >= 0 && found.length < limit; at = text.indexOf(search, at + 1)) {
+  for (let at = text.indexOf(search); at >= 0; at = text.indexOf(search, at + 1)) {
     found.push(at)
+    if (found.length >= limit) {
+      break
+    }
   }
   return found
 }
