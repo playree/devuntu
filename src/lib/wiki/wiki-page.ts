@@ -18,7 +18,7 @@ import { ClientError, errInvalidOperation, errValidation } from '../error'
 import { logger } from '../logger'
 import { prisma, type Db } from '../prisma'
 import { assertWikiSpaceAccess, type WikiSpaceAccess } from './wiki-access'
-import { writeWikiPageRevision } from './wiki-revision'
+import { WIKI_REVISION_ORDER, writeWikiPageRevision } from './wiki-revision'
 import {
   MAX_WIKI_CONTENT,
   MAX_WIKI_DEPTH,
@@ -788,7 +788,7 @@ export const getWikiPage = async (actor: Actor, key: string, number: number) => 
         const latest = await tx.wikiPageRevision.findFirst({
           where: { pageId: row.id },
           select: { number: true },
-          orderBy: { number: 'desc' },
+          orderBy: WIKI_REVISION_ORDER,
         })
         return { ...row, revisionNumber: latest?.number ?? 0 }
       },

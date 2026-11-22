@@ -48,6 +48,12 @@ export type WriteWikiPageRevision = {
   message?: string | null
 }
 
+/**
+ * ページ内の版の新しい順。版の番号は採番で 1 ずつ増えるので、作成日時(書き込んだサーバーの時計)ではなく番号で決める。
+ * 採番・一覧・ページ詳細の最新の版(`getWikiPage` の `revisionNumber`)を同じ版に揃える
+ */
+export const WIKI_REVISION_ORDER = { number: 'desc' } as const
+
 /** 版を残す。まとめたときは 'merged'、新しく作ったときは 'created' */
 export const writeWikiPageRevision = async (
   tx: Db,
@@ -70,7 +76,7 @@ export const writeWikiPageRevision = async (
       message: true,
       createdAt: true,
     },
-    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    orderBy: WIKI_REVISION_ORDER,
   })
 
   if (
@@ -104,7 +110,7 @@ export const writeWikiPageRevision = async (
   const excess = await tx.wikiPageRevision.findMany({
     where: { pageId: revision.pageId },
     select: { id: true },
-    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    orderBy: WIKI_REVISION_ORDER,
     skip: envu.server.WIKI_REVISION_MAX_PER_PAGE,
   })
   if (excess.length > 0) {
@@ -181,8 +187,6 @@ const toRevisionSummary = (
   beforeRetention: row.updatedAt < cutoff,
 })
 
-const REVISION_ORDER = [{ createdAt: 'desc' }, { id: 'desc' }] as const
-
 /** ページのスペース。削除済みのページは版から引く */
 const spaceIdOfPage = async (pageId: string): Promise<string> => {
   const owner =
@@ -218,7 +222,7 @@ export const listWikiPageRevisions = async (
       prisma.wikiPageRevision.findMany({
         where: { pageId },
         select: REVISION_SUMMARY_SELECT,
-        orderBy: [...REVISION_ORDER],
+        orderBy: WIKI_REVISION_ORDER,
       }),
     ],
     { isolationLevel: 'RepeatableRead' },
@@ -288,7 +292,7 @@ export const deleteWikiPageRevision = async (actor: Actor, revisionId: string): 
     const latest = await tx.wikiPageRevision.findFirst({
       where: { pageId: revision.pageId },
       select: { id: true },
-      orderBy: [...REVISION_ORDER],
+      orderBy: WIKI_REVISION_ORDER,
     })
     if (latest?.id === revisionId) {
       throw errInvalidOperation()
@@ -313,7 +317,8 @@ export const listDeletedWikiPages = async (
   const rows = await prisma.wikiPageRevision.findMany({
     where: { spaceId, action: 'deleted' },
     select: REVISION_SUMMARY_SELECT,
-    orderBy: [...REVISION_ORDER],
+    // ページをまたいで並べるので、番号ではなく削除した日時の新しい順にする
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     distinct: ['pageId'],
   })
   if (rows.length === 0) {

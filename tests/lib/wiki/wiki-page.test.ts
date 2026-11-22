@@ -31,7 +31,10 @@ vi.mock('@/lib/prisma', async () =>
   }),
 )
 vi.mock('@/lib/wiki/wiki-access', () => ({ assertWikiSpaceAccess: vi.fn() }))
-vi.mock('@/lib/wiki/wiki-revision', () => ({ writeWikiPageRevision: vi.fn() }))
+vi.mock('@/lib/wiki/wiki-revision', async (importOriginal) => ({
+  WIKI_REVISION_ORDER: (await importOriginal<typeof import('@/lib/wiki/wiki-revision')>()).WIKI_REVISION_ORDER,
+  writeWikiPageRevision: vi.fn(),
+}))
 vi.mock('@/lib/wiki/wiki-space', () => ({ getWikiSpaceByKey: vi.fn() }))
 vi.mock('@/lib/board/board-access', () => ({ getTicketAccess: vi.fn() }))
 vi.mock('@/lib/wiki/wiki-tag', () => ({ assertWikiTagIdsInSpace: vi.fn(), syncWikiPageTags: vi.fn() }))
