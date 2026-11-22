@@ -109,7 +109,9 @@ pnpm exec prisma migrate status   # Database schema is up to date!
 Wiki のマイグレーションは、リリース前に `20261117120207_wiki` の1本へまとめた(サンプルスペースの投入もここで行う)。
 まとめた後にも、スペースのキー履歴(`wiki_space_key_history`)と版のタグ ID(`wiki_page_revision.tagIds`)をこの1本へ足している。
 まとめる前の `20261108062633_wiki` 〜 `20261115003457_wiki_space_type`(まとめた直後の名前 `20261108062633_wiki` を含む)や、キー履歴・版のタグ ID を足す前の `20261117120207_wiki` を適用済みの開発DBは、checksum や履歴が一致せず `prisma migrate` が失敗する。
-データが要らなければ `pnpm exec prisma migrate reset` で作り直す。データを残す場合は、キー履歴の表を作って既存スペースのキーを登録し、版にタグ ID の列を足して今のタグ名で埋め(引き当たらない削除済みのタグ名は落とす)、履歴だけを貼り替える(サンプルスペースは入らない)。
+データが要らなければ `pnpm exec prisma migrate reset` で作り直す。データを残す場合は、キー履歴の表を作って既存スペースのキーを登録し、版にタグ ID の列を足して今のタグ名で埋め、履歴だけを貼り替える(サンプルスペースは入らない)。
+埋め戻しでは、版の最後の保存(`updatedAt`)より後に作ったタグは引き当てない(削除後に同じ名前で作り直したタグを古い版に結び付けない)。引き当たらないタグ名(削除済み、または版の後で改名したもの)は落とす。
+タグの改名は履歴が無いため、版の後で別のタグがその名前に改名されていた場合だけは区別できず、そのタグに引き当たる。
 どちらの状態の DB でも同じ手順で揃う(edge など、開発中の版を適用済みの環境も同じ)。
 
 ```sh
@@ -121,7 +123,7 @@ ALTER TABLE "wiki_page_revision" ADD COLUMN IF NOT EXISTS "tagIds" TEXT[] DEFAUL
 UPDATE "wiki_page_revision" AS r SET ("tagIds", "tagNames") = (
   SELECT COALESCE(array_agg(t."id" ORDER BY n.ord), ARRAY[]::TEXT[]), COALESCE(array_agg(t."name" ORDER BY n.ord), ARRAY[]::TEXT[])
   FROM unnest(r."tagNames") WITH ORDINALITY AS n(name, ord)
-  JOIN "wiki_tag" AS t ON t."spaceId" = r."spaceId" AND t."name" = n.name
+  JOIN "wiki_tag" AS t ON t."spaceId" = r."spaceId" AND t."name" = n.name AND t."createdAt" <= r."updatedAt"
 ) WHERE cardinality(r."tagIds") = 0 AND cardinality(r."tagNames") > 0;
 SQL
 pnpm exec prisma migrate resolve --applied 20261117120207_wiki
