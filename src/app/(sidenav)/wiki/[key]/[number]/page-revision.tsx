@@ -39,6 +39,7 @@ type Revision = NonNullable<GetWikiPageRevisionsReturnType>['revisions'][number]
 /**
  * ページの版の一覧と、選んでいる版。最新の版はいまの内容と同じなので、過去の版(`past`)を選んだときだけ本文を引く。
  * 一覧は同じ時点のページの更新日時を持つので、表示中のページと照合し、ずれていれば古いほう(一覧かページ)を取り直す。
+ * 移動は更新日時を進めずに版だけを足すので、更新日時が同じなら最新の版の番号で比べる。
  * そろうまでは一覧を出さない(版の表示と内容が別の版を指さないように)
  */
 export const useWikiPageRevisions = (page: Page, reloadPage: () => Promise<void>) => {
@@ -46,7 +47,8 @@ export const useWikiPageRevisions = (page: Page, reloadPage: () => Promise<void>
   const { data, refresh } = useActionData(() => getWikiPageRevisions({ id: page.id }), { key: page.id })
   const updatedAt = page.updatedAt.getTime()
   const listPageAt = data ? (data.pageUpdatedAt?.getTime() ?? null) : undefined
-  const isSynced = listPageAt === updatedAt
+  const listRevisionNumber = data?.revisions[0]?.number ?? 0
+  const isSynced = listPageAt === updatedAt && listRevisionNumber === page.revisionNumber
   /**
    * 取り直しは、ページか一覧を新しく受け取るたびに1回だけ行う。取得に失敗すると前の値のまま残るので、失敗しても繰り返さない。
    * 画面の再読み込みボタンでページを取り直せば(更新日時が同じでも)もう一度試す
@@ -54,15 +56,19 @@ export const useWikiPageRevisions = (page: Page, reloadPage: () => Promise<void>
   const tried = useRef<{ page: Page; list: typeof data } | null>(null)
   const syncLatest = useEffectEvent((older: 'list' | 'page') => (older === 'list' ? refresh() : reloadPage()))
   useEffect(() => {
-    if (listPageAt === undefined || listPageAt === updatedAt) {
+    if (listPageAt === undefined || isSynced) {
       return
     }
     if (tried.current?.page !== page || tried.current.list !== data) {
       tried.current = { page, list: data }
-      // 一覧のほうが新しい(他の人の保存・ページの削除)ならページを、ページのほうが新しい(保存・ロールバック)なら一覧を取り直す
-      void syncLatest(listPageAt === null || listPageAt > updatedAt ? 'page' : 'list')
+      // 一覧のほうが新しい(他の人の保存・移動・ページの削除)ならページを、ページのほうが新しい(保存・ロールバック・移動)なら一覧を取り直す
+      const isListNewer =
+        listPageAt === null ||
+        listPageAt > updatedAt ||
+        (listPageAt === updatedAt && listRevisionNumber > page.revisionNumber)
+      void syncLatest(isListNewer ? 'page' : 'list')
     }
-  }, [listPageAt, updatedAt, page, data])
+  }, [listPageAt, listRevisionNumber, updatedAt, isSynced, page, data])
   const reload = async () => {
     await Promise.all([refresh(), reloadPage()])
   }

@@ -27,6 +27,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('@/lib/prisma', async () =>
   (await import('../../helpers/prisma')).mockPrisma({
     wikiPage: ['findUnique', 'findUniqueOrThrow', 'findMany', 'create', 'update', 'delete'],
+    wikiPageRevision: ['findFirst'],
   }),
 )
 vi.mock('@/lib/wiki/wiki-access', () => ({ assertWikiSpaceAccess: vi.fn() }))
@@ -618,5 +619,21 @@ describe('getWikiPage', () => {
 
     expect(detail.ancestors).toEqual([{ number: 1, title: 'T-a' }])
     expect(detail.children).toEqual([{ number: 5, title: 'T-c' }])
+  })
+
+  it('ページと同じトランザクションで読んだ最新の版の番号を添える(移動は更新日時を進めずに版だけを足すため)', async () => {
+    vi.mocked(getWikiSpaceByKey).mockResolvedValue({ space: { id: SPACE_ID }, access: {} } as never)
+    vi.mocked(prisma.wikiPage.findUnique).mockResolvedValue({ id: 'b' } as never)
+    vi.mocked(prisma.wikiPageRevision.findFirst).mockResolvedValue({ number: 7 } as never)
+
+    const detail = await getWikiPage(actor, 'DOCS', 3)
+
+    expect(detail.page.revisionNumber).toBe(7)
+    expect(vi.mocked(prisma.wikiPageRevision.findFirst).mock.calls[0][0]).toEqual({
+      where: { pageId: 'b' },
+      select: { number: true },
+      orderBy: { number: 'desc' },
+    })
+    expect(vi.mocked(prisma.$transaction).mock.calls[0][1]).toEqual({ isolationLevel: 'RepeatableRead' })
   })
 })

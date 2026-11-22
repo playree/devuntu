@@ -49,7 +49,7 @@ import {
 } from './wiki-tree'
 
 // MCP からも返すので、AI が次の手を選べるようメッセージに理由と対処を書く
-export const errWikiPageConflict = () =>
+const errWikiPageConflict = () =>
   new ClientError(WIKI_PAGE_CONFLICT, 'The page was updated by someone else after you read it. Read it again and retry')
 const errHasChildren = (count: number) =>
   new ClientError(
@@ -768,15 +768,32 @@ const PAGE_DETAIL_SELECT = {
 
 /**
  * `KEY/番号` でページを引く。パンくず(先祖)と子ページの一覧を添える。
- * 画面ではサイドメニューのツリーにも同じ木を使うので、先祖を 1 段ずつ引かず本文抜きの木をまとめて読む
+ * 画面ではサイドメニューのツリーにも同じ木を使うので、先祖を 1 段ずつ引かず本文抜きの木をまとめて読む。
+ * `revisionNumber` はページと同じ時点の最新の版の番号。移動は更新日時を進めずに版だけを足すので、
+ * 画面で版の一覧と照合するときは更新日時とあわせて使う
  */
 export const getWikiPage = async (actor: Actor, key: string, number: number) => {
   const { space, access } = await getWikiSpaceByKey(actor, key)
   const [page, tree] = await Promise.all([
-    prisma.wikiPage.findUnique({
-      where: { spaceId_number: { spaceId: space.id, number } },
-      select: PAGE_DETAIL_SELECT,
-    }),
+    // ページと版は同じトランザクションで書くので、同じスナップショットで読めば最新の版とページがそろう
+    prisma.$transaction(
+      async (tx) => {
+        const row = await tx.wikiPage.findUnique({
+          where: { spaceId_number: { spaceId: space.id, number } },
+          select: PAGE_DETAIL_SELECT,
+        })
+        if (!row) {
+          return null
+        }
+        const latest = await tx.wikiPageRevision.findFirst({
+          where: { pageId: row.id },
+          select: { number: true },
+          orderBy: { number: 'desc' },
+        })
+        return { ...row, revisionNumber: latest?.number ?? 0 }
+      },
+      { isolationLevel: 'RepeatableRead' },
+    ),
     loadTree(prisma, space.id),
   ])
   if (!page) {

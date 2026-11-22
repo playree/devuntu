@@ -197,7 +197,10 @@ const spaceIdOfPage = async (pageId: string): Promise<string> => {
 export type WikiPageRevisionList = {
   /** 新しい順、本文なし */
   revisions: WikiPageRevisionSummary[]
-  /** 一覧と同じ時点のページの更新日時。画面側で、ページの表示と一覧が同じ版を指しているかの照合に使う。削除済みなら null */
+  /**
+   * 一覧と同じ時点のページの更新日時。画面側で、ページの表示と一覧が同じ版を指しているかの照合に使う。削除済みなら null。
+   * 移動は更新日時を進めないので、照合では最新の版の番号(ページ詳細の `revisionNumber`)もあわせて比べる
+   */
   pageUpdatedAt: Date | null
 }
 
