@@ -12,7 +12,14 @@ import { ClientError } from '@/lib/error'
 import { type CreateWikiPage, scCreateWikiPage } from '@/lib/schema/schema-wiki'
 import { useConfirmAction } from '@/lib/use-confirm-action'
 import { defaultWikiPageType, MAX_WIKI_DEPTH } from '@/lib/wiki/wiki-rule'
-import { depthOf, descendantIds, indexWikiTree, isSelfOrDescendant, subtreeHeight } from '@/lib/wiki/wiki-tree'
+import {
+  depthOf,
+  descendantIds,
+  indexWikiTree,
+  isSelfOrDescendant,
+  placeInSiblings,
+  subtreeHeight,
+} from '@/lib/wiki/wiki-tree'
 import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
@@ -109,11 +116,19 @@ export const MovePageModal: FC<ModalBaseProps & { page: { id: string; title: str
 }) => {
   const { t } = useLocale()
   const { space, tree } = useWikiSpace()
-  const [parentKey, setParentKey] = useState(page.parentId ?? ROOT_KEY)
-  const [positionKey, setPositionKey] = useState(LAST_KEY)
-  const [isPending, setPending] = useState(false)
-
   const index = useMemo(() => indexWikiTree(tree), [tree])
+
+  // 今の親と兄弟の並び(自分を含む)は木から取る。ページ詳細の page は、ツリー側での移動の後に古いままになりうるため
+  const currentParentId = index.byId.has(page.id) ? (index.byId.get(page.id)?.parentId ?? null) : page.parentId
+  const currentIds = useMemo(() => index.children.get(currentParentId) ?? [], [index, currentParentId])
+  const initialPositionKey = useMemo(() => {
+    const at = currentIds.indexOf(page.id)
+    return at > 0 ? currentIds[at - 1] : FIRST_KEY
+  }, [currentIds, page.id])
+
+  const [parentKey, setParentKey] = useState(currentParentId ?? ROOT_KEY)
+  const [positionKey, setPositionKey] = useState(initialPositionKey)
+  const [isPending, setPending] = useState(false)
 
   const parentOptions = useMemo(() => {
     const height = subtreeHeight(index, page.id)
@@ -137,17 +152,23 @@ export const MovePageModal: FC<ModalBaseProps & { page: { id: string; title: str
     ...Object.fromEntries(siblings.map((item) => [item.id, t('wiki_position_after', { title: item.title })])),
   }
 
+  // 選んだ「◯◯ の後」が再読み込みで兄弟から消えていたら、先頭ではなく末尾として扱う
+  const afterIndex = siblings.findIndex((item) => item.id === positionKey)
+  const position =
+    positionKey === FIRST_KEY ? 0 : positionKey === LAST_KEY || afterIndex < 0 ? undefined : afterIndex + 1
+  // サーバーと同じく、並べた結果の id の列で比べる(末尾のページで「末尾」を選んだときなども変化なしになる)
+  const isUnchanged =
+    parentId === currentParentId &&
+    placeInSiblings(currentIds, page.id, position).every((id, i) => currentIds[i] === id)
+
   const submit = async () => {
-    const position =
-      positionKey === FIRST_KEY
-        ? 0
-        : positionKey === LAST_KEY
-          ? undefined
-          : siblings.findIndex((item) => item.id === positionKey) + 1
     setPending(true)
     try {
-      await parseAction(moveWikiPage({ id: page.id, parentId, position }))
-      notify.success(t('msg_saved'))
+      const res = await parseAction(moveWikiPage({ id: page.id, parentId, position }))
+      // 開いた後に別の操作で同じ位置へ動いていれば unchanged が返る。動かしていないので通知しない
+      if (res.result === 'moved') {
+        notify.success(t('msg_moved_target', { target: page.title }))
+      }
       reload()
       state.close()
     } catch (e) {
@@ -163,7 +184,7 @@ export const MovePageModal: FC<ModalBaseProps & { page: { id: string; title: str
     <DialogModal
       state={state}
       title={{ text: t('wiki_move_page'), icon: <FolderArrowRightIcon /> }}
-      submit={{ label: t('wiki_move'), isPending, onPress: submit }}
+      submit={{ label: t('wiki_move'), isPending, isDisabled: isUnchanged, onPress: submit }}
     >
       <GridBox isSmart>
         <p className='col-span-12 truncate text-sm font-semibold'>{page.title}</p>
@@ -173,8 +194,9 @@ export const MovePageModal: FC<ModalBaseProps & { page: { id: string; title: str
             groupOptions={parentOptions}
             value={parentKey}
             onChange={(key) => {
-              setParentKey(key ?? ROOT_KEY)
-              setPositionKey(LAST_KEY)
+              const nextKey = key ?? ROOT_KEY
+              setParentKey(nextKey)
+              setPositionKey(nextKey === (currentParentId ?? ROOT_KEY) ? initialPositionKey : LAST_KEY)
             }}
           />
         </div>

@@ -430,6 +430,7 @@ export type LocaleItemBase =
   | 'msg_gitlab_token_webhook_steps'
   | 'msg_maintenance_mode'
   | 'msg_moved_board_note'
+  | 'msg_moved_target'
   | 'msg_no_board_note_revisions'
   | 'msg_no_board_notes'
   | 'msg_no_deleted_board_notes'
