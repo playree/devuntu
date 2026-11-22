@@ -607,11 +607,15 @@ const RESTORE_SOURCE_SELECT = {
  * - ページが残っている: タイトル・本文・種類・タグだけを戻す。位置(親・並び)は変えない(位置は移動で変える)
  * - 削除済み: 同じ id・番号で作り直す。版の親が残っていて深さの上限に収まればその下の元の位置へ、
  *   そうでなければスペース直下の末尾へ戻す。配下ごと削除したページは1ページずつ戻す
+ *
+ * `deletedOnly` は削除済みのページの一覧からの復元。一覧を開いた後に別の人が戻して編集したページを、削除の版で上書きしないよう、
+ * ロックの後でページが存在すれば何もせず unchanged を返す
  */
 export const restoreWikiPageRevision = async (
   actor: Actor,
   writer: WikiWriter,
   revisionId: string,
+  opts: { deletedOnly?: boolean } = {},
 ): Promise<WikiPageWriteResult> => {
   const source = await prisma.wikiPageRevision.findUnique({ where: { id: revisionId }, select: { spaceId: true } })
   if (!source) {
@@ -649,6 +653,9 @@ export const restoreWikiPageRevision = async (
       where: { id: pageId },
       select: { ...SNAPSHOT_SELECT, updatedAt: true },
     })
+    if (existing && opts.deletedOnly) {
+      return { result: 'unchanged' as const, id: pageId, ref, number, updatedAt: existing.updatedAt }
+    }
     if (existing) {
       const currentTagIds = existing.tags.map(({ tag }) => tag.id)
       const tagsChanged = tagIds.length !== currentTagIds.length || tagIds.some((id) => !currentTagIds.includes(id))

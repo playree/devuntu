@@ -423,7 +423,7 @@ export const en: DefaultLocaleItems = {
   msg_no_board_notes: 'Nothing yet.',
   msg_no_deleted_board_notes: 'Nothing has been deleted.',
   msg_restored_target: 'Restored ${target}.',
-  msg_restored_wiki_page_with_descendants: 'Restored ${target} and its ${count} descendant pages.',
+  msg_restored_wiki_page_with_descendants: 'Restored ${target} and its descendants (${count} pages).',
   my_mentions: 'Mentions',
   msg_maintenance_mode: 'We are currently performing maintenance.\nPlease try again later.',
   msg_command_already_running: 'This command is already running. Try again after it finishes.',
@@ -832,9 +832,9 @@ Please copy and use the connection information above.
   msg_confirm_deletion: 'Delete ${target}.',
   msg_confirm_disable_share: 'Disabling sharing will invalidate the current share URL. Are you sure?',
   msg_confirm_restore_deleted_wiki_page:
-    'Restores ${target}. If its original parent page no longer exists, it is restored to the top level.',
+    'Restores ${target}. If its original parent page no longer exists, or the page would exceed the depth limit under it, it is restored to the top level.',
   msg_confirm_restore_deleted_wiki_page_parent_deleted:
-    'Restores ${target}. Its original parent ${parent} is still deleted, so it is restored to the top level. Restore ${parent} first to put it back in its original position.',
+    'Restores ${target}. Its original parent ${parent} is still deleted, so it is restored to the top level. Restore ${parent} first to put it back in its original position (unless that exceeds the depth limit).',
   msg_confirm_restore_wiki_page_with_descendants:
     'Restores ${target} and its ${count} descendant pages, parents first.',
   msg_confirm_restore_wiki_page:
@@ -957,7 +957,7 @@ Please copy and use the connection information above.
   msg_wiki_board_assign:
     'Members of the board (direct or via groups) can use this space with the chosen role. You can assign boards you belong to.',
   msg_wiki_deleted_pages_hint:
-    'Deleted pages can be restored only for ${days} days after deletion. Restoring them from the top puts them back in their original hierarchy.',
+    'Deleted pages can be restored only for ${days} days after deletion. Restoring them from the top puts them back in their original hierarchy (a page that would exceed the depth limit under its original parent goes to the top level).',
   msg_wiki_design_docs_load_failed: 'Failed to load the design doc list. Please wait a moment and reload.',
   msg_wiki_diff_no_change: 'The content has not changed.',
   msg_wiki_draft_copied: 'Copied the draft content (Markdown).',
@@ -965,11 +965,15 @@ Please copy and use the connection information above.
   msg_wiki_manage_only:
     'You are not assigned to this space, so you can only change its settings. Assign yourself to read its pages.',
   msg_wiki_message_not_saved: 'Nothing changed, so the commit message was not kept.',
+  msg_wiki_page_already_restored: '${target} had already been restored, so it was left unchanged.',
   msg_wiki_page_conflict: 'Someone else saved this page after you started editing. Your draft is kept.',
   msg_wiki_page_has_children: 'The page has child pages. Delete it together with its descendants.',
   msg_wiki_page_invalid_parent: 'The page cannot be moved there (not under itself, its descendants, or another space).',
   msg_wiki_page_too_deep: 'Pages can be nested at most 10 levels deep.',
   msg_wiki_page_type_not_allowed: 'Only design docs can be created in a design doc space.',
+  msg_wiki_pages_already_restored: '${count} pages had already been restored, so they were left unchanged.',
+  msg_wiki_restore_excluded_pages:
+    ' Regular pages, which cannot be restored to a design doc space, and their descendants (${count} pages) are not restored.',
   msg_wiki_restore_parent_still_deleted:
     ' Its original parent ${parent} is still deleted, so ${target} is restored to the top level.',
   msg_wiki_restore_unchanged: 'No changes. The content is the same as the current one.',

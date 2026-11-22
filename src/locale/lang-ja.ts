@@ -421,7 +421,7 @@ export const ja: DefaultLocaleItems = {
   msg_no_board_notes: 'まだありません。',
   msg_no_deleted_board_notes: '削除済みのものはありません。',
   msg_restored_target: '${target} を復元しました。',
-  msg_restored_wiki_page_with_descendants: '${target} と配下の ${count} ページを復元しました。',
+  msg_restored_wiki_page_with_descendants: '${target} と配下を復元しました(${count} ページ)。',
   my_mentions: '自分宛てのメンション',
   msg_maintenance_mode: 'ただいまメンテナンスを行っています。\n終了までしばらくお待ちください。',
   msg_command_already_running: 'このコマンドは既に実行中です。終了してから再度お試しください。',
@@ -830,9 +830,10 @@ export const ja: DefaultLocaleItems = {
     '通常のページはリッチエディタで編集するため、front matter や HTML コメントなど、設計書の書き方が変わることがあります。通常のページにしますか?',
   msg_confirm_deletion: '${target} を削除します。',
   msg_confirm_disable_share: '共有を無効にすると、現在の共有URLは無効になります。よろしいですか？',
-  msg_confirm_restore_deleted_wiki_page: '${target} を復元します。元の親ページが無い場合は、スペース直下に戻ります。',
+  msg_confirm_restore_deleted_wiki_page:
+    '${target} を復元します。元の親ページが無い場合や、元の親の下では階層の上限を超える場合は、スペース直下に戻ります。',
   msg_confirm_restore_deleted_wiki_page_parent_deleted:
-    '${target} を復元します。元の親の ${parent} は削除されたままのため、スペース直下に戻ります。先に ${parent} を復元すると、元の位置に戻ります。',
+    '${target} を復元します。元の親の ${parent} は削除されたままのため、スペース直下に戻ります。先に ${parent} を復元すると、元の位置に戻ります(階層の上限を超える場合を除く)。',
   msg_confirm_restore_wiki_page_with_descendants: '${target} と配下の ${count} ページを、親から順に復元します。',
   msg_confirm_restore_wiki_page:
     '${target} のタイトル・本文・タグを、この版の内容に戻します。ページの位置は変わりません。',
@@ -952,7 +953,7 @@ export const ja: DefaultLocaleItems = {
   msg_wiki_board_assign:
     'ボードのメンバー(直接・グループ経由)が、選んだロールでこのスペースを使えます。割り当てられるのは、あなたが参加しているボードです。',
   msg_wiki_deleted_pages_hint:
-    '削除したページを復元できるのは、削除から ${days} 日のあいだだけです。上から順に復元すると、元の親子関係に戻ります。',
+    '削除したページを復元できるのは、削除から ${days} 日のあいだだけです。上から順に復元すると、元の親子関係に戻ります(元の親の下で階層の上限を超えるページは、スペース直下に戻ります)。',
   msg_wiki_design_docs_load_failed: '設計書一覧を取得できませんでした。時間をおいてリロードしてください。',
   msg_wiki_diff_no_change: '本文に変更はありません。',
   msg_wiki_draft_copied: '下書きの本文(Markdown)をコピーしました。',
@@ -960,11 +961,14 @@ export const ja: DefaultLocaleItems = {
   msg_wiki_manage_only:
     'このスペースに割り当てられていないため、設定だけを変更できます。ページを読むには、自分を割り当ててください。',
   msg_wiki_message_not_saved: '内容に変更が無いため、コミットメッセージは残りませんでした。',
+  msg_wiki_page_already_restored: '${target} は既に復元されていたため、変更していません。',
   msg_wiki_page_conflict: '編集を始めた後に、他の人がこのページを保存しました。下書きは残っています。',
   msg_wiki_page_has_children: '子ページがあるため削除できません。配下ごと削除してください。',
   msg_wiki_page_invalid_parent: 'そのページの下には移動できません(自分自身・子孫・別のスペースは選べません)。',
   msg_wiki_page_too_deep: '階層が深すぎます(10階層まで)。',
   msg_wiki_page_type_not_allowed: '設計書スペースでは、通常のページは作れません(設計書だけです)。',
+  msg_wiki_pages_already_restored: '${count} ページは既に復元されていたため、変更していません。',
+  msg_wiki_restore_excluded_pages: '設計書スペースに戻せない通常のページとその配下(${count} ページ)は、復元しません。',
   msg_wiki_restore_parent_still_deleted:
     '元の親の ${parent} は削除されたままのため、${target} はスペース直下に戻ります。',
   msg_wiki_restore_unchanged: 'いまの内容と同じため、変更はありません。',
