@@ -393,7 +393,36 @@ describe('moveWikiPage', () => {
       pageId: 'b',
       action: 'moved',
       snapshot: { parentId: 'e', order: 0, title: 'title-b' },
+      actorId: actor.id,
+      via: 'web',
     })
+  })
+
+  it('動かしたページの更新日時と更新者は変えない(編集中の保存を競合にしない。移動した人は版に残る)', async () => {
+    const result = await moveWikiPage(actor, MCP, 'b', { parentId: 'e' })
+
+    expect(vi.mocked(prisma.wikiPage.update).mock.calls.at(-1)?.[0].data).toEqual({
+      parentId: 'e',
+      order: 0,
+      updatedAt: UPDATED_AT,
+    })
+    expect(result.updatedAt).toEqual(UPDATED_AT)
+    expect(vi.mocked(writeWikiPageRevision).mock.calls[0][1]).toMatchObject({ actorId: actor.id, via: 'mcp' })
+  })
+
+  it('移動の後も、移動前に読んだ updatedAt で本文を保存できる', async () => {
+    const { updatedAt } = await moveWikiPage(actor, WEB, 'b', { parentId: 'e' })
+    // 移動を書いた後の行として、移動が返した updatedAt を持つ行を読ませる
+    vi.mocked(prisma.wikiPage.findUnique).mockResolvedValue(pageRow('b', { parentId: 'e', updatedAt }) as never)
+
+    const saved = await updateWikiPage(
+      actor,
+      WEB,
+      'b',
+      { content: 'x' },
+      { expectedUpdatedAt: UPDATED_AT.toISOString() },
+    )
+    expect(saved.result).toBe('updated')
   })
 
   it('同じ親の中で並べ替える', async () => {

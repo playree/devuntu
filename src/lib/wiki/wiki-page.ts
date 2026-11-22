@@ -122,7 +122,7 @@ const siblingIdsOf = (rows: readonly TreeRow[], parentId: string | null) =>
 
 /**
  * 兄弟を `orderedIds` の並び(0 始まり)に振り直す。値が変わる行だけを 1 文で更新し、`skipId` の行は呼び出し側で書く。
- * 押し出されただけのページは更新日時を変えない(編集中の人の expectedUpdatedAt を競合にしないため)
+ * 位置は本文の保存が上書きしない項目なので、更新日時は変えない(編集中の人の expectedUpdatedAt を競合にしないため)
  */
 const applySiblingOrders = async (tx: Db, rows: readonly TreeRow[], orderedIds: readonly string[], skipId: string) => {
   const orderById = new Map(rows.map(({ id, order }) => [id, order]))
@@ -446,7 +446,8 @@ export const updateWikiPage = async (
 /**
  * 親・兄弟内の位置の変更。自分自身や子孫の下へは移せず、移した後の部分木が深さの上限を超えるなら弾く。
  * 同じ親の中での並べ替えもこれで行う。`parentId` を省略すると、ロックを取った後に読んだ今の親のまま並べ替える。
- * `expectedPlace` は呼び出し側が見ていた親と兄弟の並び(自分を含む)で、今と違えば(他の人が別の親へ移した・兄弟を増減や並べ替えしたなら)弾く
+ * `expectedPlace` は呼び出し側が見ていた親と兄弟の並び(自分を含む)で、今と違えば(他の人が別の親へ移した・兄弟を増減や並べ替えしたなら)弾く。
+ * 動かしたページも押し出された兄弟と同じく、更新日時と更新者を変えない(移動した人と時刻は moved の版に残る)
  */
 export const moveWikiPage = async (
   actor: Actor,
@@ -505,10 +506,11 @@ export const moveWikiPage = async (
     const ticketId = await resolveRevisionTicketId(tx, actor, opts.ticketId)
     const order = ordered.indexOf(pageId)
     await applySiblingOrders(tx, rows, ordered, pageId)
-    const updated = await tx.wikiPage.update({
+    // updatedAt は @updatedAt なので、明示しないと進んでしまう
+    await tx.wikiPage.update({
       where: { id: pageId },
-      data: { parentId, order, updatedById: actor.id, updatedVia: writer.via },
-      select: { updatedAt: true },
+      data: { parentId, order, updatedAt: existing.updatedAt },
+      select: { id: true },
     })
     await writeWikiPageRevision(tx, {
       spaceId,
@@ -520,7 +522,7 @@ export const moveWikiPage = async (
       via: writer.via,
       ticketId,
     })
-    return { result: 'moved' as const, id: pageId, ref, number: existing.number, updatedAt: updated.updatedAt }
+    return { result: 'moved' as const, id: pageId, ref, number: existing.number, updatedAt: existing.updatedAt }
   })
 
   if (outcome.result === 'moved') {
