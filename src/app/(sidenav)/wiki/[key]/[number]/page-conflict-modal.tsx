@@ -25,8 +25,10 @@ export const WikiPageConflictModal: FC<{
   href: string
   content: string
   isSaving: boolean
+  /** 下書きを保存できる状態か(画像のアップロード中などは上書き保存もできない) */
+  isSubmittable: boolean
   onOverwrite: (expectedUpdatedAt: Date) => void
-}> = ({ state, href, content, isSaving, onOverwrite }) => {
+}> = ({ state, href, content, isSaving, isSubmittable, onOverwrite }) => {
   const { t } = useLocale()
   const tz = useUserTimezone()
   const { copy } = useCopyToClipboard()
@@ -69,7 +71,7 @@ export const WikiPageConflictModal: FC<{
           <MultiButton
             icon={<CheckIcon width={16} />}
             isPending={isSaving}
-            isDisabled={!latest}
+            isDisabled={!latest || !isSubmittable}
             onPress={() => latest && onOverwrite(latest.updatedAt)}
           >
             {t('wiki_conflict_overwrite')}

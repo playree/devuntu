@@ -221,6 +221,9 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
   }
 
   const overwrite = async (expectedUpdatedAt: Date) => {
+    if (!isSubmittable) {
+      return
+    }
     if (await ask({ title: t('wiki_conflict_overwrite'), text: t('msg_confirm_wiki_overwrite') })) {
       await save(expectedUpdatedAt)
     }
@@ -428,6 +431,7 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
         href={`/wiki/${space.key}/${page.number}`}
         content={contentDraft}
         isSaving={isSaving}
+        isSubmittable={isSubmittable}
         onOverwrite={overwrite}
       />
     </>
