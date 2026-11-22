@@ -64,6 +64,10 @@ export const skillFileUrl = (name: SkillName, path: string) =>
  */
 const SAFE_SKILL_PATH = /^[A-Za-z0-9._-]+(\/[A-Za-z0-9._-]+)*$/
 
+/** 手順は一時フォルダの中へ書くので、`.` / `..` のセグメントでフォルダの外を指すパスも止める */
+const isSafeSkillPath = (path: string) =>
+  SAFE_SKILL_PATH.test(path) && path.split('/').every((segment) => segment !== '.' && segment !== '..')
+
 /** 入れ替えも戻すのも失敗したときに出す文。退避した既存のフォルダは消さずに残し、その場所を利用者へ伝えさせる */
 const KEPT_MESSAGE = 'Could not put back the previous skill. It is kept in'
 
@@ -144,7 +148,7 @@ const powershellSteps = (name: SkillName, paths: string[]) => {
 export const skillInstallGuide = (name: SkillName) => {
   const { skill, purpose, zipUrl } = AI_SKILLS[name]
   const paths = Object.keys(skill.files)
-  const unsafe = paths.find((path) => !SAFE_SKILL_PATH.test(path))
+  const unsafe = paths.find((path) => !isSafeSkillPath(path))
   if (unsafe !== undefined) {
     throw new Error(`unsafe path in the skill ${name}: ${unsafe}`)
   }

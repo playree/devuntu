@@ -41,6 +41,7 @@ vi.mock('@/lib/prisma', async () =>
   (await import('../../helpers/prisma')).mockPrisma({
     wikiPageRevision: ['findFirst', 'findUnique', 'findMany', 'create', 'update', 'deleteMany'],
     wikiPage: ['findUnique', 'findMany'],
+    ticket: ['findMany'],
   }),
 )
 vi.mock('@/lib/wiki/wiki-access', () => ({ assertWikiSpaceAccess: vi.fn() }))
@@ -80,12 +81,20 @@ const latest = (override: Record<string, unknown> = {}) => ({
   ...override,
 })
 
+/** チケットの閲覧可否の問い合わせに、`viewable` を満たす ID だけを返す */
+const mockViewableTickets = (viewable: (id: string) => boolean) =>
+  vi
+    .mocked(prisma.ticket.findMany)
+    .mockImplementation(((args: { where: { id: { in: string[] } } }) =>
+      Promise.resolve(args.where.id.in.filter(viewable).map((id) => ({ id })))) as never)
+
 beforeEach(() => {
   vi.clearAllMocks()
   settings.merge = 10
   settings.max = 3
   settings.retention = 7
   vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ key: 'DOCS' } as never)
+  mockViewableTickets(() => true)
   vi.mocked(prisma.wikiPageRevision.findFirst).mockResolvedValue(null)
   vi.mocked(prisma.wikiPageRevision.findMany).mockResolvedValue([])
 })
@@ -219,6 +228,16 @@ const summaryRow = (id: string, daysAgo: number, override: Record<string, unknow
   ...override,
 })
 
+/** 版に紐づくチケット */
+const ticketOf = (id: string, number: number) => ({ ticket: { id, number, board: { key: 'PRIV' } } })
+
+/** 閲覧者が見られるチケットだけを返す */
+const viewableTickets = (...ids: string[]) => mockViewableTickets((id) => ids.includes(id))
+
+/** チケットの閲覧可否を引いた ID */
+const askedTicketIds = () =>
+  vi.mocked(prisma.ticket.findMany).mock.calls.map(([args]) => (args?.where?.id as { in: string[] }).in)
+
 describe('listWikiPageRevisions', () => {
   it('存在するページのスペースで閲覧権限を確かめ、本文なしで新しい順に返す', async () => {
     const pageUpdatedAt = new Date('2026-11-08T09:00:00.000Z')
@@ -226,7 +245,7 @@ describe('listWikiPageRevisions', () => {
       .mockResolvedValueOnce({ spaceId: 's1' } as never)
       .mockResolvedValueOnce({ updatedAt: pageUpdatedAt } as never)
     vi.mocked(prisma.wikiPageRevision.findMany).mockResolvedValue([
-      summaryRow('r2', 1, { ticket: { number: 5, board: { key: 'DEV' } } }),
+      summaryRow('r2', 1, { ticket: { id: 't5', number: 5, board: { key: 'DEV' } } }),
       summaryRow('r1', 8, { actor: null }),
     ] as never)
 
@@ -243,6 +262,36 @@ describe('listWikiPageRevisions', () => {
     expect(list[0]).toMatchObject({ ticketDisplayId: 'DEV-5', actorName: '利用者' })
     expect(list[1]).toMatchObject({ ticketDisplayId: null, actorName: '', actorIsAgent: false })
     expect(at).toEqual(pageUpdatedAt)
+  })
+
+  it('閲覧者が見られないチケットの表示ID は返さない。判定は重複を除いて 1 回のクエリで行う', async () => {
+    vi.mocked(prisma.wikiPage.findUnique).mockResolvedValue({ spaceId: 's1' } as never)
+    vi.mocked(prisma.wikiPageRevision.findMany).mockResolvedValue([
+      summaryRow('r3', 1, ticketOf('t-open', 1)),
+      summaryRow('r2', 2, ticketOf('t-hidden', 2)),
+      summaryRow('r1', 3, ticketOf('t-open', 1)),
+    ] as never)
+    viewableTickets('t-open')
+
+    const { revisions } = await listWikiPageRevisions({ id: 'u1' }, 'p1', NOW)
+
+    expect(revisions.map(({ ticketDisplayId }) => ticketDisplayId)).toEqual(['PRIV-1', null, 'PRIV-1'])
+    expect(askedTicketIds()).toEqual([['t-open', 't-hidden']])
+    // getTicketAccess の canView と同じく、ボードのメンバーか担当エージェントの承認者なら見られる
+    expect(vi.mocked(prisma.ticket.findMany).mock.calls[0][0]?.where).toMatchObject({
+      OR: [
+        { board: { OR: [{ members: { some: { userId: 'u1' } } }, expect.anything()] } },
+        { assignee: { isAgent: true } },
+      ],
+    })
+    expect(revisions[0]).not.toHaveProperty('ticket')
+  })
+
+  it('チケットの無い版だけなら判定しない', async () => {
+    vi.mocked(prisma.wikiPage.findUnique).mockResolvedValue({ spaceId: 's1' } as never)
+    vi.mocked(prisma.wikiPageRevision.findMany).mockResolvedValue([summaryRow('r1', 1)] as never)
+    await listWikiPageRevisions({ id: 'u1' }, 'p1', NOW)
+    expect(prisma.ticket.findMany).not.toHaveBeenCalled()
   })
 
   it('ページの更新日時は版の一覧と同じスナップショットで読む', async () => {
@@ -315,6 +364,23 @@ describe('getWikiPageRevisionSnapshot', () => {
       beforeRetention: false,
     })
     expect(result).not.toHaveProperty('spaceId')
+  })
+
+  it.each([
+    ['見られる', 'PRIV-7', true],
+    ['見られない', null, false],
+  ])('閲覧者が%sチケットの表示ID は %j', async (_, expected, canView) => {
+    vi.mocked(prisma.wikiPageRevision.findUnique).mockResolvedValue({
+      ...summaryRow('r2', 1, ticketOf('t7', 7)),
+      spaceId: 's1',
+      content: '本文',
+    } as never)
+    vi.mocked(listWikiTags).mockResolvedValue([])
+    viewableTickets(...(canView ? ['t7'] : []))
+
+    const result = await getWikiPageRevisionSnapshot({ id: 'u1' }, 'p1', 'r2', NOW)
+    expect(result.ticketDisplayId).toBe(expected)
+    expect(askedTicketIds()).toEqual([['t7']])
   })
 
   it('別のページの版はエラー', async () => {
@@ -412,6 +478,24 @@ describe('listDeletedWikiPages', () => {
       distinct: ['pageId'],
     })
     expect(list.map(({ id, ref }) => [id, ref])).toEqual([['r-gone', 'DOCS/3']])
+  })
+
+  it('閲覧者が見られないチケットの表示ID は返さない。いま存在するページのチケットは判定しない', async () => {
+    vi.mocked(prisma.wikiPageRevision.findMany).mockResolvedValue([
+      summaryRow('r-open', 1, { pageId: 'a', pageNumber: 1, action: 'deleted', ...ticketOf('t-open', 1) }),
+      summaryRow('r-hidden', 2, { pageId: 'b', pageNumber: 2, action: 'deleted', ...ticketOf('t-hidden', 2) }),
+      summaryRow('r-back', 3, { pageId: 'back', pageNumber: 3, action: 'deleted', ...ticketOf('t-back', 3) }),
+    ] as never)
+    vi.mocked(prisma.wikiPage.findMany).mockResolvedValue([{ id: 'back' }] as never)
+    viewableTickets('t-open', 't-back')
+
+    const list = await listDeletedWikiPages({ id: 'u1' }, 's1', NOW)
+
+    expect(list.map(({ id, ticketDisplayId }) => [id, ticketDisplayId])).toEqual([
+      ['r-open', 'PRIV-1'],
+      ['r-hidden', null],
+    ])
+    expect(askedTicketIds()).toEqual([['t-open', 't-hidden']])
   })
 
   it('削除の版が無ければページを引かない', async () => {

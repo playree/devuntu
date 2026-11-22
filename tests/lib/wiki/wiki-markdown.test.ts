@@ -13,7 +13,7 @@ import {
   listMarkdownHeadings,
   startsWithFrontMatter,
 } from '@/lib/wiki/wiki-markdown'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { parse } from 'yaml'
 
 const errorTypeOf = (fn: () => unknown) => {
@@ -105,10 +105,10 @@ describe('applyTextEdits', () => {
     expect(error.message).toContain('edits[1].oldText was not found')
   })
 
-  it('複数箇所に一致する oldText は件数を添えたエラー', () => {
+  it('複数箇所に一致する oldText は、件数ではなく複数ある旨のエラー', () => {
     const error = errorTypeOf(() => applyTextEdits('aa-aa', [{ oldText: 'aa', newText: 'b' }]))
     expect(error.type).toBe(VALIDATION_ERROR)
-    expect(error.message).toContain('matches 2 places')
+    expect(error.message).toContain('matches more than one place')
   })
 
   it('空の oldText はエラー', () => {
@@ -149,7 +149,20 @@ describe('境界のケース', () => {
   })
 
   it('重なって現れる oldText も複数として数える', () => {
-    expect(() => applyTextEdits('aaa', [{ oldText: 'aa', newText: 'b' }])).toThrow('matches 2 places')
+    expect(() => applyTextEdits('aaa', [{ oldText: 'aa', newText: 'b' }])).toThrow('matches more than one place')
+  })
+
+  it('重なって何度も現れる oldText は、2 件見つかった時点で探すのをやめる', () => {
+    const oldText = 'a'.repeat(10)
+    const indexOf = vi.spyOn(String.prototype, 'indexOf')
+    try {
+      expect(() => applyTextEdits('a'.repeat(1_000), [{ oldText, newText: 'b' }])).toThrow(
+        'matches more than one place',
+      )
+      expect(indexOf.mock.calls.filter(([search]) => search === oldText)).toHaveLength(2)
+    } finally {
+      indexOf.mockRestore()
+    }
   })
 })
 

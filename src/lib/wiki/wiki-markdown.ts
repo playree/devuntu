@@ -89,13 +89,19 @@ export const extractMarkdownSection = (content: string, heading: string): string
 
 export type TextEdit = { oldText: string; newText: string }
 
-/** 出現数。重なる出現も数える(`aaa` の中の `aa` は2回) */
-const countOccurrences = (text: string, search: string): number => {
-  let count = 0
+/**
+ * `search` が現れる位置を、重なる出現も含めて先頭から `limit` 件まで。
+ * 判定には 0 件 / 1 件 / 2 件以上かだけが要るので、長い本文と長い `search` でも全件は数えない
+ */
+const findOccurrences = (text: string, search: string, limit: number): number[] => {
+  const found: number[] = []
   for (let at = text.indexOf(search); at >= 0; at = text.indexOf(search, at + 1)) {
-    count++
+    found.push(at)
+    if (found.length >= limit) {
+      break
+    }
   }
-  return count
+  return found
 }
 
 /**
@@ -107,18 +113,18 @@ export const applyTextEdits = (content: string, edits: readonly TextEdit[]): str
     if (oldText === '') {
       throw errValidation(`edits[${i}].oldText must not be empty`)
     }
-    const count = countOccurrences(current, oldText)
-    if (count === 0) {
+    const found = findOccurrences(current, oldText, 2)
+    if (found.length === 0) {
       throw errValidation(
         `edits[${i}].oldText was not found in the page content. Read the page again with get_wiki_page and copy the text exactly`,
       )
     }
-    if (count > 1) {
+    if (found.length > 1) {
       throw errValidation(
-        `edits[${i}].oldText matches ${count} places in the page content. Include more surrounding text so that it matches exactly one place`,
+        `edits[${i}].oldText matches more than one place in the page content. Include more surrounding text so that it matches exactly one place`,
       )
     }
-    const at = current.indexOf(oldText)
+    const [at] = found
     return current.slice(0, at) + newText + current.slice(at + oldText.length)
   }, content)
 

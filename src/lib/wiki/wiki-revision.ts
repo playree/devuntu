@@ -10,8 +10,10 @@
 
 import type { Prisma } from '@/generated/prisma/client'
 import type { WikiPageRevisionAction, WikiVia } from '@/generated/prisma/enums'
+import { approvableAgentWhere } from '../agent/agent-approver'
 import type { Actor } from '../board/board-access'
 import { ticketDisplayId } from '../board/ticket-id'
+import { boardVisibleWhere } from '../board/ticket-permission'
 import { DAY_MS, msBefore } from '../day'
 import { envu } from '../env-util'
 import { errInvalidOperation } from '../error'
@@ -117,7 +119,7 @@ const REVISION_SUMMARY_SELECT = {
   createdAt: true,
   updatedAt: true,
   actor: { select: { name: true, isAgent: true } },
-  ticket: { select: { number: true, board: { select: { key: true } } } },
+  ticket: { select: { id: true, number: true, board: { select: { key: true } } } },
 } as const
 
 type RevisionSummaryRow = Prisma.WikiPageRevisionGetPayload<{ select: typeof REVISION_SUMMARY_SELECT }>
@@ -125,17 +127,41 @@ type RevisionSummaryRow = Prisma.WikiPageRevisionGetPayload<{ select: typeof REV
 export type WikiPageRevisionSummary = Omit<RevisionSummaryRow, 'actor' | 'ticket'> & {
   actorName: string
   actorIsAgent: boolean
-  /** 書いたときに対応していたチケットの表示ID */
+  /** 書いたときに対応していたチケットの表示ID。閲覧者が見られないチケットは null */
   ticketDisplayId: string | null
   /** 最後の保存が保持期限より古い(基準版、または期限を過ぎても残す最新・直近の版) */
   beforeRetention: boolean
 }
 
-const toRevisionSummary = ({ actor, ticket, ...row }: RevisionSummaryRow, cutoff: Date): WikiPageRevisionSummary => ({
+/**
+ * 版のチケットのうち閲覧者が見られるもの。紐づけたときは書き手が見られるかしか確かめていないので、返すたびに閲覧者で確かめる。
+ * 条件は `getTicketAccess` の canView と同じ(ボードのメンバーか、担当エージェントの承認者)
+ */
+const viewableTicketIds = async (actor: Actor, rows: readonly Pick<RevisionSummaryRow, 'ticket'>[]) => {
+  const ids = [...new Set(rows.flatMap(({ ticket }) => (ticket ? [ticket.id] : [])))]
+  if (ids.length === 0) {
+    return new Set<string>()
+  }
+  const viewable = await prisma.ticket.findMany({
+    where: {
+      id: { in: ids },
+      OR: [{ board: boardVisibleWhere(actor.id) }, { assignee: approvableAgentWhere(actor.id) }],
+    },
+    select: { id: true },
+  })
+  return new Set(viewable.map(({ id }) => id))
+}
+
+const toRevisionSummary = (
+  { actor, ticket, ...row }: RevisionSummaryRow,
+  cutoff: Date,
+  viewableTickets: ReadonlySet<string>,
+): WikiPageRevisionSummary => ({
   ...row,
   actorName: actor?.name ?? '',
   actorIsAgent: actor?.isAgent ?? false,
-  ticketDisplayId: ticket ? ticketDisplayId({ key: ticket.board.key, number: ticket.number }) : null,
+  ticketDisplayId:
+    ticket && viewableTickets.has(ticket.id) ? ticketDisplayId({ key: ticket.board.key, number: ticket.number }) : null,
   beforeRetention: row.updatedAt < cutoff,
 })
 
@@ -179,7 +205,11 @@ export const listWikiPageRevisions = async (
     { isolationLevel: 'RepeatableRead' },
   )
   const cutoff = wikiRevisionCutoff(now)
-  return { revisions: rows.map((row) => toRevisionSummary(row, cutoff)), pageUpdatedAt: page?.updatedAt ?? null }
+  const viewableTickets = await viewableTicketIds(actor, rows)
+  return {
+    revisions: rows.map((row) => toRevisionSummary(row, cutoff, viewableTickets)),
+    pageUpdatedAt: page?.updatedAt ?? null,
+  }
 }
 
 /** 版の本文(版を選んで表示するときに引く) */
@@ -215,7 +245,8 @@ export const getWikiPageRevisionSnapshot = async (
   const { spaceId, content, ...summary } = row
   await assertWikiSpaceAccess(actor, spaceId, 'view')
   const tags = resolveWikiTagNames(summary.tagNames, await listWikiTags(spaceId))
-  return { ...toRevisionSummary(summary, wikiRevisionCutoff(now)), content, tags }
+  const viewableTickets = await viewableTicketIds(actor, [summary])
+  return { ...toRevisionSummary(summary, wikiRevisionCutoff(now), viewableTickets), content, tags }
 }
 
 /**
@@ -274,11 +305,11 @@ export const listDeletedWikiPages = async (
     select: { id: true },
   })
   const aliveIds = new Set(alive.map(({ id }) => id))
+  const deleted = rows.filter(({ pageId }) => !aliveIds.has(pageId))
   const cutoff = wikiRevisionCutoff(now)
-  return rows
-    .filter(({ pageId }) => !aliveIds.has(pageId))
-    .map((row) => ({
-      ...toRevisionSummary(row, cutoff),
-      ref: wikiPageRef({ key: access.key, number: row.pageNumber }),
-    }))
+  const viewableTickets = await viewableTicketIds(actor, deleted)
+  return deleted.map((row) => ({
+    ...toRevisionSummary(row, cutoff, viewableTickets),
+    ref: wikiPageRef({ key: access.key, number: row.pageNumber }),
+  }))
 }
