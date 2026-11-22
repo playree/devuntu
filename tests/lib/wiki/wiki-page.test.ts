@@ -17,6 +17,7 @@ import {
   WIKI_PAGE_INVALID_PARENT,
   WIKI_PAGE_TOO_DEEP,
   WIKI_PAGE_TYPE_NOT_ALLOWED,
+  WIKI_TREE_CHANGED,
   type WikiWriter,
 } from '@/lib/wiki/wiki-rule'
 import { getWikiSpaceByKey } from '@/lib/wiki/wiki-space'
@@ -470,6 +471,37 @@ describe('moveWikiPage', () => {
       ),
     ).toBe(WIKI_PAGE_CONFLICT)
   })
+
+  describe('expectedPlace(画面で見ていた親と兄弟の並び)', () => {
+    it.each([
+      ['別の親へ移された(画面では e の下)', 'd', { parentId: 'e', siblingIds: ['d'] }],
+      ['スペース直下から移された', 'd', { parentId: null, siblingIds: ['a', 'd', 'e'] }],
+      ['スペース直下へ移された(画面では a の下)', 'e', { parentId: 'a', siblingIds: ['b', 'd', 'e'] }],
+      ['兄弟が増えた', 'd', { parentId: 'a', siblingIds: ['d'] }],
+      ['兄弟が減った', 'd', { parentId: 'a', siblingIds: ['b', 'x', 'd'] }],
+      ['兄弟が並べ替えられた', 'd', { parentId: 'a', siblingIds: ['d', 'b'] }],
+    ])('%s なら WIKI_TREE_CHANGED で書かない', async (_, id, expectedPlace) => {
+      expect(await errorTypeOf(moveWikiPage(actor, WEB, id, { position: 0 }, { expectedPlace }))).toBe(
+        WIKI_TREE_CHANGED,
+      )
+      expect(prisma.wikiPage.update).not.toHaveBeenCalled()
+      expect(prisma.$executeRaw).not.toHaveBeenCalled()
+      expect(writeWikiPageRevision).not.toHaveBeenCalled()
+    })
+
+    it('一致すれば、今の親の中で並べ替える', async () => {
+      const expectedPlace = { parentId: 'a', siblingIds: ['b', 'd'] }
+      expect((await moveWikiPage(actor, WEB, 'd', { position: 0 }, { expectedPlace })).result).toBe('moved')
+      expect(orderUpdates()).toEqual([['b', 1]])
+      expect(vi.mocked(prisma.wikiPage.update).mock.calls.at(-1)?.[0].data).toMatchObject({ parentId: 'a', order: 0 })
+    })
+
+    it('スペース直下どうしでも一致を判定する(null)', async () => {
+      const expectedPlace = { parentId: null, siblingIds: ['a', 'e'] }
+      expect((await moveWikiPage(actor, WEB, 'e', { position: 0 }, { expectedPlace })).result).toBe('moved')
+      expect(orderUpdates()).toEqual([['a', 1]])
+    })
+  })
 })
 
 describe('deleteWikiPage', () => {
@@ -511,6 +543,32 @@ describe('deleteWikiPage', () => {
 
   it('子孫がいなければ recursive 無しで消せる', async () => {
     expect(await deleteWikiPage(actor, WEB, 'c')).toEqual({ deleted: 1 })
+  })
+
+  describe('expectedDescendantIds(確認で見せた配下)', () => {
+    it.each([
+      ['子が増えた', ['b', 'c']],
+      ['子が減った', ['b', 'c', 'd', 'x']],
+      ['件数は同じで入れ替わった', ['b', 'c', 'x']],
+    ])('今の配下と違えば(確認の後に%s)WIKI_TREE_CHANGED で消さない', async (_, expectedDescendantIds) => {
+      expect(await errorTypeOf(deleteWikiPage(actor, WEB, 'a', { recursive: true, expectedDescendantIds }))).toBe(
+        WIKI_TREE_CHANGED,
+      )
+      expect(prisma.wikiPage.delete).not.toHaveBeenCalled()
+      expect(writeWikiPageRevision).not.toHaveBeenCalled()
+    })
+
+    it('配下は無いと確認したのに子がいれば、WIKI_PAGE_HAS_CHILDREN ではなく WIKI_TREE_CHANGED', async () => {
+      expect(await errorTypeOf(deleteWikiPage(actor, WEB, 'b', { expectedDescendantIds: [] }))).toBe(WIKI_TREE_CHANGED)
+      expect(prisma.wikiPage.delete).not.toHaveBeenCalled()
+    })
+
+    it('一致すれば(並びは問わない)消す', async () => {
+      expect(
+        await deleteWikiPage(actor, WEB, 'a', { recursive: true, expectedDescendantIds: ['d', 'c', 'b'] }),
+      ).toEqual({ deleted: 4 })
+      expect(await deleteWikiPage(actor, WEB, 'c', { expectedDescendantIds: [] })).toEqual({ deleted: 1 })
+    })
   })
 })
 

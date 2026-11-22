@@ -8,6 +8,7 @@ import {
   scCreateWikiTag,
   scDeleteWikiPage,
   scMoveWikiPage,
+  scReorderWikiPage,
   scWikiSpaceKey,
 } from '@/lib/schema/schema-wiki'
 import { getWikiDesignDocIndex as getWikiDesignDocIndexCore } from '@/lib/wiki/wiki-design-doc-index'
@@ -75,12 +76,25 @@ export const moveWikiPage = safeAuthAction
       await moveWikiPageCore(user, WEB, id, { parentId, position }),
   )
 
-/** 削除。子孫があるときは recursive で配下ごと消す */
+/** 同じ親の中での並べ替え。画面で見ていた親・兄弟の並びが今と違えば WIKI_TREE_CHANGED で弾く */
+export const reorderWikiPage = safeAuthAction
+  .metadata({ actionName: 'reorderWikiPage', role: 'user' })
+  .inputSchema(scReorderWikiPage)
+  .action(
+    async ({ ctx: { user }, parsedInput: { id, parentId, siblingIds, position } }) =>
+      await moveWikiPageCore(user, WEB, id, { position }, { expectedPlace: { parentId, siblingIds } }),
+  )
+
+/** 削除。確認で見せた配下のページが今と違えば WIKI_TREE_CHANGED で弾く。配下があれば配下ごと消す */
 export const deleteWikiPage = safeAuthAction
   .metadata({ actionName: 'deleteWikiPage', role: 'user' })
   .inputSchema(scDeleteWikiPage)
   .action(
-    async ({ ctx: { user }, parsedInput: { id, recursive } }) => await deleteWikiPageCore(user, WEB, id, { recursive }),
+    async ({ ctx: { user }, parsedInput: { id, descendantIds } }) =>
+      await deleteWikiPageCore(user, WEB, id, {
+        recursive: descendantIds.length > 0,
+        expectedDescendantIds: descendantIds,
+      }),
   )
 
 /** タグの作成(editor 以上)。ページの編集中とスペースの設定で使う */

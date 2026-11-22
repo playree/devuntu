@@ -43,6 +43,7 @@ import {
   WIKI_PAGE_TYPE_NOT_ALLOWED,
   WIKI_SPACE_HAS_NORMAL_PAGES,
   WIKI_SPACE_NO_OWNER,
+  WIKI_TREE_CHANGED,
 } from '../wiki/wiki-rule'
 
 export type ActionErrorMessage = {
@@ -81,6 +82,7 @@ export const ACTION_ERROR_MESSAGES: Record<string, ActionErrorMessage> = {
   [DUPLICATED_WIKI_SPACE_KEY]: { item: 'msg_duplicated_wiki_space_key', level: 'warn' },
   [WIKI_PAGE_CONFLICT]: { item: 'msg_wiki_page_conflict', level: 'warn' },
   [WIKI_PAGE_HAS_CHILDREN]: { item: 'msg_wiki_page_has_children', level: 'warn' },
+  [WIKI_TREE_CHANGED]: { item: 'msg_wiki_tree_changed', level: 'warn' },
   [WIKI_PAGE_TOO_DEEP]: { item: 'msg_wiki_page_too_deep', level: 'warn' },
   [WIKI_PAGE_INVALID_PARENT]: { item: 'msg_wiki_page_invalid_parent', level: 'warn' },
   [WIKI_SPACE_NO_OWNER]: { item: 'msg_wiki_space_no_owner', level: 'warn' },

@@ -22,7 +22,7 @@ import { useLocale } from '@/locale/client'
 import { useParams } from 'next/navigation'
 import { FC, useMemo, useState } from 'react'
 import { CreatePageModal, MovePageModal } from './page-modals'
-import { moveWikiPage } from './server'
+import { reorderWikiPage } from './server'
 import { useWikiSpace } from './space-context'
 import { WikiSpaceSwitcher } from './space-switcher'
 
@@ -58,12 +58,15 @@ export const WikiSideTree: FC = () => {
   const reorder = async (item: TreeViewItem, { index }: TreeViewItemPlace, delta: -1 | 1) => {
     setPendingId(item.id)
     try {
-      await parseAction(moveWikiPage({ id: item.id, parentId: item.parentId, position: index + delta }))
+      const siblingIds = tree.filter((page) => page.parentId === item.parentId).map(({ id }) => id)
+      await parseAction(reorderWikiPage({ id: item.id, parentId: item.parentId, siblingIds, position: index + delta }))
       await reloadSpace()
     } catch (e) {
       if (!(e instanceof ClientError)) {
         throw e
       }
+      // 他の人が別の親へ移した・兄弟を増減したなど、画面のツリーが古い。通知は parseAction が済ませている
+      await reloadSpace()
     } finally {
       setPendingId(undefined)
     }

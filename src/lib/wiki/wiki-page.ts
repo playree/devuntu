@@ -29,6 +29,7 @@ import {
   WIKI_PAGE_INVALID_PARENT,
   WIKI_PAGE_TOO_DEEP,
   WIKI_PAGE_TYPE_NOT_ALLOWED,
+  WIKI_TREE_CHANGED,
   defaultWikiPageType,
   isWikiPageTypeAllowed,
   wikiPageRef,
@@ -61,6 +62,11 @@ const errInvalidParent = () =>
   new ClientError(
     WIKI_PAGE_INVALID_PARENT,
     'The parent must be another page in the same space, and not the page itself or one of its descendants',
+  )
+const errTreeChanged = () =>
+  new ClientError(
+    WIKI_TREE_CHANGED,
+    'The page tree was changed by someone else after you read it. Read the tree again and retry',
   )
 
 const errTypeNotAllowed = () =>
@@ -435,14 +441,15 @@ export const updateWikiPage = async (
 
 /**
  * 親・兄弟内の位置の変更。自分自身や子孫の下へは移せず、移した後の部分木が深さの上限を超えるなら弾く。
- * 同じ親の中での並べ替えもこれで行う。`parentId` を省略すると、ロックを取った後に読んだ今の親のまま並べ替える
+ * 同じ親の中での並べ替えもこれで行う。`parentId` を省略すると、ロックを取った後に読んだ今の親のまま並べ替える。
+ * `expectedPlace` は呼び出し側が見ていた親と兄弟の並び(自分を含む)で、今と違えば(他の人が別の親へ移した・兄弟を増減や並べ替えしたなら)弾く
  */
 export const moveWikiPage = async (
   actor: Actor,
   writer: WikiWriter,
   pageId: string,
   target: { parentId?: string | null; position?: number },
-  opts: ExpectOpts = {},
+  opts: ExpectOpts & { expectedPlace?: { parentId: string | null; siblingIds: readonly string[] } } = {},
 ): Promise<WikiPageWriteResult> => {
   const expected = parseExpectedUpdatedAt(opts.expectedUpdatedAt)
   const spaceId = await findPageSpace(pageId)
@@ -454,7 +461,19 @@ export const moveWikiPage = async (
     if (!index.byId.has(pageId)) {
       throw errInvalidOperation()
     }
-    const parentId = target.parentId === undefined ? (index.byId.get(pageId)?.parentId ?? null) : target.parentId
+    const currentParentId = index.byId.get(pageId)?.parentId ?? null
+    if (opts.expectedPlace) {
+      const { parentId: expectedParentId, siblingIds: expectedSiblingIds } = opts.expectedPlace
+      const currentSiblingIds = siblingIdsOf(rows, currentParentId)
+      if (
+        expectedParentId !== currentParentId ||
+        expectedSiblingIds.length !== currentSiblingIds.length ||
+        expectedSiblingIds.some((id, i) => currentSiblingIds[i] !== id)
+      ) {
+        throw errTreeChanged()
+      }
+    }
+    const parentId = target.parentId === undefined ? currentParentId : target.parentId
     if (parentId !== null) {
       if (!index.byId.has(parentId) || isSelfOrDescendant(index, pageId, parentId)) {
         throw errInvalidParent()
@@ -508,13 +527,14 @@ export const moveWikiPage = async (
 
 /**
  * ページの削除。子孫がいれば `recursive` を指定したときだけ配下ごと消す。
- * 消すページごとに deleted の版を残すので、保持期間内なら復元できる。戻り値は消したページ数
+ * 消すページごとに deleted の版を残すので、保持期間内なら復元できる。戻り値は消したページ数。
+ * `expectedDescendantIds` は利用者に確認した配下のページで、今の配下と違えば(件数が同じでも入れ替わっていれば)消さずに弾く
  */
 export const deleteWikiPage = async (
   actor: Actor,
   writer: WikiWriter,
   pageId: string,
-  opts: WriteOpts & { recursive?: boolean } = {},
+  opts: WriteOpts & { recursive?: boolean; expectedDescendantIds?: readonly string[] } = {},
 ): Promise<{ deleted: number }> => {
   const spaceId = await findPageSpace(pageId)
   const deleted = await prisma.$transaction(async (tx) => {
@@ -525,6 +545,12 @@ export const deleteWikiPage = async (
       throw errInvalidOperation()
     }
     const descendants = descendantIds(index, pageId)
+    if (opts.expectedDescendantIds) {
+      const expectedIds = new Set(opts.expectedDescendantIds)
+      if (expectedIds.size !== descendants.length || descendants.some((id) => !expectedIds.has(id))) {
+        throw errTreeChanged()
+      }
+    }
     if (descendants.length > 0 && !opts.recursive) {
       throw errHasChildren(descendants.length)
     }
