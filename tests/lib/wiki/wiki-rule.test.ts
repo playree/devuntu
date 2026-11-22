@@ -11,7 +11,6 @@ import {
   MAX_WIKI_SEARCH_KEYWORD,
   parseWikiPageRef,
   parseWikiSearchParams,
-  pickExpiredWikiRevisionIds,
   resolveWikiRevisionTags,
   resolveWikiRole,
   revisionTagColumns,
@@ -187,53 +186,5 @@ describe('parseWikiSearchParams', () => {
     expect(parseWikiSearchParams({ tags: ['仕様', '', '仕様', 'x'.repeat(21)] }).tags).toEqual(['仕様'])
     const many = Array.from({ length: MAX_WIKI_PAGE_TAGS + 3 }, (_, i) => `t${i}`)
     expect(parseWikiSearchParams({ tags: many }).tags).toHaveLength(MAX_WIKI_PAGE_TAGS)
-  })
-})
-
-describe('pickExpiredWikiRevisionIds', () => {
-  const EXPIRED = [
-    { id: 'a4', pageId: 'a' },
-    { id: 'b2', pageId: 'b' },
-    { id: 'a3', pageId: 'a' },
-    { id: 'a2', pageId: 'a' },
-    { id: 'b1', pageId: 'b' },
-    { id: 'a1', pageId: 'a' },
-  ]
-  const NO_RECENT = new Map<string, number>()
-
-  it('期限内の版が無い存在ページは、最新の版と直近の keepRecent 版を残す', () => {
-    expect(pickExpiredWikiRevisionIds(EXPIRED, new Set(['a', 'b']), NO_RECENT, 2)).toEqual(['a1'])
-  })
-
-  it('期限内の版がある存在ページは、合わせて 1 + keepRecent 版になるまで期限より古い版を残す', () => {
-    expect(pickExpiredWikiRevisionIds(EXPIRED, new Set(['a']), new Map([['a', 2]]), 2)).toEqual([
-      'b2',
-      'a3',
-      'a2',
-      'b1',
-      'a1',
-    ])
-  })
-
-  it('期限内の版が 1 + keepRecent 版以上でも、期限より古い版のうち最新の1版(基準版)は残す', () => {
-    expect(pickExpiredWikiRevisionIds(EXPIRED, new Set(['a']), new Map([['a', 10]]), 2)).toEqual([
-      'b2',
-      'a3',
-      'a2',
-      'b1',
-      'a1',
-    ])
-  })
-
-  it('keepRecent が 0 なら基準版だけを残す', () => {
-    expect(pickExpiredWikiRevisionIds(EXPIRED, new Set(['a', 'b']), NO_RECENT, 0)).toEqual(['a3', 'a2', 'b1', 'a1'])
-  })
-
-  it('削除済みのページは期限より古い版をすべて消す', () => {
-    expect(pickExpiredWikiRevisionIds(EXPIRED, new Set(), new Map([['a', 0]]), 2)).toEqual(EXPIRED.map(({ id }) => id))
-  })
-
-  it('期限より古い版が残す数以下の存在ページは何も消さない', () => {
-    expect(pickExpiredWikiRevisionIds([{ id: 'a1', pageId: 'a' }], new Set(['a']), NO_RECENT, 2)).toEqual([])
   })
 })

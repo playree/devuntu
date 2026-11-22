@@ -18,7 +18,7 @@ import { ClientError, errInvalidOperation, errValidation } from '../error'
 import { logger } from '../logger'
 import { prisma, type Db } from '../prisma'
 import { assertWikiSpaceAccess, type WikiSpaceAccess } from './wiki-access'
-import { writeWikiPageRevision } from './wiki-revision'
+import { WIKI_REVISION_ORDER, writeWikiPageRevision } from './wiki-revision'
 import {
   MAX_WIKI_CONTENT,
   MAX_WIKI_DEPTH,
@@ -49,7 +49,7 @@ import {
 } from './wiki-tree'
 
 // MCP からも返すので、AI が次の手を選べるようメッセージに理由と対処を書く
-export const errWikiPageConflict = () =>
+const errWikiPageConflict = () =>
   new ClientError(WIKI_PAGE_CONFLICT, 'The page was updated by someone else after you read it. Read it again and retry')
 const errHasChildren = (count: number) =>
   new ClientError(
@@ -122,7 +122,7 @@ const siblingIdsOf = (rows: readonly TreeRow[], parentId: string | null) =>
 
 /**
  * 兄弟を `orderedIds` の並び(0 始まり)に振り直す。値が変わる行だけを 1 文で更新し、`skipId` の行は呼び出し側で書く。
- * 押し出されただけのページは更新日時を変えない(編集中の人の expectedUpdatedAt を競合にしないため)
+ * 位置は本文の保存が上書きしない項目なので、更新日時は変えない(編集中の人の expectedUpdatedAt を競合にしないため)
  */
 const applySiblingOrders = async (tx: Db, rows: readonly TreeRow[], orderedIds: readonly string[], skipId: string) => {
   const orderById = new Map(rows.map(({ id, order }) => [id, order]))
@@ -238,6 +238,10 @@ const assertNotConflicted = (expected: number | null, updatedAt: Date) => {
     throw errWikiPageConflict()
   }
 }
+
+/** 呼び出し側で読んだ内容に手を加えてから保存するとき(MCP の edits)の競合判定。日時として読めなければ入力不正 */
+export const assertWikiPageNotConflicted = (expectedUpdatedAt: string | undefined, updatedAt: Date) =>
+  assertNotConflicted(parseExpectedUpdatedAt(expectedUpdatedAt), updatedAt)
 
 export type CreateWikiPageInput = {
   title: string
@@ -442,7 +446,8 @@ export const updateWikiPage = async (
 /**
  * 親・兄弟内の位置の変更。自分自身や子孫の下へは移せず、移した後の部分木が深さの上限を超えるなら弾く。
  * 同じ親の中での並べ替えもこれで行う。`parentId` を省略すると、ロックを取った後に読んだ今の親のまま並べ替える。
- * `expectedPlace` は呼び出し側が見ていた親と兄弟の並び(自分を含む)で、今と違えば(他の人が別の親へ移した・兄弟を増減や並べ替えしたなら)弾く
+ * `expectedPlace` は呼び出し側が見ていた親と兄弟の並び(自分を含む)で、今と違えば(他の人が別の親へ移した・兄弟を増減や並べ替えしたなら)弾く。
+ * 動かしたページも押し出された兄弟と同じく、更新日時と更新者を変えない(移動した人と時刻は moved の版に残る)
  */
 export const moveWikiPage = async (
   actor: Actor,
@@ -501,10 +506,11 @@ export const moveWikiPage = async (
     const ticketId = await resolveRevisionTicketId(tx, actor, opts.ticketId)
     const order = ordered.indexOf(pageId)
     await applySiblingOrders(tx, rows, ordered, pageId)
-    const updated = await tx.wikiPage.update({
+    // updatedAt は @updatedAt なので、明示しないと進んでしまう
+    await tx.wikiPage.update({
       where: { id: pageId },
-      data: { parentId, order, updatedById: actor.id, updatedVia: writer.via },
-      select: { updatedAt: true },
+      data: { parentId, order, updatedAt: existing.updatedAt },
+      select: { id: true },
     })
     await writeWikiPageRevision(tx, {
       spaceId,
@@ -516,7 +522,7 @@ export const moveWikiPage = async (
       via: writer.via,
       ticketId,
     })
-    return { result: 'moved' as const, id: pageId, ref, number: existing.number, updatedAt: updated.updatedAt }
+    return { result: 'moved' as const, id: pageId, ref, number: existing.number, updatedAt: existing.updatedAt }
   })
 
   if (outcome.result === 'moved') {
@@ -762,15 +768,32 @@ const PAGE_DETAIL_SELECT = {
 
 /**
  * `KEY/番号` でページを引く。パンくず(先祖)と子ページの一覧を添える。
- * 画面ではサイドメニューのツリーにも同じ木を使うので、先祖を 1 段ずつ引かず本文抜きの木をまとめて読む
+ * 画面ではサイドメニューのツリーにも同じ木を使うので、先祖を 1 段ずつ引かず本文抜きの木をまとめて読む。
+ * `revisionNumber` はページと同じ時点の最新の版の番号。移動は更新日時を進めずに版だけを足すので、
+ * 画面で版の一覧と照合するときは更新日時とあわせて使う
  */
 export const getWikiPage = async (actor: Actor, key: string, number: number) => {
   const { space, access } = await getWikiSpaceByKey(actor, key)
   const [page, tree] = await Promise.all([
-    prisma.wikiPage.findUnique({
-      where: { spaceId_number: { spaceId: space.id, number } },
-      select: PAGE_DETAIL_SELECT,
-    }),
+    // ページと版は同じトランザクションで書くので、同じスナップショットで読めば最新の版とページがそろう
+    prisma.$transaction(
+      async (tx) => {
+        const row = await tx.wikiPage.findUnique({
+          where: { spaceId_number: { spaceId: space.id, number } },
+          select: PAGE_DETAIL_SELECT,
+        })
+        if (!row) {
+          return null
+        }
+        const latest = await tx.wikiPageRevision.findFirst({
+          where: { pageId: row.id },
+          select: { number: true },
+          orderBy: WIKI_REVISION_ORDER,
+        })
+        return { ...row, revisionNumber: latest?.number ?? 0 }
+      },
+      { isolationLevel: 'RepeatableRead' },
+    ),
     loadTree(prisma, space.id),
   ])
   if (!page) {

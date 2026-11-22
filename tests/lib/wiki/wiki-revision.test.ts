@@ -182,7 +182,7 @@ describe('writeWikiPageRevision: 版の番号', () => {
     await writeWikiPageRevision(prisma, revision({ action: 'moved' }), NOW)
     expect(vi.mocked(prisma.wikiPageRevision.findFirst).mock.calls[0][0]).toMatchObject({
       where: { pageId: 'p1' },
-      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      orderBy: { number: 'desc' },
     })
     expect(vi.mocked(prisma.wikiPageRevision.create).mock.calls[0][0].data).toMatchObject({ number: 8 })
   })
@@ -202,7 +202,7 @@ describe('writeWikiPageRevision: 件数の上限', () => {
 
     expect(vi.mocked(prisma.wikiPageRevision.findMany).mock.calls[0][0]).toMatchObject({
       where: { pageId: 'p1' },
-      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      orderBy: { number: 'desc' },
       skip: 3,
     })
     expect(prisma.wikiPageRevision.deleteMany).toHaveBeenCalledWith({ where: { id: { in: ['r-old1', 'r-old2'] } } })
@@ -269,7 +269,7 @@ describe('listWikiPageRevisions', () => {
 
     expect(assertWikiSpaceAccess).toHaveBeenCalledWith({ id: 'u1' }, 's1', 'view')
     const args = vi.mocked(prisma.wikiPageRevision.findMany).mock.calls[0][0]
-    expect(args).toMatchObject({ where: { pageId: 'p1' }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }] })
+    expect(args).toMatchObject({ where: { pageId: 'p1' }, orderBy: { number: 'desc' } })
     expect(args?.select).not.toHaveProperty('content')
     expect(list.map(({ id, beforeRetention }) => [id, beforeRetention])).toEqual([
       ['r2', false],
@@ -449,7 +449,7 @@ describe('deleteWikiPageRevision', () => {
     expect(assertWikiSpaceAccess).toHaveBeenCalledWith({ id: 'u1' }, 's1', 'write', prisma)
     expect(vi.mocked(prisma.wikiPageRevision.findFirst).mock.calls[0][0]).toMatchObject({
       where: { pageId: 'p1' },
-      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      orderBy: { number: 'desc' },
     })
     expect(prisma.wikiPageRevision.deleteMany).toHaveBeenCalledWith({ where: { id: 'r2' } })
   })

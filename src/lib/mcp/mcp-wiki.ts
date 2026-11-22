@@ -27,9 +27,9 @@ import {
   type TextEdit,
 } from '../wiki/wiki-markdown'
 import {
+  assertWikiPageNotConflicted,
   createWikiPage,
   deleteWikiPage,
-  errWikiPageConflict,
   findWikiPageByNumber,
   getWikiPage,
   getWikiTree,
@@ -310,9 +310,7 @@ const updateWikiPageForMcp = async (
     if (!current) {
       throw errNoPage(pageRef)
     }
-    if (expectedUpdatedAt && new Date(expectedUpdatedAt).getTime() !== current.updatedAt.getTime()) {
-      throw errWikiPageConflict()
-    }
+    assertWikiPageNotConflicted(expectedUpdatedAt, current.updatedAt)
     content = applyTextEdits(current.content, input.edits)
     // edits は読んだ本文に当てたものなので、指定が無くても読んだ時点の版で楽観ロックをかける
     expectedUpdatedAt = current.updatedAt.toISOString()

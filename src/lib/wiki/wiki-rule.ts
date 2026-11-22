@@ -176,34 +176,6 @@ export const shouldMergeWikiRevision = (
   now.getTime() - latest.createdAt.getTime() <= mergeMinutes * 60_000
 
 /**
- * 保持期間の掃除で消す版の id。`expired` は保持期限より古い版を新しい順(updatedAt, id の降順)に並べたもの。
- * - 存在するページ: 最新の版(カレント)と直近の `keepRecent` 版は期限より古くても残す。
- *   あわせて期限より古い版のうち最新の1版を基準版として残す。版は変更後の全文なので、一律に消すと
- *   しばらく編集していないページを編集した直後に編集前へ戻せなくなるため。
- *   `recentCounts` はページごとの期限内の版の数で、残す期限切れの版は `max(1, 1 + keepRecent - 期限内の版の数)`
- * - 削除済みのページ: すべて消す
- */
-export const pickExpiredWikiRevisionIds = (
-  expired: readonly { id: string; pageId: string }[],
-  alivePageIds: ReadonlySet<string>,
-  recentCounts: ReadonlyMap<string, number>,
-  keepRecent: number,
-): string[] => {
-  const kept = new Map<string, number>()
-  const ids: string[] = []
-  for (const { id, pageId } of expired) {
-    const keep = alivePageIds.has(pageId) ? Math.max(1, 1 + keepRecent - (recentCounts.get(pageId) ?? 0)) : 0
-    const count = kept.get(pageId) ?? 0
-    if (count < keep) {
-      kept.set(pageId, count + 1)
-    } else {
-      ids.push(id)
-    }
-  }
-  return ids
-}
-
-/**
  * 版のタグを、いまスペースに残っているタグに ID で引き当てる(スペースの表示順)。
  * 改名したタグは今の名前で出し、削除したタグは(同じ名前で作り直していても)出さない。復元時と同じ扱い
  */
