@@ -33,6 +33,7 @@ import {
   type WikiRevisionTag,
 } from './wiki-rule'
 import { listWikiTags, type WikiTagOption } from './wiki-tag'
+import { ancestorIds, arrangeDeletedWikiPages, indexWikiTree } from './wiki-tree'
 
 /** 保持期限。最後の保存(updatedAt)がこれより古い版は「保持期間より前の状態」 */
 export const wikiRevisionCutoff = (now: Date): Date => msBefore(now, envu.server.WIKI_REVISION_RETENTION_DAYS * DAY_MS)
@@ -309,12 +310,29 @@ export const deleteWikiPageRevision = async (actor: Actor, revisionId: string): 
   logger.info({ userId: actor.id, spaceId: source.spaceId, revisionId }, 'wiki page revision deleted')
 }
 
+/** 削除済みのページの元の親 */
+export type DeletedWikiPageParent =
+  /** 元からスペース直下 */
+  | { state: 'root' }
+  /** 存在する。`path` はスペース側から元の親までのタイトル */
+  | { state: 'alive'; path: string[] }
+  /** 削除済み(一覧にいる)。先に戻せば子も元の位置へ戻る */
+  | { state: 'deleted'; pageId: string; title: string }
+  /** 存在せず一覧にも無い(復元するとスペース直下へ戻る) */
+  | { state: 'missing' }
+
 export type DeletedWikiPage = WikiPageRevisionSummary & {
   /** `KEY/番号` */
   ref: string
+  /** 削除済み同士の段数(0 始まり)。一覧は親 → 子の順 */
+  depth: number
+  parent: DeletedWikiPageParent
 }
 
-/** 削除済みのページ(いまは存在しないもの)を、最後に削除された版で返す。復元はその版から行う */
+/**
+ * 削除済みのページ(いまは存在しないもの)を、最後に削除された版で返す。復元はその版から行う。
+ * 上から順に復元すれば元の親子関係に戻るよう、元の親を子より先に並べる(`arrangeDeletedWikiPages`)
+ */
 export const listDeletedWikiPages = async (
   actor: Actor,
   spaceId: string,
@@ -331,16 +349,32 @@ export const listDeletedWikiPages = async (
   if (rows.length === 0) {
     return []
   }
+  // いま存在するページは除き、元の親のパンくずにも使う
   const alive = await prisma.wikiPage.findMany({
-    where: { id: { in: rows.map(({ pageId }) => pageId) } },
-    select: { id: true },
+    where: { spaceId },
+    select: { id: true, parentId: true, title: true },
   })
-  const aliveIds = new Set(alive.map(({ id }) => id))
-  const deleted = rows.filter(({ pageId }) => !aliveIds.has(pageId))
+  const aliveIndex = indexWikiTree(alive)
+  const aliveTitles = new Map(alive.map(({ id, title }) => [id, title]))
+  const deleted = arrangeDeletedWikiPages(rows.filter(({ pageId }) => !aliveTitles.has(pageId)))
+  const deletedTitles = new Map(deleted.map(({ pageId, title }) => [pageId, title]))
+  const parentOf = ({ parentId }: { parentId: string | null }): DeletedWikiPageParent => {
+    if (parentId === null) {
+      return { state: 'root' }
+    }
+    if (aliveTitles.has(parentId)) {
+      const path = [parentId, ...ancestorIds(aliveIndex, parentId)].toReversed()
+      return { state: 'alive', path: path.map((id) => aliveTitles.get(id) ?? '') }
+    }
+    const title = deletedTitles.get(parentId)
+    return title === undefined ? { state: 'missing' } : { state: 'deleted', pageId: parentId, title }
+  }
   const cutoff = wikiRevisionCutoff(now)
   const viewableTickets = await viewableTicketIds(actor, deleted)
-  return deleted.map((row) => ({
+  return deleted.map(({ depth, ...row }) => ({
     ...toRevisionSummary(row, cutoff, viewableTickets),
     ref: wikiPageRef({ key: access.key, number: row.pageNumber }),
+    depth,
+    parent: parentOf(row),
   }))
 }

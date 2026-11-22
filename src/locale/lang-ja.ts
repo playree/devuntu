@@ -421,6 +421,7 @@ export const ja: DefaultLocaleItems = {
   msg_no_board_notes: 'まだありません。',
   msg_no_deleted_board_notes: '削除済みのものはありません。',
   msg_restored_target: '${target} を復元しました。',
+  msg_restored_wiki_page_with_descendants: '${target} と配下の ${count} ページを復元しました。',
   my_mentions: '自分宛てのメンション',
   msg_maintenance_mode: 'ただいまメンテナンスを行っています。\n終了までしばらくお待ちください。',
   msg_command_already_running: 'このコマンドは既に実行中です。終了してから再度お試しください。',
@@ -662,6 +663,9 @@ export const ja: DefaultLocaleItems = {
   wiki_conflict_title: '保存が競合しました',
   wiki_delete_revision: 'この版を削除',
   wiki_deleted_pages: '削除済みのページ',
+  wiki_deleted_parent: '元の親: ${path}',
+  wiki_deleted_parent_missing: '元の親は残っていません(スペース直下に戻ります)',
+  wiki_deleted_parent_root: '元の位置: スペース直下',
   wiki_deleted_tag: '${name}(削除済み)',
   wiki_design_doc_editor: '設計書の編集',
   wiki_design_doc_filter: 'タイトル・番号・メタ情報で絞り込み',
@@ -672,6 +676,7 @@ export const ja: DefaultLocaleItems = {
   wiki_discard_draft: '下書きの破棄',
   wiki_move: '移動',
   wiki_move_page: 'ページを移動',
+  wiki_open_restored_page: '復元したページを開く',
   wiki_page_number: '番号',
   wiki_page_ref: 'ページの指定',
   wiki_page_title: 'タイトル',
@@ -687,6 +692,8 @@ export const ja: DefaultLocaleItems = {
   wiki_position_last: '末尾',
   wiki_reorder_mode: '並べ替え',
   wiki_restore_this: 'この版に戻す',
+  wiki_restore_with_descendants: '配下ごと',
+  wiki_restore_with_descendants_hint: '配下もまとめて復元',
   wiki_revision_action_created: '作成',
   wiki_revision_action_deleted: '削除',
   wiki_revision_action_moved: '移動',
@@ -824,6 +831,9 @@ export const ja: DefaultLocaleItems = {
   msg_confirm_deletion: '${target} を削除します。',
   msg_confirm_disable_share: '共有を無効にすると、現在の共有URLは無効になります。よろしいですか？',
   msg_confirm_restore_deleted_wiki_page: '${target} を復元します。元の親ページが無い場合は、スペース直下に戻ります。',
+  msg_confirm_restore_deleted_wiki_page_parent_deleted:
+    '${target} を復元します。元の親の ${parent} は削除されたままのため、スペース直下に戻ります。先に ${parent} を復元すると、元の位置に戻ります。',
+  msg_confirm_restore_wiki_page_with_descendants: '${target} と配下の ${count} ページを、親から順に復元します。',
   msg_confirm_restore_wiki_page:
     '${target} のタイトル・本文・タグを、この版の内容に戻します。ページの位置は変わりません。',
   msg_confirm_revoke_consent:
@@ -942,7 +952,7 @@ export const ja: DefaultLocaleItems = {
   msg_wiki_board_assign:
     'ボードのメンバー(直接・グループ経由)が、選んだロールでこのスペースを使えます。割り当てられるのは、あなたが参加しているボードです。',
   msg_wiki_deleted_pages_hint:
-    '削除したページを復元できるのは、削除から ${days} 日のあいだだけです。配下ごと削除したページは1ページずつ復元します。',
+    '削除したページを復元できるのは、削除から ${days} 日のあいだだけです。上から順に復元すると、元の親子関係に戻ります。',
   msg_wiki_design_docs_load_failed: '設計書一覧を取得できませんでした。時間をおいてリロードしてください。',
   msg_wiki_diff_no_change: '本文に変更はありません。',
   msg_wiki_draft_copied: '下書きの本文(Markdown)をコピーしました。',
@@ -955,6 +965,8 @@ export const ja: DefaultLocaleItems = {
   msg_wiki_page_invalid_parent: 'そのページの下には移動できません(自分自身・子孫・別のスペースは選べません)。',
   msg_wiki_page_too_deep: '階層が深すぎます(10階層まで)。',
   msg_wiki_page_type_not_allowed: '設計書スペースでは、通常のページは作れません(設計書だけです)。',
+  msg_wiki_restore_parent_still_deleted:
+    '元の親の ${parent} は削除されたままのため、${target} はスペース直下に戻ります。',
   msg_wiki_restore_unchanged: 'いまの内容と同じため、変更はありません。',
   msg_wiki_revision_retention:
     '版は最後の保存から ${days} 日残ります。それより古い版も、ページが残っていれば最新の版と直近の ${keep} 版、保持期間より前の状態を表す1版は残ります。ただし1ページに残るのは新しい ${max} 版までです。続けて保存した分は1つの版にまとまります。',

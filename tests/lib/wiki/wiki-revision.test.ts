@@ -228,6 +228,7 @@ const summaryRow = (id: string, daysAgo: number, override: Record<string, unknow
   number: 1,
   action: 'updated',
   parentId: null,
+  order: 0,
   title: 'タイトル',
   tagIds: [],
   tagNames: [],
@@ -512,6 +513,7 @@ describe('listDeletedWikiPages', () => {
 
     const list = await listDeletedWikiPages({ id: 'u1' }, 's1', NOW)
 
+    expect(vi.mocked(prisma.wikiPage.findMany).mock.calls[0][0]).toMatchObject({ where: { spaceId: 's1' } })
     expect(assertWikiSpaceAccess).toHaveBeenCalledWith({ id: 'u1' }, 's1', 'view')
     expect(vi.mocked(prisma.wikiPageRevision.findMany).mock.calls[0][0]).toMatchObject({
       where: { spaceId: 's1', action: 'deleted' },
@@ -536,6 +538,35 @@ describe('listDeletedWikiPages', () => {
       ['r-hidden', null],
     ])
     expect(askedTicketIds()).toEqual([['t-open', 't-hidden']])
+  })
+
+  it('元の親を子より先に並べ、段数と元の親の状態を付ける', async () => {
+    // 削除した日時の新しい順: 子 c1 / 親 p / 孫 g / 親の残る x / 親の消えた m / 直下の r / 子 c2
+    vi.mocked(prisma.wikiPageRevision.findMany).mockResolvedValue([
+      summaryRow('r-c1', 1, { pageId: 'c1', pageNumber: 2, action: 'deleted', parentId: 'p', order: 1, title: '子1' }),
+      summaryRow('r-p', 1, { pageId: 'p', pageNumber: 1, action: 'deleted', parentId: 'top', title: '親' }),
+      summaryRow('r-g', 1, { pageId: 'g', pageNumber: 4, action: 'deleted', parentId: 'c1', title: '孫' }),
+      summaryRow('r-x', 2, { pageId: 'x', pageNumber: 5, action: 'deleted', parentId: 'mid', title: 'X' }),
+      summaryRow('r-m', 3, { pageId: 'm', pageNumber: 6, action: 'deleted', parentId: 'gone', title: 'M' }),
+      summaryRow('r-r', 4, { pageId: 'r', pageNumber: 7, action: 'deleted', parentId: null, title: 'R' }),
+      summaryRow('r-c2', 5, { pageId: 'c2', pageNumber: 3, action: 'deleted', parentId: 'p', order: 0, title: '子2' }),
+    ] as never)
+    vi.mocked(prisma.wikiPage.findMany).mockResolvedValue([
+      { id: 'top', parentId: null, title: 'トップ' },
+      { id: 'mid', parentId: 'top', title: '中間' },
+    ] as never)
+
+    const list = await listDeletedWikiPages({ id: 'u1' }, 's1', NOW)
+
+    expect(list.map(({ id, depth, parent }) => [id, depth, parent])).toEqual([
+      ['r-p', 0, { state: 'alive', path: ['トップ'] }],
+      ['r-c2', 1, { state: 'deleted', pageId: 'p', title: '親' }],
+      ['r-c1', 1, { state: 'deleted', pageId: 'p', title: '親' }],
+      ['r-g', 2, { state: 'deleted', pageId: 'c1', title: '子1' }],
+      ['r-x', 0, { state: 'alive', path: ['トップ', '中間'] }],
+      ['r-m', 0, { state: 'missing' }],
+      ['r-r', 0, { state: 'root' }],
+    ])
   })
 
   it('削除の版が無ければページを引かない', async () => {

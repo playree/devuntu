@@ -423,6 +423,7 @@ export const en: DefaultLocaleItems = {
   msg_no_board_notes: 'Nothing yet.',
   msg_no_deleted_board_notes: 'Nothing has been deleted.',
   msg_restored_target: 'Restored ${target}.',
+  msg_restored_wiki_page_with_descendants: 'Restored ${target} and its ${count} descendant pages.',
   my_mentions: 'Mentions',
   msg_maintenance_mode: 'We are currently performing maintenance.\nPlease try again later.',
   msg_command_already_running: 'This command is already running. Try again after it finishes.',
@@ -663,6 +664,9 @@ export const en: DefaultLocaleItems = {
   wiki_conflict_title: 'Save Conflict',
   wiki_delete_revision: 'Delete this version',
   wiki_deleted_pages: 'Deleted pages',
+  wiki_deleted_parent: 'Original parent: ${path}',
+  wiki_deleted_parent_missing: 'The original parent no longer exists (restores to the top level)',
+  wiki_deleted_parent_root: 'Originally at the top level',
   wiki_deleted_tag: '${name} (deleted)',
   wiki_design_doc_editor: 'Design doc editor',
   wiki_design_doc_filter: 'Filter by title, number or metadata',
@@ -673,6 +677,7 @@ export const en: DefaultLocaleItems = {
   wiki_discard_draft: 'Discard Draft',
   wiki_move: 'Move',
   wiki_move_page: 'Move Page',
+  wiki_open_restored_page: 'Open the restored page',
   wiki_page_number: 'No.',
   wiki_page_ref: 'Page reference',
   wiki_page_title: 'Title',
@@ -688,6 +693,8 @@ export const en: DefaultLocaleItems = {
   wiki_position_last: 'Last',
   wiki_reorder_mode: 'Reorder',
   wiki_restore_this: 'Restore this version',
+  wiki_restore_with_descendants: 'With children',
+  wiki_restore_with_descendants_hint: 'Restore together with its descendants',
   wiki_revision_action_created: 'Created',
   wiki_revision_action_deleted: 'Deleted',
   wiki_revision_action_moved: 'Moved',
@@ -826,6 +833,10 @@ Please copy and use the connection information above.
   msg_confirm_disable_share: 'Disabling sharing will invalidate the current share URL. Are you sure?',
   msg_confirm_restore_deleted_wiki_page:
     'Restores ${target}. If its original parent page no longer exists, it is restored to the top level.',
+  msg_confirm_restore_deleted_wiki_page_parent_deleted:
+    'Restores ${target}. Its original parent ${parent} is still deleted, so it is restored to the top level. Restore ${parent} first to put it back in its original position.',
+  msg_confirm_restore_wiki_page_with_descendants:
+    'Restores ${target} and its ${count} descendant pages, parents first.',
   msg_confirm_restore_wiki_page:
     'Restores the title, content and tags of ${target} to this version. The position of the page does not change.',
   msg_confirm_revoke_consent:
@@ -946,7 +957,7 @@ Please copy and use the connection information above.
   msg_wiki_board_assign:
     'Members of the board (direct or via groups) can use this space with the chosen role. You can assign boards you belong to.',
   msg_wiki_deleted_pages_hint:
-    'Deleted pages can be restored only for ${days} days after deletion. Pages deleted together with their descendants are restored one page at a time.',
+    'Deleted pages can be restored only for ${days} days after deletion. Restoring them from the top puts them back in their original hierarchy.',
   msg_wiki_design_docs_load_failed: 'Failed to load the design doc list. Please wait a moment and reload.',
   msg_wiki_diff_no_change: 'The content has not changed.',
   msg_wiki_draft_copied: 'Copied the draft content (Markdown).',
@@ -959,6 +970,8 @@ Please copy and use the connection information above.
   msg_wiki_page_invalid_parent: 'The page cannot be moved there (not under itself, its descendants, or another space).',
   msg_wiki_page_too_deep: 'Pages can be nested at most 10 levels deep.',
   msg_wiki_page_type_not_allowed: 'Only design docs can be created in a design doc space.',
+  msg_wiki_restore_parent_still_deleted:
+    ' Its original parent ${parent} is still deleted, so ${target} is restored to the top level.',
   msg_wiki_restore_unchanged: 'No changes. The content is the same as the current one.',
   msg_wiki_revision_retention:
     'Versions are kept for ${days} days after the last save. While the page exists, older versions are still kept if they are the latest version, one of the ${keep} before it, or the one showing the state before the retention period. However, only the newest ${max} versions are kept per page. Consecutive saves are combined into one version.',
