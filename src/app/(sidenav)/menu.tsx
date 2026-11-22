@@ -2,6 +2,7 @@
 import { AccordionSection } from '@/components/general/accordion'
 import { UserAvatar } from '@/components/general/avatar'
 import { MultiButton } from '@/components/general/button'
+import { usePushIfLeavable } from '@/components/general/leave-guard'
 import { SideNavSlot, useSideNav } from '@/components/general/side-nav-slot'
 import { TabsBox } from '@/components/general/tabs'
 import { ThemeSwitchList } from '@/components/general/theme-switch'
@@ -29,7 +30,6 @@ import { useLocale } from '@/locale/client'
 import { Accordion, Button, Card, cn } from '@heroui/react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { createContext, FC, ReactNode, useContext, useEffect, useState } from 'react'
 
 /**
@@ -68,7 +68,7 @@ export const MenuButton: FC<{
   /** 遷移と合わせて行う処理 */
   onNavigate?: () => void
 }> = ({ text, to, closeMenu, icon, onNavigate }) => {
-  const router = useRouter()
+  const pushIfLeavable = usePushIfLeavable()
   return (
     <div>
       <Button
@@ -77,7 +77,8 @@ export const MenuButton: FC<{
         className='my-0.5 justify-start rounded-xl px-4 hover:bg-mist-100 dark:hover:bg-neutral-900'
         variant='ghost'
         onPress={() => {
-          router.push(to)
+          // 編集中の下書きがあれば、捨てて移るかを確かめる
+          void pushIfLeavable(to)
           onNavigate?.()
           if (closeMenu) {
             closeMenu()

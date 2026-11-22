@@ -2,6 +2,7 @@
 
 import { MultiButton } from '@/components/general/button'
 import { InputSearchField } from '@/components/general/input'
+import { usePushIfLeavable } from '@/components/general/leave-guard'
 import { useModalState } from '@/components/general/modal'
 import { useSideNav } from '@/components/general/side-nav-slot'
 import { TreeView, type TreeViewItem, type TreeViewItemPlace } from '@/components/general/tree-view'
@@ -18,7 +19,7 @@ import { parseAction } from '@/lib/action/action-client'
 import { ClientError } from '@/lib/error'
 import { MAX_WIKI_SEARCH_KEYWORD, wikiSearchHref } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import { FC, useMemo, useState } from 'react'
 import { CreatePageModal, MovePageModal } from './page-modals'
 import { moveWikiPage } from './server'
@@ -32,9 +33,9 @@ import { WikiSpaceSwitcher } from './space-switcher'
 export const WikiSideTree: FC = () => {
   const { t } = useLocale()
   const { space, access, tree, tagsOf, reloadSpace } = useWikiSpace()
+  const pushIfLeavable = usePushIfLeavable()
   const { closeMenu } = useSideNav()
   const params = useParams<{ number?: string }>()
-  const router = useRouter()
   const [isEditMode, setEditMode] = useState(false)
   const [pendingId, setPendingId] = useState<string>()
   const createModalState = useModalState()
@@ -105,8 +106,8 @@ export const WikiSideTree: FC = () => {
               tooltip={t('settings')}
               icon={<Cog6ToothIcon width={16} />}
               onPress={() => {
-                router.push(`/wiki/${space.key}/settings`)
                 closeMenu()
+                void pushIfLeavable(`/wiki/${space.key}/settings`)
               }}
             />
           )}
@@ -121,8 +122,8 @@ export const WikiSideTree: FC = () => {
           maxLength={MAX_WIKI_SEARCH_KEYWORD}
           onSubmit={(value) => {
             if (value.trim()) {
-              router.push(wikiSearchHref({ spaceKey: space.key, q: value.trim() }))
               closeMenu()
+              void pushIfLeavable(wikiSearchHref({ spaceKey: space.key, q: value.trim() }))
             }
           }}
         />

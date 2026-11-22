@@ -1,11 +1,12 @@
 'use client'
 
+import { usePushIfLeavable } from '@/components/general/leave-guard'
 import { useSideNav } from '@/components/general/side-nav-slot'
 import { BookOpenIcon, ChevronDownIcon } from '@/components/icon'
 import { useActionData } from '@/lib/action/action-client'
 import { useLocale } from '@/locale/client'
 import { Button, cn, Dropdown, Label, Separator } from '@heroui/react'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { FC, useMemo } from 'react'
 import { getWikiSpaces } from '../server'
 import { useWikiSpace } from './space-context'
@@ -17,9 +18,9 @@ const ALL_SPACES_KEY = 'all'
 export const WikiSpaceSwitcher: FC = () => {
   const { t } = useLocale()
   const { space } = useWikiSpace()
+  const pushIfLeavable = usePushIfLeavable()
   const { closeMenu } = useSideNav()
   const pathname = usePathname()
-  const router = useRouter()
   const { data } = useActionData(() => getWikiSpaces({ includeArchived: false }))
 
   // アーカイブ済み・取得中でも、今のスペースは必ず選べるようにする
@@ -50,8 +51,8 @@ export const WikiSpaceSwitcher: FC = () => {
         <Dropdown.Menu
           aria-label={t('wiki_switch_space')}
           onAction={(key) => {
-            router.push(key === ALL_SPACES_KEY ? '/wiki' : `/wiki/${key}`)
             closeMenu()
+            void pushIfLeavable(key === ALL_SPACES_KEY ? '/wiki' : `/wiki/${key}`)
           }}
         >
           <Dropdown.Section

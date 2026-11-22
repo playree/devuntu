@@ -1,6 +1,7 @@
 'use client'
 
 import { ActionErrorNotifier } from '@/components/action-error-notifier'
+import { LeaveGuardProvider } from '@/components/general/leave-guard'
 import { ConfirmModalProvider } from '@/components/general/modal'
 import { GeneralUiText, GeneralUiTextProvider } from '@/components/general/ui-text'
 import { LocaleProvider } from '@/components/locale/client'
@@ -107,7 +108,9 @@ export const Providers: FC<ProvidersProps> = ({
           <MyGeneralUiTextProvider>
             <ConfirmModalProvider>
               <ActionErrorNotifier />
-              <MyRouterProvider>{children}</MyRouterProvider>
+              <LeaveGuardProvider>
+                <MyRouterProvider>{children}</MyRouterProvider>
+              </LeaveGuardProvider>
             </ConfirmModalProvider>
           </MyGeneralUiTextProvider>
         </DefaultTimezoneContext>
