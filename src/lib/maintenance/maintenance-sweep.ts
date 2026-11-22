@@ -193,6 +193,7 @@ export const sweepBoardNoteRevisions = async (now: Date): Promise<number> =>
  *   残す期限切れの版の数は `max(1, 1 + keepRecent - 期限内の版の数)` で、期限より古い版の新しい順にその数だけ残す
  * - 削除済みのページ: 期限より古い版をすべて消すので、削除したページを復元できるのは保持期間のあいだだけになる
  *
+ * 期限内の版を数えるのは、期限より古い版が2版以上あるページだけ(1版だけならどのみち残す)。
  * 残す版の判定は DB 側で行い、消す版だけを古い順に `MAINTENANCE_DELETE_BATCH` 件まで選んで同じ文で消す。
  * 期限より古い版を件数で絞って読んでから判定すると、残す版だけで上限が埋まったときに、それより古い消すべき版へ届かなくなるため。
  *
@@ -211,7 +212,7 @@ export const sweepWikiPageRevisions = async (now: Date): Promise<number> => {
     recent AS (
       SELECT "pageId", COUNT(*)::int AS "count"
       FROM "wiki_page_revision"
-      WHERE "updatedAt" >= ${cutoff}
+      WHERE "updatedAt" >= ${cutoff} AND "pageId" IN (SELECT "pageId" FROM expired WHERE "rank" > 1)
       GROUP BY "pageId"
     ),
     doomed AS (

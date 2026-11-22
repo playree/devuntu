@@ -329,7 +329,7 @@ describe('sweepWikiPageRevisions', () => {
     await sweepWikiPageRevisions(now)
     const { sql, values } = deleteSql()
     expect(sql).toContain('WHERE r."updatedAt" < ?')
-    expect(sql).toContain('WHERE "updatedAt" >= ?')
+    expect(sql).toContain('WHERE "updatedAt" >= ? AND "pageId" IN (SELECT "pageId" FROM expired WHERE "rank" > 1)')
     expect(values.slice(0, 2)).toEqual([msBefore(now, 7 * DAY_MS), msBefore(now, 7 * DAY_MS)])
   })
 
