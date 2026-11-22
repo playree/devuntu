@@ -239,6 +239,10 @@ const assertNotConflicted = (expected: number | null, updatedAt: Date) => {
   }
 }
 
+/** 呼び出し側で読んだ内容に手を加えてから保存するとき(MCP の edits)の競合判定。日時として読めなければ入力不正 */
+export const assertWikiPageNotConflicted = (expectedUpdatedAt: string | undefined, updatedAt: Date) =>
+  assertNotConflicted(parseExpectedUpdatedAt(expectedUpdatedAt), updatedAt)
+
 export type CreateWikiPageInput = {
   title: string
   content?: string

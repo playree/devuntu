@@ -34,7 +34,8 @@ import { agentAuth, oauthAuth } from '../../helpers/resource-auth'
 vi.mock('@/lib/prisma', async () => (await import('../../helpers/prisma')).mockPrisma({}))
 vi.mock('@/lib/mcp/mcp-ticket', () => ({ resolveTicketId: vi.fn() }))
 vi.mock('@/lib/wiki/wiki-page', async (importOriginal) => ({
-  errWikiPageConflict: (await importOriginal<typeof import('@/lib/wiki/wiki-page')>()).errWikiPageConflict,
+  assertWikiPageNotConflicted: (await importOriginal<typeof import('@/lib/wiki/wiki-page')>())
+    .assertWikiPageNotConflicted,
   createWikiPage: vi.fn(),
   deleteWikiPage: vi.fn(),
   findWikiPageByNumber: vi.fn(),
@@ -234,6 +235,31 @@ describe('saveWikiPageForMcp: 更新', () => {
       }),
     )
     expect(error.errorType).toBe(WIKI_PAGE_CONFLICT)
+    expect(updateWikiPage).not.toHaveBeenCalled()
+  })
+
+  it('edits で、読んだ時点の updatedAt と一致すれば保存する', async () => {
+    await saveWikiPageForMcp(human, {
+      ref: 'DOCS/12',
+      edits: [{ oldText: '古い手順', newText: '新しい手順' }],
+      expectedUpdatedAt: READ_AT.toISOString(),
+    })
+    expect(vi.mocked(updateWikiPage).mock.calls[0][4]).toEqual({
+      expectedUpdatedAt: READ_AT.toISOString(),
+      ticketId: null,
+    })
+  })
+
+  it('edits で、日時として読めない expectedUpdatedAt は競合ではなく入力不正(読み直しても解消しないため)', async () => {
+    const error = await errorOf(
+      saveWikiPageForMcp(human, {
+        ref: 'DOCS/12',
+        edits: [{ oldText: '古い手順', newText: 'x' }],
+        expectedUpdatedAt: 'yesterday',
+      }),
+    )
+    expect(error.errorType).toBe(VALIDATION_ERROR)
+    expect(error.message).toContain('expectedUpdatedAt must be an ISO 8601 date-time')
     expect(updateWikiPage).not.toHaveBeenCalled()
   })
 
