@@ -167,7 +167,10 @@ describe('listContentAttachments', () => {
     expect(list.map((item) => item.key)).toEqual(['a', 'b'])
     expect(prisma.attachment.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { key: { in: ['a', 'x', 'b'] }, OR: [{ boardId: 'board1' }, { boardId: null, wikiSpaceId: null }] },
+        where: {
+          key: { in: ['a', 'x', 'b'] },
+          OR: [{ boardId: 'board1' }, { boardId: null, wikiSpaceId: null, detachedAt: null }],
+        },
       }),
     )
   })
@@ -189,9 +192,10 @@ describe('listAttachmentKeysOf / detachAttachmentsOf', () => {
   it.each([
     [{ boardId: 'b1' }, { boardId: null }],
     [{ wikiSpaceId: 's1' }, { wikiSpaceId: null }],
-  ])('添付先 %o の紐付けだけを外す', async (target, data) => {
-    await detachAttachmentsOf(prisma, target)
-    expect(prisma.attachment.updateMany).toHaveBeenCalledWith({ where: target, data })
+  ])('添付先 %o の紐付けを外し、削除待ちの印を付ける', async (target, unlink) => {
+    const now = new Date('2026-11-22T10:00:00.000Z')
+    await detachAttachmentsOf(prisma, target, now)
+    expect(prisma.attachment.updateMany).toHaveBeenCalledWith({ where: target, data: { ...unlink, detachedAt: now } })
   })
 
   it('添付先の ID が空なら、全添付を対象にしないよう例外にする', async () => {

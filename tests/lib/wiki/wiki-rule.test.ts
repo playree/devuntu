@@ -5,6 +5,7 @@
  */
 
 import {
+  canDeleteWikiRevision,
   evaluateWikiAccess,
   hasWikiRole,
   MAX_WIKI_PAGE_TAGS,
@@ -21,6 +22,7 @@ import {
   wikiRevisionTagLabels,
   wikiSearchHref,
   type WikiRevisionOrigin,
+  type WikiRole,
 } from '@/lib/wiki/wiki-rule'
 import { describe, expect, it } from 'vitest'
 
@@ -71,6 +73,26 @@ describe('evaluateWikiAccess', () => {
     [null, false, false, { canView: false, canWrite: false, canManage: false }],
   ] as const)('role=%s archived=%s admin=%s', (role, archived, isAdmin, expected) => {
     expect(evaluateWikiAccess({ role, archived, isAdmin })).toEqual(expected)
+  })
+})
+
+describe('canDeleteWikiRevision', () => {
+  const access = (role: WikiRole | null, archived: boolean, isAdmin: boolean) => ({
+    ...evaluateWikiAccess({ role, archived, isAdmin }),
+    archived,
+  })
+
+  it.each([
+    ['viewer', false, false, false],
+    // 編集者は版を書けても消せない(本文を空にしてから前の版を消せば、内容を戻せなくなるため)
+    ['editor', false, false, false],
+    ['owner', false, false, true],
+    ['owner', true, false, false],
+    ['viewer', false, true, true],
+    // 本文を読めない管理者は消せない
+    [null, false, true, false],
+  ] as const)('role=%s archived=%s admin=%s', (role, archived, isAdmin, expected) => {
+    expect(canDeleteWikiRevision(access(role, archived, isAdmin))).toBe(expected)
   })
 })
 

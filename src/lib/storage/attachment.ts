@@ -163,14 +163,14 @@ export const saveContentFile = async (file: File, owner: AttachmentOwner) => {
  * 本文から参照されている添付の一覧(チケット詳細・MCP の get_ticket 用)。並びは `keys` の順。
  *
  * 本文には他ボードや Wiki スペースの添付URLも書けてしまうため、そのボードの添付と
- * どこにも属さないもの(全ログインユーザー向け)だけに絞り、見られない添付の名前やサイズを出さない。
+ * どこにも属さないもの(全ログインユーザー向け。削除待ちは除く)だけに絞り、見られない添付の名前やサイズを出さない。
  */
 export const listContentAttachments = async (keys: string[], boardId: string) => {
   if (keys.length === 0) {
     return []
   }
   const rows = await prisma.attachment.findMany({
-    where: { key: { in: keys }, OR: [{ boardId }, { boardId: null, wikiSpaceId: null }] },
+    where: { key: { in: keys }, OR: [{ boardId }, { boardId: null, wikiSpaceId: null, detachedAt: null }] },
     select: { key: true, originalName: true, size: true, mimeType: true, createdAt: true },
   })
   const byKey = new Map(rows.map((row) => [row.key, row]))
@@ -262,12 +262,18 @@ export const listAttachmentKeysOf = async (
 }
 
 /**
- * ボード / Wiki スペースに属する添付の紐付けを外す。ボード / スペースの削除の直前に呼ぶ。
+ * ボード / Wiki スペースに属する添付の紐付けを外し、削除待ち(`detachedAt`)にする。ボード / スペースの削除の直前に呼ぶ。
  *
  * Cascade でレコードごと消すと、実体の削除に失敗した分がどこからも辿れなくなる。
- * 行を残しておけば未参照の添付として掃除が拾い直すので、失敗しても収束する。
+ * 行を残しておけば掃除が拾い直すので、失敗しても収束する。
+ * 紐付けだけを外すと全ログインユーザーへ配信してよい添付と見分けがつかないので、印を付けて配信を止める。
  */
-export const detachAttachmentsOf = async (tx: Prisma.TransactionClient, target: AttachmentTarget): Promise<void> => {
+export const detachAttachmentsOf = async (
+  tx: Prisma.TransactionClient,
+  target: AttachmentTarget,
+  now: Date = new Date(),
+): Promise<void> => {
   const where = attachmentTargetWhere(target)
-  await tx.attachment.updateMany({ where, data: 'boardId' in where ? { boardId: null } : { wikiSpaceId: null } })
+  const unlink = 'boardId' in where ? { boardId: null } : { wikiSpaceId: null }
+  await tx.attachment.updateMany({ where, data: { ...unlink, detachedAt: now } })
 }

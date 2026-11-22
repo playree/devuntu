@@ -24,7 +24,10 @@ export type WikiSpaceAccess = WikiPermission & {
   archived: boolean
 }
 
-/** `userId` が閲覧できるスペースの条件(割り当て・グループ・ボード経由・everyone) */
+/**
+ * `userId` が閲覧できるスペースの条件(割り当て・グループ・ボード経由・everyone)。
+ * everyone は全員に公開する文書なので、エージェントのユーザーも担当ボードに関係なく含める
+ */
 export const wikiSpaceVisibleWhere = (userId: string): WikiSpaceWhereInput => ({
   OR: [
     { visibility: 'everyone' },

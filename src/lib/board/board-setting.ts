@@ -199,13 +199,10 @@ export const setBoardNotify = async (
 /**
  * ボード削除(owner または管理者)。チケット / タグ / アサインは Cascade で消える。
  *
- * 添付のレコードは Cascade に任せず、削除の前にボードとの紐付けだけを外して残す。
+ * 添付のレコードは Cascade に任せず、削除の前にボードとの紐付けを外して削除待ち(`detachedAt`)にして残す。
  * レコードごと消してしまうと、コミット後の実体削除が失敗した分を誰も辿れなくなり、
- * DBを起点にした掃除の対象から永久に外れる。行が残っていれば、本文が消えて参照が
- * 外れた添付として `maintenance-attachment.ts` が拾い直し、実体ごと回収して収束する。
- *
- * 回収されるまでの間 `boardId` は null(全ログインユーザーへ配信してよい扱い)になるが、
- * キーは推測できず、URLを知っているのは削除したボードのメンバーだけなので実害は無い。
+ * DBを起点にした掃除の対象から永久に外れる。行が残っていれば、削除待ちの添付として `maintenance-attachment.ts` が拾い直し、実体ごと回収して収束する。
+ * 回収されるまでの間も、削除待ちの添付は誰にも配信しない(`canViewAttachment`)。
  */
 export const deleteBoard = async (actor: Actor, id: string) => {
   const keys = await prisma.$transaction(async (tx) => {

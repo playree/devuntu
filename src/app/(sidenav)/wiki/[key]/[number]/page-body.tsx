@@ -54,11 +54,12 @@ type Page = NonNullable<GetWikiPageReturnType>['page']
  * 編集中に変更があれば、キャンセル・画面の移動・タブを閉じる前に確認する。Ctrl/Cmd+S で保存できる。
  * 保存が競合したら、下書きを残したまま最新の確認・下書きのコピー・上書き保存を選べる
  */
-export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Promise<void> }> = ({
-  page,
-  canWrite,
-  onSaved,
-}) => {
+export const WikiPageBody: FC<{
+  page: Page
+  canWrite: boolean
+  canDeleteRevision: boolean
+  onSaved: () => Promise<void>
+}> = ({ page, canWrite, canDeleteRevision, onSaved }) => {
   const { t } = useLocale()
   const tz = useUserTimezone()
   const { space } = useWikiSpace()
@@ -404,7 +405,7 @@ export const WikiPageBody: FC<{ page: Page; canWrite: boolean; onSaved: () => Pr
                 content={shownContent}
                 revision={revisions.past}
               />
-              {canWrite && !isEditing && <WikiRevisionDeleteButton revisions={revisions} />}
+              {canDeleteRevision && !isEditing && <WikiRevisionDeleteButton revisions={revisions} />}
             </div>
           </div>
         )}

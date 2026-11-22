@@ -10,7 +10,7 @@ import { BookOpenIcon, DocumentPlusIcon, FolderArrowRightIcon, TrashIcon } from 
 import { NoAccessView } from '@/components/no-access-view'
 import { ReloadButton } from '@/components/reload-button'
 import { useActionData } from '@/lib/action/action-client'
-import { wikiPageRef } from '@/lib/wiki/wiki-rule'
+import { canDeleteWikiRevision, wikiPageRef } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { Breadcrumbs, ButtonGroup } from '@heroui/react'
 import { FC } from 'react'
@@ -153,7 +153,13 @@ export const WikiPageClient: FC<{ spaceKey: string; number: number }> = ({ space
 
         {space.archived && <NoticePanel status='warning'>{t('msg_wiki_space_archived')}</NoticePanel>}
 
-        <WikiPageBody key={page.id} page={page} canWrite={access.canWrite} onSaved={reloadAll} />
+        <WikiPageBody
+          key={page.id}
+          page={page}
+          canWrite={access.canWrite}
+          canDeleteRevision={canDeleteWikiRevision(access)}
+          onSaved={reloadAll}
+        />
       </FlexCol>
 
       <ChildPages parentId={page.id} />

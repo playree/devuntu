@@ -76,20 +76,20 @@ describe('findTicketIdByDisplayId', () => {
 
 describe('canViewAttachment', () => {
   it('ボードに属さない添付は誰でも読める', async () => {
-    expect(await canViewAttachment(actor, { key: KEY, boardId: null, wikiSpaceId: null })).toBe(true)
+    expect(await canViewAttachment(actor, { key: KEY, boardId: null, wikiSpaceId: null, detachedAt: null })).toBe(true)
     expect(prisma.board.findUnique).not.toHaveBeenCalled()
   })
 
   it('ボードのメンバーなら読める', async () => {
     mockBoard(true)
-    expect(await canViewAttachment(actor, { key: KEY, boardId: 'b1', wikiSpaceId: null })).toBe(true)
+    expect(await canViewAttachment(actor, { key: KEY, boardId: 'b1', wikiSpaceId: null, detachedAt: null })).toBe(true)
     expect(prisma.ticket.count).not.toHaveBeenCalled()
   })
 
   it('メンバーでなければ、承認対象のチケットから参照されている添付だけを許す', async () => {
     mockBoard(false)
     vi.mocked(prisma.ticket.count).mockResolvedValue(1)
-    expect(await canViewAttachment(actor, { key: KEY, boardId: 'b1', wikiSpaceId: null })).toBe(true)
+    expect(await canViewAttachment(actor, { key: KEY, boardId: 'b1', wikiSpaceId: null, detachedAt: null })).toBe(true)
 
     const url = toUploadUrl(KEY)
     expect(prisma.ticket.count).toHaveBeenCalledWith({
@@ -104,6 +104,6 @@ describe('canViewAttachment', () => {
   it('承認対象のチケットから参照されていなければ読めない', async () => {
     mockBoard(false)
     vi.mocked(prisma.ticket.count).mockResolvedValue(0)
-    expect(await canViewAttachment(actor, { key: KEY, boardId: 'b1', wikiSpaceId: null })).toBe(false)
+    expect(await canViewAttachment(actor, { key: KEY, boardId: 'b1', wikiSpaceId: null, detachedAt: null })).toBe(false)
   })
 })

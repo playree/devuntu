@@ -311,6 +311,7 @@ describe('get_image', () => {
     findAttachment.mockResolvedValue({
       boardId: null,
       wikiSpaceId: 'w1',
+      detachedAt: null,
       originalName: 'icon.png',
       size: 10,
       mimeType: 'image/webp',
@@ -322,6 +323,7 @@ describe('get_image', () => {
       key: KEY,
       boardId: null,
       wikiSpaceId: 'w1',
+      detachedAt: null,
     })
     expect(result.isError).toBeFalsy()
   })

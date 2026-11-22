@@ -182,12 +182,17 @@ const getImageForMcp = async (auth: ResourceAuth, input: { image: string; maxSiz
 
   const attachment = await prisma.attachment.findUnique({
     where: { key },
-    select: { boardId: true, wikiSpaceId: true, originalName: true, size: true, mimeType: true },
+    select: { boardId: true, wikiSpaceId: true, detachedAt: true, originalName: true, size: true, mimeType: true },
   })
   // アクセス不可は未存在と区別せず、キーの当たり判定を返さない(配信APIと同じ扱い)
   if (
     !attachment ||
-    !(await canViewAttachment(auth.user, { key, boardId: attachment.boardId, wikiSpaceId: attachment.wikiSpaceId }))
+    !(await canViewAttachment(auth.user, {
+      key,
+      boardId: attachment.boardId,
+      wikiSpaceId: attachment.wikiSpaceId,
+      detachedAt: attachment.detachedAt,
+    }))
   ) {
     throw errInvalidOperation()
   }
