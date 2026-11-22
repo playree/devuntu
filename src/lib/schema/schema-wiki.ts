@@ -112,10 +112,21 @@ export const scMoveWikiPage = z.object({
 })
 export type MoveWikiPage = z.infer<typeof scMoveWikiPage>
 
-/** 子孫を持つページは recursive が無いと消せない */
+/**
+ * 画面のツリーでの上下の並べ替え。parentId / siblingIds は画面で見ていた親と兄弟の並び(自分を含む)で、
+ * 今と違えば弾く。position は 0 始まり
+ */
+export const scReorderWikiPage = z.object({
+  id: z.uuidv7(),
+  parentId: z.uuidv7().nullable(),
+  siblingIds: z.array(z.uuidv7()).min(1),
+  position: z.number().int().min(0),
+})
+
+/** descendantIds は確認で見せた配下のページ。今の配下と違えば消さずに弾く(1件以上なら配下ごと消す) */
 export const scDeleteWikiPage = z.object({
   id: z.uuidv7(),
-  recursive: z.boolean(),
+  descendantIds: z.array(z.uuidv7()),
 })
 
 /** 版の内容(印刷用ページ)。版がそのページのものかも確かめる */

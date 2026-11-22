@@ -140,7 +140,7 @@ export const WikiPageClient: FC<{ spaceKey: string; number: number }> = ({ space
               isIconOnly
               tooltip={t('delete')}
               icon={<TrashIcon />}
-              onPress={() => deletePage(page, parentHref)}
+              onPress={() => deletePage(page, parentHref, reloadAll)}
             >
               <ButtonGroup.Separator />
             </MultiButton>

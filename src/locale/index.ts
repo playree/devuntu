@@ -904,6 +904,7 @@ export type LocaleItemBase =
   | 'msg_wiki_space_key'
   | 'msg_wiki_space_no_owner'
   | 'msg_wiki_space_type'
+  | 'msg_wiki_tree_changed'
   | 'msg_wiki_visibility'
   | 'msg_within_a_day'
   | 'msg_within_days'

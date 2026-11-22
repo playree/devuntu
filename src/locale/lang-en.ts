@@ -974,6 +974,8 @@ Please copy and use the connection information above.
   msg_wiki_space_no_owner: 'A space needs at least one owner. Assign another owner first.',
   msg_wiki_space_type:
     'With "Design docs", only design docs can be created and the space top shows the list of design docs. A space with normal pages cannot be changed to it.',
+  msg_wiki_tree_changed:
+    'The page tree was changed by someone else, so nothing was done. The tree has been refreshed; check it and try again.',
   msg_wiki_visibility:
     'With "Everyone", every signed-in user can read the space. Only assigned editors and owners can edit.',
   msg_within_a_day: 'Within 1 day',

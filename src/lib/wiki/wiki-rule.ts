@@ -41,6 +41,8 @@ export const DUPLICATED_WIKI_SPACE_KEY = 'DUPLICATED_WIKI_SPACE_KEY'
 export const WIKI_PAGE_CONFLICT = 'WIKI_PAGE_CONFLICT'
 /** 子を持つページを recursive 指定なしで削除しようとした */
 export const WIKI_PAGE_HAS_CHILDREN = 'WIKI_PAGE_HAS_CHILDREN'
+/** 画面が見ていたツリー(親・配下の件数)と、今のツリーが食い違う */
+export const WIKI_TREE_CHANGED = 'WIKI_TREE_CHANGED'
 /** 階層の深さの上限を超える */
 export const WIKI_PAGE_TOO_DEEP = 'WIKI_PAGE_TOO_DEEP'
 /** 親に指定できないページ(自分自身・自分の子孫・別スペース・存在しない) */

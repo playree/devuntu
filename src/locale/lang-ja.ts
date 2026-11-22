@@ -972,6 +972,8 @@ export const ja: DefaultLocaleItems = {
   msg_wiki_space_no_owner: 'owner が1人もいなくなる変更はできません。先に別の owner を割り当ててください。',
   msg_wiki_space_type:
     '「設計書」にすると、作れるページは設計書だけになり、スペースのトップに設計書一覧を表示します。通常のページがあるスペースは「設計書」にできません。',
+  msg_wiki_tree_changed:
+    '他の人の操作でページの構成が変わっていたため、実行しませんでした。ツリーを更新したので、確認してからもう一度操作してください。',
   msg_wiki_visibility:
     '「全員」にすると、ログインできる全員が閲覧できます。編集できるのは割り当てられた編集者以上です。',
   msg_within_a_day: '1日以内',
