@@ -668,6 +668,7 @@ export type LocaleItemBase =
   | 'wiki_conflict_title'
   | 'wiki_delete_revision'
   | 'wiki_deleted_pages'
+  | 'wiki_deleted_tag'
   | 'wiki_design_doc_editor'
   | 'wiki_design_doc_filter'
   | 'wiki_design_doc_source'

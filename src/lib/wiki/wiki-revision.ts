@@ -20,7 +20,15 @@ import { errInvalidOperation } from '../error'
 import { logger } from '../logger'
 import { prisma, type Db } from '../prisma'
 import { assertWikiSpaceAccess } from './wiki-access'
-import { resolveWikiTagNames, shouldMergeWikiRevision, wikiPageRef, type WikiPageSnapshot } from './wiki-rule'
+import {
+  resolveWikiRevisionTags,
+  revisionTagColumns,
+  revisionTagsOf,
+  shouldMergeWikiRevision,
+  wikiPageRef,
+  type WikiPageSnapshot,
+  type WikiRevisionTag,
+} from './wiki-rule'
 import { listWikiTags, type WikiTagOption } from './wiki-tag'
 
 /** 保持期限。最後の保存(updatedAt)がこれより古い版は「保持期間より前の状態」 */
@@ -43,7 +51,7 @@ export type WriteWikiPageRevision = {
 /** 版を残す。まとめたときは 'merged'、新しく作ったときは 'created' */
 export const writeWikiPageRevision = async (
   tx: Db,
-  { snapshot, ...revision }: WriteWikiPageRevision,
+  { snapshot: { tags, ...snapshot }, ...revision }: WriteWikiPageRevision,
   now: Date = new Date(),
 ): Promise<'created' | 'merged'> => {
   const ticketId = revision.ticketId ?? null
@@ -74,7 +82,10 @@ export const writeWikiPageRevision = async (
       mergeMinutes,
     )
   ) {
-    await tx.wikiPageRevision.update({ where: { id: latest.id }, data: { ...snapshot, updatedAt: now } })
+    await tx.wikiPageRevision.update({
+      where: { id: latest.id },
+      data: { ...snapshot, ...revisionTagColumns(tags), updatedAt: now },
+    })
     return 'merged'
   }
 
@@ -85,6 +96,7 @@ export const writeWikiPageRevision = async (
       ticketId,
       message,
       ...snapshot,
+      ...revisionTagColumns(tags),
       createdAt: now,
       updatedAt: now,
     },
@@ -112,6 +124,7 @@ const REVISION_SUMMARY_SELECT = {
   order: true,
   title: true,
   type: true,
+  tagIds: true,
   tagNames: true,
   via: true,
   restoredFromId: true,
@@ -124,7 +137,9 @@ const REVISION_SUMMARY_SELECT = {
 
 type RevisionSummaryRow = Prisma.WikiPageRevisionGetPayload<{ select: typeof REVISION_SUMMARY_SELECT }>
 
-export type WikiPageRevisionSummary = Omit<RevisionSummaryRow, 'actor' | 'ticket'> & {
+export type WikiPageRevisionSummary = Omit<RevisionSummaryRow, 'actor' | 'ticket' | 'tagIds' | 'tagNames'> & {
+  /** 書いたときのタグ。今のタグへは ID で引き当てる(`resolveWikiRevisionTags`) */
+  tags: WikiRevisionTag[]
   actorName: string
   actorIsAgent: boolean
   /** 書いたときに対応していたチケットの表示ID。閲覧者が見られないチケットは null */
@@ -153,11 +168,12 @@ const viewableTicketIds = async (actor: Actor, rows: readonly Pick<RevisionSumma
 }
 
 const toRevisionSummary = (
-  { actor, ticket, ...row }: RevisionSummaryRow,
+  { actor, ticket, tagIds, tagNames, ...row }: RevisionSummaryRow,
   cutoff: Date,
   viewableTickets: ReadonlySet<string>,
 ): WikiPageRevisionSummary => ({
   ...row,
+  tags: revisionTagsOf({ tagIds, tagNames }),
   actorName: actor?.name ?? '',
   actorIsAgent: actor?.isAgent ?? false,
   ticketDisplayId:
@@ -227,14 +243,14 @@ export const getWikiPageRevisionContent = async (actor: Actor, revisionId: strin
 
 /**
  * 版の内容(印刷用ページで過去の版を出すときに引く)。指定したページの版でなければ拒否する。
- * タグは版のタグ名のうち、いまスペースに残っているものを返す(画面で過去の版を表示するときと同じ)
+ * タグは版のタグのうち、いまスペースに残っているものを今の名前で返す(画面で過去の版を表示するときと同じ)
  */
 export const getWikiPageRevisionSnapshot = async (
   actor: Actor,
   pageId: string,
   revisionId: string,
   now: Date = new Date(),
-): Promise<WikiPageRevisionSummary & { content: string; tags: WikiTagOption[] }> => {
+): Promise<Omit<WikiPageRevisionSummary, 'tags'> & { content: string; tags: WikiTagOption[] }> => {
   const row = await prisma.wikiPageRevision.findUnique({
     where: { id: revisionId },
     select: { ...REVISION_SUMMARY_SELECT, spaceId: true, content: true },
@@ -244,9 +260,9 @@ export const getWikiPageRevisionSnapshot = async (
   }
   const { spaceId, content, ...summary } = row
   await assertWikiSpaceAccess(actor, spaceId, 'view')
-  const tags = resolveWikiTagNames(summary.tagNames, await listWikiTags(spaceId))
   const viewableTickets = await viewableTicketIds(actor, [summary])
-  return { ...toRevisionSummary(summary, wikiRevisionCutoff(now), viewableTickets), content, tags }
+  const revision = toRevisionSummary(summary, wikiRevisionCutoff(now), viewableTickets)
+  return { ...revision, content, tags: resolveWikiRevisionTags(revision.tags, await listWikiTags(spaceId)) }
 }
 
 /**

@@ -37,7 +37,7 @@ import {
   type WikiWriter,
 } from './wiki-rule'
 import { getWikiSpaceByKey } from './wiki-space'
-import { assertWikiTagIdsInSpace, findWikiTagsByNames, syncWikiPageTags } from './wiki-tag'
+import { assertWikiTagIdsInSpace, findWikiTagsByIds, syncWikiPageTags } from './wiki-tag'
 import {
   ancestorIds,
   depthOf,
@@ -195,7 +195,7 @@ const snapshotOf = ({ parentId, order, title, content, type, tags }: SnapshotRow
   title,
   content,
   type,
-  tagNames: tags.map(({ tag }) => tag.name),
+  tags: tags.map(({ tag }) => tag),
 })
 
 export type WikiPageWriteResult = {
@@ -316,7 +316,7 @@ export const createWikiPage = async (
       pageId: created.id,
       pageNumber: number,
       action: 'created',
-      snapshot: { parentId, order, title, content, type, tagNames: tags.map(({ name }) => name) },
+      snapshot: { parentId, order, title, content, type, tags },
       actorId: actor.id,
       via: writer.via,
       ticketId,
@@ -384,7 +384,7 @@ export const updateWikiPage = async (
       title: patch.title?.trim() ?? before.title,
       content: patch.content ?? before.content,
       type: patch.type ?? before.type,
-      tagNames: nextTags ? nextTags.map(({ name }) => name) : before.tagNames,
+      tags: nextTags ?? before.tags,
     }
     assertTitle(next.title)
     assertContent(next.content)
@@ -593,11 +593,11 @@ const RESTORE_SOURCE_SELECT = {
   title: true,
   content: true,
   type: true,
-  tagNames: true,
+  tagIds: true,
 } as const
 
 /**
- * 版の内容へ戻し、restored の版を残す。タグは名前で引き当て、スペースから消えたタグは外す。
+ * 版の内容へ戻し、restored の版を残す。タグは ID で引き当て(改名したタグは今の名前で付く)、スペースから消えたタグは外す。
  * - ページが残っている: タイトル・本文・種類・タグだけを戻す。位置(親・並び)は変えない(位置は移動で変える)
  * - 削除済み: 同じ id・番号で作り直す。版の親が残っていて深さの上限に収まればその下の元の位置へ、
  *   そうでなければスペース直下の末尾へ戻す。配下ごと削除したページは1ページずつ戻す
@@ -624,9 +624,8 @@ export const restoreWikiPageRevision = async (
     assertPageTypeAllowed(access, revision.type)
     const { pageId, pageNumber: number } = revision
     const ref = wikiPageRef({ key: access.key, number })
-    const tags = await findWikiTagsByNames(tx, spaceId, revision.tagNames)
+    const tags = await findWikiTagsByIds(tx, spaceId, revision.tagIds)
     const tagIds = tags.map(({ id }) => id)
-    const tagNames = tags.map(({ name }) => name)
     const writeRestored = (snapshot: WikiPageSnapshot) =>
       writeWikiPageRevision(tx, {
         spaceId,
@@ -674,7 +673,7 @@ export const restoreWikiPageRevision = async (
         title: revision.title,
         content: revision.content,
         type: revision.type,
-        tagNames,
+        tags,
       })
       return { result: 'updated' as const, id: pageId, ref, number, updatedAt: updated.updatedAt }
     }
@@ -717,7 +716,7 @@ export const restoreWikiPageRevision = async (
       title: revision.title,
       content: revision.content,
       type: revision.type,
-      tagNames,
+      tags,
     })
     return { result: 'created' as const, id: pageId, ref, number, updatedAt: created.updatedAt }
   })

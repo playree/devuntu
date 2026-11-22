@@ -54,7 +54,18 @@ const snapshot: WikiPageSnapshot = {
   title: 'タイトル',
   content: '本文',
   type: 'page',
-  tagNames: [],
+  tags: [{ id: 't1', name: '設計' }],
+}
+
+/** snapshot を版の行に書いたときの列(タグは同じ並びの ID と名前) */
+const snapshotColumns = {
+  parentId: null,
+  order: 0,
+  title: 'タイトル',
+  content: '本文',
+  type: 'page',
+  tagIds: ['t1'],
+  tagNames: ['設計'],
 }
 
 const revision = (override: Partial<WriteWikiPageRevision> = {}): WriteWikiPageRevision => ({
@@ -106,7 +117,7 @@ describe('writeWikiPageRevision: 連続保存のまとめ', () => {
     expect(await writeWikiPageRevision(prisma, revision(), NOW)).toBe('merged')
     expect(prisma.wikiPageRevision.update).toHaveBeenCalledWith({
       where: { id: 'r-latest' },
-      data: { ...snapshot, updatedAt: NOW },
+      data: { ...snapshotColumns, updatedAt: NOW },
     })
     expect(prisma.wikiPageRevision.create).not.toHaveBeenCalled()
   })
@@ -129,7 +140,7 @@ describe('writeWikiPageRevision: 連続保存のまとめ', () => {
       action: 'updated',
       actorId: 'u1',
       ticketId: null,
-      ...snapshot,
+      ...snapshotColumns,
       createdAt: NOW,
       updatedAt: NOW,
     })
@@ -218,6 +229,7 @@ const summaryRow = (id: string, daysAgo: number, override: Record<string, unknow
   action: 'updated',
   parentId: null,
   title: 'タイトル',
+  tagIds: [],
   tagNames: [],
   via: 'web',
   restoredFromId: null,
@@ -245,7 +257,11 @@ describe('listWikiPageRevisions', () => {
       .mockResolvedValueOnce({ spaceId: 's1' } as never)
       .mockResolvedValueOnce({ updatedAt: pageUpdatedAt } as never)
     vi.mocked(prisma.wikiPageRevision.findMany).mockResolvedValue([
-      summaryRow('r2', 1, { ticket: { id: 't5', number: 5, board: { key: 'DEV' } } }),
+      summaryRow('r2', 1, {
+        ticket: { id: 't5', number: 5, board: { key: 'DEV' } },
+        tagIds: ['t1', 't9'],
+        tagNames: ['設計', '削除済み'],
+      }),
       summaryRow('r1', 8, { actor: null }),
     ] as never)
 
@@ -259,7 +275,15 @@ describe('listWikiPageRevisions', () => {
       ['r2', false],
       ['r1', true],
     ])
-    expect(list[0]).toMatchObject({ ticketDisplayId: 'DEV-5', actorName: '利用者' })
+    expect(list[0]).toMatchObject({
+      ticketDisplayId: 'DEV-5',
+      actorName: '利用者',
+      tags: [
+        { id: 't1', name: '設計' },
+        { id: 't9', name: '削除済み' },
+      ],
+    })
+    expect(list[0], 'タグの列はそのまま出さない').not.toHaveProperty('tagIds')
     expect(list[1]).toMatchObject({ ticketDisplayId: null, actorName: '', actorIsAgent: false })
     expect(at).toEqual(pageUpdatedAt)
   })
@@ -341,9 +365,10 @@ describe('getWikiPageRevisionContent', () => {
 })
 
 describe('getWikiPageRevisionSnapshot', () => {
-  it('閲覧権限を確かめて、版の内容と本文を返す。タグはいまスペースに残っているものだけ', async () => {
+  it('閲覧権限を確かめて、版の内容と本文を返す。タグはいまスペースに残っているものを ID で引き、改名後の名前で返す', async () => {
     vi.mocked(prisma.wikiPageRevision.findUnique).mockResolvedValue({
-      ...summaryRow('r2', 1, { number: 3, type: 'design_doc', tagNames: ['設計', '削除済み'] }),
+      // t1 は版の後で「旧設計」から「設計」に改名、t9 は削除済み
+      ...summaryRow('r2', 1, { number: 3, type: 'design_doc', tagIds: ['t1', 't9'], tagNames: ['旧設計', '削除済み'] }),
       spaceId: 's1',
       content: '本文',
     } as never)
@@ -357,7 +382,6 @@ describe('getWikiPageRevisionSnapshot', () => {
       id: 'r2',
       number: 3,
       type: 'design_doc',
-      tagNames: ['設計', '削除済み'],
       tags: [tag],
       content: '本文',
       actorName: '利用者',

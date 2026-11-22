@@ -134,6 +134,7 @@ CREATE TABLE "wiki_page_revision" (
     "title" TEXT NOT NULL,
     "content" TEXT NOT NULL,
     "type" "WikiPageType" NOT NULL DEFAULT 'page',
+    "tagIds" TEXT[] DEFAULT ARRAY[]::TEXT[],
     "tagNames" TEXT[] DEFAULT ARRAY[]::TEXT[],
     "actorId" TEXT,
     "via" "WikiVia" NOT NULL,
@@ -930,10 +931,10 @@ VALUES
   ('019a9000-0000-7000-8000-000000000206', '019a9000-0000-7000-8000-000000000106', '019a9000-0000-7000-8000-000000000012'),
   ('019a9000-0000-7000-8000-000000000207', '019a9000-0000-7000-8000-000000000107', '019a9000-0000-7000-8000-000000000012');
 
--- 各ページの版 1(作成)。本文・タグは上で入れたページから写す
+-- 各ページの版 1(作成)。本文・タグ(ID と名前を同じ並びで)は上で入れたページから写す
 INSERT INTO "wiki_page_revision" (
   "id", "spaceId", "pageId", "pageNumber", "number", "action",
-  "parentId", "order", "title", "content", "type", "tagNames", "via"
+  "parentId", "order", "title", "content", "type", "tagIds", "tagNames", "via"
 )
 SELECT
   '019a9000-0000-7000-8000-0000000003' || lpad(p."number"::text, 2, '0'),
@@ -947,6 +948,15 @@ SELECT
   p."title",
   p."content",
   p."type",
+  COALESCE(
+    (
+      SELECT array_agg(t."id" ORDER BY t."order", t."name")
+      FROM "wiki_page_tag" AS pt
+      JOIN "wiki_tag" AS t ON t."id" = pt."tagId"
+      WHERE pt."pageId" = p."id"
+    ),
+    ARRAY[]::TEXT[]
+  ),
   COALESCE(
     (
       SELECT array_agg(t."name" ORDER BY t."order", t."name")

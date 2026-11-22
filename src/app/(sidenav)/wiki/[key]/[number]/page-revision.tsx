@@ -13,7 +13,12 @@ import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { ticketShortPath } from '@/lib/board/ticket-id'
 import { dayformat } from '@/lib/day'
 import { useConfirmAction } from '@/lib/use-confirm-action'
-import { isWikiPageTypeAllowed, resolveWikiTagNames } from '@/lib/wiki/wiki-rule'
+import {
+  isWikiPageTypeAllowed,
+  resolveWikiRevisionTags,
+  wikiRevisionTagLabels,
+  type WikiRevisionTag,
+} from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { Button, Chip, cn, Dropdown } from '@heroui/react'
 import Link from 'next/link'
@@ -22,8 +27,8 @@ import {
   deleteWikiPageRevision,
   getWikiPageRevisionContent,
   getWikiPageRevisions,
-  type GetWikiPageRevisionsReturnType,
   restoreWikiPageRevision,
+  type GetWikiPageRevisionsReturnType,
 } from '../server'
 import { useWikiSpace } from '../space-context'
 import type { GetWikiPageReturnType } from './server'
@@ -118,7 +123,7 @@ export const useWikiPageRevisions = (page: Page, reloadPage: () => Promise<void>
 
 export type WikiPageRevisions = ReturnType<typeof useWikiPageRevisions>
 
-/** 版の内容(過去の版)で表示するタイトル・種類・タグ。タグは名前で持つので、いまスペースに残っているものだけ出す */
+/** 版の内容(過去の版)で表示するタイトル・種類・タグ。タグは ID で、いまスペースに残っているものを今の名前で出す */
 export const usePastPageView = (past: Revision | undefined) => {
   const { tags } = useWikiSpace()
   if (!past) {
@@ -127,10 +132,10 @@ export const usePastPageView = (past: Revision | undefined) => {
   return {
     id: past.id,
     number: past.number,
-    tagNames: past.tagNames,
+    revisionTags: past.tags,
     title: past.title,
     type: past.type,
-    tags: resolveWikiTagNames(past.tagNames, tags),
+    tags: resolveWikiRevisionTags(past.tags, tags),
   }
 }
 
@@ -267,21 +272,21 @@ export const WikiRevisionDiffToggle: FC<{ revisions: WikiPageRevisions }> = ({
   )
 }
 
-/** タグは名前で比べる(過去の版のタグは、その後に削除されていても名前で残る) */
-type RevisionFields = { title: string; type: WikiPageType; tagNames: readonly string[] }
+/** タグは ID で比べ、今の名前で出す(過去の版のタグは、その後に削除されていても版の名前に削除済みの印を付けて出る) */
+type RevisionFields = { title: string; type: WikiPageType; tags: readonly WikiRevisionTag[] }
 
-const sortedNames = (names: readonly string[]) => [...names].sort()
-
-const isSameNames = (a: readonly string[], b: readonly string[]) => {
-  const sortedB = sortedNames(b)
-  return a.length === b.length && sortedNames(a).every((name, index) => name === sortedB[index])
+const isSameTags = (a: readonly WikiRevisionTag[], b: readonly WikiRevisionTag[]) => {
+  const idsOfB = new Set(b.map(({ id }) => id))
+  return a.length === b.length && a.every(({ id }) => idsOfB.has(id))
 }
 
-const tagText = (names: readonly string[]) => sortedNames(names).join(', ') || '-'
+const tagText = (names: readonly string[]) => [...names].sort().join(', ') || '-'
 
 /** 差分の表示中に、本文の差分とは別に、選んだ過去の版から最新までに変わったタイトル・種類・タグを出す */
 export const WikiRevisionFieldChanges: FC<{ before: RevisionFields; after: RevisionFields }> = ({ before, after }) => {
   const { t } = useLocale()
+  const { tags } = useWikiSpace()
+  const deletedTag = (name: string) => t('wiki_deleted_tag', { name })
   const changes = [
     before.title !== after.title && (
       <RevisionFieldChange key='title' label={t('wiki_page_title')} before={before.title} after={after.title} />
@@ -294,12 +299,12 @@ export const WikiRevisionFieldChanges: FC<{ before: RevisionFields; after: Revis
         after={t(`wiki_page_type_${after.type}`)}
       />
     ),
-    !isSameNames(before.tagNames, after.tagNames) && (
+    !isSameTags(before.tags, after.tags) && (
       <RevisionFieldChange
         key='tags'
         label={t('tags')}
-        before={tagText(before.tagNames)}
-        after={tagText(after.tagNames)}
+        before={tagText(wikiRevisionTagLabels(before.tags, tags, deletedTag))}
+        after={tagText(wikiRevisionTagLabels(after.tags, tags, deletedTag))}
       />
     ),
   ].filter(Boolean)

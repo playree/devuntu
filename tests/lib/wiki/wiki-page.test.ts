@@ -151,7 +151,7 @@ describe('createWikiPage', () => {
       pageId: 'new',
       pageNumber: 11,
       action: 'created',
-      snapshot: { parentId: 'a', order: 2, title: '新規', content: '', type: 'page', tagNames: [] },
+      snapshot: { parentId: 'a', order: 2, title: '新規', content: '', type: 'page', tags: [] },
       actorId: actor.id,
       via: 'mcp',
       ticketId: 't1',
@@ -222,12 +222,15 @@ describe('createWikiPage', () => {
     expect(prisma.wikiPage.create).toHaveBeenCalledTimes(1)
   })
 
-  it('タグを付けて作り、版の tagNames にタグの表示順で残す', async () => {
+  it('タグを付けて作り、版にタグの ID と名前を表示順で残す', async () => {
     await createWikiPage(actor, WEB, SPACE_ID, { title: '新規', tagIds: ['tag-b', 'tag-a'] })
 
     expect(assertWikiTagIdsInSpace).toHaveBeenCalledWith(expect.anything(), SPACE_ID, ['tag-b', 'tag-a'])
     expect(syncWikiPageTags).toHaveBeenCalledWith(expect.anything(), 'new', [], ['tag-a', 'tag-b'])
-    expect(vi.mocked(writeWikiPageRevision).mock.calls[0][1].snapshot.tagNames).toEqual(['設計', '運用'])
+    expect(vi.mocked(writeWikiPageRevision).mock.calls[0][1].snapshot.tags).toEqual([
+      { id: 'tag-a', name: '設計' },
+      { id: 'tag-b', name: '運用' },
+    ])
   })
 
   it('タイトルが空なら検証エラー', async () => {
@@ -269,7 +272,7 @@ describe('updateWikiPage', () => {
     expect(vi.mocked(writeWikiPageRevision).mock.calls[0][1]).toMatchObject({
       pageId: 'b',
       action: 'updated',
-      snapshot: { parentId: 'a', order: 0, title: 'title-b', content: '新しい本文', type: 'page', tagNames: [] },
+      snapshot: { parentId: 'a', order: 0, title: 'title-b', content: '新しい本文', type: 'page', tags: [] },
     })
   })
 
@@ -331,14 +334,17 @@ describe('updateWikiPage', () => {
           pageRow('b', { tags: TAGS.filter(({ id }) => ids.includes(id)).map((tag) => ({ tag })) }) as never,
         )
 
-    it('タグだけを変えても保存し、差分を同期して版の tagNames を新しいタグにする', async () => {
+    it('タグだけを変えても保存し、差分を同期して版のタグを新しいタグにする', async () => {
       withTags(['tag-a', 'tag-b'])
       const result = await updateWikiPage(actor, WEB, 'b', { tagIds: ['tag-c', 'tag-a'] })
 
       expect(result.result).toBe('updated')
       expect(assertWikiTagIdsInSpace).toHaveBeenCalledWith(expect.anything(), SPACE_ID, ['tag-c', 'tag-a'])
       expect(syncWikiPageTags).toHaveBeenCalledWith(expect.anything(), 'b', ['tag-a', 'tag-b'], ['tag-a', 'tag-c'])
-      expect(vi.mocked(writeWikiPageRevision).mock.calls[0][1].snapshot.tagNames).toEqual(['設計', '下書き'])
+      expect(vi.mocked(writeWikiPageRevision).mock.calls[0][1].snapshot.tags).toEqual([
+        { id: 'tag-a', name: '設計' },
+        { id: 'tag-c', name: '下書き' },
+      ])
     })
 
     it('並びが違うだけなら変化なし', async () => {
@@ -356,7 +362,7 @@ describe('updateWikiPage', () => {
 
       expect(assertWikiTagIdsInSpace).not.toHaveBeenCalled()
       expect(syncWikiPageTags).not.toHaveBeenCalled()
-      expect(vi.mocked(writeWikiPageRevision).mock.calls[0][1].snapshot.tagNames).toEqual(['設計'])
+      expect(vi.mocked(writeWikiPageRevision).mock.calls[0][1].snapshot.tags).toEqual([{ id: 'tag-a', name: '設計' }])
     })
 
     it('別のスペースのタグは付けられない', async () => {
