@@ -352,3 +352,25 @@ describe('restoreWikiPageRevision(設計書スペース)', () => {
     expect(result.result).toBe('created')
   })
 })
+
+describe('restoreWikiPageRevision(アナウンス用スペース)', () => {
+  beforeEach(() => {
+    vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ key: 'NEWS', type: 'announcement' } as never)
+    vi.mocked(prisma.wikiPageRevision.findUnique).mockResolvedValue(revision({ type: 'page' }) as never)
+  })
+
+  it('親を持っていた版も、全件の木を読まずにスペース直下へ作り直す', async () => {
+    const result = await restoreWikiPageRevision(actor, WEB, 'rev-1')
+
+    expect(result.result).toBe('created')
+    expect(prisma.wikiPage.findMany).not.toHaveBeenCalled()
+    expect(vi.mocked(prisma.wikiPage.create).mock.calls[0][0].data).toMatchObject({ parentId: null, order: 0 })
+    expect(orderUpdates()).toEqual([])
+  })
+
+  it('設計書の版は戻せない', async () => {
+    vi.mocked(prisma.wikiPageRevision.findUnique).mockResolvedValue(revision({ type: 'design_doc' }) as never)
+    expect(await errorTypeOf(restoreWikiPageRevision(actor, WEB, 'rev-1'))).toBe(WIKI_PAGE_TYPE_NOT_ALLOWED)
+    expect(prisma.wikiPage.create).not.toHaveBeenCalled()
+  })
+})

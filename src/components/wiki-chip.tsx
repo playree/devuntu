@@ -38,6 +38,7 @@ export const useWikiVisibilityOptions = visibilityChip.useOptions
 const spaceTypeChip = createEnumChip<WikiSpaceType>({
   mixed: { item: 'wiki_space_type_mixed', color: 'default' },
   design_doc: { item: 'wiki_space_type_design_doc', color: 'accent' },
+  announcement: { item: 'wiki_space_type_announcement', color: 'warning' },
 })
 
 /** スペースの区分 */

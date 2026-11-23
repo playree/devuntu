@@ -24,6 +24,7 @@ import {
   MAX_WIKI_DEPTH,
   MAX_WIKI_REVISION_MESSAGE,
   MAX_WIKI_TITLE,
+  WIKI_ANNOUNCEMENT_FLAT,
   WIKI_PAGE_CONFLICT,
   WIKI_PAGE_HAS_CHILDREN,
   WIKI_PAGE_INVALID_PARENT,
@@ -31,6 +32,7 @@ import {
   WIKI_PAGE_TYPE_NOT_ALLOWED,
   WIKI_TREE_CHANGED,
   defaultWikiPageType,
+  isFlatWikiSpace,
   isWikiPageTypeAllowed,
   wikiPageRef,
   type WikiPageSnapshot,
@@ -69,16 +71,23 @@ const errTreeChanged = () =>
     'The page tree was changed by someone else after you read it. Read the tree again and retry',
   )
 
-const errTypeNotAllowed = () =>
+const errTypeNotAllowed = (access: WikiSpaceAccess) =>
   new ClientError(
     WIKI_PAGE_TYPE_NOT_ALLOWED,
-    'This space is a design doc space: its pages must be design docs (type=design_doc)',
+    access.type === 'announcement'
+      ? 'This space is an announcement space: its pages must be normal pages (type=page)'
+      : 'This space is a design doc space: its pages must be design docs (type=design_doc)',
+  )
+const errFlat = () =>
+  new ClientError(
+    WIKI_ANNOUNCEMENT_FLAT,
+    'This space is an announcement space: pages are flat and ordered by creation date, so parent, position and moving are not available',
   )
 
 /** スペースの区分で作れない種類なら弾く(スペース行のロックを取った後に読んだ区分で判定する) */
 const assertPageTypeAllowed = (access: WikiSpaceAccess, type: WikiPageType) => {
   if (!isWikiPageTypeAllowed(access.type, type)) {
-    throw errTypeNotAllowed()
+    throw errTypeNotAllowed(access)
   }
 }
 
@@ -275,7 +284,12 @@ export const createWikiPage = async (
     const access = await assertWikiSpaceAccess(actor, spaceId, 'write', tx)
     const type = input.type ?? defaultWikiPageType(access.type)
     assertPageTypeAllowed(access, type)
-    const rows = await loadTree(tx, spaceId)
+    // アナウンス用スペースは平らで並びを持たないので、親・位置を受けず、増え続ける全件の木も読まない
+    const isFlat = isFlatWikiSpace(access.type)
+    if (isFlat && (parentId !== null || input.position !== undefined)) {
+      throw errFlat()
+    }
+    const rows = isFlat ? [] : await loadTree(tx, spaceId)
     if (parentId) {
       const index = indexWikiTree(rows)
       if (!index.byId.has(parentId)) {
@@ -479,6 +493,9 @@ export const moveWikiPage = async (
   const outcome = await prisma.$transaction(async (tx) => {
     await lockSpaceForStructure(tx, spaceId)
     const access = await assertWikiSpaceAccess(actor, spaceId, 'write', tx)
+    if (isFlatWikiSpace(access.type)) {
+      throw errFlat()
+    }
     const rows = await loadTree(tx, spaceId)
     const index = indexWikiTree(rows)
     if (!index.byId.has(pageId)) {
@@ -710,9 +727,12 @@ export const restoreWikiPageRevision = async (
       return { result: 'updated' as const, id: pageId, ref, number, updatedAt: updated.updatedAt }
     }
 
-    const rows = await loadTree(tx, spaceId)
+    // アナウンス用スペースは平らなので、親を持っていた版(区分を変える前のもの)もスペース直下へ戻し、全件の木は読まない
+    const isFlat = isFlatWikiSpace(access.type)
+    const rows = isFlat ? [] : await loadTree(tx, spaceId)
     const index = indexWikiTree(rows)
     const parentId =
+      !isFlat &&
       revision.parentId !== null &&
       index.byId.has(revision.parentId) &&
       depthOf(index, revision.parentId) + 1 <= MAX_WIKI_DEPTH
@@ -723,7 +743,7 @@ export const restoreWikiPageRevision = async (
       pageId,
       parentId === revision.parentId ? revision.order : undefined,
     )
-    const order = ordered.indexOf(pageId)
+    const order = isFlat ? 0 : ordered.indexOf(pageId)
     // 戻し元の版をロックの後で読めているので見つかる。見つからなければ(型の上だけ)復元した人・時刻にする
     const oldest = await tx.wikiPageRevision.findFirst({
       where: { pageId },

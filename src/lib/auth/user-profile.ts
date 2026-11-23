@@ -1,12 +1,19 @@
 /**
- * 利用者本人のプロフィール(タイムゾーン / アバター)の更新(サーバー専用)
+ * 利用者本人のプロフィール(タイムゾーン / アバター)の参照・更新(サーバー専用)
  */
 
 import { isValidTimezone } from '../day'
+import { envu } from '../env-util'
 import { errValidation } from '../error'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
 import { removeImageAttachment, removeOwnedImageAttachment, saveImageAttachment } from '../storage/attachment'
+
+/** 表示名とタイムゾーン。タイムゾーンが未設定ならサーバーの既定(`DEFAULT_TIMEZONE`) */
+export const getUserNameAndTimezone = async (userId: string): Promise<{ name: string; timezone: string }> => {
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { name: true, timezone: true } })
+  return { name: user?.name ?? '', timezone: user?.timezone ?? envu.server.DEFAULT_TIMEZONE }
+}
 
 export const updateUserTimezone = async (userId: string, timezone: string) => {
   if (!isValidTimezone(timezone)) {

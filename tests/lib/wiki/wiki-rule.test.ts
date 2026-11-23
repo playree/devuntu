@@ -6,8 +6,11 @@
 
 import {
   canDeleteWikiRevision,
+  defaultWikiPageType,
   evaluateWikiAccess,
   hasWikiRole,
+  isFlatWikiSpace,
+  isWikiPageTypeAllowed,
   MAX_WIKI_PAGE_TAGS,
   MAX_WIKI_SEARCH_KEYWORD,
   parseWikiPageRef,
@@ -25,6 +28,28 @@ import {
   type WikiRole,
 } from '@/lib/wiki/wiki-rule'
 import { describe, expect, it } from 'vitest'
+
+describe('区分ごとのページの種類', () => {
+  it.each([
+    ['mixed', 'page', true],
+    ['mixed', 'design_doc', true],
+    ['design_doc', 'page', false],
+    ['design_doc', 'design_doc', true],
+    ['announcement', 'page', true],
+    ['announcement', 'design_doc', false],
+  ] as const)('%s スペースに %s を作れるか: %s', (spaceType, pageType, expected) => {
+    expect(isWikiPageTypeAllowed(spaceType, pageType)).toBe(expected)
+  })
+
+  it('種類を省いたときの既定と、平らな区分', () => {
+    expect(defaultWikiPageType('mixed')).toBe('page')
+    expect(defaultWikiPageType('design_doc')).toBe('design_doc')
+    expect(defaultWikiPageType('announcement')).toBe('page')
+    expect(isFlatWikiSpace('announcement')).toBe(true)
+    expect(isFlatWikiSpace('mixed')).toBe(false)
+    expect(isFlatWikiSpace('design_doc')).toBe(false)
+  })
+})
 
 describe('strongestWikiRole / hasWikiRole', () => {
   it('owner > editor > viewer の順で最も強いものを採る', () => {

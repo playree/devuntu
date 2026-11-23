@@ -6,7 +6,11 @@ import { VALIDATION_ERROR } from '@/lib/error'
 import { prisma } from '@/lib/prisma'
 import { detachAttachmentsOf, listAttachmentKeysOf, removeAttachmentByKey } from '@/lib/storage/attachment'
 import { assertWikiSpaceAccess } from '@/lib/wiki/wiki-access'
-import { DUPLICATED_WIKI_SPACE_KEY, WIKI_SPACE_HAS_NORMAL_PAGES } from '@/lib/wiki/wiki-rule'
+import {
+  DUPLICATED_WIKI_SPACE_KEY,
+  WIKI_SPACE_CANNOT_BE_ANNOUNCEMENT,
+  WIKI_SPACE_HAS_NORMAL_PAGES,
+} from '@/lib/wiki/wiki-rule'
 import {
   createWikiSpace,
   deleteWikiSpace,
@@ -142,6 +146,34 @@ describe('updateWikiSpace / setWikiSpaceArchived', () => {
     )
     expect(vi.mocked(prisma.wikiTemplate.count).mock.calls[0][0]).toEqual({ where: { spaceId: 's1', type: 'page' } })
     expect(prisma.wikiSpace.update).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['子を持つページ', { parentId: { not: null } }, 'page'],
+    ['設計書ページ', { type: 'design_doc' }, 'page'],
+    ['設計書のテンプレート', { type: 'design_doc' }, 'template'],
+  ] as const)('%sがあればアナウンス用スペースにできない', async (_label, where, model) => {
+    vi.mocked(prisma.wikiPage.count).mockImplementation((async (args: { where: object }) =>
+      model === 'page' && JSON.stringify(args.where) === JSON.stringify({ spaceId: 's1', ...where }) ? 1 : 0) as never)
+    vi.mocked(prisma.wikiTemplate.count).mockResolvedValue(model === 'template' ? 1 : 0)
+
+    expect(await errorTypeOf(updateWikiSpace(actor, 's1', { type: 'announcement' }))).toBe(
+      WIKI_SPACE_CANNOT_BE_ANNOUNCEMENT,
+    )
+    expect(prisma.wikiSpace.update).not.toHaveBeenCalled()
+  })
+
+  it('平らな通常ページだけならアナウンス用スペースにできる', async () => {
+    vi.mocked(prisma.wikiPage.count).mockResolvedValue(0)
+    await updateWikiSpace(actor, 's1', { type: 'announcement' })
+    expect(vi.mocked(prisma.wikiPage.count).mock.calls.map(([args]) => args?.where)).toEqual([
+      { spaceId: 's1', parentId: { not: null } },
+      { spaceId: 's1', type: 'design_doc' },
+    ])
+    expect(vi.mocked(prisma.wikiTemplate.count).mock.calls[0][0]).toEqual({
+      where: { spaceId: 's1', type: 'design_doc' },
+    })
+    expect(vi.mocked(prisma.wikiSpace.update).mock.calls[0][0].data).toEqual({ type: 'announcement' })
   })
 
   it('すでに設計書スペースなら、区分を送っても通常ページを数えない', async () => {

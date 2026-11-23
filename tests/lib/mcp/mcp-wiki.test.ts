@@ -13,6 +13,7 @@ import {
   searchWikiForMcp,
   WIKI_AGENT_RECURSIVE_DELETE_DENIED,
 } from '@/lib/mcp/mcp-wiki'
+import { listAllWikiAnnouncements } from '@/lib/wiki/wiki-announcement'
 import {
   createWikiPage,
   deleteWikiPage,
@@ -53,6 +54,7 @@ vi.mock('@/lib/wiki/wiki-space', () => ({
 }))
 vi.mock('@/lib/wiki/wiki-tag', () => ({ listWikiTags: vi.fn(), resolveWikiTagIdsByName: vi.fn() }))
 vi.mock('@/lib/wiki/wiki-search', () => ({ searchWikiPages: vi.fn() }))
+vi.mock('@/lib/wiki/wiki-announcement', () => ({ listAllWikiAnnouncements: vi.fn() }))
 vi.mock('@/lib/wiki/wiki-template', () => ({ listWikiTemplateNames: vi.fn(), renderWikiTemplate: vi.fn() }))
 
 const SPACE_ID = 'space-1'
@@ -620,6 +622,31 @@ describe('getWikiTreeForMcp', () => {
     } as never)
     expect(await getWikiTreeForMcp(human, { space: 'DOCS' })).not.toHaveProperty('templates')
     expect(listWikiTemplateNames).not.toHaveBeenCalled()
+  })
+
+  it('アナウンス用スペースは、作成日時の新しい順の平らな一覧で返す。root はエラー', async () => {
+    vi.mocked(getWikiSpaceByKey).mockResolvedValue({
+      space: { id: SPACE_ID, key: 'NEWS', name: 'お知らせ', type: 'announcement' },
+      access: { canWrite: false },
+    } as never)
+    const createdAt = new Date('2026-11-20T00:00:00.000Z')
+    vi.mocked(listAllWikiAnnouncements).mockResolvedValue([
+      { number: 5, title: '新しい', createdAt, tagIds: ['t1'] },
+      { number: 4, title: '古い', createdAt: new Date('2026-10-01T00:00:00.000Z'), tagIds: [] },
+    ])
+
+    expect(await getWikiTreeForMcp(human, { space: 'NEWS', depth: 1 })).toEqual({
+      space: { key: 'NEWS', name: 'お知らせ', type: 'announcement' },
+      pages: [
+        { ref: 'NEWS/5', title: '新しい', tags: ['設計'], createdAt },
+        { ref: 'NEWS/4', title: '古い', createdAt: new Date('2026-10-01T00:00:00.000Z') },
+      ],
+      totalPages: 2,
+    })
+    expect(getWikiTree).not.toHaveBeenCalled()
+    expect((await errorOf(getWikiTreeForMcp(human, { space: 'NEWS', root: 'NEWS/5' }))).errorType).toBe(
+      VALIDATION_ERROR,
+    )
   })
 
   it('root を渡すとその配下だけを返す。別スペースの root はエラー', async () => {

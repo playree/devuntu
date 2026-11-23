@@ -36,6 +36,9 @@ enum WikiSpaceType {
   mixed
   /// 設計書だけを置く。トップに設計書一覧を出す
   design_doc
+  /// アナウンス用。通常ページだけを平らに置き(親子・並べ替えなし)、作成日時の新しい順に並べる。
+  /// トップに新しい順の一覧と年月のバックナンバーを出す
+  announcement
 }
 
 /// Wiki ページの種類。表示と編集のしかたが変わる
@@ -215,6 +218,8 @@ model WikiPage {
   @@unique([spaceId, number])
   @@index([spaceId, parentId, order])
   @@index([parentId])
+  // アナウンス用スペースの新しい順の一覧と年月の集計
+  @@index([spaceId, createdAt])
   // 部分一致検索(ILIKE)を pg_trgm の GIN 索引で引く。拡張はマイグレーションで作る
   @@index([title(ops: raw("gin_trgm_ops"))], type: Gin, map: "wiki_page_title_trgm_idx")
   @@index([content(ops: raw("gin_trgm_ops"))], type: Gin, map: "wiki_page_content_trgm_idx")

@@ -54,13 +54,21 @@ export const WIKI_PAGE_TYPE_NOT_ALLOWED = 'WIKI_PAGE_TYPE_NOT_ALLOWED'
 /** 通常ページが残っているスペースを設計書スペースにしようとした */
 export const WIKI_SPACE_HAS_NORMAL_PAGES = 'WIKI_SPACE_HAS_NORMAL_PAGES'
 
-/** スペースの区分で作れるページの種類か(設計書スペースは設計書だけ) */
+/** アナウンス用スペースで、親の指定・位置の指定・移動・並べ替えをしようとした(ページは平らに置き、作成日時の順に並べる) */
+export const WIKI_ANNOUNCEMENT_FLAT = 'WIKI_ANNOUNCEMENT_FLAT'
+/** 子を持つページ・設計書ページ・設計書のテンプレートが残っているスペースを、アナウンス用にしようとした */
+export const WIKI_SPACE_CANNOT_BE_ANNOUNCEMENT = 'WIKI_SPACE_CANNOT_BE_ANNOUNCEMENT'
+
+/** スペースの区分で作れるページの種類か(設計書スペースは設計書だけ、アナウンス用スペースは通常ページだけ) */
 export const isWikiPageTypeAllowed = (spaceType: WikiSpaceType, pageType: WikiPageType): boolean =>
-  spaceType !== 'design_doc' || pageType === 'design_doc'
+  spaceType === 'design_doc' ? pageType === 'design_doc' : spaceType === 'announcement' ? pageType === 'page' : true
 
 /** 種類を指定せずに作るページの種類 */
 export const defaultWikiPageType = (spaceType: WikiSpaceType): WikiPageType =>
   spaceType === 'design_doc' ? 'design_doc' : 'page'
+
+/** ページを平らに置き、親子・並べ替えを使わない区分か */
+export const isFlatWikiSpace = (spaceType: WikiSpaceType): boolean => spaceType === 'announcement'
 
 export type WikiRole = WikiSpaceRole
 

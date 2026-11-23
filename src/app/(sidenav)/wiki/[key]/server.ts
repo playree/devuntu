@@ -9,8 +9,13 @@ import {
   scDeleteWikiPage,
   scMoveWikiPage,
   scReorderWikiPage,
+  scWikiAnnouncementQuery,
   scWikiSpaceKey,
 } from '@/lib/schema/schema-wiki'
+import {
+  getWikiAnnouncementArchive as getWikiAnnouncementArchiveCore,
+  listWikiAnnouncements,
+} from '@/lib/wiki/wiki-announcement'
 import { getWikiDesignDocIndex as getWikiDesignDocIndexCore } from '@/lib/wiki/wiki-design-doc-index'
 import { designDocFrontMatter } from '@/lib/wiki/wiki-markdown'
 import {
@@ -39,7 +44,8 @@ const WEB = { via: 'web' } as const
 
 /**
  * スペースの情報と自分の権限、ツリー(本文なし)、タグ。サイドメニューのツリーとスペース内の画面で使う。
- * 割り当ての無い管理者は設定だけを開けるよう、ツリーとタグを空にして返す
+ * 割り当ての無い管理者は設定だけを開けるよう、ツリーとタグを空にして返す。
+ * アナウンス用スペースは増え続けるページを平らに置くので、ツリーは空にし、一覧は getWikiAnnouncements でページごとに引く
  */
 export const getWikiSpace = safeAuthAction
   .metadata({ actionName: 'getWikiSpace', role: 'user' })
@@ -47,7 +53,7 @@ export const getWikiSpace = safeAuthAction
   .action(async ({ ctx: { user }, parsedInput: { key } }) => {
     const { space, access } = await getWikiSpaceByKeyForManage(user, key)
     const [tree, tags] = access.canView
-      ? await Promise.all([getWikiTree(user, space.id), listWikiTags(space.id)])
+      ? await Promise.all([space.type === 'announcement' ? [] : getWikiTree(user, space.id), listWikiTags(space.id)])
       : [[], []]
     return { space, access, tree, tags }
   })
@@ -184,3 +190,16 @@ export const restoreDeletedWikiPage = safeAuthAction
   .action(async ({ ctx: { user }, parsedInput: { id } }) =>
     restoreWikiPageRevisionCore(user, WEB, id, { deletedOnly: true }),
   )
+
+/** アナウンス用スペースの一覧(作成日時の新しい順、1 ページ分と総件数)。年・月・タグで絞り込む */
+export const getWikiAnnouncements = safeAuthAction
+  .metadata({ actionName: 'getWikiAnnouncements', role: 'user' })
+  .inputSchema(scWikiAnnouncementQuery)
+  .action(async ({ ctx: { user }, parsedInput: { id, ...query } }) => await listWikiAnnouncements(user, id, query))
+export type GetWikiAnnouncementsReturnType = Awaited<ReturnType<typeof getWikiAnnouncements>>['data']
+
+/** アナウンス用スペースのバックナンバー(年月ごとの件数、新しい順)。`id` はスペース ID */
+export const getWikiAnnouncementArchive = safeAuthAction
+  .metadata({ actionName: 'getWikiAnnouncementArchive', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => await getWikiAnnouncementArchiveCore(user, id))

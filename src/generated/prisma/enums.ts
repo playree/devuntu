@@ -347,7 +347,8 @@ export type WikiVia = (typeof WikiVia)[keyof typeof WikiVia]
 
 export const WikiSpaceType = {
   mixed: 'mixed',
-  design_doc: 'design_doc'
+  design_doc: 'design_doc',
+  announcement: 'announcement'
 } as const
 
 export type WikiSpaceType = (typeof WikiSpaceType)[keyof typeof WikiSpaceType]

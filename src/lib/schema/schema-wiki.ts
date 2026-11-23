@@ -7,6 +7,11 @@ import { z } from 'zod'
 import { MAX_TAG_NAME } from '../board/tag-rule'
 import { MAX_TEMPLATE_NAME } from '../board/ticket-template-rule'
 import {
+  MAX_WIKI_ANNOUNCEMENT_PAGE_SIZE,
+  WIKI_ANNOUNCEMENT_MONTH_PATTERN,
+  WIKI_ANNOUNCEMENT_YEAR_PATTERN,
+} from '../wiki/wiki-announcement-rule'
+import {
   MAX_WIKI_CONTENT,
   MAX_WIKI_PAGE_TAGS,
   MAX_WIKI_REVISION_MESSAGE,
@@ -44,7 +49,7 @@ export const zWikiSpaceRole = z.enum(['viewer', 'editor', 'owner'])
 /** Prisma の WikiAssignRole と一致させる */
 export const zWikiAssignRole = z.enum(['viewer', 'editor'])
 /** Prisma の WikiSpaceType と一致させる */
-export const zWikiSpaceType = z.enum(['mixed', 'design_doc'])
+export const zWikiSpaceType = z.enum(['mixed', 'design_doc', 'announcement'])
 /** Prisma の WikiPageType と一致させる */
 export const zWikiPageType = z.enum(['page', 'design_doc'])
 
@@ -204,6 +209,16 @@ export type UpdateWikiTemplate = z.infer<typeof scUpdateWikiTemplate>
 export const scMoveWikiTemplate = z.object({
   id: z.uuidv7(),
   direction: z.enum(['up', 'down']),
+})
+
+/** アナウンスの一覧。`id` はスペース ID。月を指定すれば年より優先する */
+export const scWikiAnnouncementQuery = z.object({
+  id: z.uuidv7(),
+  month: z.string().regex(WIKI_ANNOUNCEMENT_MONTH_PATTERN).optional(),
+  year: z.string().regex(WIKI_ANNOUNCEMENT_YEAR_PATTERN).optional(),
+  tagId: z.uuidv7().optional(),
+  page: z.number().int().min(1),
+  rowsPerPage: z.number().int().min(1).max(MAX_WIKI_ANNOUNCEMENT_PAGE_SIZE),
 })
 
 /** `space` を省略すると、閲覧できる全スペース(アーカイブ済みを除く)を探す */

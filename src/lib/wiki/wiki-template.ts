@@ -9,9 +9,9 @@
  */
 
 import type { WikiPageType } from '@/generated/prisma/enums'
+import { getUserNameAndTimezone } from '../auth/user-profile'
 import type { Actor } from '../board/board-access'
 import { DUPLICATED_TEMPLATE_NAME } from '../board/ticket-template-rule'
-import { envu } from '../env-util'
 import { ClientError, errClient, errInvalidOperation, errValidation } from '../error'
 import { logger } from '../logger'
 import { isUniqueViolation, prisma, type Db } from '../prisma'
@@ -213,12 +213,8 @@ export const renderWikiTemplate = async (
     )
   }
 
-  const user = await prisma.user.findUnique({ where: { id: actor.id }, select: { name: true, timezone: true } })
-  const context: WikiTemplateContext = {
-    now,
-    timezone: user?.timezone ?? envu.server.DEFAULT_TIMEZONE,
-    userName: user?.name ?? '',
-  }
+  const { name: userName, timezone } = await getUserNameAndTimezone(actor.id)
+  const context: WikiTemplateContext = { now, timezone, userName }
   const title = applyWikiTemplatePlaceholders(template.title, context)
   const content = applyWikiTemplatePlaceholders(template.content, context)
   // 登録時は置き換える前の長さで検査しているので、表示名などで伸びた分をここで弾き、テンプレートが原因だと分かるようにする

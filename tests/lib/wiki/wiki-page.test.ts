@@ -12,6 +12,7 @@ import { createWikiPage, deleteWikiPage, getWikiPage, moveWikiPage, updateWikiPa
 import { writeWikiPageRevision } from '@/lib/wiki/wiki-revision'
 import {
   MAX_WIKI_DEPTH,
+  WIKI_ANNOUNCEMENT_FLAT,
   WIKI_PAGE_CONFLICT,
   WIKI_PAGE_HAS_CHILDREN,
   WIKI_PAGE_INVALID_PARENT,
@@ -246,6 +247,48 @@ describe('createWikiPage', () => {
     expect(await errorTypeOf(createWikiPage(actor, WEB, SPACE_ID, { title: 'x' }, { ticketId: 't9' }))).toBe(
       VALIDATION_ERROR,
     )
+  })
+})
+
+describe('アナウンス用スペース', () => {
+  beforeEach(() => {
+    vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ key: 'NEWS', type: 'announcement' } as never)
+  })
+
+  it('全件の木を読まずに、通常のページとしてスペース直下に作る', async () => {
+    await createWikiPage(actor, WEB, SPACE_ID, { title: 'お知らせ' })
+
+    expect(prisma.wikiPage.findMany).not.toHaveBeenCalled()
+    expect(vi.mocked(prisma.wikiPage.create).mock.calls[0][0].data).toMatchObject({
+      parentId: null,
+      type: 'page',
+      order: 0,
+    })
+  })
+
+  it('親や位置を指定した作成は WIKI_ANNOUNCEMENT_FLAT', async () => {
+    expect(await errorTypeOf(createWikiPage(actor, MCP, SPACE_ID, { title: 'x', parentId: 'a' }))).toBe(
+      WIKI_ANNOUNCEMENT_FLAT,
+    )
+    expect(await errorTypeOf(createWikiPage(actor, MCP, SPACE_ID, { title: 'x', position: 0 }))).toBe(
+      WIKI_ANNOUNCEMENT_FLAT,
+    )
+    expect(prisma.wikiPage.create).not.toHaveBeenCalled()
+  })
+
+  it('設計書は作れない', async () => {
+    expect(await errorTypeOf(createWikiPage(actor, MCP, SPACE_ID, { title: 'x', type: 'design_doc' }))).toBe(
+      WIKI_PAGE_TYPE_NOT_ALLOWED,
+    )
+  })
+
+  it('移動・並べ替えは WIKI_ANNOUNCEMENT_FLAT(ロックの後で区分を読んで弾く)', async () => {
+    expect(await errorTypeOf(moveWikiPage(actor, WEB, 'a', { parentId: null, position: 1 }))).toBe(
+      WIKI_ANNOUNCEMENT_FLAT,
+    )
+    expect(await errorTypeOf(moveWikiPage(actor, MCP, 'a', { parentId: 'e' }))).toBe(WIKI_ANNOUNCEMENT_FLAT)
+    expect(lockedBeforeAccessCheck()).toBe(true)
+    expect(prisma.wikiPage.update).not.toHaveBeenCalled()
   })
 })
 

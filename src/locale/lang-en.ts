@@ -656,6 +656,12 @@ export const en: DefaultLocaleItems = {
   wiki_add_page: 'Add Page',
   wiki_add_space: 'Add Space',
   wiki_all_spaces: 'All Spaces',
+  wiki_announcement_all: 'All time',
+  wiki_announcement_archive: 'Archive',
+  wiki_announcement_count: '${count}',
+  wiki_announcement_latest: 'Latest announcements',
+  wiki_announcement_month: '${year}-${month}',
+  wiki_announcement_year: '${year}',
   wiki_child_count: '${count} children',
   wiki_change_page_type: 'Change Type',
   wiki_child_pages: 'Child Pages',
@@ -679,6 +685,7 @@ export const en: DefaultLocaleItems = {
   wiki_discard_draft: 'Discard Draft',
   wiki_move: 'Move',
   wiki_move_page: 'Move Page',
+  wiki_new_announcement: 'New announcement',
   wiki_open_restored_page: 'Open the restored page',
   wiki_page_number: 'No.',
   wiki_page_ref: 'Page reference',
@@ -720,6 +727,7 @@ export const en: DefaultLocaleItems = {
   wiki_space_root: '${name} (top level)',
   wiki_space_settings: 'Space Settings',
   wiki_space_type: 'Space type',
+  wiki_space_type_announcement: 'Announcements',
   wiki_space_type_design_doc: 'Design docs',
   wiki_space_type_mixed: 'Mixed',
   wiki_switch_space: 'Switch Space',
@@ -911,6 +919,9 @@ Please copy and use the connection information above.
   msg_system_error: 'An error has occurred. Please try again later.',
   msg_validation_error: 'The input is invalid.',
   msg_widget_load_failed: 'Could not load. Please reload after a while.',
+  msg_wiki_announcement_flat:
+    'Pages in an announcement space cannot have parents and cannot be reordered or moved (they are listed newest first).',
+  msg_wiki_announcements_load_failed: 'Failed to load the announcements. Reload to try again.',
   msg_no_matching_assignees: 'No matching assignees.',
   msg_no_matching_tickets: 'No matching tickets.',
   msg_no_matching_users: 'No matching users.',
@@ -921,6 +932,7 @@ Please copy and use the connection information above.
     'Choosing a template on the ticket creation form fills in the content, acceptance criteria, tags and priority (you can edit them before creating). MCP returns them in get_board and accepts templateId in create_ticket.',
   msg_no_criteria: 'No acceptance criteria',
   msg_no_tickets: 'No tickets.',
+  msg_no_wiki_announcements: 'No announcements.',
   msg_no_wiki_boards: 'No boards are assigned.',
   msg_no_wiki_design_docs: 'No design docs yet.',
   msg_no_wiki_groups: 'No groups are assigned.',
@@ -994,6 +1006,8 @@ Please copy and use the connection information above.
   msg_wiki_search_hint: 'Enter keywords or choose tags. Words of two characters or fewer may take longer to search.',
   msg_wiki_search_limit: 'Up to ${max} results are shown. If you cannot find the page, add words or filter by tags.',
   msg_wiki_space_archived: 'This space is archived and read-only.',
+  msg_wiki_space_cannot_be_announcement:
+    'The space has pages with child pages, design docs, or design doc templates, so it cannot be an announcement space. Move child pages to the top level and delete the design docs or change them to normal pages first.',
   msg_wiki_space_has_normal_pages:
     'The space has normal pages, so it cannot be a design doc space. Delete them or change their type to design doc first.',
   msg_wiki_space_has_normal_templates:
@@ -1001,7 +1015,7 @@ Please copy and use the connection information above.
   msg_wiki_space_key: 'Pages are referenced as KEY/number (e.g. DOCS/12). The key cannot be changed later.',
   msg_wiki_space_no_owner: 'A space needs at least one owner. Assign another owner first.',
   msg_wiki_space_type:
-    'With "Design docs", only design docs can be created and the space top shows the list of design docs. A space with normal pages or normal page templates cannot be changed to it.',
+    'With "Design docs", only design docs can be created and the space top shows the list of design docs (not available while the space has normal pages or normal page templates). With "Announcements", normal pages are listed flat, newest first, and the space top shows the list and the archive (not available while the space has child pages or design docs).',
   msg_wiki_template_desc:
     "Choose a template when creating a page to fill in its title, type and content. {{date}} (YYYY-MM-DD), {{month}} (YYYY-MM) and {{user}} (the creator's display name) are replaced on creation, using the creator's time zone. Templates can also be used by name with template in the MCP tool save_wiki_page.",
   msg_wiki_template_too_long:

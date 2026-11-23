@@ -110,7 +110,14 @@ export const CreatePageModal: FC<ModalBaseProps & { parent: { id: string; title:
           }
         }
       })}
-      title={{ text: parent ? t('wiki_add_child_page') : t('wiki_add_page'), icon: <DocumentPlusIcon /> }}
+      title={{
+        text: parent
+          ? t('wiki_add_child_page')
+          : space.type === 'announcement'
+            ? t('wiki_new_announcement')
+            : t('wiki_add_page'),
+        icon: <DocumentPlusIcon />,
+      }}
       submit={{ isPending: isSubmitting }}
     >
       <GridBox>

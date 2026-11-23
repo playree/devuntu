@@ -20,6 +20,7 @@ import { zWikiPageType } from '../schema/schema-wiki'
 import { makeUrl } from '../server-utils'
 import { extractUploadKeys } from '../storage/upload'
 import { type WikiSpaceAccess } from '../wiki/wiki-access'
+import { listAllWikiAnnouncements } from '../wiki/wiki-announcement'
 import {
   applyTextEdits,
   extractMarkdownSection,
@@ -130,11 +131,45 @@ export const listWikiSpacesForMcp = async (auth: ResourceAuth, input: { includeA
   }))
 }
 
+/** アナウンス用スペースは平らなので、作成日時の新しい順の一覧で返す(depth は意味を持たず、root は指定できない) */
+const getAnnouncementTreeForMcp = async (
+  auth: ResourceAuth,
+  { space, access }: { space: { id: string; key: string; name: string }; access: { canWrite: boolean } },
+  input: { root?: string },
+) => {
+  if (input.root) {
+    throw errValidation(`${space.key} is an announcement space: its pages are flat, so root cannot be specified`)
+  }
+  const [rows, tags, templates] = await Promise.all([
+    listAllWikiAnnouncements(auth.user, space.id),
+    listWikiTags(space.id),
+    access.canWrite ? listWikiTemplateNames(space.id) : [],
+  ])
+  const tagName = new Map(tags.map(({ id, name }) => [id, name]))
+  return {
+    space: { key: space.key, name: space.name, type: 'announcement' as const },
+    pages: rows.map(({ number, title, createdAt, tagIds }) => {
+      const names = tagIds.map((id) => tagName.get(id)).filter((name) => name !== undefined)
+      return {
+        ref: wikiPageRef({ key: space.key, number }),
+        title,
+        ...(names.length > 0 ? { tags: names } : {}),
+        createdAt,
+      }
+    }),
+    totalPages: rows.length,
+    ...(templates.length > 0 ? { templates: templates.map(({ name, type }) => ({ name, type })) } : {}),
+  }
+}
+
 export const getWikiTreeForMcp = async (
   auth: ResourceAuth,
   input: { space: string; root?: string; depth?: number },
 ) => {
   const { space, access } = await getWikiSpaceByKey(auth.user, input.space)
+  if (space.type === 'announcement') {
+    return getAnnouncementTreeForMcp(auth, { space, access }, input)
+  }
   const [rows, tags, templates] = await Promise.all([
     getWikiTree(auth.user, space.id),
     listWikiTags(space.id),
@@ -478,6 +513,7 @@ export const registerWikiTools = (server: McpServer, auth: ResourceAuth) => {
       description:
         'Returns the Wiki spaces you can read, with your role and whether you can write. ' +
         'type design_doc means a design doc space: all its pages are design docs (type=design_doc). ' +
+        'type announcement means an announcement space: its pages are flat normal pages listed newest first (no parent / position). ' +
         'Spaces assigned to a board are also listed as wikiSpaces in get_ticket / get_board',
       inputSchema: z.strictObject({
         includeArchived: z.boolean().optional().describe('Include archived (read-only) spaces. Excluded by default'),
@@ -494,7 +530,8 @@ export const registerWikiTools = (server: McpServer, auth: ResourceAuth) => {
       description:
         'Returns the page hierarchy of a Wiki space (ref, title and tags only, no content). ' +
         'Pass root to get only the pages under it, and depth to limit the levels (deeper pages are summarized as childCount). ' +
-        'If you can write to the space, templates lists the page templates (name, type) you can pass to save_wiki_page',
+        'If you can write to the space, templates lists the page templates (name, type) you can pass to save_wiki_page. ' +
+        'For an announcement space, pages is a flat list newest first with createdAt (root and depth are not used)',
       inputSchema: z.strictObject({
         space: zSpaceKey.describe('Space key (e.g. DOCS)'),
         root: zWikiPageRef.optional().describe('ref of the page whose descendants to return'),
@@ -571,6 +608,7 @@ export const registerWikiTools = (server: McpServer, auth: ResourceAuth) => {
         `type design_doc makes the page a design document in the Markdown Design Doc Viewer format (${designDocSkillNote(auth)}); ` +
         'when creating without type, a content whose front matter has type: design_doc becomes one. Omit type when updating to keep it. ' +
         'In a design doc space (type design_doc in list_wiki_spaces), pages are always design docs: type page is an error, and creating without type makes a design doc. ' +
+        'In an announcement space (type announcement), pages are flat normal pages ordered by creation date: parent, position and type design_doc are errors. ' +
         'Write only what the user asked for or agreed to; every change is kept in the page history, from which users can restore it',
       inputSchema: z.strictObject({
         ref: zWikiPageRef.optional().describe('Page ref KEY/number to update. Omit to create a page'),
