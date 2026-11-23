@@ -518,7 +518,7 @@ describe('moveWikiPage', () => {
     it('移動先の兄弟が増えていても、選んだ兄弟の直後に入る', async () => {
       tree = withNewFirstChild()
       expect((await moveWikiPage(actor, WEB, 'e', { parentId: 'a', afterId: 'b' })).result).toBe('moved')
-      // 番号(画面での「b の後」= 1)だと n と b の間に入っていた
+      // 画面で見ていた番号(1)の n と b の間ではなく、今の並びの b の直後
       expect(vi.mocked(prisma.wikiPage.update).mock.calls.at(-1)?.[0].data).toMatchObject({ parentId: 'a', order: 2 })
     })
 

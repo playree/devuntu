@@ -154,12 +154,12 @@ export const MovePageModal: FC<ModalBaseProps & { page: { id: string; title: str
     ...Object.fromEntries(siblings.map((item) => [item.id, t('wiki_position_after', { title: item.title })])),
   }
 
-  // 選んだ「◯◯ の後」が再読み込みで兄弟から消えていたら、先頭ではなく末尾として扱う
-  const afterIndex = siblings.findIndex((item) => item.id === positionKey)
-  const position =
-    positionKey === FIRST_KEY ? 0 : positionKey === LAST_KEY || afterIndex < 0 ? undefined : afterIndex + 1
+  // 選んだ「◯◯ の後」が再読み込みで兄弟から消えていたら、先頭ではなく末尾として扱う(選択肢にも末尾と出す)
+  const selectedKey = positionKey in positionOptions ? positionKey : LAST_KEY
+  const afterIndex = siblings.findIndex((item) => item.id === selectedKey)
+  const position = selectedKey === FIRST_KEY ? 0 : afterIndex < 0 ? undefined : afterIndex + 1
   // サーバーへは番号ではなく基準の兄弟を送る。開いた後に兄弟が増減しても、選んだページの直後に入る
-  const afterId = positionKey === FIRST_KEY ? null : afterIndex < 0 ? undefined : positionKey
+  const afterId = selectedKey === FIRST_KEY ? null : afterIndex < 0 ? undefined : selectedKey
   // サーバーと同じく、並べた結果の id の列で比べる(末尾のページで「末尾」を選んだときなども変化なしになる)
   const isUnchanged =
     parentId === currentParentId &&
@@ -212,7 +212,7 @@ export const MovePageModal: FC<ModalBaseProps & { page: { id: string; title: str
           <SingleSelectField
             label={t('wiki_position')}
             groupOptions={positionOptions}
-            value={positionKey}
+            value={selectedKey}
             onChange={(key) => setPositionKey(key ?? LAST_KEY)}
           />
         </div>
