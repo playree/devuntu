@@ -31,10 +31,16 @@ const stripClosingSequence = (raw: string): string => {
   return end === 0 || body[end - 1] === ' ' || body[end - 1] === '\t' ? body.slice(0, end).trimEnd() : body
 }
 
-/** 本文の見出し(出現順)。`line` は 0 始まりの行番号。先頭の front matter(YAML のコメント行 `# ...`)は見出しにしない */
-export const listMarkdownHeadings = (content: string): MarkdownHeading[] => {
+/**
+ * 見出しの走査の設定。`skipFrontMatter` は先頭の front matter(YAML のコメント行 `# ...`)を見出しにしないか。
+ * 設計書はビューアが front matter をヘッダとして扱うので飛ばす。通常のページでは区切り線と見出しとして表示されるので飛ばさない
+ */
+export type MarkdownHeadingOpts = { skipFrontMatter?: boolean }
+
+/** 本文の見出し(出現順)。`line` は 0 始まりの行番号 */
+export const listMarkdownHeadings = (content: string, opts: MarkdownHeadingOpts = {}): MarkdownHeading[] => {
   const headings: MarkdownHeading[] = []
-  const frontMatter = frontMatterLines(content)
+  const frontMatter = opts.skipFrontMatter ? frontMatterLines(content) : null
   // 開きと閉じの区切り線を含めた行数
   const bodyStart = frontMatter ? frontMatter.length + 2 : 0
   let fence: string | null = null
@@ -77,9 +83,13 @@ const normalizeHeading = (text: string) =>
  * `heading` に一致する最初の見出しの節(見出しの行から、同じか浅いレベルの次の見出しの手前まで。子見出しを含む)。
  * 見つからなければ null
  */
-export const extractMarkdownSection = (content: string, heading: string): string | null => {
+export const extractMarkdownSection = (
+  content: string,
+  heading: string,
+  opts: MarkdownHeadingOpts = {},
+): string | null => {
   const target = normalizeHeading(heading)
-  const headings = listMarkdownHeadings(content)
+  const headings = listMarkdownHeadings(content, opts)
   const index = headings.findIndex(({ text }) => normalizeHeading(text) === target)
   if (index < 0) {
     return null

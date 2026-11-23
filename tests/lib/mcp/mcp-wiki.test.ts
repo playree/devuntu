@@ -446,6 +446,29 @@ describe('getWikiPageForMcp', () => {
     expect(error.errorType).toBe(VALIDATION_ERROR)
     expect(error.message).toContain('# 概要 | ## 手順 | ## 運用')
   })
+
+  describe('先頭の front matter', () => {
+    const CONTENT = '---\ntype: design_doc\n# 版管理メモ\n---\n## 概要\n本文'
+    const withPage = (type: string) => {
+      const detail = pageDetail() as unknown as { page: Record<string, unknown> }
+      vi.mocked(getWikiPage).mockResolvedValue({ ...detail, page: { ...detail.page, type, content: CONTENT } } as never)
+    }
+
+    it('設計書では、front matter の YAML コメント行を section にも見出しの一覧にも出さない', async () => {
+      withPage('design_doc')
+      const error = await errorOf(getWikiPageForMcp(human, { ref: 'DOCS/12', section: '版管理メモ' }))
+
+      expect(error.errorType).toBe(VALIDATION_ERROR)
+      expect(error.message).toMatch(/Headings: ## 概要$/)
+    })
+
+    it('通常のページでは、区切り線の間の # も見出しとして扱う(画面でも見出しとして表示される)', async () => {
+      withPage('page')
+      const result = await getWikiPageForMcp(human, { ref: 'DOCS/12', section: '版管理メモ' })
+
+      expect(result).toMatchObject({ section: '版管理メモ', content: '# 版管理メモ\n---\n## 概要\n本文' })
+    })
+  })
 })
 
 describe('listWikiSpacesForMcp', () => {
