@@ -722,6 +722,7 @@ export const ja: DefaultLocaleItems = {
   wiki_space_type_design_doc: '設計書',
   wiki_space_type_mixed: '混合',
   wiki_switch_space: 'スペースを切り替え',
+  wiki_template_title: 'タイトルの雛形',
   wiki_tree: 'Wikiツリー',
   wiki_updated_by: '${name} が ${at} に更新',
   wiki_visibility: '公開範囲',
@@ -968,6 +969,7 @@ export const ja: DefaultLocaleItems = {
   msg_wiki_message_not_saved: '内容に変更が無いため、コミットメッセージは残りませんでした。',
   msg_wiki_page_already_restored: '${target} は既に復元されていたため、変更していません。',
   msg_wiki_page_conflict: '編集を始めた後に、他の人がこのページを保存しました。下書きは残っています。',
+  msg_wiki_page_from_template: '種類と本文はテンプレートのものになります。',
   msg_wiki_page_has_children: '子ページがあるため削除できません。配下ごと削除してください。',
   msg_wiki_page_invalid_parent: 'そのページの下には移動できません(自分自身・子孫・別のスペースは選べません)。',
   msg_wiki_page_too_deep: '階層が深すぎます(10階層まで)。',
@@ -991,10 +993,14 @@ export const ja: DefaultLocaleItems = {
   msg_wiki_space_archived: 'このスペースはアーカイブされているため、閲覧のみです。',
   msg_wiki_space_has_normal_pages:
     '通常のページがあるため、設計書スペースにできません。通常のページを削除するか、種類を設計書に変えてください。',
+  msg_wiki_space_has_normal_templates:
+    '種類が通常ページのテンプレートがあるため、設計書スペースにできません。テンプレートを削除するか、種類を設計書に変えてください。',
   msg_wiki_space_key: 'ページは「キー/番号」(例: DOCS/12)で指定します。キーは作成後に変更できません。',
   msg_wiki_space_no_owner: 'owner が1人もいなくなる変更はできません。先に別の owner を割り当ててください。',
   msg_wiki_space_type:
-    '「設計書」にすると、作れるページは設計書だけになり、スペースのトップに設計書一覧を表示します。通常のページがあるスペースは「設計書」にできません。',
+    '「設計書」にすると、作れるページは設計書だけになり、スペースのトップに設計書一覧を表示します。通常のページや、種類が通常ページのテンプレートがあるスペースは「設計書」にできません。',
+  msg_wiki_template_desc:
+    'ページの作成画面でテンプレートを選ぶと、タイトル・種類・本文が入力されます。{{date}}(作成日 YYYY-MM-DD)・{{month}}(YYYY-MM)・{{user}}(作成者の表示名)は作成時に置き換わります(日付は作成者のタイムゾーン)。MCP の save_wiki_page でも template に名前を指定して使えます。',
   msg_wiki_tree_changed:
     '他の人の操作でページの構成が変わっていたため、実行しませんでした。ツリーを更新したので、確認してからもう一度操作してください。',
   msg_wiki_visibility:

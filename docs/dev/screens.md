@@ -75,7 +75,7 @@ Proxy は通るリクエストのボディを既定 10MB まで複製して溜�
 | ページ詳細                    | `/wiki/[key]/[number]`       | 認証必須 + スペースの閲覧権限。作成・編集・移動・削除・版の復元は `editor` 以上かつ未アーカイブ。版の削除は閲覧できる `owner` と管理者かつ未アーカイブ(`canDeleteWikiRevision`)                                                                                                                                                                                                                                                                                                      |
 | ページの印刷(PDF / HTML 出力) | `/print/wiki/[key]/[number]` | 認証必須 + スペースの閲覧権限(ページ詳細と同じ `getWikiPage` で判定)。サイドバー無し。`?rev=<版 ID>` でその版の内容を出す(版は `getWikiPageRevisionSnapshot` で引き、そのページの版でない・存在しない ID は権限なしと同じ表示)。`?format=html` で印刷ダイアログの代わりに HTML を作り、出力メニューの見えない iframe の中なら親へ `postMessage` で返す(直接開いたときは自分で保存する)。配下はダーク設定でもライト表示で、同一オリジンからだけ iframe に埋め込める(`next.config.ts`) |
 | スペース内検索                | `/wiki/[key]/search`         | 認証必須 + スペースの閲覧権限。条件は `?q=` と `?tags=`(複数可)で持つ。`/wiki?q=` は閲覧できる全スペース(アーカイブ済みを除く)の横断検索                                                                                                                                                                                                                                                                                                                                             |
-| スペース設定                  | `/wiki/[key]/settings`       | 認証必須 + `owner` または管理者。スペースの削除(`deleteWikiSpace`)もここから行う                                                                                                                                                                                                                                                                                                                                                                                                     |
+| スペース設定                  | `/wiki/[key]/settings`       | 認証必須 + `owner` または管理者。タグ・ページテンプレートの管理と、スペースの削除(`deleteWikiSpace`)もここから行う                                                                                                                                                                                                                                                                                                                                                                   |
 
 権限はスペース単位で、直接割り当て(`WikiSpaceMember`)・グループ(`WikiSpaceGroup`)・ボード(`WikiSpaceBoard`。ボードのメンバーが対象)のうち最も強いロールを採る。
 判定は `src/lib/wiki/wiki-access.ts`(`assertWikiSpaceAccess`)、割り当ての変更は `src/lib/wiki/wiki-assignment.ts`。
@@ -86,6 +86,11 @@ Proxy は通るリクエストのボディを既定 10MB まで複製して溜�
 - スペースの削除(`deleteWikiSpace`。`src/lib/wiki/wiki-space.ts`)は `manage` を要求し、スペース行のロックを取ってから消す。ページ・版・タグ・割り当ては Cascade で消し、添付はボード削除と同じく紐付けを外して削除待ち(`detachedAt`)にしてから、コミット後に実体を消す(`listAttachmentKeysOf` / `detachAttachmentsOf`)。実体の削除に失敗して残った添付は、掃除が回収するまで誰にも配信しない(`canViewAttachment`)。
   キーは作成時に `WikiSpaceKeyHistory` へ登録し、スペースを消しても残す(共有済みの `KEY/番号` が別のスペースのページを指さないため)。履歴にあるキーでの作成は `DUPLICATED_WIKI_SPACE_KEY`
 - タグ(`src/lib/wiki/wiki-tag.ts`)はスペースごと。作成は `editor` 以上、更新・削除は `manage`。ページへの付与は `assertWikiTagIdsInSpace` で同じスペースのタグに限る
+- ページテンプレート(`WikiTemplate`。`src/lib/wiki/wiki-template.ts`)はスペースごと(20件まで、`MAX_WIKI_TEMPLATES_PER_SPACE`)。設定画面の一覧(本文込み)・追加・編集・削除・並べ替えは `manage` かつ未アーカイブ(`wiki/[key]/settings/space-templates.tsx`)。
+  種類は `isWikiPageTypeAllowed` で区分に合うものに限り、追加・編集はスペース行のロックの後で区分を読む。並べ替え(`moveWikiTemplate`)はロックの下で今の並びの隣と入れ替えて `order` を 0 から振り直す。
+  ページ作成のモーダル(`CreatePageModal`)は、開いたときに `getWikiTemplateOptions`(`write`。本文なし)で選択肢を引き、選ぶとタイトルと種類を埋めて `createWikiPage` に `templateId` を渡す。
+  サーバーは `renderWikiTemplate` で、`write` を確かめてから同じスペースのテンプレートを引き、作成者の表示名・タイムゾーン(未設定は `DEFAULT_TIMEZONE`)で `{{date}}` / `{{month}}` / `{{user}}` を置き換えた本文と種類で作る(`applyWikiTemplatePlaceholders`。1回の走査で置き換え、置き換えた値は置き換え直さない。タイトルにも同じ値で置き換えをかける)。
+  本文の画像は添付の掃除で参照として扱う(`attachment-ref.ts` の `wikiTemplate`)
 - 版(`src/lib/wiki/wiki-revision.ts`)の一覧は本文を含めず、ページ詳細で過去の版を選んだときにその版の本文だけを引く(本文の最大長 × 版数を一度に転送しない)。
   版の選択は更新者・日時の表示を兼ね(`wiki/[key]/[number]/page-revision.tsx`)、過去の版の表示中は編集させず、ロールバックと版の削除(`deleteWikiPageRevision`。最新の版は消せない)だけを出す。
   版の削除を `editor` に許すと、本文を空にしてから前の版を消して内容を戻せなくできるので、`manage` に限る。
@@ -112,7 +117,7 @@ Proxy は通るリクエストのボディを既定 10MB まで複製して溜�
   ビューアの内部スクロールは `globals.css` の `.design-doc-print` で外す。描画の完了待ち(`useWhenRendered`)は、ワイヤーフレームの shadow root の中の画像も待つ
 - スペースの区分(`WikiSpaceType`)が `design_doc` のスペース(設計書スペース)には設計書だけを置く
   - 判定は `isWikiPageTypeAllowed`(`src/lib/wiki/wiki-rule.ts`)。ページの作成・種類の変更・版の復元で、スペース行のロックを取った後に読んだ区分(`WikiSpaceAccess.type`)で弾く(`WIKI_PAGE_TYPE_NOT_ALLOWED`)。種類を省いた作成は区分の既定(`defaultWikiPageType`)にする
-  - `design_doc` への切り替え(`updateWikiSpace`)は、同じスペース行のロック(`FOR NO KEY UPDATE`)を取ってから通常ページを数え、1件でもあれば拒む(`WIKI_SPACE_HAS_NORMAL_PAGES`)。ページの書き込みもロックの後で区分を読むので、切り替えと同時に通常ページが作られることはない
+  - `design_doc` への切り替え(`updateWikiSpace`)は、同じスペース行のロック(`FOR NO KEY UPDATE`)を取ってから通常ページを数え、1件でもあれば拒む(`WIKI_SPACE_HAS_NORMAL_PAGES`)。続けて種類 `page` のテンプレートを数え、1件でもあれば拒む(`WIKI_SPACE_HAS_NORMAL_TEMPLATES`)。ページとテンプレートの書き込みもロックの後で区分を読むので、切り替えと同時に通常ページや通常のテンプレートが作られることはない
   - スペースのトップの設計書一覧(`wiki/[key]/design-doc-index.tsx`)は、`getWikiDesignDocIndex`(`src/lib/wiki/wiki-design-doc-index.ts`)が返す設計書の front matter(本文は返さない。DB からも本文は先頭だけを読み、判定は `frontMatterBlock` で行う。先頭に収まらない長い front matter の行だけ本文全体を読み直す)を、embed の `DesignDocList`(`markdown-design-doc-viewer-embed/react`)に渡して描く。
     列(版数など)は embed が mddv と同じ解釈で front matter から取り出す。フォルダには親ページのタイトルのパス、ファイル名にはページ番号を渡し(組み立ては `src/lib/wiki/wiki-design-doc-list.ts`)、リンクは `onOpenLink` で `router.push` する
 - 検索(`src/lib/wiki/wiki-search.ts`)は `$queryRaw` で組む

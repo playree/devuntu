@@ -26,6 +26,7 @@ import {
   WIKI_SPACE_HAS_NORMAL_PAGES,
   WIKI_SPACE_KEY_PATTERN,
 } from './wiki-rule'
+import { WIKI_SPACE_HAS_NORMAL_TEMPLATES } from './wiki-template-rule'
 
 export type WikiSpaceInput = {
   key: string
@@ -44,6 +45,12 @@ const errHasNormalPages = (count: number) =>
   new ClientError(
     WIKI_SPACE_HAS_NORMAL_PAGES,
     `The space has ${count} normal page(s). Delete them or change them to design docs before making it a design doc space`,
+  )
+
+const errHasNormalTemplates = (count: number) =>
+  new ClientError(
+    WIKI_SPACE_HAS_NORMAL_TEMPLATES,
+    `The space has ${count} normal page template(s). Delete them or change them to design docs before making it a design doc space`,
   )
 
 const assertName = (name: string) => {
@@ -123,6 +130,10 @@ export const updateWikiSpace = async (actor: Actor, spaceId: string, patch: Part
       const normalPages = await tx.wikiPage.count({ where: { spaceId, type: 'page' } })
       if (normalPages > 0) {
         throw errHasNormalPages(normalPages)
+      }
+      const normalTemplates = await tx.wikiTemplate.count({ where: { spaceId, type: 'page' } })
+      if (normalTemplates > 0) {
+        throw errHasNormalTemplates(normalTemplates)
       }
     }
     return tx.wikiSpace.update({

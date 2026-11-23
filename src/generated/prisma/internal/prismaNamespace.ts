@@ -465,7 +465,8 @@ export const ModelName = {
   WikiPage: 'WikiPage',
   WikiTag: 'WikiTag',
   WikiPageTag: 'WikiPageTag',
-  WikiPageRevision: 'WikiPageRevision'
+  WikiPageRevision: 'WikiPageRevision',
+  WikiTemplate: 'WikiTemplate'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -481,7 +482,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "agentToken" | "mcpToken" | "agentRunner" | "agentRun" | "agentAutoReviseTrigger" | "agentUsage" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "boardNote" | "boardNoteRevision" | "board" | "boardKeyHistory" | "ticketTemplate" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "calendarShare" | "calendarBusyTime" | "commandTargetMember" | "commandTargetGroup" | "commandRun" | "commandRunChunk" | "ticketLink" | "boardRepository" | "boardGitSetting" | "gitCheckSuite" | "userNotifySetting" | "webPushSubscription" | "boardNotifySetting" | "notifyOutbox" | "notifyDelivery" | "ticketDueReminder" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "uploadNonce" | "keyValueStore" | "appVersion" | "ticket" | "ticketComment" | "ticketCriterion" | "ticketRelation" | "ticketActivity" | "user" | "group" | "userGroup" | "wikiSpace" | "wikiSpaceKeyHistory" | "wikiSpaceMember" | "wikiSpaceGroup" | "wikiSpaceBoard" | "wikiPage" | "wikiTag" | "wikiPageTag" | "wikiPageRevision"
+    modelProps: "agentToken" | "mcpToken" | "agentRunner" | "agentRun" | "agentAutoReviseTrigger" | "agentUsage" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "boardNote" | "boardNoteRevision" | "board" | "boardKeyHistory" | "ticketTemplate" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "calendarShare" | "calendarBusyTime" | "commandTargetMember" | "commandTargetGroup" | "commandRun" | "commandRunChunk" | "ticketLink" | "boardRepository" | "boardGitSetting" | "gitCheckSuite" | "userNotifySetting" | "webPushSubscription" | "boardNotifySetting" | "notifyOutbox" | "notifyDelivery" | "ticketDueReminder" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "uploadNonce" | "keyValueStore" | "appVersion" | "ticket" | "ticketComment" | "ticketCriterion" | "ticketRelation" | "ticketActivity" | "user" | "group" | "userGroup" | "wikiSpace" | "wikiSpaceKeyHistory" | "wikiSpaceMember" | "wikiSpaceGroup" | "wikiSpaceBoard" | "wikiPage" | "wikiTag" | "wikiPageTag" | "wikiPageRevision" | "wikiTemplate"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -5591,6 +5592,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    WikiTemplate: {
+      payload: Prisma.$WikiTemplatePayload<ExtArgs>
+      fields: Prisma.WikiTemplateFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.WikiTemplateFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTemplatePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.WikiTemplateFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTemplatePayload>
+        }
+        findFirst: {
+          args: Prisma.WikiTemplateFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTemplatePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.WikiTemplateFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTemplatePayload>
+        }
+        findMany: {
+          args: Prisma.WikiTemplateFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTemplatePayload>[]
+        }
+        create: {
+          args: Prisma.WikiTemplateCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTemplatePayload>
+        }
+        createMany: {
+          args: Prisma.WikiTemplateCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.WikiTemplateCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTemplatePayload>[]
+        }
+        delete: {
+          args: Prisma.WikiTemplateDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTemplatePayload>
+        }
+        update: {
+          args: Prisma.WikiTemplateUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTemplatePayload>
+        }
+        deleteMany: {
+          args: Prisma.WikiTemplateDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.WikiTemplateUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.WikiTemplateUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTemplatePayload>[]
+        }
+        upsert: {
+          args: Prisma.WikiTemplateUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTemplatePayload>
+        }
+        aggregate: {
+          args: Prisma.WikiTemplateAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateWikiTemplate>
+        }
+        groupBy: {
+          args: Prisma.WikiTemplateGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WikiTemplateGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.WikiTemplateCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WikiTemplateCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -6690,6 +6765,23 @@ export const WikiPageRevisionScalarFieldEnum = {
 export type WikiPageRevisionScalarFieldEnum = (typeof WikiPageRevisionScalarFieldEnum)[keyof typeof WikiPageRevisionScalarFieldEnum]
 
 
+export const WikiTemplateScalarFieldEnum = {
+  id: 'id',
+  spaceId: 'spaceId',
+  name: 'name',
+  title: 'title',
+  content: 'content',
+  type: 'type',
+  order: 'order',
+  createdById: 'createdById',
+  updatedById: 'updatedById',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WikiTemplateScalarFieldEnum = (typeof WikiTemplateScalarFieldEnum)[keyof typeof WikiTemplateScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -7614,6 +7706,7 @@ export type GlobalOmitConfig = {
   wikiTag?: Prisma.WikiTagOmit
   wikiPageTag?: Prisma.WikiPageTagOmit
   wikiPageRevision?: Prisma.WikiPageRevisionOmit
+  wikiTemplate?: Prisma.WikiTemplateOmit
 }
 
 /* Types for Logging */

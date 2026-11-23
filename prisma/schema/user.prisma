@@ -90,10 +90,12 @@ model User {
   boardNoteRevisions BoardNoteRevision[]
 
   // Wiki
-  wikiSpaceMembers  WikiSpaceMember[]
-  createdWikiPages  WikiPage[]         @relation("WikiPageCreatedBy")
-  updatedWikiPages  WikiPage[]         @relation("WikiPageUpdatedBy")
-  wikiPageRevisions WikiPageRevision[]
+  wikiSpaceMembers     WikiSpaceMember[]
+  createdWikiPages     WikiPage[]         @relation("WikiPageCreatedBy")
+  updatedWikiPages     WikiPage[]         @relation("WikiPageUpdatedBy")
+  createdWikiTemplates WikiTemplate[]     @relation("WikiTemplateCreatedBy")
+  updatedWikiTemplates WikiTemplate[]     @relation("WikiTemplateUpdatedBy")
+  wikiPageRevisions    WikiPageRevision[]
 
   // MCP
   mcpTokens McpToken[]

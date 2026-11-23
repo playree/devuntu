@@ -24,6 +24,7 @@ const IMAGE_EDITORS: Record<string, AttachmentRefSource> = {
   'src/app/(sidenav)/boards/[id]/settings/board-ticket-templates.tsx': 'ticketTemplate',
   'src/app/(sidenav)/admin/dashboard/announcement-edit.tsx': 'announcement',
   'src/app/(sidenav)/wiki/[key]/[number]/page-body.tsx': 'wikiPage',
+  'src/app/(sidenav)/wiki/[key]/settings/space-templates.tsx': 'wikiTemplate',
 }
 
 const rootDir = fileURLToPath(new URL('../../../', import.meta.url))

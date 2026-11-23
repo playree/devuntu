@@ -5,6 +5,7 @@
 import { el } from '@/locale'
 import { z } from 'zod'
 import { MAX_TAG_NAME } from '../board/tag-rule'
+import { MAX_TEMPLATE_NAME } from '../board/ticket-template-rule'
 import {
   MAX_WIKI_CONTENT,
   MAX_WIKI_PAGE_TAGS,
@@ -88,6 +89,8 @@ export const scCreateWikiPage = z.object({
   parentId: z.uuidv7().nullable(),
   title: zWikiTitle,
   type: zWikiPageType,
+  /** 本文と種類をこのテンプレートから作る(同じスペースのものに限る) */
+  templateId: z.uuidv7().optional(),
 })
 export type CreateWikiPage = z.infer<typeof scCreateWikiPage>
 
@@ -172,6 +175,35 @@ export const scUpdateWikiTag = z.object({
   name: zTagName,
   color: zTagColor,
   order: zTagOrder,
+})
+
+/** テンプレートの名前はチケットテンプレートと同じ長さ・文言にする */
+export const zWikiTemplateName = z
+  .string()
+  .trim()
+  .min(1, el('@required_field'))
+  .max(MAX_TEMPLATE_NAME, el('@invalid_template_name'))
+
+/** テンプレートの編集フォーム。タイトルの雛形は空でもよい(作成時の入力のまま) */
+export const scWikiTemplateFields = z.object({
+  name: zWikiTemplateName,
+  title: z.string().trim().max(MAX_WIKI_TITLE, el('@invalid_wiki_title')).default(''),
+  content: z.string().max(MAX_WIKI_CONTENT, el('@invalid_content')).default(''),
+  type: zWikiPageType,
+})
+export type WikiTemplateFields = z.infer<typeof scWikiTemplateFields>
+export type WikiTemplateFieldsIn = z.input<typeof scWikiTemplateFields>
+
+export const scCreateWikiTemplate = scWikiTemplateFields.extend({ spaceId: z.uuidv7() })
+export type CreateWikiTemplate = z.infer<typeof scCreateWikiTemplate>
+
+export const scUpdateWikiTemplate = scWikiTemplateFields.extend({ id: z.uuidv7() })
+export type UpdateWikiTemplate = z.infer<typeof scUpdateWikiTemplate>
+
+/** 表示順で隣のテンプレートと入れ替える */
+export const scMoveWikiTemplate = z.object({
+  id: z.uuidv7(),
+  direction: z.enum(['up', 'down']),
 })
 
 /** `space` を省略すると、閲覧できる全スペース(アーカイブ済みを除く)を探す */

@@ -28,6 +28,8 @@ import {
 } from '@/lib/wiki/wiki-revision'
 import { getWikiSpaceByKeyForManage } from '@/lib/wiki/wiki-space'
 import { createWikiTag as createWikiTagCore, listWikiTags } from '@/lib/wiki/wiki-tag'
+import { listWikiTemplateOptions, renderWikiTemplate } from '@/lib/wiki/wiki-template'
+import { applyWikiTemplatePlaceholders } from '@/lib/wiki/wiki-template-rule'
 
 /**
  * スペース内の画面(トップ・ページ・設定)で共通に使う Server Action。
@@ -52,20 +54,33 @@ export const getWikiSpace = safeAuthAction
   })
 export type GetWikiSpaceReturnType = Awaited<ReturnType<typeof getWikiSpace>>['data']
 
-/** ページの作成。親の子(親が無ければスペース直下)の末尾に置く。設計書は最小の front matter を入れて作る */
+/**
+ * ページの作成。親の子(親が無ければスペース直下)の末尾に置く。
+ * テンプレートを指定すると、種類と本文はテンプレートのもの(プレースホルダーを置き換える)にし、タイトルにも置き換えをかける。
+ * 本文が空の設計書は最小の front matter を入れて作る(ビューアの設計書ヘッダになる)
+ */
 export const createWikiPage = safeAuthAction
   .metadata({ actionName: 'createWikiPage', role: 'user' })
   .inputSchema(scCreateWikiPage)
-  .action(
-    async ({ ctx: { user }, parsedInput: { spaceId, parentId, title, type } }) =>
-      await createWikiPageCore(user, WEB, spaceId, {
-        title,
-        parentId,
-        type,
-        // 設計書は最小の front matter から書き始める(ビューアの設計書ヘッダになる)
-        content: type === 'design_doc' ? designDocFrontMatter(title) : '',
-      }),
-  )
+  .action(async ({ ctx: { user }, parsedInput: { spaceId, parentId, title, type, templateId } }) => {
+    const now = new Date()
+    const template = templateId ? await renderWikiTemplate(user, spaceId, { id: templateId }, now) : null
+    const pageTitle = template ? applyWikiTemplatePlaceholders(title, template.context) : title
+    const pageType = template?.type ?? type
+    const content = template?.content ?? ''
+    return await createWikiPageCore(user, WEB, spaceId, {
+      title: pageTitle,
+      parentId,
+      type: pageType,
+      content: pageType === 'design_doc' && content === '' ? designDocFrontMatter(pageTitle) : content,
+    })
+  })
+
+/** ページ作成で選べるテンプレート(本文なし)。editor 以上かつ未アーカイブ。`id` はスペース ID */
+export const getWikiTemplateOptions = safeAuthAction
+  .metadata({ actionName: 'getWikiTemplateOptions', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => await listWikiTemplateOptions(user, id))
 
 /**
  * 移動。`afterId` の兄弟の直後へ置き、null なら先頭、省略で末尾。

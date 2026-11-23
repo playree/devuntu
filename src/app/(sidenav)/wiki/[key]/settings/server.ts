@@ -3,11 +3,14 @@
 import { safeAuthAction } from '@/lib/action/action-server'
 import { scUUID } from '@/lib/schema/schema'
 import {
+  scCreateWikiTemplate,
+  scMoveWikiTemplate,
   scRemoveWikiSpaceMember,
   scRemoveWikiSpaceTarget,
   scSetWikiSpaceArchived,
   scUpdateWikiSpace,
   scUpdateWikiTag,
+  scUpdateWikiTemplate,
   scUpsertWikiSpaceMember,
   scUpsertWikiSpaceTarget,
 } from '@/lib/schema/schema-wiki'
@@ -31,6 +34,13 @@ import {
   listWikiTagsForManage,
   updateWikiTag as updateWikiTagCore,
 } from '@/lib/wiki/wiki-tag'
+import {
+  createWikiTemplate as createWikiTemplateCore,
+  deleteWikiTemplate as deleteWikiTemplateCore,
+  listWikiTemplatesForManage,
+  moveWikiTemplate as moveWikiTemplateCore,
+  updateWikiTemplate as updateWikiTemplateCore,
+} from '@/lib/wiki/wiki-template'
 
 /**
  * スペース設定画面の Server Action。どれも manage(owner または管理者)を要求する。
@@ -139,5 +149,40 @@ export const deleteWikiTag = safeAuthAction
   .inputSchema(scUUID)
   .action(async ({ ctx: { user }, parsedInput: { id } }) => {
     await deleteWikiTagCore(user, id)
+    return { id }
+  })
+
+/** ページテンプレートの一覧(本文込み、表示順)。`id` はスペース ID */
+export const getWikiTemplates = safeAuthAction
+  .metadata({ actionName: 'getWikiTemplates', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => await listWikiTemplatesForManage(user, id))
+export type GetWikiTemplatesReturnType = Awaited<ReturnType<typeof getWikiTemplates>>['data']
+
+/** テンプレートの追加(末尾に置く) */
+export const createWikiTemplate = safeAuthAction
+  .metadata({ actionName: 'createWikiTemplate', role: 'user' })
+  .inputSchema(scCreateWikiTemplate)
+  .action(async ({ ctx: { user }, parsedInput }) => await createWikiTemplateCore(user, parsedInput))
+
+export const updateWikiTemplate = safeAuthAction
+  .metadata({ actionName: 'updateWikiTemplate', role: 'user' })
+  .inputSchema(scUpdateWikiTemplate)
+  .action(async ({ ctx: { user }, parsedInput }) => await updateWikiTemplateCore(user, parsedInput))
+
+export const deleteWikiTemplate = safeAuthAction
+  .metadata({ actionName: 'deleteWikiTemplate', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => {
+    await deleteWikiTemplateCore(user, id)
+    return { id }
+  })
+
+/** 表示順で隣と入れ替える */
+export const moveWikiTemplate = safeAuthAction
+  .metadata({ actionName: 'moveWikiTemplate', role: 'user' })
+  .inputSchema(scMoveWikiTemplate)
+  .action(async ({ ctx: { user }, parsedInput: { id, direction } }) => {
+    await moveWikiTemplateCore(user, id, direction)
     return { id }
   })

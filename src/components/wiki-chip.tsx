@@ -51,3 +51,4 @@ const pageTypeChip = createEnumChip<WikiPageType>({
 
 /** ページの種類の選択肢 */
 export const useWikiPageTypeOptions = pageTypeChip.useOptions
+export const WikiPageTypeChip = pageTypeChip.EnumChip

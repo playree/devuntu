@@ -119,7 +119,8 @@ export const ModelName = {
   WikiPage: 'WikiPage',
   WikiTag: 'WikiTag',
   WikiPageTag: 'WikiPageTag',
-  WikiPageRevision: 'WikiPageRevision'
+  WikiPageRevision: 'WikiPageRevision',
+  WikiTemplate: 'WikiTemplate'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1196,6 +1197,23 @@ export const WikiPageRevisionScalarFieldEnum = {
 } as const
 
 export type WikiPageRevisionScalarFieldEnum = (typeof WikiPageRevisionScalarFieldEnum)[keyof typeof WikiPageRevisionScalarFieldEnum]
+
+
+export const WikiTemplateScalarFieldEnum = {
+  id: 'id',
+  spaceId: 'spaceId',
+  name: 'name',
+  title: 'title',
+  content: 'content',
+  type: 'type',
+  order: 'order',
+  createdById: 'createdById',
+  updatedById: 'updatedById',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WikiTemplateScalarFieldEnum = (typeof WikiTemplateScalarFieldEnum)[keyof typeof WikiTemplateScalarFieldEnum]
 
 
 export const SortOrder = {

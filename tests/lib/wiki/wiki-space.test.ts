@@ -15,6 +15,7 @@ import {
   setWikiSpaceArchived,
   updateWikiSpace,
 } from '@/lib/wiki/wiki-space'
+import { WIKI_SPACE_HAS_NORMAL_TEMPLATES } from '@/lib/wiki/wiki-template-rule'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/prisma', async () =>
@@ -22,6 +23,7 @@ vi.mock('@/lib/prisma', async () =>
     wikiSpace: ['create', 'update', 'delete', 'findMany', 'findUnique'],
     wikiSpaceKeyHistory: ['create'],
     wikiPage: ['count'],
+    wikiTemplate: ['count'],
   }),
 )
 vi.mock('@/lib/storage/attachment', () => ({
@@ -49,6 +51,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   vi.mocked(prisma.wikiSpace.create).mockResolvedValue({ id: 's1' } as never)
   vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ type: 'mixed' } as never)
+  vi.mocked(prisma.wikiTemplate.count).mockResolvedValue(0)
   vi.mocked(listAttachmentKeysOf).mockResolvedValue([])
   vi.mocked(removeAttachmentByKey).mockResolvedValue(true)
 })
@@ -128,6 +131,16 @@ describe('updateWikiSpace / setWikiSpaceArchived', () => {
   it('通常ページがあれば設計書スペースにできない', async () => {
     vi.mocked(prisma.wikiPage.count).mockResolvedValue(2)
     expect(await errorTypeOf(updateWikiSpace(actor, 's1', { type: 'design_doc' }))).toBe(WIKI_SPACE_HAS_NORMAL_PAGES)
+    expect(prisma.wikiSpace.update).not.toHaveBeenCalled()
+  })
+
+  it('種類が通常ページのテンプレートがあれば設計書スペースにできない', async () => {
+    vi.mocked(prisma.wikiPage.count).mockResolvedValue(0)
+    vi.mocked(prisma.wikiTemplate.count).mockResolvedValue(1)
+    expect(await errorTypeOf(updateWikiSpace(actor, 's1', { type: 'design_doc' }))).toBe(
+      WIKI_SPACE_HAS_NORMAL_TEMPLATES,
+    )
+    expect(vi.mocked(prisma.wikiTemplate.count).mock.calls[0][0]).toEqual({ where: { spaceId: 's1', type: 'page' } })
     expect(prisma.wikiSpace.update).not.toHaveBeenCalled()
   })
 

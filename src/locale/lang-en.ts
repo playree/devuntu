@@ -723,6 +723,7 @@ export const en: DefaultLocaleItems = {
   wiki_space_type_design_doc: 'Design docs',
   wiki_space_type_mixed: 'Mixed',
   wiki_switch_space: 'Switch Space',
+  wiki_template_title: 'Title template',
   wiki_tree: 'Wiki Tree',
   wiki_updated_by: 'Updated by ${name} at ${at}',
   wiki_visibility: 'Visibility',
@@ -972,6 +973,7 @@ Please copy and use the connection information above.
   msg_wiki_message_not_saved: 'Nothing changed, so the commit message was not kept.',
   msg_wiki_page_already_restored: '${target} had already been restored, so it was left unchanged.',
   msg_wiki_page_conflict: 'Someone else saved this page after you started editing. Your draft is kept.',
+  msg_wiki_page_from_template: 'The type and content come from the template.',
   msg_wiki_page_has_children: 'The page has child pages. Delete it together with its descendants.',
   msg_wiki_page_invalid_parent: 'The page cannot be moved there (not under itself, its descendants, or another space).',
   msg_wiki_page_too_deep: 'Pages can be nested at most 10 levels deep.',
@@ -994,10 +996,14 @@ Please copy and use the connection information above.
   msg_wiki_space_archived: 'This space is archived and read-only.',
   msg_wiki_space_has_normal_pages:
     'The space has normal pages, so it cannot be a design doc space. Delete them or change their type to design doc first.',
+  msg_wiki_space_has_normal_templates:
+    'The space has normal page templates, so it cannot be a design doc space. Delete them or change their type to design doc first.',
   msg_wiki_space_key: 'Pages are referenced as KEY/number (e.g. DOCS/12). The key cannot be changed later.',
   msg_wiki_space_no_owner: 'A space needs at least one owner. Assign another owner first.',
   msg_wiki_space_type:
-    'With "Design docs", only design docs can be created and the space top shows the list of design docs. A space with normal pages cannot be changed to it.',
+    'With "Design docs", only design docs can be created and the space top shows the list of design docs. A space with normal pages or normal page templates cannot be changed to it.',
+  msg_wiki_template_desc:
+    "Choose a template when creating a page to fill in its title, type and content. {{date}} (YYYY-MM-DD), {{month}} (YYYY-MM) and {{user}} (the creator's display name) are replaced on creation, using the creator's time zone. Templates can also be used by name with template in the MCP tool save_wiki_page.",
   msg_wiki_tree_changed:
     'The page tree was changed by someone else, so nothing was done. The tree has been refreshed; check it and try again.',
   msg_wiki_visibility:

@@ -27,6 +27,7 @@ import { WIKI_PAGE_CONFLICT, WIKI_PAGE_TOO_DEEP } from '@/lib/wiki/wiki-rule'
 import { searchWikiPages } from '@/lib/wiki/wiki-search'
 import { getWikiSpaceByKey, listWikiSpaces } from '@/lib/wiki/wiki-space'
 import { listWikiTags, resolveWikiTagIdsByName } from '@/lib/wiki/wiki-tag'
+import { listWikiTemplateNames, renderWikiTemplate } from '@/lib/wiki/wiki-template'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { connectMcpServer } from '../../helpers/mcp-client'
@@ -52,6 +53,7 @@ vi.mock('@/lib/wiki/wiki-space', () => ({
 }))
 vi.mock('@/lib/wiki/wiki-tag', () => ({ listWikiTags: vi.fn(), resolveWikiTagIdsByName: vi.fn() }))
 vi.mock('@/lib/wiki/wiki-search', () => ({ searchWikiPages: vi.fn() }))
+vi.mock('@/lib/wiki/wiki-template', () => ({ listWikiTemplateNames: vi.fn(), renderWikiTemplate: vi.fn() }))
 
 const SPACE_ID = 'space-1'
 const PAGE_ID = 'page-12'
@@ -99,6 +101,70 @@ beforeEach(() => {
   vi.mocked(updateWikiPage).mockResolvedValue(writeResult('updated'))
   vi.mocked(moveWikiPage).mockResolvedValue(writeResult('moved', MOVED_AT))
   vi.mocked(deleteWikiPage).mockResolvedValue({ deleted: 1 })
+  vi.mocked(listWikiTemplateNames).mockResolvedValue([])
+})
+
+describe('saveWikiPageForMcp: テンプレートからの作成', () => {
+  beforeEach(() => {
+    vi.mocked(renderWikiTemplate).mockResolvedValue({
+      name: '議事録',
+      title: '2026-11-23 定例',
+      content: '# 議題',
+      type: 'design_doc',
+      context: { now: new Date(), timezone: 'Asia/Tokyo', userName: 'agent' },
+    })
+  })
+
+  it('書き込みを確かめてから名前でテンプレートを引き、省いた title / content / type を埋める', async () => {
+    await saveWikiPageForMcp(human, { space: 'DOCS', template: '議事録' })
+
+    expect(getWikiSpaceByKey).toHaveBeenCalledWith(human.user, 'DOCS', 'write')
+    expect(renderWikiTemplate).toHaveBeenCalledWith(human.user, SPACE_ID, { name: '議事録' })
+    expect(vi.mocked(createWikiPage).mock.calls[0][3]).toMatchObject({
+      title: '2026-11-23 定例',
+      content: '# 議題',
+      type: 'design_doc',
+    })
+  })
+
+  it('指定した title / content / type はテンプレートより優先する', async () => {
+    await saveWikiPageForMcp(human, {
+      space: 'DOCS',
+      template: '議事録',
+      title: '臨時',
+      content: '本文',
+      type: 'page',
+    })
+    expect(vi.mocked(createWikiPage).mock.calls[0][3]).toMatchObject({ title: '臨時', content: '本文', type: 'page' })
+  })
+
+  it('テンプレートにタイトルが無く title も省いたらエラー', async () => {
+    vi.mocked(renderWikiTemplate).mockResolvedValue({
+      name: '議事録',
+      title: '',
+      content: '',
+      type: 'page',
+      context: { now: new Date(), timezone: 'Asia/Tokyo', userName: 'agent' },
+    })
+    expect((await errorOf(saveWikiPageForMcp(human, { space: 'DOCS', template: '議事録' }))).errorType).toBe(
+      VALIDATION_ERROR,
+    )
+    expect(createWikiPage).not.toHaveBeenCalled()
+  })
+
+  it('更新(ref あり)では template を受けない', async () => {
+    expect((await errorOf(saveWikiPageForMcp(human, { ref: 'DOCS/12', template: '議事録' }))).errorType).toBe(
+      VALIDATION_ERROR,
+    )
+    expect(renderWikiTemplate).not.toHaveBeenCalled()
+    expect(updateWikiPage).not.toHaveBeenCalled()
+  })
+
+  it('書けないスペースではテンプレートを引かない', async () => {
+    vi.mocked(getWikiSpaceByKey).mockRejectedValue(errInvalidOperation())
+    await errorOf(saveWikiPageForMcp(human, { space: 'DOCS', template: '議事録' }))
+    expect(renderWikiTemplate).not.toHaveBeenCalled()
+  })
 })
 
 describe('saveWikiPageForMcp: 作成', () => {
@@ -499,6 +565,7 @@ describe('getWikiTreeForMcp', () => {
   beforeEach(() => {
     vi.mocked(getWikiSpaceByKey).mockResolvedValue({
       space: { id: SPACE_ID, key: 'DOCS', name: '開発ドキュメント' },
+      access: { canWrite: true },
     } as never)
     vi.mocked(listWikiTags).mockResolvedValue([{ id: 't1', name: '設計', color: 'red', order: 1 }])
     vi.mocked(getWikiTree).mockResolvedValue([
@@ -521,6 +588,29 @@ describe('getWikiTreeForMcp', () => {
       ],
       totalPages: 3,
     })
+  })
+
+  it('書けるスペースにテンプレートがあれば、名前と種類を templates に並べる', async () => {
+    vi.mocked(listWikiTemplateNames).mockResolvedValue([
+      { id: 'tp1', name: '議事録', title: '{{date}} 定例', type: 'page' },
+      { id: 'tp2', name: '設計書', title: '', type: 'design_doc' },
+    ])
+    expect(await getWikiTreeForMcp(human, { space: 'DOCS' })).toMatchObject({
+      templates: [
+        { name: '議事録', type: 'page' },
+        { name: '設計書', type: 'design_doc' },
+      ],
+    })
+    expect(listWikiTemplateNames).toHaveBeenCalledWith(SPACE_ID)
+  })
+
+  it('書けないスペースではテンプレートを引かず、templates を省く', async () => {
+    vi.mocked(getWikiSpaceByKey).mockResolvedValue({
+      space: { id: SPACE_ID, key: 'DOCS', name: '開発ドキュメント' },
+      access: { canWrite: false },
+    } as never)
+    expect(await getWikiTreeForMcp(human, { space: 'DOCS' })).not.toHaveProperty('templates')
+    expect(listWikiTemplateNames).not.toHaveBeenCalled()
   })
 
   it('root を渡すとその配下だけを返す。別スペースの root はエラー', async () => {
@@ -605,6 +695,7 @@ describe('registerWikiTools', () => {
         'ref',
         'space',
         'tags',
+        'template',
         'ticketId',
         'title',
         'type',

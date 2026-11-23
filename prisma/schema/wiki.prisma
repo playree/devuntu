@@ -93,6 +93,7 @@ model WikiSpace {
   tags        WikiTag[]
   revisions   WikiPageRevision[]
   attachments Attachment[]
+  templates   WikiTemplate[]
 
   @@map("wiki_space")
 }
@@ -325,4 +326,41 @@ model WikiPageRevision {
   @@index([updatedAt])
   @@index([ticketId])
   @@map("wiki_page_revision")
+}
+
+/// ページ作成時にタイトル・種類・本文を埋めるスペースごとの雛形。
+/// 作成時に写すだけで、作成したページとの紐付けは持たない。種類はスペースの区分で作れるもの(isWikiPageTypeAllowed)に限る
+model WikiTemplate {
+  id String @id @default(uuid(7))
+
+  spaceId String
+  space   WikiSpace @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  /// テンプレート名。スペース内で一意(MCP の save_wiki_page でも名前で指定する)
+  name String
+
+  /// タイトルの雛形。空なら作成時の入力のまま
+  title String @default("")
+
+  /// 本文の雛形(Markdown)
+  content String @default("")
+
+  /// 作るページの種類
+  type WikiPageType @default(page)
+
+  /// スペース内の表示順。昇順。同値は name 昇順で安定させる
+  order Int @default(0)
+
+  createdById String?
+  createdBy   User?   @relation("WikiTemplateCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedById String?
+  updatedBy   User?   @relation("WikiTemplateUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // @@unique が (spaceId, ...) の先頭索引を兼ねる
+  @@unique([spaceId, name])
+  @@map("wiki_template")
 }
