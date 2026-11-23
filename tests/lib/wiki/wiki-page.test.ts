@@ -8,6 +8,7 @@ import { getTicketAccess } from '@/lib/board/board-access'
 import { VALIDATION_ERROR } from '@/lib/error'
 import { prisma } from '@/lib/prisma'
 import { assertWikiSpaceAccess } from '@/lib/wiki/wiki-access'
+import { skipScheduledWikiAnnouncementsOf } from '@/lib/wiki/wiki-announcement-notify'
 import { createWikiPage, deleteWikiPage, getWikiPage, moveWikiPage, updateWikiPage } from '@/lib/wiki/wiki-page'
 import { writeWikiPageRevision } from '@/lib/wiki/wiki-revision'
 import {
@@ -32,6 +33,7 @@ vi.mock('@/lib/prisma', async () =>
   }),
 )
 vi.mock('@/lib/wiki/wiki-access', () => ({ assertWikiSpaceAccess: vi.fn() }))
+vi.mock('@/lib/wiki/wiki-announcement-notify', () => ({ skipScheduledWikiAnnouncementsOf: vi.fn() }))
 vi.mock('@/lib/wiki/wiki-revision', async (importOriginal) => ({
   WIKI_REVISION_ORDER: (await importOriginal<typeof import('@/lib/wiki/wiki-revision')>()).WIKI_REVISION_ORDER,
   writeWikiPageRevision: vi.fn(),
@@ -667,6 +669,13 @@ describe('deleteWikiPage', () => {
     // 子孫は parentId の Cascade で消えるので、消すのは指定したページだけ
     expect(prisma.wikiPage.delete).toHaveBeenCalledTimes(1)
     expect(vi.mocked(prisma.wikiPage.delete).mock.calls[0][0]).toMatchObject({ where: { id: 'a' } })
+  })
+
+  it('消すページの予約中の Slack 通知を、同じトランザクションで見送りにする', async () => {
+    await deleteWikiPage(actor, MCP, 'a', { recursive: true })
+    expect(skipScheduledWikiAnnouncementsOf).toHaveBeenCalledTimes(1)
+    const [, pageIds] = vi.mocked(skipScheduledWikiAnnouncementsOf).mock.calls[0]
+    expect([...pageIds].sort()).toEqual(['a', 'b', 'c', 'd'])
   })
 
   it('deleted の版に、ページの作成日時と作成者を残す(復元で元の作成日時に戻すため)', async () => {

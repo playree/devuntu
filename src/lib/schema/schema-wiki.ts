@@ -2,10 +2,13 @@
  * Wiki(スペース / ページ / 割り当て)の入力スキーマ
  */
 
+import { WikiAnnouncementNotifyKind } from '@/generated/prisma/enums'
 import { el } from '@/locale'
 import { z } from 'zod'
 import { MAX_TAG_NAME } from '../board/tag-rule'
 import { MAX_TEMPLATE_NAME } from '../board/ticket-template-rule'
+import { SLACK_CHANNEL_ID_PATTERN } from '../slack/slack'
+import { MAX_WIKI_ANNOUNCE_MESSAGE } from '../wiki/wiki-announcement-notify-rule'
 import {
   MAX_WIKI_ANNOUNCEMENT_PAGE_SIZE,
   WIKI_ANNOUNCEMENT_MONTH_PATTERN,
@@ -223,6 +226,56 @@ export const scWikiAnnouncementQuery = z.object({
 
 /** アナウンスのバックナンバー。`id` はスペース ID。タグを渡すとそのタグを持つものだけを数える */
 export const scWikiAnnouncementArchive = z.object({ id: z.uuidv7(), tagId: z.uuidv7().optional() })
+
+/** アナウンスの通知先に選べる Slack チャンネルの一覧。`id` はスペース ID。`force` はキャッシュを捨てて取り直す */
+export const scGetWikiSlackChannels = z.object({
+  id: z.uuidv7(),
+  force: z.boolean().optional(),
+})
+
+/** アナウンスの通知先チャンネル。空文字で解除する */
+export const scSetWikiAnnounceChannel = z.object({
+  id: z.uuidv7(),
+  slackChannelId: z.union([z.literal(''), z.string().regex(SLACK_CHANNEL_ID_PATTERN, el('@invalid_slack_channel'))]),
+})
+export type SetWikiAnnounceChannel = z.infer<typeof scSetWikiAnnounceChannel>
+
+const zWikiAnnounceMessage = z
+  .string()
+  .trim()
+  .max(MAX_WIKI_ANNOUNCE_MESSAGE, el('@invalid_wiki_announce_message'))
+  .default('')
+
+/** 今すぐ通知する。`id` はページ ID */
+export const scWikiAnnounceNow = z.object({
+  id: z.uuidv7(),
+  kind: z.enum(WikiAnnouncementNotifyKind),
+  message: zWikiAnnounceMessage,
+})
+
+/** 予約する(`id` はページ ID)・予約を変える(`id` は通知の ID)。日時は画面で利用者のタイムゾーンから絶対時刻にしてある */
+export const scWikiAnnounceSchedule = scWikiAnnounceNow.extend({
+  scheduledAt: z.iso.datetime({ offset: true }),
+})
+
+/**
+ * 通知モーダルの入力。予約の日付・時刻(0:00 からの分)は利用者のタイムゾーンで持ち、送る前に絶対時刻へ直す
+ */
+export const scWikiAnnounceForm = z
+  .object({
+    kind: z.enum(WikiAnnouncementNotifyKind),
+    message: zWikiAnnounceMessage,
+    timing: z.enum(['now', 'schedule']),
+    date: z.string().default(''),
+    minutes: z
+      .number()
+      .int()
+      .min(0)
+      .max(24 * 60 - 1),
+  })
+  .refine((value) => value.timing === 'now' || value.date !== '', { path: ['date'], message: el('@required_field') })
+export type WikiAnnounceForm = z.infer<typeof scWikiAnnounceForm>
+export type WikiAnnounceFormIn = z.input<typeof scWikiAnnounceForm>
 
 /** `space` を省略すると、閲覧できる全スペース(アーカイブ済みを除く)を探す */
 export const scWikiSearch = z.object({

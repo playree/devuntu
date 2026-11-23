@@ -85,6 +85,9 @@ model WikiSpace {
   /// アーカイブ済み。閲覧のみになる
   archived Boolean @default(false)
 
+  /// アナウンスの通知先の Slack チャンネル ID。区分が announcement のときだけ使う
+  announceSlackChannelId String?
+
   // メタデータ
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -97,6 +100,7 @@ model WikiSpace {
   revisions   WikiPageRevision[]
   attachments Attachment[]
   templates   WikiTemplate[]
+  notifies    WikiAnnouncementNotify[]
 
   @@map("wiki_space")
 }
@@ -374,4 +378,83 @@ model WikiTemplate {
   // @@unique が (spaceId, ...) の先頭索引を兼ねる
   @@unique([spaceId, name])
   @@map("wiki_template")
+}
+
+/// アナウンスの通知の種類。Slack の文面が変わる
+enum WikiAnnouncementNotifyKind {
+  /// 初回のお知らせ
+  published
+  /// 修正後の更新のお知らせ
+  updated
+}
+
+/// アナウンスの通知の状態
+enum WikiAnnouncementNotifyStatus {
+  /// 予約中。scheduledAt を過ぎるとワーカーが送る。この間だけ変更・取り消しできる
+  scheduled
+  /// 送信済み(通知キューへ投入した)
+  sent
+  /// 予約を取り消した
+  canceled
+  /// 送る時点で条件を満たさず見送った(理由は skipReason)
+  skipped
+}
+
+/// 予約の通知を見送った理由
+enum WikiAnnouncementNotifySkipReason {
+  /// スペースがアーカイブされた
+  archived
+  /// スペースの区分がアナウンス用でなくなった
+  not_announcement
+  /// 通知先のチャンネルが未設定になった
+  channel_unset
+  /// Slack 連携が無効になった
+  slack_disabled
+  /// 送信者が編集権限を失った(退会を含む)
+  no_permission
+  /// ページが削除された
+  page_deleted
+}
+
+/// アナウンスのページの Slack 通知。予約と履歴を兼ねる。
+/// ページを削除しても履歴を残し、復元(同じ id で作り直す)で戻すため pageId に外部キーを張らない
+model WikiAnnouncementNotify {
+  id String @id @default(uuid(7))
+
+  spaceId String
+  space   WikiSpace @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  /// 対象の WikiPage.id
+  pageId String
+
+  kind WikiAnnouncementNotifyKind
+
+  /// 一言。空なら送信時に本文の先頭を抜粋する
+  message String?
+
+  /// 送る予定の日時。今すぐ送ったものは送った日時
+  scheduledAt DateTime
+
+  status WikiAnnouncementNotifyStatus
+
+  /// 送った日時
+  sentAt DateTime?
+
+  /// status=skipped のときの理由
+  skipReason WikiAnnouncementNotifySkipReason?
+
+  /// 送信者。予約を変更した人に置き換わる。送る時点の編集権限はこの人で確かめる
+  createdById String?
+  createdBy   User?   @relation("WikiAnnouncementNotifyCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ワーカーが期限の来た予約を引く
+  @@index([status, scheduledAt])
+  @@index([pageId, createdAt])
+  @@index([spaceId])
+  @@index([createdById])
+  @@map("wiki_announcement_notify")
 }

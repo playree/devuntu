@@ -33,6 +33,9 @@ export const register = async () => {
   const { startDueRemindWorker } = await import('./lib/notify/notify-due-worker')
   startDueRemindWorker()
 
+  const { startWikiAnnouncementWorker } = await import('./lib/wiki/wiki-announcement-notify-worker')
+  startWikiAnnouncementWorker()
+
   const { startMaintenanceWorker } = await import('./lib/maintenance/maintenance-worker')
   startMaintenanceWorker()
 

@@ -313,6 +313,7 @@ export type UserWhereInput = {
   createdWikiTemplates?: Prisma.WikiTemplateListRelationFilter
   updatedWikiTemplates?: Prisma.WikiTemplateListRelationFilter
   wikiPageRevisions?: Prisma.WikiPageRevisionListRelationFilter
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyListRelationFilter
   mcpTokens?: Prisma.McpTokenListRelationFilter
   agentToken?: Prisma.XOR<Prisma.AgentTokenNullableScalarRelationFilter, Prisma.AgentTokenWhereInput> | null
   createdAgentTokens?: Prisma.AgentTokenListRelationFilter
@@ -376,6 +377,7 @@ export type UserOrderByWithRelationInput = {
   createdWikiTemplates?: Prisma.WikiTemplateOrderByRelationAggregateInput
   updatedWikiTemplates?: Prisma.WikiTemplateOrderByRelationAggregateInput
   wikiPageRevisions?: Prisma.WikiPageRevisionOrderByRelationAggregateInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyOrderByRelationAggregateInput
   mcpTokens?: Prisma.McpTokenOrderByRelationAggregateInput
   agentToken?: Prisma.AgentTokenOrderByWithRelationInput
   createdAgentTokens?: Prisma.AgentTokenOrderByRelationAggregateInput
@@ -442,6 +444,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   createdWikiTemplates?: Prisma.WikiTemplateListRelationFilter
   updatedWikiTemplates?: Prisma.WikiTemplateListRelationFilter
   wikiPageRevisions?: Prisma.WikiPageRevisionListRelationFilter
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyListRelationFilter
   mcpTokens?: Prisma.McpTokenListRelationFilter
   agentToken?: Prisma.XOR<Prisma.AgentTokenNullableScalarRelationFilter, Prisma.AgentTokenWhereInput> | null
   createdAgentTokens?: Prisma.AgentTokenListRelationFilter
@@ -551,6 +554,7 @@ export type UserCreateInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -614,6 +618,7 @@ export type UserUncheckedCreateInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -677,6 +682,7 @@ export type UserUpdateInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -740,6 +746,7 @@ export type UserUncheckedUpdateInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -1529,6 +1536,22 @@ export type UserUpdateOneWithoutUpdatedWikiTemplatesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutUpdatedWikiTemplatesInput, Prisma.UserUpdateWithoutUpdatedWikiTemplatesInput>, Prisma.UserUncheckedUpdateWithoutUpdatedWikiTemplatesInput>
 }
 
+export type UserCreateNestedOneWithoutWikiAnnouncementNotifiesInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutWikiAnnouncementNotifiesInput, Prisma.UserUncheckedCreateWithoutWikiAnnouncementNotifiesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutWikiAnnouncementNotifiesInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneWithoutWikiAnnouncementNotifiesNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutWikiAnnouncementNotifiesInput, Prisma.UserUncheckedCreateWithoutWikiAnnouncementNotifiesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutWikiAnnouncementNotifiesInput
+  upsert?: Prisma.UserUpsertWithoutWikiAnnouncementNotifiesInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutWikiAnnouncementNotifiesInput, Prisma.UserUpdateWithoutWikiAnnouncementNotifiesInput>, Prisma.UserUncheckedUpdateWithoutWikiAnnouncementNotifiesInput>
+}
+
 export type UserCreateWithoutAgentTokenInput = {
   id?: string
   name: string
@@ -1581,6 +1604,7 @@ export type UserCreateWithoutAgentTokenInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
@@ -1643,6 +1667,7 @@ export type UserUncheckedCreateWithoutAgentTokenInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
@@ -1710,6 +1735,7 @@ export type UserCreateWithoutCreatedAgentTokensInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
@@ -1772,6 +1798,7 @@ export type UserUncheckedCreateWithoutCreatedAgentTokensInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
@@ -1850,6 +1877,7 @@ export type UserUpdateWithoutAgentTokenInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
@@ -1912,6 +1940,7 @@ export type UserUncheckedUpdateWithoutAgentTokenInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
@@ -1985,6 +2014,7 @@ export type UserUpdateWithoutCreatedAgentTokensInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
@@ -2047,6 +2077,7 @@ export type UserUncheckedUpdateWithoutCreatedAgentTokensInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
@@ -2109,6 +2140,7 @@ export type UserCreateWithoutMcpTokensInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
@@ -2171,6 +2203,7 @@ export type UserUncheckedCreateWithoutMcpTokensInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
   agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
@@ -2249,6 +2282,7 @@ export type UserUpdateWithoutMcpTokensInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
@@ -2311,6 +2345,7 @@ export type UserUncheckedUpdateWithoutMcpTokensInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
   agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
@@ -2373,6 +2408,7 @@ export type UserCreateWithoutAgentRunnerInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -2435,6 +2471,7 @@ export type UserUncheckedCreateWithoutAgentRunnerInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -2513,6 +2550,7 @@ export type UserUpdateWithoutAgentRunnerInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -2575,6 +2613,7 @@ export type UserUncheckedUpdateWithoutAgentRunnerInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -2637,6 +2676,7 @@ export type UserCreateWithoutAgentApproversInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -2699,6 +2739,7 @@ export type UserUncheckedCreateWithoutAgentApproversInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -2766,6 +2807,7 @@ export type UserCreateWithoutApproverOfInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -2828,6 +2870,7 @@ export type UserUncheckedCreateWithoutApproverOfInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -2906,6 +2949,7 @@ export type UserUpdateWithoutAgentApproversInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -2968,6 +3012,7 @@ export type UserUncheckedUpdateWithoutAgentApproversInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -3041,6 +3086,7 @@ export type UserUpdateWithoutApproverOfInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -3103,6 +3149,7 @@ export type UserUncheckedUpdateWithoutApproverOfInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -3165,6 +3212,7 @@ export type UserCreateWithoutAgentApproverGroupsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -3227,6 +3275,7 @@ export type UserUncheckedCreateWithoutAgentApproverGroupsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -3305,6 +3354,7 @@ export type UserUpdateWithoutAgentApproverGroupsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -3367,6 +3417,7 @@ export type UserUncheckedUpdateWithoutAgentApproverGroupsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -3428,6 +3479,7 @@ export type UserCreateWithoutSessionsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -3490,6 +3542,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -3568,6 +3621,7 @@ export type UserUpdateWithoutSessionsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -3630,6 +3684,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -3692,6 +3747,7 @@ export type UserCreateWithoutAccountsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -3754,6 +3810,7 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -3832,6 +3889,7 @@ export type UserUpdateWithoutAccountsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -3894,6 +3952,7 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -3956,6 +4015,7 @@ export type UserCreateWithoutTwofactorsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -4018,6 +4078,7 @@ export type UserUncheckedCreateWithoutTwofactorsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -4096,6 +4157,7 @@ export type UserUpdateWithoutTwofactorsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -4158,6 +4220,7 @@ export type UserUncheckedUpdateWithoutTwofactorsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -4220,6 +4283,7 @@ export type UserCreateWithoutPasskeysInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -4282,6 +4346,7 @@ export type UserUncheckedCreateWithoutPasskeysInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -4360,6 +4425,7 @@ export type UserUpdateWithoutPasskeysInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -4422,6 +4488,7 @@ export type UserUncheckedUpdateWithoutPasskeysInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -4484,6 +4551,7 @@ export type UserCreateWithoutCreatedBoardNotesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -4546,6 +4614,7 @@ export type UserUncheckedCreateWithoutCreatedBoardNotesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -4613,6 +4682,7 @@ export type UserCreateWithoutUpdatedBoardNotesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -4675,6 +4745,7 @@ export type UserUncheckedCreateWithoutUpdatedBoardNotesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -4753,6 +4824,7 @@ export type UserUpdateWithoutCreatedBoardNotesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -4815,6 +4887,7 @@ export type UserUncheckedUpdateWithoutCreatedBoardNotesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -4888,6 +4961,7 @@ export type UserUpdateWithoutUpdatedBoardNotesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -4950,6 +5024,7 @@ export type UserUncheckedUpdateWithoutUpdatedBoardNotesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -5012,6 +5087,7 @@ export type UserCreateWithoutBoardNoteRevisionsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -5074,6 +5150,7 @@ export type UserUncheckedCreateWithoutBoardNoteRevisionsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -5152,6 +5229,7 @@ export type UserUpdateWithoutBoardNoteRevisionsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -5214,6 +5292,7 @@ export type UserUncheckedUpdateWithoutBoardNoteRevisionsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -5276,6 +5355,7 @@ export type UserCreateWithoutPrivateBoardInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -5338,6 +5418,7 @@ export type UserUncheckedCreateWithoutPrivateBoardInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -5416,6 +5497,7 @@ export type UserUpdateWithoutPrivateBoardInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -5478,6 +5560,7 @@ export type UserUncheckedUpdateWithoutPrivateBoardInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -5540,6 +5623,7 @@ export type UserCreateWithoutBoardMembersInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -5602,6 +5686,7 @@ export type UserUncheckedCreateWithoutBoardMembersInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -5680,6 +5765,7 @@ export type UserUpdateWithoutBoardMembersInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -5742,6 +5828,7 @@ export type UserUncheckedUpdateWithoutBoardMembersInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -5804,6 +5891,7 @@ export type UserCreateWithoutCalendarShareInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -5866,6 +5954,7 @@ export type UserUncheckedCreateWithoutCalendarShareInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -5944,6 +6033,7 @@ export type UserUpdateWithoutCalendarShareInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -6006,6 +6096,7 @@ export type UserUncheckedUpdateWithoutCalendarShareInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -6068,6 +6159,7 @@ export type UserCreateWithoutCalendarBusyTimesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -6130,6 +6222,7 @@ export type UserUncheckedCreateWithoutCalendarBusyTimesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -6208,6 +6301,7 @@ export type UserUpdateWithoutCalendarBusyTimesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -6270,6 +6364,7 @@ export type UserUncheckedUpdateWithoutCalendarBusyTimesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -6333,6 +6428,7 @@ export type UserCreateWithoutCommandTargetMembersInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -6395,6 +6491,7 @@ export type UserUncheckedCreateWithoutCommandTargetMembersInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -6473,6 +6570,7 @@ export type UserUpdateWithoutCommandTargetMembersInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -6535,6 +6633,7 @@ export type UserUncheckedUpdateWithoutCommandTargetMembersInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -6597,6 +6696,7 @@ export type UserCreateWithoutCommandRunsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -6659,6 +6759,7 @@ export type UserUncheckedCreateWithoutCommandRunsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -6737,6 +6838,7 @@ export type UserUpdateWithoutCommandRunsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -6799,6 +6901,7 @@ export type UserUncheckedUpdateWithoutCommandRunsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -6860,6 +6963,7 @@ export type UserCreateWithoutTicketLinksInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -6922,6 +7026,7 @@ export type UserUncheckedCreateWithoutTicketLinksInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -7000,6 +7105,7 @@ export type UserUpdateWithoutTicketLinksInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -7062,6 +7168,7 @@ export type UserUncheckedUpdateWithoutTicketLinksInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -7124,6 +7231,7 @@ export type UserCreateWithoutNotifySettingsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -7186,6 +7294,7 @@ export type UserUncheckedCreateWithoutNotifySettingsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -7264,6 +7373,7 @@ export type UserUpdateWithoutNotifySettingsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -7326,6 +7436,7 @@ export type UserUncheckedUpdateWithoutNotifySettingsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -7388,6 +7499,7 @@ export type UserCreateWithoutWebPushSubscriptionsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -7450,6 +7562,7 @@ export type UserUncheckedCreateWithoutWebPushSubscriptionsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -7528,6 +7641,7 @@ export type UserUpdateWithoutWebPushSubscriptionsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -7590,6 +7704,7 @@ export type UserUncheckedUpdateWithoutWebPushSubscriptionsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -7652,6 +7767,7 @@ export type UserCreateWithoutNotifyOutboxesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -7714,6 +7830,7 @@ export type UserUncheckedCreateWithoutNotifyOutboxesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -7792,6 +7909,7 @@ export type UserUpdateWithoutNotifyOutboxesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -7854,6 +7972,7 @@ export type UserUncheckedUpdateWithoutNotifyOutboxesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -7916,6 +8035,7 @@ export type UserCreateWithoutNotifyDeliveriesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -7978,6 +8098,7 @@ export type UserUncheckedCreateWithoutNotifyDeliveriesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -8056,6 +8177,7 @@ export type UserUpdateWithoutNotifyDeliveriesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -8118,6 +8240,7 @@ export type UserUncheckedUpdateWithoutNotifyDeliveriesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -8180,6 +8303,7 @@ export type UserCreateWithoutOauthclientsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -8242,6 +8366,7 @@ export type UserUncheckedCreateWithoutOauthclientsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -8320,6 +8445,7 @@ export type UserUpdateWithoutOauthclientsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -8382,6 +8508,7 @@ export type UserUncheckedUpdateWithoutOauthclientsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -8444,6 +8571,7 @@ export type UserCreateWithoutOauthrefreshtokensInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -8506,6 +8634,7 @@ export type UserUncheckedCreateWithoutOauthrefreshtokensInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -8584,6 +8713,7 @@ export type UserUpdateWithoutOauthrefreshtokensInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -8646,6 +8776,7 @@ export type UserUncheckedUpdateWithoutOauthrefreshtokensInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -8708,6 +8839,7 @@ export type UserCreateWithoutOauthaccesstokensInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -8770,6 +8902,7 @@ export type UserUncheckedCreateWithoutOauthaccesstokensInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -8848,6 +8981,7 @@ export type UserUpdateWithoutOauthaccesstokensInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -8910,6 +9044,7 @@ export type UserUncheckedUpdateWithoutOauthaccesstokensInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -8972,6 +9107,7 @@ export type UserCreateWithoutOauthconsentsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -9034,6 +9170,7 @@ export type UserUncheckedCreateWithoutOauthconsentsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -9112,6 +9249,7 @@ export type UserUpdateWithoutOauthconsentsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -9174,6 +9312,7 @@ export type UserUncheckedUpdateWithoutOauthconsentsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -9236,6 +9375,7 @@ export type UserCreateWithoutDashboardInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -9298,6 +9438,7 @@ export type UserUncheckedCreateWithoutDashboardInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -9376,6 +9517,7 @@ export type UserUpdateWithoutDashboardInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -9438,6 +9580,7 @@ export type UserUncheckedUpdateWithoutDashboardInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -9500,6 +9643,7 @@ export type UserCreateWithoutAttachmentsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -9562,6 +9706,7 @@ export type UserUncheckedCreateWithoutAttachmentsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -9640,6 +9785,7 @@ export type UserUpdateWithoutAttachmentsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -9702,6 +9848,7 @@ export type UserUncheckedUpdateWithoutAttachmentsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -9764,6 +9911,7 @@ export type UserCreateWithoutCreatedTicketsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -9826,6 +9974,7 @@ export type UserUncheckedCreateWithoutCreatedTicketsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -9893,6 +10042,7 @@ export type UserCreateWithoutAssignedTicketsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -9955,6 +10105,7 @@ export type UserUncheckedCreateWithoutAssignedTicketsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -10033,6 +10184,7 @@ export type UserUpdateWithoutCreatedTicketsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -10095,6 +10247,7 @@ export type UserUncheckedUpdateWithoutCreatedTicketsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -10168,6 +10321,7 @@ export type UserUpdateWithoutAssignedTicketsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -10230,6 +10384,7 @@ export type UserUncheckedUpdateWithoutAssignedTicketsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -10292,6 +10447,7 @@ export type UserCreateWithoutTicketCommentsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -10354,6 +10510,7 @@ export type UserUncheckedCreateWithoutTicketCommentsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -10432,6 +10589,7 @@ export type UserUpdateWithoutTicketCommentsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -10494,6 +10652,7 @@ export type UserUncheckedUpdateWithoutTicketCommentsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -10556,6 +10715,7 @@ export type UserCreateWithoutCheckedCriteriaInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -10618,6 +10778,7 @@ export type UserUncheckedCreateWithoutCheckedCriteriaInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -10696,6 +10857,7 @@ export type UserUpdateWithoutCheckedCriteriaInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -10758,6 +10920,7 @@ export type UserUncheckedUpdateWithoutCheckedCriteriaInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -10820,6 +10983,7 @@ export type UserCreateWithoutTicketActivitiesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -10882,6 +11046,7 @@ export type UserUncheckedCreateWithoutTicketActivitiesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -10960,6 +11125,7 @@ export type UserUpdateWithoutTicketActivitiesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -11022,6 +11188,7 @@ export type UserUncheckedUpdateWithoutTicketActivitiesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -11084,6 +11251,7 @@ export type UserCreateWithoutUserGroupsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -11146,6 +11314,7 @@ export type UserUncheckedCreateWithoutUserGroupsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -11224,6 +11393,7 @@ export type UserUpdateWithoutUserGroupsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -11286,6 +11456,7 @@ export type UserUncheckedUpdateWithoutUserGroupsInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -11348,6 +11519,7 @@ export type UserCreateWithoutWikiSpaceMembersInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -11410,6 +11582,7 @@ export type UserUncheckedCreateWithoutWikiSpaceMembersInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -11488,6 +11661,7 @@ export type UserUpdateWithoutWikiSpaceMembersInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -11550,6 +11724,7 @@ export type UserUncheckedUpdateWithoutWikiSpaceMembersInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -11612,6 +11787,7 @@ export type UserCreateWithoutCreatedWikiPagesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -11674,6 +11850,7 @@ export type UserUncheckedCreateWithoutCreatedWikiPagesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -11741,6 +11918,7 @@ export type UserCreateWithoutUpdatedWikiPagesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -11803,6 +11981,7 @@ export type UserUncheckedCreateWithoutUpdatedWikiPagesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -11881,6 +12060,7 @@ export type UserUpdateWithoutCreatedWikiPagesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -11943,6 +12123,7 @@ export type UserUncheckedUpdateWithoutCreatedWikiPagesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -12016,6 +12197,7 @@ export type UserUpdateWithoutUpdatedWikiPagesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -12078,6 +12260,7 @@ export type UserUncheckedUpdateWithoutUpdatedWikiPagesInput = {
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -12140,6 +12323,7 @@ export type UserCreateWithoutWikiPageRevisionsInput = {
   updatedWikiPages?: Prisma.WikiPageCreateNestedManyWithoutUpdatedByInput
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -12202,6 +12386,7 @@ export type UserUncheckedCreateWithoutWikiPageRevisionsInput = {
   updatedWikiPages?: Prisma.WikiPageUncheckedCreateNestedManyWithoutUpdatedByInput
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -12280,6 +12465,7 @@ export type UserUpdateWithoutWikiPageRevisionsInput = {
   updatedWikiPages?: Prisma.WikiPageUpdateManyWithoutUpdatedByNestedInput
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -12342,6 +12528,7 @@ export type UserUncheckedUpdateWithoutWikiPageRevisionsInput = {
   updatedWikiPages?: Prisma.WikiPageUncheckedUpdateManyWithoutUpdatedByNestedInput
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -12404,6 +12591,7 @@ export type UserCreateWithoutCreatedWikiTemplatesInput = {
   updatedWikiPages?: Prisma.WikiPageCreateNestedManyWithoutUpdatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -12466,6 +12654,7 @@ export type UserUncheckedCreateWithoutCreatedWikiTemplatesInput = {
   updatedWikiPages?: Prisma.WikiPageUncheckedCreateNestedManyWithoutUpdatedByInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -12533,6 +12722,7 @@ export type UserCreateWithoutUpdatedWikiTemplatesInput = {
   updatedWikiPages?: Prisma.WikiPageCreateNestedManyWithoutUpdatedByInput
   createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
@@ -12595,6 +12785,7 @@ export type UserUncheckedCreateWithoutUpdatedWikiTemplatesInput = {
   updatedWikiPages?: Prisma.WikiPageUncheckedCreateNestedManyWithoutUpdatedByInput
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput
   mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
   agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
@@ -12673,6 +12864,7 @@ export type UserUpdateWithoutCreatedWikiTemplatesInput = {
   updatedWikiPages?: Prisma.WikiPageUpdateManyWithoutUpdatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -12735,6 +12927,7 @@ export type UserUncheckedUpdateWithoutCreatedWikiTemplatesInput = {
   updatedWikiPages?: Prisma.WikiPageUncheckedUpdateManyWithoutUpdatedByNestedInput
   updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -12808,6 +13001,7 @@ export type UserUpdateWithoutUpdatedWikiTemplatesInput = {
   updatedWikiPages?: Prisma.WikiPageUpdateManyWithoutUpdatedByNestedInput
   createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput
   mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
@@ -12870,6 +13064,275 @@ export type UserUncheckedUpdateWithoutUpdatedWikiTemplatesInput = {
   updatedWikiPages?: Prisma.WikiPageUncheckedUpdateManyWithoutUpdatedByNestedInput
   createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
   wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiAnnouncementNotifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput
+  mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUncheckedUpdateOneWithoutUserNestedInput
+  agentApprovers?: Prisma.AgentApproverUncheckedUpdateManyWithoutAgentNestedInput
+  agentApproverGroups?: Prisma.AgentApproverGroupUncheckedUpdateManyWithoutAgentNestedInput
+  approverOf?: Prisma.AgentApproverUncheckedUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUncheckedUpdateManyWithoutUserNestedInput
+  commandTargetMembers?: Prisma.CommandTargetMemberUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutWikiAnnouncementNotifiesInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  role?: string | null
+  banned?: boolean | null
+  banReason?: string | null
+  banExpires?: Date | string | null
+  twoFactorEnabled?: boolean | null
+  nameLocked?: boolean | null
+  locale?: string | null
+  lastLoginAt?: Date | string | null
+  timezone?: string | null
+  isAgent?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
+  passkeys?: Prisma.PasskeyCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentCreateNestedManyWithoutUserInput
+  userGroups?: Prisma.UserGroupCreateNestedManyWithoutUserInput
+  dashboard?: Prisma.DashboardCreateNestedOneWithoutUserInput
+  attachments?: Prisma.AttachmentCreateNestedManyWithoutCreatedByInput
+  notifySettings?: Prisma.UserNotifySettingCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareCreateNestedOneWithoutUserInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeCreateNestedManyWithoutUserInput
+  boardMembers?: Prisma.BoardMemberCreateNestedManyWithoutUserInput
+  privateBoard?: Prisma.BoardCreateNestedOneWithoutPrivateOwnerInput
+  createdTickets?: Prisma.TicketCreateNestedManyWithoutCreatedByInput
+  assignedTickets?: Prisma.TicketCreateNestedManyWithoutAssigneeInput
+  ticketComments?: Prisma.TicketCommentCreateNestedManyWithoutAuthorInput
+  ticketLinks?: Prisma.TicketLinkCreateNestedManyWithoutCreatedByInput
+  checkedCriteria?: Prisma.TicketCriterionCreateNestedManyWithoutCheckedByInput
+  ticketActivities?: Prisma.TicketActivityCreateNestedManyWithoutActorInput
+  createdBoardNotes?: Prisma.BoardNoteCreateNestedManyWithoutCreatedByInput
+  updatedBoardNotes?: Prisma.BoardNoteCreateNestedManyWithoutUpdatedByInput
+  boardNoteRevisions?: Prisma.BoardNoteRevisionCreateNestedManyWithoutActorInput
+  wikiSpaceMembers?: Prisma.WikiSpaceMemberCreateNestedManyWithoutUserInput
+  createdWikiPages?: Prisma.WikiPageCreateNestedManyWithoutCreatedByInput
+  updatedWikiPages?: Prisma.WikiPageCreateNestedManyWithoutUpdatedByInput
+  createdWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutCreatedByInput
+  updatedWikiTemplates?: Prisma.WikiTemplateCreateNestedManyWithoutUpdatedByInput
+  wikiPageRevisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutActorInput
+  mcpTokens?: Prisma.McpTokenCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenCreateNestedOneWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerCreateNestedOneWithoutUserInput
+  agentApprovers?: Prisma.AgentApproverCreateNestedManyWithoutAgentInput
+  agentApproverGroups?: Prisma.AgentApproverGroupCreateNestedManyWithoutAgentInput
+  approverOf?: Prisma.AgentApproverCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunCreateNestedManyWithoutUserInput
+  commandTargetMembers?: Prisma.CommandTargetMemberCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutWikiAnnouncementNotifiesInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  role?: string | null
+  banned?: boolean | null
+  banReason?: string | null
+  banExpires?: Date | string | null
+  twoFactorEnabled?: boolean | null
+  nameLocked?: boolean | null
+  locale?: string | null
+  lastLoginAt?: Date | string | null
+  timezone?: string | null
+  isAgent?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
+  passkeys?: Prisma.PasskeyUncheckedCreateNestedManyWithoutUserInput
+  oauthclients?: Prisma.OauthClientUncheckedCreateNestedManyWithoutUserInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedCreateNestedManyWithoutUserInput
+  oauthconsents?: Prisma.OauthConsentUncheckedCreateNestedManyWithoutUserInput
+  userGroups?: Prisma.UserGroupUncheckedCreateNestedManyWithoutUserInput
+  dashboard?: Prisma.DashboardUncheckedCreateNestedOneWithoutUserInput
+  attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCreatedByInput
+  notifySettings?: Prisma.UserNotifySettingUncheckedCreateNestedManyWithoutUserInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedCreateNestedManyWithoutActorInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+  calendarShare?: Prisma.CalendarShareUncheckedCreateNestedOneWithoutUserInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedCreateNestedManyWithoutUserInput
+  boardMembers?: Prisma.BoardMemberUncheckedCreateNestedManyWithoutUserInput
+  privateBoard?: Prisma.BoardUncheckedCreateNestedOneWithoutPrivateOwnerInput
+  createdTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatedByInput
+  assignedTickets?: Prisma.TicketUncheckedCreateNestedManyWithoutAssigneeInput
+  ticketComments?: Prisma.TicketCommentUncheckedCreateNestedManyWithoutAuthorInput
+  ticketLinks?: Prisma.TicketLinkUncheckedCreateNestedManyWithoutCreatedByInput
+  checkedCriteria?: Prisma.TicketCriterionUncheckedCreateNestedManyWithoutCheckedByInput
+  ticketActivities?: Prisma.TicketActivityUncheckedCreateNestedManyWithoutActorInput
+  createdBoardNotes?: Prisma.BoardNoteUncheckedCreateNestedManyWithoutCreatedByInput
+  updatedBoardNotes?: Prisma.BoardNoteUncheckedCreateNestedManyWithoutUpdatedByInput
+  boardNoteRevisions?: Prisma.BoardNoteRevisionUncheckedCreateNestedManyWithoutActorInput
+  wikiSpaceMembers?: Prisma.WikiSpaceMemberUncheckedCreateNestedManyWithoutUserInput
+  createdWikiPages?: Prisma.WikiPageUncheckedCreateNestedManyWithoutCreatedByInput
+  updatedWikiPages?: Prisma.WikiPageUncheckedCreateNestedManyWithoutUpdatedByInput
+  createdWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutCreatedByInput
+  updatedWikiTemplates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutUpdatedByInput
+  wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutActorInput
+  mcpTokens?: Prisma.McpTokenUncheckedCreateNestedManyWithoutUserInput
+  agentToken?: Prisma.AgentTokenUncheckedCreateNestedOneWithoutUserInput
+  createdAgentTokens?: Prisma.AgentTokenUncheckedCreateNestedManyWithoutCreatedByInput
+  agentRunner?: Prisma.AgentRunnerUncheckedCreateNestedOneWithoutUserInput
+  agentApprovers?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutAgentInput
+  agentApproverGroups?: Prisma.AgentApproverGroupUncheckedCreateNestedManyWithoutAgentInput
+  approverOf?: Prisma.AgentApproverUncheckedCreateNestedManyWithoutUserInput
+  commandRuns?: Prisma.CommandRunUncheckedCreateNestedManyWithoutUserInput
+  commandTargetMembers?: Prisma.CommandTargetMemberUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutWikiAnnouncementNotifiesInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutWikiAnnouncementNotifiesInput, Prisma.UserUncheckedCreateWithoutWikiAnnouncementNotifiesInput>
+}
+
+export type UserUpsertWithoutWikiAnnouncementNotifiesInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutWikiAnnouncementNotifiesInput, Prisma.UserUncheckedUpdateWithoutWikiAnnouncementNotifiesInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutWikiAnnouncementNotifiesInput, Prisma.UserUncheckedCreateWithoutWikiAnnouncementNotifiesInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutWikiAnnouncementNotifiesInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutWikiAnnouncementNotifiesInput, Prisma.UserUncheckedUpdateWithoutWikiAnnouncementNotifiesInput>
+}
+
+export type UserUpdateWithoutWikiAnnouncementNotifiesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
+  passkeys?: Prisma.PasskeyUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUpdateManyWithoutUserNestedInput
+  userGroups?: Prisma.UserGroupUpdateManyWithoutUserNestedInput
+  dashboard?: Prisma.DashboardUpdateOneWithoutUserNestedInput
+  attachments?: Prisma.AttachmentUpdateManyWithoutCreatedByNestedInput
+  notifySettings?: Prisma.UserNotifySettingUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUpdateOneWithoutUserNestedInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeUpdateManyWithoutUserNestedInput
+  boardMembers?: Prisma.BoardMemberUpdateManyWithoutUserNestedInput
+  privateBoard?: Prisma.BoardUpdateOneWithoutPrivateOwnerNestedInput
+  createdTickets?: Prisma.TicketUpdateManyWithoutCreatedByNestedInput
+  assignedTickets?: Prisma.TicketUpdateManyWithoutAssigneeNestedInput
+  ticketComments?: Prisma.TicketCommentUpdateManyWithoutAuthorNestedInput
+  ticketLinks?: Prisma.TicketLinkUpdateManyWithoutCreatedByNestedInput
+  checkedCriteria?: Prisma.TicketCriterionUpdateManyWithoutCheckedByNestedInput
+  ticketActivities?: Prisma.TicketActivityUpdateManyWithoutActorNestedInput
+  createdBoardNotes?: Prisma.BoardNoteUpdateManyWithoutCreatedByNestedInput
+  updatedBoardNotes?: Prisma.BoardNoteUpdateManyWithoutUpdatedByNestedInput
+  boardNoteRevisions?: Prisma.BoardNoteRevisionUpdateManyWithoutActorNestedInput
+  wikiSpaceMembers?: Prisma.WikiSpaceMemberUpdateManyWithoutUserNestedInput
+  createdWikiPages?: Prisma.WikiPageUpdateManyWithoutCreatedByNestedInput
+  updatedWikiPages?: Prisma.WikiPageUpdateManyWithoutUpdatedByNestedInput
+  createdWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutCreatedByNestedInput
+  updatedWikiTemplates?: Prisma.WikiTemplateUpdateManyWithoutUpdatedByNestedInput
+  wikiPageRevisions?: Prisma.WikiPageRevisionUpdateManyWithoutActorNestedInput
+  mcpTokens?: Prisma.McpTokenUpdateManyWithoutUserNestedInput
+  agentToken?: Prisma.AgentTokenUpdateOneWithoutUserNestedInput
+  createdAgentTokens?: Prisma.AgentTokenUpdateManyWithoutCreatedByNestedInput
+  agentRunner?: Prisma.AgentRunnerUpdateOneWithoutUserNestedInput
+  agentApprovers?: Prisma.AgentApproverUpdateManyWithoutAgentNestedInput
+  agentApproverGroups?: Prisma.AgentApproverGroupUpdateManyWithoutAgentNestedInput
+  approverOf?: Prisma.AgentApproverUpdateManyWithoutUserNestedInput
+  commandRuns?: Prisma.CommandRunUpdateManyWithoutUserNestedInput
+  commandTargetMembers?: Prisma.CommandTargetMemberUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutWikiAnnouncementNotifiesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  nameLocked?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  locale?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAgent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
+  passkeys?: Prisma.PasskeyUncheckedUpdateManyWithoutUserNestedInput
+  oauthclients?: Prisma.OauthClientUncheckedUpdateManyWithoutUserNestedInput
+  oauthrefreshtokens?: Prisma.OauthRefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthaccesstokens?: Prisma.OauthAccessTokenUncheckedUpdateManyWithoutUserNestedInput
+  oauthconsents?: Prisma.OauthConsentUncheckedUpdateManyWithoutUserNestedInput
+  userGroups?: Prisma.UserGroupUncheckedUpdateManyWithoutUserNestedInput
+  dashboard?: Prisma.DashboardUncheckedUpdateOneWithoutUserNestedInput
+  attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput
+  notifySettings?: Prisma.UserNotifySettingUncheckedUpdateManyWithoutUserNestedInput
+  notifyOutboxes?: Prisma.NotifyOutboxUncheckedUpdateManyWithoutActorNestedInput
+  notifyDeliveries?: Prisma.NotifyDeliveryUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  calendarShare?: Prisma.CalendarShareUncheckedUpdateOneWithoutUserNestedInput
+  calendarBusyTimes?: Prisma.CalendarBusyTimeUncheckedUpdateManyWithoutUserNestedInput
+  boardMembers?: Prisma.BoardMemberUncheckedUpdateManyWithoutUserNestedInput
+  privateBoard?: Prisma.BoardUncheckedUpdateOneWithoutPrivateOwnerNestedInput
+  createdTickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatedByNestedInput
+  assignedTickets?: Prisma.TicketUncheckedUpdateManyWithoutAssigneeNestedInput
+  ticketComments?: Prisma.TicketCommentUncheckedUpdateManyWithoutAuthorNestedInput
+  ticketLinks?: Prisma.TicketLinkUncheckedUpdateManyWithoutCreatedByNestedInput
+  checkedCriteria?: Prisma.TicketCriterionUncheckedUpdateManyWithoutCheckedByNestedInput
+  ticketActivities?: Prisma.TicketActivityUncheckedUpdateManyWithoutActorNestedInput
+  createdBoardNotes?: Prisma.BoardNoteUncheckedUpdateManyWithoutCreatedByNestedInput
+  updatedBoardNotes?: Prisma.BoardNoteUncheckedUpdateManyWithoutUpdatedByNestedInput
+  boardNoteRevisions?: Prisma.BoardNoteRevisionUncheckedUpdateManyWithoutActorNestedInput
+  wikiSpaceMembers?: Prisma.WikiSpaceMemberUncheckedUpdateManyWithoutUserNestedInput
+  createdWikiPages?: Prisma.WikiPageUncheckedUpdateManyWithoutCreatedByNestedInput
+  updatedWikiPages?: Prisma.WikiPageUncheckedUpdateManyWithoutUpdatedByNestedInput
+  createdWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutCreatedByNestedInput
+  updatedWikiTemplates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutUpdatedByNestedInput
+  wikiPageRevisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutActorNestedInput
   mcpTokens?: Prisma.McpTokenUncheckedUpdateManyWithoutUserNestedInput
   agentToken?: Prisma.AgentTokenUncheckedUpdateOneWithoutUserNestedInput
   createdAgentTokens?: Prisma.AgentTokenUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -12918,6 +13381,7 @@ export type UserCountOutputType = {
   createdWikiTemplates: number
   updatedWikiTemplates: number
   wikiPageRevisions: number
+  wikiAnnouncementNotifies: number
   mcpTokens: number
   createdAgentTokens: number
   agentApprovers: number
@@ -12959,6 +13423,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   createdWikiTemplates?: boolean | UserCountOutputTypeCountCreatedWikiTemplatesArgs
   updatedWikiTemplates?: boolean | UserCountOutputTypeCountUpdatedWikiTemplatesArgs
   wikiPageRevisions?: boolean | UserCountOutputTypeCountWikiPageRevisionsArgs
+  wikiAnnouncementNotifies?: boolean | UserCountOutputTypeCountWikiAnnouncementNotifiesArgs
   mcpTokens?: boolean | UserCountOutputTypeCountMcpTokensArgs
   createdAgentTokens?: boolean | UserCountOutputTypeCountCreatedAgentTokensArgs
   agentApprovers?: boolean | UserCountOutputTypeCountAgentApproversArgs
@@ -13198,6 +13663,13 @@ export type UserCountOutputTypeCountWikiPageRevisionsArgs<ExtArgs extends runtim
 /**
  * UserCountOutputType without action
  */
+export type UserCountOutputTypeCountWikiAnnouncementNotifiesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.WikiAnnouncementNotifyWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
 export type UserCountOutputTypeCountMcpTokensArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.McpTokenWhereInput
 }
@@ -13297,6 +13769,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   createdWikiTemplates?: boolean | Prisma.User$createdWikiTemplatesArgs<ExtArgs>
   updatedWikiTemplates?: boolean | Prisma.User$updatedWikiTemplatesArgs<ExtArgs>
   wikiPageRevisions?: boolean | Prisma.User$wikiPageRevisionsArgs<ExtArgs>
+  wikiAnnouncementNotifies?: boolean | Prisma.User$wikiAnnouncementNotifiesArgs<ExtArgs>
   mcpTokens?: boolean | Prisma.User$mcpTokensArgs<ExtArgs>
   agentToken?: boolean | Prisma.User$agentTokenArgs<ExtArgs>
   createdAgentTokens?: boolean | Prisma.User$createdAgentTokensArgs<ExtArgs>
@@ -13405,6 +13878,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   createdWikiTemplates?: boolean | Prisma.User$createdWikiTemplatesArgs<ExtArgs>
   updatedWikiTemplates?: boolean | Prisma.User$updatedWikiTemplatesArgs<ExtArgs>
   wikiPageRevisions?: boolean | Prisma.User$wikiPageRevisionsArgs<ExtArgs>
+  wikiAnnouncementNotifies?: boolean | Prisma.User$wikiAnnouncementNotifiesArgs<ExtArgs>
   mcpTokens?: boolean | Prisma.User$mcpTokensArgs<ExtArgs>
   agentToken?: boolean | Prisma.User$agentTokenArgs<ExtArgs>
   createdAgentTokens?: boolean | Prisma.User$createdAgentTokensArgs<ExtArgs>
@@ -13456,6 +13930,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     createdWikiTemplates: Prisma.$WikiTemplatePayload<ExtArgs>[]
     updatedWikiTemplates: Prisma.$WikiTemplatePayload<ExtArgs>[]
     wikiPageRevisions: Prisma.$WikiPageRevisionPayload<ExtArgs>[]
+    wikiAnnouncementNotifies: Prisma.$WikiAnnouncementNotifyPayload<ExtArgs>[]
     mcpTokens: Prisma.$McpTokenPayload<ExtArgs>[]
     agentToken: Prisma.$AgentTokenPayload<ExtArgs> | null
     createdAgentTokens: Prisma.$AgentTokenPayload<ExtArgs>[]
@@ -13954,6 +14429,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   createdWikiTemplates<T extends Prisma.User$createdWikiTemplatesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$createdWikiTemplatesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WikiTemplatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   updatedWikiTemplates<T extends Prisma.User$updatedWikiTemplatesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$updatedWikiTemplatesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WikiTemplatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   wikiPageRevisions<T extends Prisma.User$wikiPageRevisionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$wikiPageRevisionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WikiPageRevisionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  wikiAnnouncementNotifies<T extends Prisma.User$wikiAnnouncementNotifiesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$wikiAnnouncementNotifiesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WikiAnnouncementNotifyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   mcpTokens<T extends Prisma.User$mcpTokensArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$mcpTokensArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$McpTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   agentToken<T extends Prisma.User$agentTokenArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$agentTokenArgs<ExtArgs>>): Prisma.Prisma__AgentTokenClient<runtime.Types.Result.GetResult<Prisma.$AgentTokenPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   createdAgentTokens<T extends Prisma.User$createdAgentTokensArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$createdAgentTokensArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AgentTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -15200,6 +15676,30 @@ export type User$wikiPageRevisionsArgs<ExtArgs extends runtime.Types.Extensions.
   take?: number
   skip?: number
   distinct?: Prisma.WikiPageRevisionScalarFieldEnum | Prisma.WikiPageRevisionScalarFieldEnum[]
+}
+
+/**
+ * User.wikiAnnouncementNotifies
+ */
+export type User$wikiAnnouncementNotifiesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the WikiAnnouncementNotify
+   */
+  select?: Prisma.WikiAnnouncementNotifySelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the WikiAnnouncementNotify
+   */
+  omit?: Prisma.WikiAnnouncementNotifyOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.WikiAnnouncementNotifyInclude<ExtArgs> | null
+  where?: Prisma.WikiAnnouncementNotifyWhereInput
+  orderBy?: Prisma.WikiAnnouncementNotifyOrderByWithRelationInput | Prisma.WikiAnnouncementNotifyOrderByWithRelationInput[]
+  cursor?: Prisma.WikiAnnouncementNotifyWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.WikiAnnouncementNotifyScalarFieldEnum | Prisma.WikiAnnouncementNotifyScalarFieldEnum[]
 }
 
 /**

@@ -15,6 +15,7 @@ import { t } from '@/locale/server'
 import { AGENT_RUN_ACTION_LOCALE, AGENT_RUN_STATUS_LOCALE, agentRunDuration } from '../agent/agent'
 import { commentAnchorId, ticketShortPath } from '../board/ticket-id'
 import { makeUrl } from '../server-utils'
+import { wikiPagePath, wikiPageRef } from '../wiki/wiki-rule'
 import type { AgentRunNotifyState, NotifyPayload } from './notify-payload'
 
 /**
@@ -34,6 +35,8 @@ export type NotifyContent = {
   url: string
   /** 引用として出す抜粋。無い場合は持たせない */
   excerpt?: string
+  /** 遷移先を開くボタンの文言。無ければチャネル側の既定(チケットを開く)を使う */
+  openLabel?: string
 }
 
 /**
@@ -155,6 +158,22 @@ const BUILDERS = {
     url: shortUrl(payload.displayId, payload.commentId).toString(),
     excerpt: payload.excerpt,
   }),
+
+  /** Wiki のアナウンス。見出しはページ指定(`KEY/番号`)を先頭に置き、初回と更新で文面を分ける */
+  wiki_announcement: (payload, locale) => {
+    const page = { key: payload.spaceKey, number: payload.pageNumber }
+    return {
+      subject: `[${wikiPageRef(page)}] ${payload.pageTitle}`,
+      body: t(
+        locale,
+        payload.kind === 'updated' ? 'notify_msg_wiki_announcement_updated' : 'notify_msg_wiki_announcement_published',
+        { from: payload.fromName },
+      ),
+      url: makeUrl(wikiPagePath(page)).toString(),
+      ...(payload.excerpt && { excerpt: payload.excerpt }),
+      openLabel: t(locale, 'slack_msg_open_wiki_page'),
+    }
+  },
 } as const satisfies { [E in NotifyEvent]: ContentBuilder<E> }
 
 /**

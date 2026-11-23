@@ -120,7 +120,8 @@ export const ModelName = {
   WikiTag: 'WikiTag',
   WikiPageTag: 'WikiPageTag',
   WikiPageRevision: 'WikiPageRevision',
-  WikiTemplate: 'WikiTemplate'
+  WikiTemplate: 'WikiTemplate',
+  WikiAnnouncementNotify: 'WikiAnnouncementNotify'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1083,6 +1084,7 @@ export const WikiSpaceScalarFieldEnum = {
   type: 'type',
   pageSeq: 'pageSeq',
   archived: 'archived',
+  announceSlackChannelId: 'announceSlackChannelId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -1216,6 +1218,24 @@ export const WikiTemplateScalarFieldEnum = {
 } as const
 
 export type WikiTemplateScalarFieldEnum = (typeof WikiTemplateScalarFieldEnum)[keyof typeof WikiTemplateScalarFieldEnum]
+
+
+export const WikiAnnouncementNotifyScalarFieldEnum = {
+  id: 'id',
+  spaceId: 'spaceId',
+  pageId: 'pageId',
+  kind: 'kind',
+  message: 'message',
+  scheduledAt: 'scheduledAt',
+  status: 'status',
+  sentAt: 'sentAt',
+  skipReason: 'skipReason',
+  createdById: 'createdById',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WikiAnnouncementNotifyScalarFieldEnum = (typeof WikiAnnouncementNotifyScalarFieldEnum)[keyof typeof WikiAnnouncementNotifyScalarFieldEnum]
 
 
 export const SortOrder = {

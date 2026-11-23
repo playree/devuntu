@@ -436,3 +436,9 @@ export type WikiPageRevision = Prisma.WikiPageRevisionModel
  * 作成時に写すだけで、作成したページとの紐付けは持たない。種類はスペースの区分で作れるもの(isWikiPageTypeAllowed)に限る
  */
 export type WikiTemplate = Prisma.WikiTemplateModel
+/**
+ * Model WikiAnnouncementNotify
+ * アナウンスのページの Slack 通知。予約と履歴を兼ねる。
+ * ページを削除しても履歴を残し、復元(同じ id で作り直す)で戻すため pageId に外部キーを張らない
+ */
+export type WikiAnnouncementNotify = Prisma.WikiAnnouncementNotifyModel

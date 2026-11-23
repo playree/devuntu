@@ -466,7 +466,8 @@ export const ModelName = {
   WikiTag: 'WikiTag',
   WikiPageTag: 'WikiPageTag',
   WikiPageRevision: 'WikiPageRevision',
-  WikiTemplate: 'WikiTemplate'
+  WikiTemplate: 'WikiTemplate',
+  WikiAnnouncementNotify: 'WikiAnnouncementNotify'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -482,7 +483,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "agentToken" | "mcpToken" | "agentRunner" | "agentRun" | "agentAutoReviseTrigger" | "agentUsage" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "boardNote" | "boardNoteRevision" | "board" | "boardKeyHistory" | "ticketTemplate" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "calendarShare" | "calendarBusyTime" | "commandTargetMember" | "commandTargetGroup" | "commandRun" | "commandRunChunk" | "ticketLink" | "boardRepository" | "boardGitSetting" | "gitCheckSuite" | "userNotifySetting" | "webPushSubscription" | "boardNotifySetting" | "notifyOutbox" | "notifyDelivery" | "ticketDueReminder" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "uploadNonce" | "keyValueStore" | "appVersion" | "ticket" | "ticketComment" | "ticketCriterion" | "ticketRelation" | "ticketActivity" | "user" | "group" | "userGroup" | "wikiSpace" | "wikiSpaceKeyHistory" | "wikiSpaceMember" | "wikiSpaceGroup" | "wikiSpaceBoard" | "wikiPage" | "wikiTag" | "wikiPageTag" | "wikiPageRevision" | "wikiTemplate"
+    modelProps: "agentToken" | "mcpToken" | "agentRunner" | "agentRun" | "agentAutoReviseTrigger" | "agentUsage" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "boardNote" | "boardNoteRevision" | "board" | "boardKeyHistory" | "ticketTemplate" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "calendarShare" | "calendarBusyTime" | "commandTargetMember" | "commandTargetGroup" | "commandRun" | "commandRunChunk" | "ticketLink" | "boardRepository" | "boardGitSetting" | "gitCheckSuite" | "userNotifySetting" | "webPushSubscription" | "boardNotifySetting" | "notifyOutbox" | "notifyDelivery" | "ticketDueReminder" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "uploadNonce" | "keyValueStore" | "appVersion" | "ticket" | "ticketComment" | "ticketCriterion" | "ticketRelation" | "ticketActivity" | "user" | "group" | "userGroup" | "wikiSpace" | "wikiSpaceKeyHistory" | "wikiSpaceMember" | "wikiSpaceGroup" | "wikiSpaceBoard" | "wikiPage" | "wikiTag" | "wikiPageTag" | "wikiPageRevision" | "wikiTemplate" | "wikiAnnouncementNotify"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -5666,6 +5667,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    WikiAnnouncementNotify: {
+      payload: Prisma.$WikiAnnouncementNotifyPayload<ExtArgs>
+      fields: Prisma.WikiAnnouncementNotifyFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.WikiAnnouncementNotifyFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiAnnouncementNotifyPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.WikiAnnouncementNotifyFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiAnnouncementNotifyPayload>
+        }
+        findFirst: {
+          args: Prisma.WikiAnnouncementNotifyFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiAnnouncementNotifyPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.WikiAnnouncementNotifyFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiAnnouncementNotifyPayload>
+        }
+        findMany: {
+          args: Prisma.WikiAnnouncementNotifyFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiAnnouncementNotifyPayload>[]
+        }
+        create: {
+          args: Prisma.WikiAnnouncementNotifyCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiAnnouncementNotifyPayload>
+        }
+        createMany: {
+          args: Prisma.WikiAnnouncementNotifyCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.WikiAnnouncementNotifyCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiAnnouncementNotifyPayload>[]
+        }
+        delete: {
+          args: Prisma.WikiAnnouncementNotifyDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiAnnouncementNotifyPayload>
+        }
+        update: {
+          args: Prisma.WikiAnnouncementNotifyUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiAnnouncementNotifyPayload>
+        }
+        deleteMany: {
+          args: Prisma.WikiAnnouncementNotifyDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.WikiAnnouncementNotifyUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.WikiAnnouncementNotifyUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiAnnouncementNotifyPayload>[]
+        }
+        upsert: {
+          args: Prisma.WikiAnnouncementNotifyUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiAnnouncementNotifyPayload>
+        }
+        aggregate: {
+          args: Prisma.WikiAnnouncementNotifyAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateWikiAnnouncementNotify>
+        }
+        groupBy: {
+          args: Prisma.WikiAnnouncementNotifyGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WikiAnnouncementNotifyGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.WikiAnnouncementNotifyCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WikiAnnouncementNotifyCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -6649,6 +6724,7 @@ export const WikiSpaceScalarFieldEnum = {
   type: 'type',
   pageSeq: 'pageSeq',
   archived: 'archived',
+  announceSlackChannelId: 'announceSlackChannelId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -6782,6 +6858,24 @@ export const WikiTemplateScalarFieldEnum = {
 } as const
 
 export type WikiTemplateScalarFieldEnum = (typeof WikiTemplateScalarFieldEnum)[keyof typeof WikiTemplateScalarFieldEnum]
+
+
+export const WikiAnnouncementNotifyScalarFieldEnum = {
+  id: 'id',
+  spaceId: 'spaceId',
+  pageId: 'pageId',
+  kind: 'kind',
+  message: 'message',
+  scheduledAt: 'scheduledAt',
+  status: 'status',
+  sentAt: 'sentAt',
+  skipReason: 'skipReason',
+  createdById: 'createdById',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WikiAnnouncementNotifyScalarFieldEnum = (typeof WikiAnnouncementNotifyScalarFieldEnum)[keyof typeof WikiAnnouncementNotifyScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -7476,6 +7570,48 @@ export type ListEnumWikiPageRevisionActionFieldRefInput<$PrismaModel> = FieldRef
 
 
 /**
+ * Reference to a field of type 'WikiAnnouncementNotifyKind'
+ */
+export type EnumWikiAnnouncementNotifyKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiAnnouncementNotifyKind'>
+    
+
+
+/**
+ * Reference to a field of type 'WikiAnnouncementNotifyKind[]'
+ */
+export type ListEnumWikiAnnouncementNotifyKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiAnnouncementNotifyKind[]'>
+    
+
+
+/**
+ * Reference to a field of type 'WikiAnnouncementNotifyStatus'
+ */
+export type EnumWikiAnnouncementNotifyStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiAnnouncementNotifyStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'WikiAnnouncementNotifyStatus[]'
+ */
+export type ListEnumWikiAnnouncementNotifyStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiAnnouncementNotifyStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'WikiAnnouncementNotifySkipReason'
+ */
+export type EnumWikiAnnouncementNotifySkipReasonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiAnnouncementNotifySkipReason'>
+    
+
+
+/**
+ * Reference to a field of type 'WikiAnnouncementNotifySkipReason[]'
+ */
+export type ListEnumWikiAnnouncementNotifySkipReasonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiAnnouncementNotifySkipReason[]'>
+    
+
+
+/**
  * Reference to a field of type 'Float'
  */
 export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
@@ -7709,6 +7845,7 @@ export type GlobalOmitConfig = {
   wikiPageTag?: Prisma.WikiPageTagOmit
   wikiPageRevision?: Prisma.WikiPageRevisionOmit
   wikiTemplate?: Prisma.WikiTemplateOmit
+  wikiAnnouncementNotify?: Prisma.WikiAnnouncementNotifyOmit
 }
 
 /* Types for Logging */

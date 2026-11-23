@@ -9,7 +9,13 @@
  * 定義漏れがコンパイルエラーになる。
  */
 
-import { AgentRunAction, type AgentTaskState, DueRemindKind, type NotifyEvent } from '@/generated/prisma/enums'
+import {
+  AgentRunAction,
+  type AgentTaskState,
+  DueRemindKind,
+  type NotifyEvent,
+  WikiAnnouncementNotifyKind,
+} from '@/generated/prisma/enums'
 import { z } from 'zod'
 import { errValidation } from '../error'
 
@@ -96,6 +102,24 @@ const scAnnouncement = scTicketRef.extend({
   excerpt: z.string().min(1),
 })
 
+/**
+ * Wiki のアナウンス。チケットを参照しないので `scTicketRef` を継承しない。
+ * 宛先(スペースのチャンネル)は配信時に spaceId から引く
+ */
+const scWikiAnnouncement = z.object({
+  spaceId: z.string().min(1),
+  /** ページ指定(`KEY/番号`)とリンクに使う */
+  spaceKey: z.string().min(1),
+  pageId: z.string().min(1),
+  pageNumber: z.number().int().min(1),
+  pageTitle: z.string(),
+  kind: z.enum(WikiAnnouncementNotifyKind),
+  /** 送った本人の表示名 */
+  fromName: z.string(),
+  /** 一言、無ければ本文を `announcementText()` に通したもの。改行を残す */
+  excerpt: scExcerpt,
+})
+
 /** イベントごとのペイロード定義。イベントを足すとここが型エラーになる */
 export const NOTIFY_PAYLOAD_SCHEMA = {
   mention: scMention,
@@ -106,6 +130,7 @@ export const NOTIFY_PAYLOAD_SCHEMA = {
   ticket_merge_held: scTicketMergeHeld,
   ticket_due: scTicketDue,
   announcement: scAnnouncement,
+  wiki_announcement: scWikiAnnouncement,
 } as const satisfies Record<NotifyEvent, z.ZodType>
 
 export type NotifyPayloadMap = { [E in NotifyEvent]: z.infer<(typeof NOTIFY_PAYLOAD_SCHEMA)[E]> }

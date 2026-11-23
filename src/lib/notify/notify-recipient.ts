@@ -91,6 +91,19 @@ const isStillDue = async (ticketId: string, dueDate: string): Promise<boolean> =
 const boardChannels = async (boardId: string | undefined, event: NotifyEvent): Promise<string[]> =>
   boardId ? getBoardNotifyChannels(boardId, event) : []
 
+/**
+ * Wiki スペースに設定された通知先チャンネル。
+ *
+ * 配信時点の設定を引くので、投入後にチャンネルを外した・区分を変えたスペースには送らない。
+ */
+const wikiSpaceChannels = async (spaceId: string): Promise<string[]> => {
+  const space = await prisma.wikiSpace.findUnique({
+    where: { id: spaceId },
+    select: { type: true, announceSlackChannelId: true },
+  })
+  return space?.type === 'announcement' && space.announceSlackChannelId ? [space.announceSlackChannelId] : []
+}
+
 type Resolver<E extends NotifyEvent> = (
   payload: NotifyPayload<E>,
   explicit: ExplicitTargets,
@@ -142,6 +155,12 @@ const RESOLVERS = {
   announcement: async (payload) => ({
     userIds: [],
     slackChannelIds: await boardChannels(payload.boardId, 'announcement'),
+  }),
+
+  /** Wiki のアナウンスはスペースのチャンネルだけに送る。個人宛て(メール / DM / プッシュ)は送らない */
+  wiki_announcement: async (payload) => ({
+    userIds: [],
+    slackChannelIds: await wikiSpaceChannels(payload.spaceId),
   }),
 } as const satisfies { [E in NotifyEvent]: Resolver<E> }
 

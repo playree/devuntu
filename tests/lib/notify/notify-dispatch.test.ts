@@ -392,6 +392,14 @@ describe('runNotifyDispatch: Web プッシュ', () => {
     expect(settled()).toEqual([['w1', 'ok']])
   })
 
+  it('チケットを持たない通知(Wiki のアナウンス)は、ページ単位のタグにする', async () => {
+    claimed.webpush = [delivery({ id: 'w1', channel: 'webpush', payload: { pageId: 'p9' } })]
+
+    await runNotifyDispatch(now)
+
+    expect(deliverWebPush).toHaveBeenCalledWith(expect.objectContaining({ tag: 'wiki:p9' }))
+  })
+
   it('宛先ユーザーの無い行は送らず unlinked にする', async () => {
     claimed.webpush = [delivery({ id: 'w1', channel: 'webpush', userId: null })]
 

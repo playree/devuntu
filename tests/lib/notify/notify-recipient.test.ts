@@ -16,7 +16,9 @@ vi.mock('@/lib/board/board-access', () => ({
   getTicketAccess: vi.fn(),
 }))
 vi.mock('@/lib/notify/notify-board-setting', () => ({ getBoardNotifyChannels: vi.fn(async () => []) }))
-vi.mock('@/lib/prisma', async () => (await import('../../helpers/prisma')).mockPrisma({ ticket: ['findUnique'] }))
+vi.mock('@/lib/prisma', async () =>
+  (await import('../../helpers/prisma')).mockPrisma({ ticket: ['findUnique'], wikiSpace: ['findUnique'] }),
+)
 
 const payload = { ticketId: 't1', boardId: 'b1' } as NotifyPayload<'agent_run'>
 const explicit = { userIds: [] }
@@ -197,5 +199,34 @@ describe('resolveNotifyTargets(ticket_due)', () => {
     vi.mocked(getTicketAccess).mockResolvedValue({ canView: true } as never)
 
     expect((await resolveNotifyTargets('ticket_due', due, explicit)).userIds).toEqual([])
+  })
+})
+
+describe('resolveNotifyTargets(wiki_announcement)', () => {
+  const wikiPayload = { spaceId: 's1' } as NotifyPayload<'wiki_announcement'>
+
+  it('配信時点のスペースのチャンネルだけに送り、渡された宛先があっても DM しない', async () => {
+    vi.mocked(prisma.wikiSpace.findUnique).mockResolvedValue({
+      type: 'announcement',
+      announceSlackChannelId: 'C0123ABCD',
+    } as never)
+
+    expect(await resolveNotifyTargets('wiki_announcement', wikiPayload, { userIds: ['u1'] })).toEqual({
+      userIds: [],
+      slackChannelIds: ['C0123ABCD'],
+    })
+    expect(getBoardNotifyChannels).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['チャンネルが外された', { type: 'announcement', announceSlackChannelId: null }],
+    ['アナウンス用でなくなった', { type: 'mixed', announceSlackChannelId: 'C0123ABCD' }],
+    ['スペースが消えた', null],
+  ])('%s スペースには送らない', async (_label, space) => {
+    vi.mocked(prisma.wikiSpace.findUnique).mockResolvedValue(space as never)
+    expect(await resolveNotifyTargets('wiki_announcement', wikiPayload, explicit)).toEqual({
+      userIds: [],
+      slackChannelIds: [],
+    })
   })
 })

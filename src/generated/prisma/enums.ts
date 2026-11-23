@@ -202,7 +202,8 @@ export const NotifyEvent = {
   ticket_completed: 'ticket_completed',
   ticket_merge_held: 'ticket_merge_held',
   ticket_due: 'ticket_due',
-  announcement: 'announcement'
+  announcement: 'announcement',
+  wiki_announcement: 'wiki_announcement'
 } as const
 
 export type NotifyEvent = (typeof NotifyEvent)[keyof typeof NotifyEvent]
@@ -371,3 +372,33 @@ export const WikiPageRevisionAction = {
 } as const
 
 export type WikiPageRevisionAction = (typeof WikiPageRevisionAction)[keyof typeof WikiPageRevisionAction]
+
+
+export const WikiAnnouncementNotifyKind = {
+  published: 'published',
+  updated: 'updated'
+} as const
+
+export type WikiAnnouncementNotifyKind = (typeof WikiAnnouncementNotifyKind)[keyof typeof WikiAnnouncementNotifyKind]
+
+
+export const WikiAnnouncementNotifyStatus = {
+  scheduled: 'scheduled',
+  sent: 'sent',
+  canceled: 'canceled',
+  skipped: 'skipped'
+} as const
+
+export type WikiAnnouncementNotifyStatus = (typeof WikiAnnouncementNotifyStatus)[keyof typeof WikiAnnouncementNotifyStatus]
+
+
+export const WikiAnnouncementNotifySkipReason = {
+  archived: 'archived',
+  not_announcement: 'not_announcement',
+  channel_unset: 'channel_unset',
+  slack_disabled: 'slack_disabled',
+  no_permission: 'no_permission',
+  page_deleted: 'page_deleted'
+} as const
+
+export type WikiAnnouncementNotifySkipReason = (typeof WikiAnnouncementNotifySkipReason)[keyof typeof WikiAnnouncementNotifySkipReason]

@@ -61,7 +61,8 @@ updated: 2026-11-07
 
 起動は `src/instrumentation.ts` から。`NOTIFY_WORKER_ENABLED=false` で止められる
 (投入だけが続き配信は行われないので、通知が出ない原因の切り分けに使える。
-ただし期日のリマインドは投入側もワーカーなので、一緒に止まる([期日のリマインド](#期日のリマインド)))。
+ただし期日のリマインドと Wiki アナウンスの予約は投入側もワーカーなので、一緒に止まる
+([期日のリマインド](#期日のリマインド) / [Wiki アナウンス](#wiki-アナウンス)))。
 
 ### 1 tick の処理
 
@@ -367,6 +368,39 @@ PWA manifest は `src/app/manifest.ts`(`display: 'standalone'`、アイコンは
 - アナウンスはエージェントへの返信に数えない(plan / report の承認・差し戻しボタンを消さず、revise も走らせない)。
   [agent-runner-internals.md](agent-runner-internals.md)
 
+## Wiki アナウンス
+
+Wiki のアナウンス用スペースのページを、スペースに設定した Slack チャンネルへ流すイベント(`wiki_announcement`)。
+ほかのイベントと違い**チケットを参照しない**ので、通知基盤のうちチケットを前提にしていた所を一般化している。
+
+| 対象                             | 扱い                                                                                                                                                       |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ペイロード(`notify-payload.ts`)  | `scWikiAnnouncement` は `scTicketRef` を継承しない。スペース・ページ(`KEY/番号`・タイトル)・種類・送信者名・抜粋を持つ                                     |
+| まとめキー(`notify-dispatch.ts`) | `notifyTagOf()` はチケットならチケット ID、そうでなければ `wiki:<pageId>`(Web プッシュは送らないが、型の上で全イベントを扱う)                              |
+| 文面(`notify-content.ts`)        | 件名は `[KEY/番号] タイトル`、リンクは `/wiki/KEY/番号`。初回(`published`)と更新(`updated`)で本文を分ける。ボタンの文言は `NotifyContent.openLabel` で渡す |
+| Slack(`notify-slack.ts`)         | `openLabel` が無ければ従来の「チケットを開く」                                                                                                             |
+| 宛先(`notify-recipient.ts`)      | DM は空。チャンネルは**配信時点の** `WikiSpace.announceSlackChannelId`(区分が `announcement` のときだけ)                                                   |
+| イベントの一覧(`notify.ts`)      | `SPACE_NOTIFY_EVENTS` に置き、`DM_NOTIFY_EVENTS` / `CHANNEL_NOTIFY_EVENTS` には入れない(個人設定とボード設定に出さない)                                    |
+
+- 送る操作は保存とは別で、`src/lib/wiki/wiki-announcement-notify.ts` にまとめている。送れるのは `canWrite`(editor 以上、未アーカイブ)。
+  スペース行を `FOR SHARE` でロックして、アーカイブ・区分の変更・ページの削除(どれも排他ロック)と直列にする
+- 予約と履歴は `WikiAnnouncementNotify` の 1 テーブルで兼ねる(`NotifyDelivery` は送れたら消えるので履歴にならない)。
+  状態は `scheduled` / `sent` / `canceled` / `skipped`。ページは物理削除で、復元すると同じ id で作り直すので、
+  `pageId` には外部キーを張らない(履歴を残し、復元で戻す)。スペースの削除では Cascade で消える
+- **今すぐ** : `sent` の行の作成と `enqueueNotify()` を同じトランザクションで行う。流量制限で投入できなければ `TOO_MANY_REQUESTS` にしてロールバックする
+- **予約** : `scheduled` で保存するだけ。変更・取り消しは `updateMany({ where: { id, status: 'scheduled' } })` で行い、
+  件数が 0 なら `WIKI_ANNOUNCE_NOT_SCHEDULED`。変更した人を送信者(`createdById`)に置き換え、送る時点の権限もその人で確かめる
+- **ワーカー**(`wiki-announcement-notify-worker.ts`): `createWorkerLoop` で 1 分ごとに回す。`NOTIFY_WORKER_ENABLED` に従う
+  - 期限の来た `scheduled` の ID を引き、1 件ずつトランザクションを分けて `FOR UPDATE SKIP LOCKED` で取り直す(ロックの条件にも `status` と `scheduledAt` を入れる)。
+    利用者の変更・取り消しが行を持っている間は飛ばし、ワーカーが持っている間は利用者の更新が待ってから `status` を見直す
+  - 送る時点のページ・スペース・送信者を引き直し、満たさなければ `skipped` にして理由(`skipReason`)を残す:
+    `page_deleted` / `archived` / `not_announcement` / `channel_unset` / `slack_disabled` / `no_permission`(退会・BAN を含む)
+  - 満たせば**送る時点の最新のタイトルと本文**で `enqueueNotify()` して `sent` にする。流量制限で投入できなければ予約のまま残して周を打ち切る
+  - 1 件の失敗(想定外の例外)はログに残して次へ進む。行は予約のまま残り、次の周でやり直す
+- ページの削除は、同じトランザクションで配下を含む予約を `skipped(page_deleted)` にする(復元しても予約は戻さない)
+- 抜粋は一言、空なら本文を `announcementText()` に通したもの(2000 文字に丸める)。Wiki の本文はボードのメンバーを持たないので、メンションの名前は引かない
+- 一覧・サイドバーのバッジ(`listWikiAnnouncements()` の `notifyState`)と履歴は、送る側の情報なので editor 以上にだけ返す
+
 ## エージェント実行結果の通知
 
 AIエージェントの自動運用([agent-runner.md](../admin/agent-runner.md))は無人で動くため、実行履歴を見に行かないと結果が分からない。
@@ -534,7 +568,7 @@ docker compose exec -T db psql -U devuser -d devuntu \
 1. Prisma の `NotifyEvent` enum と `NOTIFY_EVENTS`(`src/lib/notify/notify.ts`)を揃える。
    並びの一致は `tests/lib/notify/notify.test.ts` で固定しているので、**値の追加は末尾のみ**
 2. DM 通知なら `DM_NOTIFY_EVENTS`、チャネル通知なら `CHANNEL_NOTIFY_EVENTS` へ追加する
-   (両方に出るイベントは両方へ)。前者は `/account` の通知設定と `scUpdateNotifySetting`、
+   (両方に出るイベントは両方へ。Wiki スペースの設定で宛先を決めるものは `SPACE_NOTIFY_EVENTS`)。前者は `/account` の通知設定と `scUpdateNotifySetting`、
    後者はボード設定と `scSetBoardNotifySetting`(`src/lib/schema/schema-board.ts`)の入力範囲を兼ねるので、
    **画面と入力検証は追加するだけで追従する**
 3. `NOTIFY_PAYLOAD_SCHEMA`(`notify-payload.ts`)・文面(`notify-content.ts`)・宛先の決め方

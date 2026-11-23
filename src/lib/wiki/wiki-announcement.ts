@@ -11,6 +11,7 @@ import type { Actor } from '../board/board-access'
 import { errInvalidOperation } from '../error'
 import { prisma } from '../prisma'
 import { assertWikiSpaceAccess } from './wiki-access'
+import { canSeeWikiAnnounce, wikiAnnounceStateOf, type WikiAnnounceState } from './wiki-announcement-notify-rule'
 import {
   MAX_WIKI_ANNOUNCEMENT_PAGE_SIZE,
   MAX_WIKI_ANNOUNCEMENT_TREE,
@@ -26,6 +27,8 @@ export type WikiAnnouncementItem = {
   createdAt: Date
   createdByName: string
   tagIds: string[]
+  /** Slack 通知の状態。editor 以上にだけ返す */
+  notifyState?: WikiAnnounceState
 }
 
 export type WikiAnnouncementQuery = WikiAnnouncementPeriod & {
@@ -51,7 +54,7 @@ export const listWikiAnnouncements = async (
   spaceId: string,
   { month, year, tagId, page, rowsPerPage }: WikiAnnouncementQuery,
 ): Promise<{ items: WikiAnnouncementItem[]; total: number }> => {
-  await assertAnnouncementSpace(actor, spaceId)
+  const access = await assertAnnouncementSpace(actor, spaceId)
   const range =
     month || year
       ? wikiAnnouncementPeriodRange({ month, year }, (await getUserNameAndTimezone(actor.id)).timezone)
@@ -79,14 +82,31 @@ export const listWikiAnnouncements = async (
     }),
     prisma.wikiPage.count({ where }),
   ])
+  const states = canSeeWikiAnnounce(access.role) ? await notifyStatesOf(rows.map(({ id }) => id)) : null
   return {
     items: rows.map(({ createdBy, tags, ...row }) => ({
       ...row,
       createdByName: createdBy?.name ?? '',
       tagIds: tags.map(({ tagId }) => tagId),
+      ...(states && { notifyState: states.get(row.id) ?? 'none' }),
     })),
     total,
   }
+}
+
+/** ページごとの Slack 通知の状態。予約中・送信済みの行があるかだけを見る */
+const notifyStatesOf = async (pageIds: string[]): Promise<Map<string, WikiAnnounceState>> => {
+  if (pageIds.length === 0) {
+    return new Map()
+  }
+  const rows = await prisma.wikiAnnouncementNotify.findMany({
+    where: { pageId: { in: pageIds }, status: { in: ['scheduled', 'sent'] } },
+    select: { pageId: true, status: true },
+    distinct: ['pageId', 'status'],
+  })
+  return new Map(
+    pageIds.map((id) => [id, wikiAnnounceStateOf(rows.filter((row) => row.pageId === id).map(({ status }) => status))]),
+  )
 }
 
 /** 年月(閲覧者のタイムゾーン)ごとの件数。新しい順。タグを渡すとそのタグを持つアナウンスだけを数える(一覧の絞り込みと件数を揃える) */

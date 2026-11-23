@@ -10,6 +10,7 @@ import { isAdminActor, type Actor } from '../board/board-access'
 import { ClientError, errInvalidOperation, errValidation } from '../error'
 import { logger } from '../logger'
 import { isUniqueViolation, prisma } from '../prisma'
+import { listSlackChannels } from '../slack/slack-server'
 import { detachAttachmentsOf, listAttachmentKeysOf, removeAttachmentByKey } from '../storage/attachment'
 import {
   assertWikiSpaceAccess,
@@ -207,6 +208,55 @@ export const deleteWikiSpace = async (actor: Actor, spaceId: string) => {
   }
 
   logger.info({ userId: actor.id, spaceId, attachments: keys.length, removed }, 'wiki space deleted')
+}
+
+/**
+ * アナウンスの通知先チャンネル(owner または管理者)。
+ * Slack のチャンネル一覧はプライベートチャンネル名を含むので、一覧を返す前にこれで権限を確定させる
+ */
+export const assertWikiAnnounceChannelManageable = async (actor: Actor, spaceId: string) => {
+  const access = await assertWikiSpaceAccess(actor, spaceId, 'manage')
+  if (access.type !== 'announcement') {
+    throw errInvalidOperation()
+  }
+}
+
+/** アナウンスの通知先チャンネルの現在値(owner または管理者)。未設定は null */
+export const getWikiAnnounceChannel = async (actor: Actor, spaceId: string) => {
+  await assertWikiAnnounceChannelManageable(actor, spaceId)
+  const space = await prisma.wikiSpace.findUniqueOrThrow({
+    where: { id: spaceId },
+    select: { announceSlackChannelId: true },
+  })
+  return { slackChannelId: space.announceSlackChannelId }
+}
+
+/**
+ * アナウンスの通知先チャンネルの設定・解除(owner または管理者)。null で解除する。
+ * ボードのチャネル通知と同じく、Bot が参加していないチャンネルを保存すると通知だけ届かなくなるので、
+ * 一覧と突き合わせてから保存する(突き合わせの成否がチャンネルの実在を教えないよう、権限の確定を先に済ませる)
+ */
+export const setWikiAnnounceChannel = async (actor: Actor, spaceId: string, slackChannelId: string | null) => {
+  await assertWikiAnnounceChannelManageable(actor, spaceId)
+  if (slackChannelId) {
+    const channels = await listSlackChannels()
+    if (!channels?.some((channel) => channel.id === slackChannelId)) {
+      throw errValidation('slackChannelId')
+    }
+  }
+  await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT "id" FROM "wiki_space" WHERE "id" = ${spaceId} FOR NO KEY UPDATE`
+    const access = await assertWikiSpaceAccess(actor, spaceId, 'manage', tx)
+    if (access.type !== 'announcement') {
+      throw errInvalidOperation()
+    }
+    await tx.wikiSpace.update({
+      where: { id: spaceId },
+      data: { announceSlackChannelId: slackChannelId },
+      select: { id: true },
+    })
+  })
+  logger.info({ userId: actor.id, spaceId, set: !!slackChannelId }, 'wiki announce channel changed')
 }
 
 /** 閲覧できるスペースの一覧(名前順)と、それぞれでの自分の権限 */
