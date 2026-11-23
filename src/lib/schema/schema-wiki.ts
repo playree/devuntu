@@ -104,11 +104,11 @@ export const scUpdateWikiPage = z.object({
 })
 export type UpdateWikiPage = z.infer<typeof scUpdateWikiPage>
 
-/** 同じ親の中での並べ替えも、parentId を変えずに position だけ変えて表す。position は 0 始まりで、省略すると末尾 */
+/** 移動モーダルでの移動。afterId は直後に置く兄弟で、null なら先頭、省略すると末尾。同じ親の中での並べ替えも parentId を変えずに表す */
 export const scMoveWikiPage = z.object({
   id: z.uuidv7(),
   parentId: z.uuidv7().nullable(),
-  position: z.number().int().min(0).optional(),
+  afterId: z.uuidv7().nullable().optional(),
 })
 export type MoveWikiPage = z.infer<typeof scMoveWikiPage>
 

@@ -201,9 +201,10 @@ export const getWikiPageForMcp = async (auth: ResourceAuth, input: { ref: string
 
   let body: { content: string } | { section: string; content: string } = { content: page.content }
   if (input.section !== undefined) {
-    const section = extractMarkdownSection(page.content, input.section)
+    const headingOpts = { skipFrontMatter: page.type === 'design_doc' }
+    const section = extractMarkdownSection(page.content, input.section, headingOpts)
     if (section === null) {
-      const headings = listMarkdownHeadings(page.content)
+      const headings = listMarkdownHeadings(page.content, headingOpts)
         .slice(0, MAX_LISTED_HEADINGS)
         .map(({ level, text }) => `${'#'.repeat(level)} ${text}`)
       throw errValidation(
@@ -496,7 +497,7 @@ export const registerWikiTools = (server: McpServer, auth: ResourceAuth) => {
           .array(z.string().min(1).max(MAX_TAG_NAME))
           .max(MAX_WIKI_PAGE_TAGS)
           .optional()
-          .describe('Tag names: only pages with any of them'),
+          .describe('Tag names (case-insensitive): only pages with any of them'),
         limit: z
           .number()
           .int()

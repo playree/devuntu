@@ -511,6 +511,40 @@ describe('moveWikiPage', () => {
     ).toBe(WIKI_PAGE_CONFLICT)
   })
 
+  describe('afterId(直後に置く兄弟)', () => {
+    // 画面では a の下が [b, d] だったが、その後に別の人が先頭へ n を足した
+    const withNewFirstChild = (): Row[] => [{ id: 'n', parentId: 'a', order: -1 }, ...TREE]
+
+    it('移動先の兄弟が増えていても、選んだ兄弟の直後に入る', async () => {
+      tree = withNewFirstChild()
+      expect((await moveWikiPage(actor, WEB, 'e', { parentId: 'a', afterId: 'b' })).result).toBe('moved')
+      // 画面で見ていた番号(1)の n と b の間ではなく、今の並びの b の直後
+      expect(vi.mocked(prisma.wikiPage.update).mock.calls.at(-1)?.[0].data).toMatchObject({ parentId: 'a', order: 2 })
+    })
+
+    it('同じ親の中でも、ロックを取った後の並びで直後を求める', async () => {
+      tree = withNewFirstChild()
+      expect((await moveWikiPage(actor, WEB, 'b', { parentId: 'a', afterId: 'd' })).result).toBe('moved')
+      expect(vi.mocked(prisma.wikiPage.update).mock.calls.at(-1)?.[0].data).toMatchObject({ parentId: 'a', order: 2 })
+    })
+
+    it('既に直後にいれば書かない', async () => {
+      expect((await moveWikiPage(actor, WEB, 'd', { parentId: 'a', afterId: 'b' })).result).toBe('unchanged')
+      expect(writeWikiPageRevision).not.toHaveBeenCalled()
+    })
+
+    it.each([
+      ['別の親へ移された', [...TREE.filter(({ id }) => id !== 'b'), { id: 'b', parentId: 'e', order: 0 }]],
+      ['削除された', TREE.filter(({ id }) => id !== 'b' && id !== 'c')],
+    ])('選んだ兄弟が %s なら WIKI_TREE_CHANGED で書かない', async (_, rows) => {
+      tree = rows
+      expect(await errorTypeOf(moveWikiPage(actor, WEB, 'e', { parentId: 'a', afterId: 'b' }))).toBe(WIKI_TREE_CHANGED)
+      expect(prisma.wikiPage.update).not.toHaveBeenCalled()
+      expect(prisma.$executeRaw).not.toHaveBeenCalled()
+      expect(writeWikiPageRevision).not.toHaveBeenCalled()
+    })
+  })
+
   describe('expectedPlace(画面で見ていた親と兄弟の並び)', () => {
     it.each([
       ['別の親へ移された(画面では e の下)', 'd', { parentId: 'e', siblingIds: ['d'] }],
