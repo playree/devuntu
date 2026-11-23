@@ -89,6 +89,7 @@ const latest = (override: Record<string, unknown> = {}) => ({
   ticketId: null,
   message: null,
   createdAt: new Date('2026-11-08T09:55:00.000Z'),
+  updatedAt: new Date('2026-11-08T09:58:00.000Z'),
   ...override,
 })
 
@@ -168,6 +169,32 @@ describe('writeWikiPageRevision: 連続保存のまとめ', () => {
     vi.mocked(prisma.wikiPageRevision.findFirst).mockResolvedValue(latest() as never)
     expect(await writeWikiPageRevision(prisma, revision(), NOW)).toBe('created')
     expect(prisma.wikiPageRevision.update).not.toHaveBeenCalled()
+  })
+
+  describe('まとめる時間が保持期間より長い(保持 1 日・まとめ 2000 分)', () => {
+    beforeEach(() => {
+      settings.retention = 1
+      settings.merge = 2000
+    })
+
+    it('最新の版の最後の保存が保持期限より前なら(掃除が基準版として残す版なので)まとめない', async () => {
+      const twoDaysAgo = new Date('2026-11-06T10:00:00.000Z')
+      vi.mocked(prisma.wikiPageRevision.findFirst).mockResolvedValue(
+        latest({ createdAt: twoDaysAgo, updatedAt: twoDaysAgo }) as never,
+      )
+      expect(await writeWikiPageRevision(prisma, revision(), NOW)).toBe('created')
+      expect(prisma.wikiPageRevision.update).not.toHaveBeenCalled()
+    })
+
+    it('最新の版の最後の保存が保持期限の内なら、作成が期限より前でもまとめる', async () => {
+      vi.mocked(prisma.wikiPageRevision.findFirst).mockResolvedValue(
+        latest({
+          createdAt: new Date('2026-11-07T02:00:00.000Z'),
+          updatedAt: new Date('2026-11-07T12:00:00.000Z'),
+        }) as never,
+      )
+      expect(await writeWikiPageRevision(prisma, revision(), NOW)).toBe('merged')
+    })
   })
 })
 

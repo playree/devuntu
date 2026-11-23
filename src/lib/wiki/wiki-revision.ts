@@ -79,6 +79,7 @@ export const writeWikiPageRevision = async (
       ticketId: true,
       message: true,
       createdAt: true,
+      updatedAt: true,
     },
     orderBy: WIKI_REVISION_ORDER,
   })
@@ -89,7 +90,7 @@ export const writeWikiPageRevision = async (
       latest,
       { action: revision.action, actorId: revision.actorId, via: revision.via, ticketId, message },
       now,
-      mergeMinutes,
+      { mergeMinutes, retentionCutoff: wikiRevisionCutoff(now) },
     )
   ) {
     await tx.wikiPageRevision.update({

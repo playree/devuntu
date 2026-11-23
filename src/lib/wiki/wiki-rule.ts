@@ -163,13 +163,15 @@ export type WikiRevisionOrigin = {
  * 新しい版を作らず、最新の版へまとめてよいか。
  * 同じ人・同じ経路・同じチケットの `updated` が、最新の版の作成から `mergeMinutes` 以内に続いたときだけまとめる。
  * 起点を最新の版の作成時刻に固定するので、編集が続いても1つの版が際限なく伸びない。
- * どちらかにコミットメッセージがあればまとめない
+ * どちらかにコミットメッセージがあればまとめない。
+ * 最新の版の最後の保存が保持期限(`retentionCutoff`)より前ならまとめない。版の掃除はその版を基準版として残すので、
+ * まとめると保持期間より前の時点へ戻せなくなる(まとめる時間を保持期間以上にしたとき)
  */
 export const shouldMergeWikiRevision = (
-  latest: (WikiRevisionOrigin & { createdAt: Date }) | null,
+  latest: (WikiRevisionOrigin & { createdAt: Date; updatedAt: Date }) | null,
   next: WikiRevisionOrigin,
   now: Date,
-  mergeMinutes: number,
+  { mergeMinutes, retentionCutoff }: { mergeMinutes: number; retentionCutoff: Date },
 ): boolean =>
   latest !== null &&
   mergeMinutes > 0 &&
@@ -180,7 +182,8 @@ export const shouldMergeWikiRevision = (
   latest.ticketId === next.ticketId &&
   latest.message === null &&
   next.message === null &&
-  now.getTime() - latest.createdAt.getTime() <= mergeMinutes * 60_000
+  now.getTime() - latest.createdAt.getTime() <= mergeMinutes * 60_000 &&
+  latest.updatedAt.getTime() >= retentionCutoff.getTime()
 
 /**
  * 版のタグを、いまスペースに残っているタグに ID で引き当てる(スペースの表示順)。

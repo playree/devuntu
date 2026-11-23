@@ -197,7 +197,7 @@ export const sweepBoardNoteRevisions = async (now: Date): Promise<number> =>
  * 残す版の判定は DB 側で行い、消す版だけを古い順に `MAINTENANCE_DELETE_BATCH` 件まで選んで同じ文で消す。
  * 期限より古い版を件数で絞って読んでから判定すると、残す版だけで上限が埋まったときに、それより古い消すべき版へ届かなくなるため。
  *
- * 残す版のうち期限より古いものは作成から保持期間以上たっているので、書き込み側の連続保存のまとめ(最新の版の上書き)の対象にならない
+ * 残す版のうち期限より古いものは、書き込み側の連続保存のまとめ(最新の版の上書き)の対象にしない(`shouldMergeWikiRevision` の `retentionCutoff`)
  */
 export const sweepWikiPageRevisions = async (now: Date): Promise<number> => {
   const cutoff = wikiRevisionCutoff(now)
