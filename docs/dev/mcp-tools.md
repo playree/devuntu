@@ -238,6 +238,7 @@ everyone は全員に公開する文書として作るものなので、エー�
 - `get_wiki_tree` は兄弟の並び順の入れ子で返す。`root` を渡すとその子孫だけ(`root` 自身は `root` 項目に分ける)、
   `depth` を渡すとその段数まで返し、それより深い子は `childCount` だけを返す
 - `search_wiki` の条件と並び順は画面の検索と同じ(全語の AND、タイトル一致 → 更新日時の新しい順)。`keyword` か `tags` のどちらかが要る。
+  `tags` はどれかを持つページに絞り、タグ名は `keyword` でのタグ名の照合と同じく大文字小文字を問わない。
   `limit` の件数(既定20、最大50)まで返したときは `limitReached: true` を付ける
 - `save_wiki_page`
   - 作成は `space` と `title` が必須。`parent`(同じスペースのページの ref)・`position`・`tags` も同じトランザクションで反映する

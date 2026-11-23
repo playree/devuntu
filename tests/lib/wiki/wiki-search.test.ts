@@ -81,7 +81,16 @@ describe('buildWikiSearchSql', () => {
 
   it('タグの指定は、どれかを持つページに絞る(名前の一致)', () => {
     const text = textOf(buildWikiSearchSql(query({ tagNames: ['設計', '運用'] })))
-    expect(text).toMatch(/WHERE t\."name" IN \(\$\d+,\$\d+\)/)
+    expect(text).toMatch(/WHERE lower\(t\."name"\) IN \(lower\(\$\d+\),lower\(\$\d+\)\)/)
+  })
+
+  it('タグの絞り込みは、語でのタグ名の照合と同じく大文字小文字を問わない', () => {
+    const sql = buildWikiSearchSql(query({ words: ['api'], tagNames: ['api'] }))
+    const text = textOf(sql)
+    expect(text).toContain('WHERE lower(t."name") = lower(')
+    expect(text).toMatch(/WHERE lower\(t\."name"\) IN \(lower\(\$\d+\)\)/)
+    expect(text).not.toMatch(/WHERE t\."name"/)
+    expect(sql.values).toContain('api')
   })
 
   it('語が無ければタイトル一致を FALSE にし、snippet は本文の先頭から切り出す', () => {

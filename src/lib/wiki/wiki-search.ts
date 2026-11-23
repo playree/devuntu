@@ -26,7 +26,7 @@ export const SNIPPET_LENGTH = 200
 export type WikiSearchQuery = {
   /** 検索する語(分解済み)。空ならタグの絞り込みだけで探す */
   words: string[]
-  /** どれかを持つページに絞るタグ名。空なら絞らない */
+  /** どれかを持つページに絞るタグ名(語でのタグ名の照合と同じく大文字小文字を問わない)。空なら絞らない */
   tagNames: string[]
   spaceIds: string[]
   limit: number
@@ -77,7 +77,7 @@ export const buildWikiSearchSql = ({ words, tagNames, spaceIds, limit }: WikiSea
       ? [
           Prisma.sql`p."id" IN (
             SELECT pt."pageId" FROM "wiki_page_tag" pt JOIN "wiki_tag" t ON t."id" = pt."tagId"
-            WHERE t."name" IN (${Prisma.join(tagNames)})
+            WHERE lower(t."name") IN (${Prisma.join(tagNames.map((name) => Prisma.sql`lower(${name})`))})
           )`,
         ]
       : []),
