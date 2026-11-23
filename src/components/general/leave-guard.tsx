@@ -57,7 +57,7 @@ export const usePushIfLeavable = () => {
  * 新しいタブ・ダウンロード・修飾キー付き・同じ画面内のアンカーは、今の画面が残るので対象外。
  * 別オリジンへのリンクはページ全体の読み込みになり、beforeunload で止まる
  */
-const internalHrefOf = (e: MouseEvent) => {
+const internalLinkOf = (e: MouseEvent) => {
   if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
     return undefined
   }
@@ -75,13 +75,14 @@ const internalHrefOf = (e: MouseEvent) => {
   if (url.pathname === location.pathname && url.search === location.search) {
     return undefined
   }
-  return `${url.pathname}${url.search}${url.hash}`
+  return { anchor, href: `${url.pathname}${url.search}${url.hash}` }
 }
 
 /**
  * 有効な間、画面を離れる前に確認する(未保存の下書きを守る)。
  * - タブを閉じる・再読み込み・別サイトへの移動: ブラウザの離脱警告(beforeunload)
- * - 画面内のリンク: クリックを捕捉(capture)して Next の Link や RouterProvider より先に止め、`confirmLeave` が true なら移る
+ * - 画面内のリンク: クリックを捕捉(capture)して Next の Link や RouterProvider より先に止め、`confirmLeave` が true なら
+ *   同じリンクを押し直す(リンクの onClick で閉じるメニューなどは、移るときだけ動く)
  * - router.push で移る部品: usePushIfLeavable を通したものは同じ確認を通る
  *
  * ブラウザの戻る/進むは止められない
@@ -105,16 +106,41 @@ export const useLeaveGuard = ({ isActive, confirmLeave }: { isActive: boolean; c
       // 古いブラウザは returnValue が設定されていないと警告を出さない
       e.returnValue = ''
     }
+    let isReplaying = false
+    /** 確認の後に押し直す。Next の Link なら Link が移り、遷移を受け持つものが無いリンクはここで移る(ページ全体の読み込みにしない) */
+    const replay = (anchor: HTMLAnchorElement, href: string) => {
+      if (!anchor.isConnected) {
+        router.push(href)
+        return
+      }
+      const fallback = (e: MouseEvent) => {
+        if (!e.defaultPrevented) {
+          e.preventDefault()
+          router.push(href)
+        }
+      }
+      window.addEventListener('click', fallback)
+      isReplaying = true
+      try {
+        anchor.click()
+      } finally {
+        isReplaying = false
+        window.removeEventListener('click', fallback)
+      }
+    }
     const onClick = (e: MouseEvent) => {
-      const href = internalHrefOf(e)
-      if (href === undefined) {
+      if (isReplaying) {
+        return
+      }
+      const link = internalLinkOf(e)
+      if (link === undefined) {
         return
       }
       e.preventDefault()
       e.stopPropagation()
       void confirm().then((ok) => {
         if (ok) {
-          router.push(href)
+          replay(link.anchor, link.href)
         }
       })
     }
