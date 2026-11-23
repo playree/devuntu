@@ -142,8 +142,11 @@ export const updateWikiSpace = async (actor: Actor, spaceId: string, patch: Part
 
 /** アーカイブの切り替え。アーカイブ済みは閲覧のみになる */
 export const setWikiSpaceArchived = async (actor: Actor, spaceId: string, archived: boolean) => {
-  await assertWikiSpaceAccess(actor, spaceId, 'manage')
-  await prisma.wikiSpace.update({ where: { id: spaceId }, data: { archived }, select: { id: true } })
+  await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT "id" FROM "wiki_space" WHERE "id" = ${spaceId} FOR NO KEY UPDATE`
+    await assertWikiSpaceAccess(actor, spaceId, 'manage', tx)
+    await tx.wikiSpace.update({ where: { id: spaceId }, data: { archived }, select: { id: true } })
+  })
   logger.info({ userId: actor.id, spaceId, archived }, 'wiki space archived changed')
 }
 

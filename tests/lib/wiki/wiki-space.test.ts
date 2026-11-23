@@ -145,8 +145,17 @@ describe('updateWikiSpace / setWikiSpaceArchived', () => {
 
   it('アーカイブの切り替えも manage を要求する', async () => {
     await setWikiSpaceArchived(actor, 's1', true)
-    expect(assertWikiSpaceAccess).toHaveBeenCalledWith(actor, 's1', 'manage')
+    expect(assertWikiSpaceAccess).toHaveBeenCalledWith(actor, 's1', 'manage', expect.anything())
     expect(vi.mocked(prisma.wikiSpace.update).mock.calls[0][0].data).toEqual({ archived: true })
+  })
+
+  it('アーカイブの切り替えも、スペース行のロックを取ってから権限を判定し、権限が無ければ書かない', async () => {
+    vi.mocked(assertWikiSpaceAccess).mockRejectedValue(new Error('denied'))
+    await expect(setWikiSpaceArchived(actor, 's1', true)).rejects.toThrow('denied')
+    expect(vi.mocked(prisma.$queryRaw).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(assertWikiSpaceAccess).mock.invocationCallOrder[0],
+    )
+    expect(prisma.wikiSpace.update).not.toHaveBeenCalled()
   })
 
   it('権限が無ければ書かない', async () => {
