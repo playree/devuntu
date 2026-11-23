@@ -1,6 +1,6 @@
 'use client'
 
-import { PanelSkeleton } from '@/components/general/panel'
+import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { BookOpenIcon } from '@/components/icon'
 import { WikiTagLinks } from '@/components/wiki-tag'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
@@ -29,12 +29,22 @@ export const WikiSearchResults: FC<{
   if (isLoading) {
     return <PanelSkeleton />
   }
-  if (!hits || hits.length === 0) {
+  if (!hits) {
+    return (
+      <NoticePanel // 取得に失敗した(一致するページが無いのと区別する)
+        status='danger'
+      >
+        {t('msg_wiki_search_failed')}
+      </NoticePanel>
+    )
+  }
+  if (hits.length === 0) {
     return <p className='text-muted text-sm'>{t('msg_no_wiki_search_results')}</p>
   }
 
   return (
     <section className='space-y-2'>
+      <p className='text-muted text-xs'>{t('wiki_search_result_count', { count: hits.length })}</p>
       <ul className='divide-y rounded-xl border'>
         {hits.map((hit) => {
           const breadcrumbs = showSpace ? [hit.space.name, ...hit.breadcrumbs] : hit.breadcrumbs

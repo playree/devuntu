@@ -75,7 +75,14 @@ export const WikiSpaceTopClient: FC = () => {
       ) : space.type === 'design_doc' ? (
         <WikiDesignDocIndex />
       ) : tree.length === 0 ? (
-        <p className='text-muted text-sm'>{t('msg_no_wiki_pages')}</p>
+        <div className='flex flex-col items-start gap-2'>
+          <p className='text-muted text-sm'>{t('msg_no_wiki_pages')}</p>
+          {access.canWrite && (
+            <MultiButton size='sm' icon={<DocumentPlusIcon />} onPress={() => createModalState.open()}>
+              {t('wiki_add_page')}
+            </MultiButton>
+          )}
+        </div>
       ) : (
         <ChildPages parentId={null} />
       )}
