@@ -8,11 +8,14 @@ import { SingleSelectCtrl, SingleSelectField } from '@/components/general/select
 import { DocumentPlusIcon, FolderArrowRightIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { useWikiPageTypeOptions } from '@/components/wiki-chip'
-import { parseAction } from '@/lib/action/action-client'
+import { parseAction, useActionData } from '@/lib/action/action-client'
+import { authClient } from '@/lib/auth/auth-client'
+import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { ClientError } from '@/lib/error'
 import { type CreateWikiPage, scCreateWikiPage } from '@/lib/schema/schema-wiki'
 import { useConfirmAction } from '@/lib/use-confirm-action'
 import { defaultWikiPageType, MAX_WIKI_DEPTH, WIKI_TREE_CHANGED } from '@/lib/wiki/wiki-rule'
+import { applyWikiTemplatePlaceholders } from '@/lib/wiki/wiki-template-rule'
 import {
   depthOf,
   descendantIds,
@@ -25,27 +28,40 @@ import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { FC, useMemo, useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { createWikiPage, deleteWikiPage, moveWikiPage } from './server'
+import { useForm, useWatch } from 'react-hook-form'
+import { createWikiPage, deleteWikiPage, getWikiTemplateOptions, moveWikiPage } from './server'
 import { useWikiSpace } from './space-context'
 
 /** 作成後に本文の編集から始めるため、ページ詳細へ付けるクエリ */
 export const EDIT_QUERY = 'edit'
 
-/** ページの作成。タイトルと種類を入れて作り、作ったページへ移って本文の編集を始める */
+/**
+ * ページの作成。タイトルと種類を入れて作り、作ったページへ移って本文の編集を始める。
+ * テンプレートを選ぶと、タイトル(プレースホルダーを置き換えたもの。空のテンプレートなら入力のまま)と種類を埋め、
+ * 本文はサーバーがテンプレートから作る。種類はテンプレートのもので固定する
+ */
 export const CreatePageModal: FC<ModalBaseProps & { parent: { id: string; title: string } | null }> = ({
   state,
   reload,
   parent,
 }) => {
   const { t, fet } = useLocale()
-  const { space } = useWikiSpace()
+  const { space, access } = useWikiSpace()
   const pushIfLeavable = usePushIfLeavable()
   const typeOptions = useWikiPageTypeOptions()
+  const { data: session } = authClient.useSession()
+  const timezone = useUserTimezone()
+  // 開いたときだけ引く(閉じている間もマウントされ、書けない人の画面にも置かれる)
+  const { data: templates } = useActionData(() => getWikiTemplateOptions({ id: space.id }), {
+    skip: !state.isOpen || !access.canWrite,
+    key: space.id,
+  })
+  const templateOptions = Object.fromEntries((templates ?? []).map((template) => [template.id, template.name]))
 
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { isSubmitting, errors },
   } = useForm<CreateWikiPage>({
     resolver: zodResolver(scCreateWikiPage),
@@ -57,6 +73,24 @@ export const CreatePageModal: FC<ModalBaseProps & { parent: { id: string; title:
       type: defaultWikiPageType(space.type),
     },
   })
+  const templateId = useWatch({ control, name: 'templateId' })
+
+  const applyTemplate = (id: string | null) => {
+    const template = templates?.find((row) => row.id === id)
+    setValue('templateId', template?.id)
+    if (!template) {
+      return
+    }
+    setValue('type', template.type)
+    if (template.title) {
+      const title = applyWikiTemplatePlaceholders(template.title, {
+        now: new Date(),
+        timezone,
+        userName: session?.user.name ?? '',
+      })
+      setValue('title', title, { shouldValidate: true })
+    }
+  }
 
   return (
     <FormModal
@@ -76,12 +110,31 @@ export const CreatePageModal: FC<ModalBaseProps & { parent: { id: string; title:
           }
         }
       })}
-      title={{ text: parent ? t('wiki_add_child_page') : t('wiki_add_page'), icon: <DocumentPlusIcon /> }}
+      title={{
+        text: parent
+          ? t('wiki_add_child_page')
+          : space.type === 'announcement'
+            ? t('wiki_new_announcement')
+            : t('wiki_add_page'),
+        icon: <DocumentPlusIcon />,
+      }}
       submit={{ isPending: isSubmitting }}
     >
       <GridBox>
         {parent && (
           <p className='text-muted col-span-12 truncate text-sm'>{t('wiki_parent_page', { title: parent.title })}</p>
+        )}
+        {templates && templates.length > 0 && (
+          <div className='col-span-12'>
+            <SingleSelectField
+              groupOptions={templateOptions}
+              label={t('ticket_template')}
+              placeholder={t('ticket_template')}
+              value={templateId ?? null}
+              onChange={applyTemplate}
+              isClearable
+            />
+          </div>
         )}
         <div className='col-span-12'>
           <InputCtrl
@@ -95,9 +148,16 @@ export const CreatePageModal: FC<ModalBaseProps & { parent: { id: string; title:
         </div>
         {space.type === 'mixed' && ( // 設計書スペースは設計書だけなので選ばせない
           <div className='col-span-12'>
-            <SingleSelectCtrl control={control} name='type' groupOptions={typeOptions} label={t('wiki_page_type')} />
+            <SingleSelectCtrl
+              control={control}
+              name='type'
+              groupOptions={typeOptions}
+              label={t('wiki_page_type')}
+              isDisabled={!!templateId}
+            />
           </div>
         )}
+        {templateId && <p className='text-muted col-span-12 text-xs'>{t('msg_wiki_page_from_template')}</p>}
       </GridBox>
     </FormModal>
   )

@@ -10,7 +10,7 @@ import { BookOpenIcon, DocumentPlusIcon, FolderArrowRightIcon, TrashIcon } from 
 import { NoAccessView } from '@/components/no-access-view'
 import { ReloadButton } from '@/components/reload-button'
 import { useActionData } from '@/lib/action/action-client'
-import { canDeleteWikiRevision, wikiPageRef } from '@/lib/wiki/wiki-rule'
+import { canDeleteWikiRevision, isFlatWikiSpace, wikiPageRef } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { Breadcrumbs, ButtonGroup } from '@heroui/react'
 import { FC } from 'react'
@@ -91,6 +91,8 @@ export const WikiPageClient: FC<{ spaceKey: string; number: number }> = ({ space
   }
 
   const { space, access, page, ancestors } = data
+  // アナウンス用スペースは平らで、並びは作成日時で決まるので、子ページの作成と移動を出さない
+  const isFlat = isFlatWikiSpace(space.type)
   const parentHref = ancestors.length > 0 ? `/wiki/${space.key}/${ancestors.at(-1)?.number}` : `/wiki/${space.key}`
   // 本文の保存・移動・作成の後は、ツリー(タイトル・並び)も取り直す
   const reloadAll = async () => {
@@ -117,7 +119,7 @@ export const WikiPageClient: FC<{ spaceKey: string; number: number }> = ({ space
             </>
           }
         >
-          {access.canWrite && (
+          {access.canWrite && !isFlat && (
             <MultiButton
               isIconOnly
               tooltip={t('wiki_add_child_page')}
@@ -125,7 +127,7 @@ export const WikiPageClient: FC<{ spaceKey: string; number: number }> = ({ space
               onPress={() => createModalState.open()}
             />
           )}
-          {access.canWrite && (
+          {access.canWrite && !isFlat && (
             <MultiButton
               isIconOnly
               tooltip={t('wiki_move_page')}
@@ -142,7 +144,7 @@ export const WikiPageClient: FC<{ spaceKey: string; number: number }> = ({ space
               icon={<TrashIcon />}
               onPress={() => deletePage(page, parentHref, reloadAll)}
             >
-              <ButtonGroup.Separator />
+              {!isFlat && <ButtonGroup.Separator />}
             </MultiButton>
           )}
           <ReloadButton // 編集中の下書きを消さないよう、画面を作り直さずに取り直す

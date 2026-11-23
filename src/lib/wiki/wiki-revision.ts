@@ -50,6 +50,9 @@ export type WriteWikiPageRevision = {
   restoredFromId?: string | null
   /** コミットメッセージ(正規化済み。空は null) */
   message?: string | null
+  /** action=deleted のときの、削除したページの作成日時と作成者(復元で戻す) */
+  pageCreatedAt?: Date | null
+  pageCreatedById?: string | null
 }
 
 /**

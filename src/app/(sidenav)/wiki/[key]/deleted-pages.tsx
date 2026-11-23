@@ -8,7 +8,7 @@ import { notify } from '@/components/notify'
 import { UpdatedBy } from '@/components/updated-by'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { useConfirmAction } from '@/lib/use-confirm-action'
-import { isWikiPageTypeAllowed } from '@/lib/wiki/wiki-rule'
+import { isFlatWikiSpace, isWikiPageTypeAllowed } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { useRouter } from 'next/navigation'
 import { FC, useState } from 'react'
@@ -64,6 +64,8 @@ export const DeletedPagesModal: FC<{ state: ReturnType<typeof useModalState<stri
   const pages = data?.pages ?? []
   // 設計書スペースへ通常ページは戻せない(サーバーでも弾く)
   const canRestore = (page: DeletedPage) => isWikiPageTypeAllowed(space.type, page.type)
+  // アナウンス用スペースは平らで、どのページもスペース直下に戻るので、元の親は示さない
+  const isFlat = isFlatWikiSpace(space.type)
 
   /**
    * 1 ページずつ順に戻し、既に戻されていた(一覧を開いた後に別の人が戻した)ページの数を返す。
@@ -89,7 +91,7 @@ export const DeletedPagesModal: FC<{ state: ReturnType<typeof useModalState<stri
 
   /** 元の親が削除されたまま(この一覧で未復元)なら、その親 */
   const deletedParentOf = (page: DeletedPage) =>
-    page.parent.state === 'deleted' && !restored.has(page.parent.pageId) ? page.parent : undefined
+    !isFlat && page.parent.state === 'deleted' && !restored.has(page.parent.pageId) ? page.parent : undefined
 
   const restore = (page: DeletedPage) => {
     const parent = deletedParentOf(page)
@@ -108,6 +110,7 @@ export const DeletedPagesModal: FC<{ state: ReturnType<typeof useModalState<stri
   /**
    * 配下ごと戻す対象(一覧の順)と、戻さない未復元のページの数。
    * 戻せない種類のページは、その配下ごと飛ばす(親が無いと配下はスペース直下へ入るため)。
+   * ただしアナウンス用スペースはどのページもスペース直下へ戻すので、配下は飛ばさない。
    * 復元済みのページは飛ばすが、その配下は対象にする
    */
   const restoreTargetsAt = (index: number): { targets: DeletedPage[]; excluded: number } => {
@@ -121,7 +124,9 @@ export const DeletedPagesModal: FC<{ state: ReturnType<typeof useModalState<stri
       }
       skipBelow = undefined
       if (!canRestore(page)) {
-        skipBelow = page.depth
+        if (!isFlat) {
+          skipBelow = page.depth
+        }
         excluded++
       } else if (!restored.has(page.pageId)) {
         targets.push(page)
@@ -191,7 +196,7 @@ export const DeletedPagesModal: FC<{ state: ReturnType<typeof useModalState<stri
                         </span>
                         <span className='text-muted shrink-0 font-mono text-xs'>{page.ref}</span>
                       </div>
-                      {page.depth === 0 && (
+                      {page.depth === 0 && !isFlat && (
                         <div className='text-muted truncate text-xs' title={parentLabel(page)}>
                           {parentLabel(page)}
                         </div>
@@ -201,7 +206,11 @@ export const DeletedPagesModal: FC<{ state: ReturnType<typeof useModalState<stri
                         <div // 無効のボタンには tooltip が出ないので、押せない理由を行に出す
                           className='text-warning text-xs'
                         >
-                          {t('msg_wiki_cannot_restore_regular_page')}
+                          {t(
+                            space.type === 'announcement'
+                              ? 'msg_wiki_cannot_restore_design_doc'
+                              : 'msg_wiki_cannot_restore_regular_page',
+                          )}
                         </div>
                       )}
                     </div>

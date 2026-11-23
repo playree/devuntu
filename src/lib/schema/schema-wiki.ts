@@ -5,6 +5,12 @@
 import { el } from '@/locale'
 import { z } from 'zod'
 import { MAX_TAG_NAME } from '../board/tag-rule'
+import { MAX_TEMPLATE_NAME } from '../board/ticket-template-rule'
+import {
+  MAX_WIKI_ANNOUNCEMENT_PAGE_SIZE,
+  WIKI_ANNOUNCEMENT_MONTH_PATTERN,
+  WIKI_ANNOUNCEMENT_YEAR_PATTERN,
+} from '../wiki/wiki-announcement-rule'
 import {
   MAX_WIKI_CONTENT,
   MAX_WIKI_PAGE_TAGS,
@@ -43,7 +49,7 @@ export const zWikiSpaceRole = z.enum(['viewer', 'editor', 'owner'])
 /** Prisma の WikiAssignRole と一致させる */
 export const zWikiAssignRole = z.enum(['viewer', 'editor'])
 /** Prisma の WikiSpaceType と一致させる */
-export const zWikiSpaceType = z.enum(['mixed', 'design_doc'])
+export const zWikiSpaceType = z.enum(['mixed', 'design_doc', 'announcement'])
 /** Prisma の WikiPageType と一致させる */
 export const zWikiPageType = z.enum(['page', 'design_doc'])
 
@@ -88,6 +94,8 @@ export const scCreateWikiPage = z.object({
   parentId: z.uuidv7().nullable(),
   title: zWikiTitle,
   type: zWikiPageType,
+  /** 本文と種類をこのテンプレートから作る(同じスペースのものに限る) */
+  templateId: z.uuidv7().optional(),
 })
 export type CreateWikiPage = z.infer<typeof scCreateWikiPage>
 
@@ -173,6 +181,48 @@ export const scUpdateWikiTag = z.object({
   color: zTagColor,
   order: zTagOrder,
 })
+
+/** テンプレートの名前はチケットテンプレートと同じ長さ・文言にする */
+export const zWikiTemplateName = z
+  .string()
+  .trim()
+  .min(1, el('@required_field'))
+  .max(MAX_TEMPLATE_NAME, el('@invalid_template_name'))
+
+/** テンプレートの編集フォーム。タイトルの雛形は空でもよい(作成時の入力のまま) */
+export const scWikiTemplateFields = z.object({
+  name: zWikiTemplateName,
+  title: z.string().trim().max(MAX_WIKI_TITLE, el('@invalid_wiki_title')).default(''),
+  content: z.string().max(MAX_WIKI_CONTENT, el('@invalid_content')).default(''),
+  type: zWikiPageType,
+})
+export type WikiTemplateFields = z.infer<typeof scWikiTemplateFields>
+export type WikiTemplateFieldsIn = z.input<typeof scWikiTemplateFields>
+
+export const scCreateWikiTemplate = scWikiTemplateFields.extend({ spaceId: z.uuidv7() })
+export type CreateWikiTemplate = z.infer<typeof scCreateWikiTemplate>
+
+export const scUpdateWikiTemplate = scWikiTemplateFields.extend({ id: z.uuidv7() })
+export type UpdateWikiTemplate = z.infer<typeof scUpdateWikiTemplate>
+
+/** 表示順で隣のテンプレートと入れ替える */
+export const scMoveWikiTemplate = z.object({
+  id: z.uuidv7(),
+  direction: z.enum(['up', 'down']),
+})
+
+/** アナウンスの一覧。`id` はスペース ID。月を指定すれば年より優先する */
+export const scWikiAnnouncementQuery = z.object({
+  id: z.uuidv7(),
+  month: z.string().regex(WIKI_ANNOUNCEMENT_MONTH_PATTERN).optional(),
+  year: z.string().regex(WIKI_ANNOUNCEMENT_YEAR_PATTERN).optional(),
+  tagId: z.uuidv7().optional(),
+  page: z.number().int().min(1),
+  rowsPerPage: z.number().int().min(1).max(MAX_WIKI_ANNOUNCEMENT_PAGE_SIZE),
+})
+
+/** アナウンスのバックナンバー。`id` はスペース ID。タグを渡すとそのタグを持つものだけを数える */
+export const scWikiAnnouncementArchive = z.object({ id: z.uuidv7(), tagId: z.uuidv7().optional() })
 
 /** `space` を省略すると、閲覧できる全スペース(アーカイブ済みを除く)を探す */
 export const scWikiSearch = z.object({

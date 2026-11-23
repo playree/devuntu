@@ -424,7 +424,8 @@ export const WikiPastRevisionNotice: FC<{ revisions: WikiPageRevisions; canWrite
         keep: retention?.keepRecent ?? '-',
         max: retention?.maxPerPage ?? '-',
       })}`}
-      {cannotRestore && `\n${t('msg_wiki_cannot_restore_regular_page')}`}
+      {cannotRestore &&
+        `\n${t(space.type === 'announcement' ? 'msg_wiki_cannot_restore_design_doc' : 'msg_wiki_cannot_restore_regular_page')}`}
     </NoticePanel>
   )
 }

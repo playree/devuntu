@@ -36,6 +36,9 @@ enum WikiSpaceType {
   mixed
   /// 設計書だけを置く。トップに設計書一覧を出す
   design_doc
+  /// アナウンス用。通常ページだけを平らに置き(親子・並べ替えなし)、作成日時の新しい順に並べる。
+  /// トップに新しい順の一覧と年月のバックナンバーを出す
+  announcement
 }
 
 /// Wiki ページの種類。表示と編集のしかたが変わる
@@ -93,6 +96,7 @@ model WikiSpace {
   tags        WikiTag[]
   revisions   WikiPageRevision[]
   attachments Attachment[]
+  templates   WikiTemplate[]
 
   @@map("wiki_space")
 }
@@ -214,6 +218,8 @@ model WikiPage {
   @@unique([spaceId, number])
   @@index([spaceId, parentId, order])
   @@index([parentId])
+  // アナウンス用スペースの新しい順の一覧と年月の集計
+  @@index([spaceId, createdAt])
   // 部分一致検索(ILIKE)を pg_trgm の GIN 索引で引く。拡張はマイグレーションで作る
   @@index([title(ops: raw("gin_trgm_ops"))], type: Gin, map: "wiki_page_title_trgm_idx")
   @@index([content(ops: raw("gin_trgm_ops"))], type: Gin, map: "wiki_page_content_trgm_idx")
@@ -310,6 +316,12 @@ model WikiPageRevision {
   /// action=restored のときの戻し元の版
   restoredFromId String?
 
+  /// action=deleted のとき、削除したページの作成日時と作成者。削除済みページの復元でそのまま戻す
+  /// (作成の版が保持期間や件数の上限で消えていても、作成日時で並ぶアナウンスを元の位置に戻すため)
+  pageCreatedAt   DateTime?
+  /// 作成者の User.id。退会しても版は残すので外部キーは張らない(戻すときに居なければ空にする)
+  pageCreatedById String?
+
   /// 保存時に付けたコミットメッセージ(任意)。付いた版は連続保存のまとめの対象にしない
   message String?
 
@@ -325,4 +337,41 @@ model WikiPageRevision {
   @@index([updatedAt])
   @@index([ticketId])
   @@map("wiki_page_revision")
+}
+
+/// ページ作成時にタイトル・種類・本文を埋めるスペースごとの雛形。
+/// 作成時に写すだけで、作成したページとの紐付けは持たない。種類はスペースの区分で作れるもの(isWikiPageTypeAllowed)に限る
+model WikiTemplate {
+  id String @id @default(uuid(7))
+
+  spaceId String
+  space   WikiSpace @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  /// テンプレート名。スペース内で一意(MCP の save_wiki_page でも名前で指定する)
+  name String
+
+  /// タイトルの雛形。空なら作成時の入力のまま
+  title String @default("")
+
+  /// 本文の雛形(Markdown)
+  content String @default("")
+
+  /// 作るページの種類
+  type WikiPageType @default(page)
+
+  /// スペース内の表示順。昇順。同値は name 昇順で安定させる
+  order Int @default(0)
+
+  createdById String?
+  createdBy   User?   @relation("WikiTemplateCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedById String?
+  updatedBy   User?   @relation("WikiTemplateUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // @@unique が (spaceId, ...) の先頭索引を兼ねる
+  @@unique([spaceId, name])
+  @@map("wiki_template")
 }

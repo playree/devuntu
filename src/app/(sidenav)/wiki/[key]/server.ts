@@ -9,8 +9,14 @@ import {
   scDeleteWikiPage,
   scMoveWikiPage,
   scReorderWikiPage,
+  scWikiAnnouncementArchive,
+  scWikiAnnouncementQuery,
   scWikiSpaceKey,
 } from '@/lib/schema/schema-wiki'
+import {
+  getWikiAnnouncementArchive as getWikiAnnouncementArchiveCore,
+  listWikiAnnouncements,
+} from '@/lib/wiki/wiki-announcement'
 import { getWikiDesignDocIndex as getWikiDesignDocIndexCore } from '@/lib/wiki/wiki-design-doc-index'
 import { designDocFrontMatter } from '@/lib/wiki/wiki-markdown'
 import {
@@ -28,6 +34,7 @@ import {
 } from '@/lib/wiki/wiki-revision'
 import { getWikiSpaceByKeyForManage } from '@/lib/wiki/wiki-space'
 import { createWikiTag as createWikiTagCore, listWikiTags } from '@/lib/wiki/wiki-tag'
+import { assertWikiTemplateFits, listWikiTemplateOptions, renderWikiTemplate } from '@/lib/wiki/wiki-template'
 
 /**
  * スペース内の画面(トップ・ページ・設定)で共通に使う Server Action。
@@ -38,7 +45,8 @@ const WEB = { via: 'web' } as const
 
 /**
  * スペースの情報と自分の権限、ツリー(本文なし)、タグ。サイドメニューのツリーとスペース内の画面で使う。
- * 割り当ての無い管理者は設定だけを開けるよう、ツリーとタグを空にして返す
+ * 割り当ての無い管理者は設定だけを開けるよう、ツリーとタグを空にして返す。
+ * アナウンス用スペースは増え続けるページを平らに置くので、ツリーは空にし、一覧は getWikiAnnouncements でページごとに引く
  */
 export const getWikiSpace = safeAuthAction
   .metadata({ actionName: 'getWikiSpace', role: 'user' })
@@ -46,26 +54,42 @@ export const getWikiSpace = safeAuthAction
   .action(async ({ ctx: { user }, parsedInput: { key } }) => {
     const { space, access } = await getWikiSpaceByKeyForManage(user, key)
     const [tree, tags] = access.canView
-      ? await Promise.all([getWikiTree(user, space.id), listWikiTags(space.id)])
+      ? await Promise.all([space.type === 'announcement' ? [] : getWikiTree(user, space.id), listWikiTags(space.id)])
       : [[], []]
     return { space, access, tree, tags }
   })
 export type GetWikiSpaceReturnType = Awaited<ReturnType<typeof getWikiSpace>>['data']
 
-/** ページの作成。親の子(親が無ければスペース直下)の末尾に置く。設計書は最小の front matter を入れて作る */
+/**
+ * ページの作成。親の子(親が無ければスペース直下)の末尾に置く。
+ * テンプレートを指定すると、種類と本文はテンプレートのもの(プレースホルダーを置き換える)にする。
+ * タイトルは画面がテンプレートから置き換えて入れたものを、入力のまま使う(置き換え直すと表示名の中の `{{date}}` なども置き換わるため)。
+ * 本文が空の設計書は最小の front matter を入れて作る(ビューアの設計書ヘッダになる)
+ */
 export const createWikiPage = safeAuthAction
   .metadata({ actionName: 'createWikiPage', role: 'user' })
   .inputSchema(scCreateWikiPage)
-  .action(
-    async ({ ctx: { user }, parsedInput: { spaceId, parentId, title, type } }) =>
-      await createWikiPageCore(user, WEB, spaceId, {
-        title,
-        parentId,
-        type,
-        // 設計書は最小の front matter から書き始める(ビューアの設計書ヘッダになる)
-        content: type === 'design_doc' ? designDocFrontMatter(title) : '',
-      }),
-  )
+  .action(async ({ ctx: { user }, parsedInput: { spaceId, parentId, title, type, templateId } }) => {
+    const template = templateId ? await renderWikiTemplate(user, spaceId, { id: templateId }) : null
+    // 画面から使うのはテンプレートの本文だけ(タイトルは入力欄の値)なので、本文の長さだけを確かめる
+    if (template) {
+      assertWikiTemplateFits(template.name, { content: template.content })
+    }
+    const pageType = template?.type ?? type
+    const content = template?.content ?? ''
+    return await createWikiPageCore(user, WEB, spaceId, {
+      title,
+      parentId,
+      type: pageType,
+      content: pageType === 'design_doc' && content === '' ? designDocFrontMatter(title) : content,
+    })
+  })
+
+/** ページ作成で選べるテンプレート(本文なし)。editor 以上かつ未アーカイブ。`id` はスペース ID */
+export const getWikiTemplateOptions = safeAuthAction
+  .metadata({ actionName: 'getWikiTemplateOptions', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => await listWikiTemplateOptions(user, id))
 
 /**
  * 移動。`afterId` の兄弟の直後へ置き、null なら先頭、省略で末尾。
@@ -170,4 +194,19 @@ export const restoreDeletedWikiPage = safeAuthAction
   .inputSchema(scUUID)
   .action(async ({ ctx: { user }, parsedInput: { id } }) =>
     restoreWikiPageRevisionCore(user, WEB, id, { deletedOnly: true }),
+  )
+
+/** アナウンス用スペースの一覧(作成日時の新しい順、1 ページ分と総件数)。年・月・タグで絞り込む */
+export const getWikiAnnouncements = safeAuthAction
+  .metadata({ actionName: 'getWikiAnnouncements', role: 'user' })
+  .inputSchema(scWikiAnnouncementQuery)
+  .action(async ({ ctx: { user }, parsedInput: { id, ...query } }) => await listWikiAnnouncements(user, id, query))
+export type GetWikiAnnouncementsReturnType = Awaited<ReturnType<typeof getWikiAnnouncements>>['data']
+
+/** アナウンス用スペースのバックナンバー(年月ごとの件数、新しい順)。`id` はスペース ID。タグで絞り込める */
+export const getWikiAnnouncementArchive = safeAuthAction
+  .metadata({ actionName: 'getWikiAnnouncementArchive', role: 'user' })
+  .inputSchema(scWikiAnnouncementArchive)
+  .action(
+    async ({ ctx: { user }, parsedInput: { id, tagId } }) => await getWikiAnnouncementArchiveCore(user, id, { tagId }),
   )

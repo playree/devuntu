@@ -23,12 +23,14 @@ import { useParams } from 'next/navigation'
 import { FC, useMemo, useState } from 'react'
 import { CreatePageModal, MovePageModal } from './page-modals'
 import { reorderWikiPage } from './server'
+import { WikiSideAnnouncements } from './side-announcements'
 import { useWikiSpace } from './space-context'
 import { WikiSpaceSwitcher } from './space-switcher'
 
 /**
  * サイドメニューに差し込むスペースのツリー。
- * 編集モード(editor 以上)では、各行に上下の並べ替えと「移動」を出す
+ * 編集モード(editor 以上)では、各行に上下の並べ替えと「移動」を出す。
+ * アナウンス用スペースは平らで増え続けるので、ツリーと並べ替えの代わりに最新のアナウンスとバックナンバーへのリンクを出す
  */
 export const WikiSideTree: FC = () => {
   const { t } = useLocale()
@@ -60,6 +62,7 @@ export const WikiSideTree: FC = () => {
   )
   const selectedId = tree.find((page) => String(page.number) === params.number)?.id ?? null
   const canEdit = access.canWrite && isEditMode
+  const isAnnouncement = space.type === 'announcement'
 
   const reorder = async (item: TreeViewItem, { index }: TreeViewItemPlace, delta: -1 | 1) => {
     setPendingId(item.id)
@@ -90,20 +93,22 @@ export const WikiSideTree: FC = () => {
                 size='sm'
                 variant='ghost'
                 className='size-7 min-w-7'
-                tooltip={t('wiki_add_page')}
+                tooltip={isAnnouncement ? t('wiki_new_announcement') : t('wiki_add_page')}
                 icon={<DocumentPlusIcon width={16} />}
                 onPress={() => createModalState.open()}
               />
-              <MultiButton
-                isIconOnly
-                size='sm'
-                variant={isEditMode ? 'primary' : 'ghost'}
-                className='size-7 min-w-7'
-                tooltip={t('wiki_reorder_mode')}
-                aria-pressed={isEditMode}
-                icon={<ArrowsUpDownIcon width={16} />}
-                onPress={() => setEditMode(!isEditMode)}
-              />
+              {!isAnnouncement && (
+                <MultiButton
+                  isIconOnly
+                  size='sm'
+                  variant={isEditMode ? 'primary' : 'ghost'}
+                  className='size-7 min-w-7'
+                  tooltip={t('wiki_reorder_mode')}
+                  aria-pressed={isEditMode}
+                  icon={<ArrowsUpDownIcon width={16} />}
+                  onPress={() => setEditMode(!isEditMode)}
+                />
+              )}
             </>
           )}
           {access.canManage && (
@@ -120,7 +125,7 @@ export const WikiSideTree: FC = () => {
         </span>
       </div>
 
-      {tree.length > 0 && (
+      {(isAnnouncement || tree.length > 0) && (
         <InputSearchField // 見出しのボタンを増やすとスペース名が読めなくなるので、ツリーの上に置く
           isSmart
           aria-label={t('wiki_search')}
@@ -134,7 +139,9 @@ export const WikiSideTree: FC = () => {
         />
       )}
 
-      {tree.length === 0 ? (
+      {isAnnouncement ? (
+        <WikiSideAnnouncements onNavigate={closeMenu} />
+      ) : tree.length === 0 ? (
         <p className='text-muted px-2 py-1 text-xs'>{t('msg_no_wiki_pages')}</p>
       ) : (
         <TreeView

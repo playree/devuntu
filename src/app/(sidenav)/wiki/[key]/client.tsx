@@ -8,18 +8,20 @@ import { ContentHeader } from '@/components/header'
 import { BookOpenIcon, Cog6ToothIcon, DocumentPlusIcon, TrashIcon } from '@/components/icon'
 import { ReloadButton } from '@/components/reload-button'
 import { WikiRoleChip, WikiSpaceTypeChip, WikiVisibilityChip } from '@/components/wiki-chip'
+import { type WikiAnnouncementFilter } from '@/lib/wiki/wiki-announcement-rule'
 import { useLocale } from '@/locale/client'
 import { ButtonGroup } from '@heroui/react'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
+import { WikiAnnouncementIndex } from './announcement-index'
 import { ChildPages } from './child-pages'
 import { DeletedPagesModal } from './deleted-pages'
 import { WikiDesignDocIndex } from './design-doc-index'
 import { CreatePageModal } from './page-modals'
 import { useWikiSpace } from './space-context'
 
-/** スペースのトップ。説明とスペース直下のページ(設計書スペースでは設計書一覧) */
-export const WikiSpaceTopClient: FC = () => {
+/** スペースのトップ。説明とスペース直下のページ(設計書スペースでは設計書一覧、アナウンス用スペースでは新しい順の一覧とバックナンバー) */
+export const WikiSpaceTopClient: FC<{ announcementFilter: WikiAnnouncementFilter }> = ({ announcementFilter }) => {
   const { t } = useLocale()
   const router = useRouter()
   const { space, access, tree, reloadSpace } = useWikiSpace()
@@ -32,7 +34,7 @@ export const WikiSpaceTopClient: FC = () => {
         {access.canWrite && (
           <MultiButton
             isIconOnly
-            tooltip={t('wiki_add_page')}
+            tooltip={space.type === 'announcement' ? t('wiki_new_announcement') : t('wiki_add_page')}
             icon={<DocumentPlusIcon />}
             onPress={() => createModalState.open()}
           />
@@ -74,6 +76,20 @@ export const WikiSpaceTopClient: FC = () => {
         <NoticePanel>{t('msg_wiki_manage_only')}</NoticePanel>
       ) : space.type === 'design_doc' ? (
         <WikiDesignDocIndex />
+      ) : space.type === 'announcement' ? (
+        <>
+          {access.canWrite && (
+            <MultiButton
+              size='sm'
+              className='self-start'
+              icon={<DocumentPlusIcon />}
+              onPress={() => createModalState.open()}
+            >
+              {t('wiki_new_announcement')}
+            </MultiButton>
+          )}
+          <WikiAnnouncementIndex filter={announcementFilter} />
+        </>
       ) : tree.length === 0 ? (
         <div className='flex flex-col items-start gap-2'>
           <p className='text-muted text-sm'>{t('msg_no_wiki_pages')}</p>

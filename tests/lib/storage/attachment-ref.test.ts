@@ -20,6 +20,7 @@ vi.mock('@/lib/prisma', async () =>
     boardNoteRevision: ['findMany', 'findFirst'],
     wikiPage: ['findMany', 'findFirst'],
     wikiPageRevision: ['findMany', 'findFirst'],
+    wikiTemplate: ['findMany', 'findFirst'],
     user: ['findMany', 'findFirst'],
     linkWidget: ['findMany', 'findFirst'],
   }),
@@ -43,6 +44,7 @@ beforeEach(() => {
   vi.mocked(prisma.boardNoteRevision.findMany).mockResolvedValue([] as never)
   vi.mocked(prisma.wikiPage.findMany).mockResolvedValue([] as never)
   vi.mocked(prisma.wikiPageRevision.findMany).mockResolvedValue([] as never)
+  vi.mocked(prisma.wikiTemplate.findMany).mockResolvedValue([] as never)
   vi.mocked(prisma.user.findMany).mockResolvedValue([] as never)
   vi.mocked(prisma.linkWidget.findMany).mockResolvedValue([] as never)
   for (const model of [
@@ -53,6 +55,7 @@ beforeEach(() => {
     prisma.boardNoteRevision,
     prisma.wikiPage,
     prisma.wikiPageRevision,
+    prisma.wikiTemplate,
     prisma.user,
     prisma.linkWidget,
   ]) {
@@ -113,6 +116,16 @@ describe('collectReferencedUploadKeys', () => {
     const keys = await collectReferencedUploadKeys()
 
     expect([...keys].sort()).toEqual([keyA, keyB].sort())
+  })
+
+  it('Wiki のページテンプレートの本文からも集める', async () => {
+    vi.mocked(prisma.wikiTemplate.findMany).mockResolvedValue([
+      { id: 't1', content: `![](${toUploadUrl(keyC)})` },
+    ] as never)
+
+    const keys = await collectReferencedUploadKeys()
+
+    expect([...keys]).toEqual([keyC])
   })
 
   it('子チケットの起票案の本文からも集める(承認されるとチケット本文になる)', async () => {
@@ -211,6 +224,11 @@ describe('findAttachmentReference', () => {
   it('Wiki ページの版の参照を見つける(削除済みページの版を含む)', async () => {
     vi.mocked(prisma.wikiPageRevision.findFirst).mockResolvedValue({ id: 'r1' } as never)
     expect(await findAttachmentReference(keyA)).toBe('wikiPage')
+  })
+
+  it('Wiki のページテンプレート本文の参照を見つける', async () => {
+    vi.mocked(prisma.wikiTemplate.findFirst).mockResolvedValue({ id: 't1' } as never)
+    expect(await findAttachmentReference(keyA)).toBe('wikiTemplate')
   })
 
   it('アバターの参照を見つける', async () => {

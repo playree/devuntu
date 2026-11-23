@@ -656,6 +656,12 @@ export const en: DefaultLocaleItems = {
   wiki_add_page: 'Add Page',
   wiki_add_space: 'Add Space',
   wiki_all_spaces: 'All Spaces',
+  wiki_announcement_all: 'All time',
+  wiki_announcement_archive: 'Archive',
+  wiki_announcement_count: '${count}',
+  wiki_announcement_latest: 'Latest announcements',
+  wiki_announcement_month: '${year}-${mm}',
+  wiki_announcement_year: '${year}',
   wiki_child_count: '${count} children',
   wiki_change_page_type: 'Change Type',
   wiki_child_pages: 'Child Pages',
@@ -679,6 +685,7 @@ export const en: DefaultLocaleItems = {
   wiki_discard_draft: 'Discard Draft',
   wiki_move: 'Move',
   wiki_move_page: 'Move Page',
+  wiki_new_announcement: 'New announcement',
   wiki_open_restored_page: 'Open the restored page',
   wiki_page_number: 'No.',
   wiki_page_ref: 'Page reference',
@@ -720,9 +727,11 @@ export const en: DefaultLocaleItems = {
   wiki_space_root: '${name} (top level)',
   wiki_space_settings: 'Space Settings',
   wiki_space_type: 'Space type',
+  wiki_space_type_announcement: 'Announcements',
   wiki_space_type_design_doc: 'Design docs',
   wiki_space_type_mixed: 'Mixed',
   wiki_switch_space: 'Switch Space',
+  wiki_template_title: 'Title template',
   wiki_tree: 'Wiki Tree',
   wiki_updated_by: 'Updated by ${name} at ${at}',
   wiki_visibility: 'Visibility',
@@ -910,6 +919,9 @@ Please copy and use the connection information above.
   msg_system_error: 'An error has occurred. Please try again later.',
   msg_validation_error: 'The input is invalid.',
   msg_widget_load_failed: 'Could not load. Please reload after a while.',
+  msg_wiki_announcement_flat:
+    'Pages in an announcement space cannot have parents and cannot be reordered or moved (they are listed newest first).',
+  msg_wiki_announcements_load_failed: 'Failed to load the announcements. Reload to try again.',
   msg_no_matching_assignees: 'No matching assignees.',
   msg_no_matching_tickets: 'No matching tickets.',
   msg_no_matching_users: 'No matching users.',
@@ -920,6 +932,7 @@ Please copy and use the connection information above.
     'Choosing a template on the ticket creation form fills in the content, acceptance criteria, tags and priority (you can edit them before creating). MCP returns them in get_board and accepts templateId in create_ticket.',
   msg_no_criteria: 'No acceptance criteria',
   msg_no_tickets: 'No tickets.',
+  msg_no_wiki_announcements: 'No announcements.',
   msg_no_wiki_boards: 'No boards are assigned.',
   msg_no_wiki_design_docs: 'No design docs yet.',
   msg_no_wiki_groups: 'No groups are assigned.',
@@ -960,6 +973,7 @@ Please copy and use the connection information above.
   msg_user_not_exist: 'User does not exist.',
   msg_wiki_board_assign:
     'Members of the board (direct or via groups) can use this space with the chosen role. You can assign boards you belong to.',
+  msg_wiki_cannot_restore_design_doc: 'Design docs cannot be restored to an announcement space.',
   msg_wiki_cannot_restore_regular_page: 'Regular pages cannot be restored to a design doc space.',
   msg_wiki_deleted_pages_hint:
     'Deleted pages can be restored only for ${days} days after deletion. Restoring them from the top puts them back in their original hierarchy (a page that would exceed the depth limit under its original parent goes to the top level).',
@@ -972,10 +986,12 @@ Please copy and use the connection information above.
   msg_wiki_message_not_saved: 'Nothing changed, so the commit message was not kept.',
   msg_wiki_page_already_restored: '${target} had already been restored, so it was left unchanged.',
   msg_wiki_page_conflict: 'Someone else saved this page after you started editing. Your draft is kept.',
+  msg_wiki_page_from_template: 'The type and content come from the template.',
   msg_wiki_page_has_children: 'The page has child pages. Delete it together with its descendants.',
   msg_wiki_page_invalid_parent: 'The page cannot be moved there (not under itself, its descendants, or another space).',
   msg_wiki_page_too_deep: 'Pages can be nested at most 10 levels deep.',
-  msg_wiki_page_type_not_allowed: 'Only design docs can be created in a design doc space.',
+  msg_wiki_page_type_not_allowed:
+    'This type of page is not allowed in this space (a design doc space only holds design docs, an announcement space only normal pages).',
   msg_wiki_pages_already_restored: '${count} pages had already been restored, so they were left unchanged.',
   msg_wiki_restore_excluded_pages:
     ' Regular pages, which cannot be restored to a design doc space, and their descendants (${count} pages) are not restored.',
@@ -992,12 +1008,20 @@ Please copy and use the connection information above.
   msg_wiki_search_hint: 'Enter keywords or choose tags. Words of two characters or fewer may take longer to search.',
   msg_wiki_search_limit: 'Up to ${max} results are shown. If you cannot find the page, add words or filter by tags.',
   msg_wiki_space_archived: 'This space is archived and read-only.',
+  msg_wiki_space_cannot_be_announcement:
+    'The space has pages with child pages, design docs, or design doc templates, so it cannot be an announcement space. Move child pages to the top level and delete the design docs or change them to normal pages first.',
   msg_wiki_space_has_normal_pages:
     'The space has normal pages, so it cannot be a design doc space. Delete them or change their type to design doc first.',
+  msg_wiki_space_has_normal_templates:
+    'The space has normal page templates, so it cannot be a design doc space. Delete them or change their type to design doc first.',
   msg_wiki_space_key: 'Pages are referenced as KEY/number (e.g. DOCS/12). The key cannot be changed later.',
   msg_wiki_space_no_owner: 'A space needs at least one owner. Assign another owner first.',
   msg_wiki_space_type:
-    'With "Design docs", only design docs can be created and the space top shows the list of design docs. A space with normal pages cannot be changed to it.',
+    'With "Design docs", only design docs can be created and the space top shows the list of design docs (not available while the space has normal pages or normal page templates). With "Announcements", normal pages are listed flat, newest first, and the space top shows the list and the archive (not available while the space has child pages or design docs).',
+  msg_wiki_template_desc:
+    "Choose a template when creating a page to fill in its title, type and content. {{date}} (YYYY-MM-DD), {{month}} (YYYY-MM) and {{user}} (the creator's display name) are replaced on creation, using the creator's time zone. Templates can also be used by name with template in the MCP tool save_wiki_page.",
+  msg_wiki_template_too_long:
+    'After replacing placeholders such as {{user}}, the template title or content exceeds the maximum length. Shorten the template.',
   msg_wiki_tree_changed:
     'The page tree was changed by someone else, so nothing was done. The tree has been refreshed; check it and try again.',
   msg_wiki_visibility:

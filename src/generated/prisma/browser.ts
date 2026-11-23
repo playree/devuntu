@@ -430,3 +430,9 @@ export type WikiPageTag = Prisma.WikiPageTagModel
  * 1ページあたり WIKI_REVISION_MAX_PER_PAGE を超えた分は書き込み時に消す
  */
 export type WikiPageRevision = Prisma.WikiPageRevisionModel
+/**
+ * Model WikiTemplate
+ * ページ作成時にタイトル・種類・本文を埋めるスペースごとの雛形。
+ * 作成時に写すだけで、作成したページとの紐付けは持たない。種類はスペースの区分で作れるもの(isWikiPageTypeAllowed)に限る
+ */
+export type WikiTemplate = Prisma.WikiTemplateModel

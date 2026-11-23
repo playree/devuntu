@@ -218,14 +218,14 @@ AI から Wiki のページを探して読み、書けるようにする6ツー�
 everyone は全員に公開する文書として作るものなので、エージェントだけを外すことはしない(読ませたくない文書は restricted のスペースに置く)。
 スペースの作成・設定・割り当て、タグの作成、版の復元は画面で行う。
 
-| ツール             | 用途                                                                                                            | 入力                                                                                                                                     |
-| ------------------ | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `list_wiki_spaces` | 閲覧できるスペースの一覧(キー・名前・説明・公開範囲・区分・自分のロール・書き込めるか)                          | `includeArchived`(任意)                                                                                                                  |
-| `get_wiki_tree`    | スペースのページの階層(ref・タイトル・タグだけ。本文なし)                                                       | `space` / `root` / `depth`                                                                                                               |
-| `search_wiki`      | 閲覧できるページを検索し、ref・タイトル・パンくず・タグ・一致箇所の抜粋を返す                                   | `keyword` / `space` / `tags` / `limit`                                                                                                   |
-| `get_wiki_page`    | ページを読む(種類・本文・パンくず・子ページ・タグ・`updatedAt`・貼られた添付のキー)。`section` で節だけを読める | `ref` / `section`                                                                                                                        |
-| `save_wiki_page`   | `ref` が無ければ作成、あれば渡した項目だけを更新する。`edits` で部分更新、`parent` / `position` で移動する      | `ref` / `space` / `title` / `content` / `type` / `edits` / `parent` / `position` / `tags` / `expectedUpdatedAt` / `ticketId` / `message` |
-| `delete_wiki_page` | ページを削除する。子孫を持つページは `recursive: true` のときだけ配下ごと消す(エージェントは不可)               | `ref` / `recursive` / `ticketId`                                                                                                         |
+| ツール             | 用途                                                                                                            | 入力                                                                                                                                                  |
+| ------------------ | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `list_wiki_spaces` | 閲覧できるスペースの一覧(キー・名前・説明・公開範囲・区分・自分のロール・書き込めるか)                          | `includeArchived`(任意)                                                                                                                               |
+| `get_wiki_tree`    | スペースのページの階層(ref・タイトル・タグだけ。本文なし)と、書けるならページテンプレートの名前と種類           | `space` / `root` / `depth`                                                                                                                            |
+| `search_wiki`      | 閲覧できるページを検索し、ref・タイトル・パンくず・タグ・一致箇所の抜粋を返す                                   | `keyword` / `space` / `tags` / `limit`                                                                                                                |
+| `get_wiki_page`    | ページを読む(種類・本文・パンくず・子ページ・タグ・`updatedAt`・貼られた添付のキー)。`section` で節だけを読める | `ref` / `section`                                                                                                                                     |
+| `save_wiki_page`   | `ref` が無ければ作成、あれば渡した項目だけを更新する。`edits` で部分更新、`parent` / `position` で移動する      | `ref` / `space` / `title` / `content` / `type` / `template` / `edits` / `parent` / `position` / `tags` / `expectedUpdatedAt` / `ticketId` / `message` |
+| `delete_wiki_page` | ページを削除する。子孫を持つページは `recursive: true` のときだけ配下ごと消す(エージェントは不可)               | `ref` / `recursive` / `ticketId`                                                                                                                      |
 
 - ページは `ref`(`<スペースキー>/<番号>`、例: `DOCS/12`)で指定する。番号はスペース内の連番で、改名や移動では変わらない。
   キーは大文字小文字を問わない
@@ -236,12 +236,19 @@ everyone は全員に公開する文書として作るものなので、エー�
   (子見出しを含む)を返す。ATX 形式(`#`〜`######`)だけを見て、コードブロック内の `#` と、設計書の先頭の front matter の中の `#`(YAML のコメント)は見出しにしない。
   見つからなければ見出しの一覧を添えたエラーにする
 - `get_wiki_tree` は兄弟の並び順の入れ子で返す。`root` を渡すとその子孫だけ(`root` 自身は `root` 項目に分ける)、
-  `depth` を渡すとその段数まで返し、それより深い子は `childCount` だけを返す
+  `depth` を渡すとその段数まで返し、それより深い子は `childCount` だけを返す。
+  アナウンス用スペースでは、作成日時の新しい順の平らな一覧(`ref` / `title` / `tags` / `createdAt`)を新しいものから 200 件(`MAX_WIKI_ANNOUNCEMENT_TREE`)まで返し、`space.type` に `announcement` を添える。
+  `totalPages` は総件数で、上限で打ち切ったときは `limitReached: true` を付ける(古いものは `search_wiki` で探す)。`depth` は使わず、`root` を渡すと入力不正にする。
+  書けるスペースにページテンプレートがあれば、`templates`(`[{ name, type }]`、表示順)を添える(0件か書けなければ項目ごと省く)
 - `search_wiki` の条件と並び順は画面の検索と同じ(全語の AND、タイトル一致 → 更新日時の新しい順)。`keyword` か `tags` のどちらかが要る。
   `tags` はどれかを持つページに絞り、タグ名は `keyword` でのタグ名の照合と同じく大文字小文字を問わない。
   `limit` の件数(既定20、最大50)まで返したときは `limitReached: true` を付ける
 - `save_wiki_page`
   - 作成は `space` と `title` が必須。`parent`(同じスペースのページの ref)・`position`・`tags` も同じトランザクションで反映する
+  - 作成で `template`(`get_wiki_tree` の `templates` の名前)を渡すと、省いた `title` / `content` / `type` をテンプレートで埋める(渡したものが優先)。
+    テンプレートの `{{date}}` / `{{month}}` / `{{user}}` は画面と同じく作成者の設定で置き換える(明示した `title` / `content` は置き換えない)。テンプレートにタイトルが無ければ `title` が要る。
+    テンプレートから採った項目が置き換えた結果で最大長を超えたら `WIKI_TEMPLATE_TOO_LONG`(明示した `title` / `content` で置き換える項目の長さは見ない)。
+    無い名前は既存のテンプレート名を添えたエラーにする。更新(`ref` あり)では受け付けない
   - 更新で `content` を渡すと本文を丸ごと置き換え、`edits`(`[{ oldText, newText }]`、50件まで)を渡すと順に置き換える。
     `oldText` は本文にちょうど1回だけ現れなければならず、0回・複数回なら何番目の edit かを書いたエラーにする(2件見つかった時点で数えるのをやめ、件数は書かない)。`content` と同時には渡せない
   - `edits` を渡したときは、`expectedUpdatedAt` が無くても、edits を当てた本文を読んだ時点の `updatedAt` で楽観ロックをかける
@@ -256,6 +263,9 @@ everyone は全員に公開する文書として作るものなので、エー�
   - description で、markdown-design-doc スキルで書くよう促す。人の経路では、スキルが無ければ `get_skill_install_guide` で入れられることを利用者に提案させる
   - 設計書スペース(区分 `type` が `design_doc`)では、作成で `type` を省くと本文によらず `design_doc` にする。
     `type: page` での作成・更新と、通常ページの版の復元は `WIKI_PAGE_TYPE_NOT_ALLOWED` のエラーにする
+  - アナウンス用スペース(区分 `type` が `announcement`)はページが平らで、並びは作成日時で決まる。
+    作成での `parent`(null 以外)・`position` と、更新での `parent` / `position`(移動)は `WIKI_ANNOUNCEMENT_FLAT`、`type: design_doc` は `WIKI_PAGE_TYPE_NOT_ALLOWED` のエラーにする。
+    内容と移動を一度に渡したときも、内容を書く前に弾く(内容だけが保存された状態を残さない)
   - `tags` はページのタグを丸ごと置き換える。スペースに既にあるタグの**名前**で渡し、無い名前は作らずに既存のタグ名を添えたエラーにする
     (AI に表記ゆれのタグを増やさせない)
   - 応答は `result`(`created` / `updated` / `moved` / `updated+moved` / `unchanged`)・`ref`・`url`・`updatedAt`

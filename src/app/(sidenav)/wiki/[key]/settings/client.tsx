@@ -11,6 +11,7 @@ import { ContentHeader } from '@/components/header'
 import {
   ArrowLeftCircleIcon,
   Cog6ToothIcon,
+  DocumentDuplicateIcon,
   ExclamationTriangleIcon,
   InformationCircleIcon,
   TagIcon,
@@ -45,6 +46,7 @@ import {
   upsertWikiSpaceMember,
 } from './server'
 import { WikiSpaceProfile } from './space-profile'
+import { WikiSpaceTemplates } from './space-templates'
 
 const defaultExpandedKeys = new Set(['wiki_space_profile', 'wiki_space_members'])
 
@@ -208,6 +210,10 @@ export const WikiSpaceSettingsClient: FC = () => {
               }}
             />
           )}
+        </AccordionSection>
+
+        <AccordionSection id='wiki_space_templates' icon={<DocumentDuplicateIcon />} title={t('ticket_template')}>
+          <WikiSpaceTemplates space={space} />
         </AccordionSection>
 
         <AccordionSection

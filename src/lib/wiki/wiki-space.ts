@@ -23,9 +23,11 @@ import {
   evaluateWikiAccess,
   MAX_WIKI_SPACE_DESCRIPTION,
   MAX_WIKI_SPACE_NAME,
+  WIKI_SPACE_CANNOT_BE_ANNOUNCEMENT,
   WIKI_SPACE_HAS_NORMAL_PAGES,
   WIKI_SPACE_KEY_PATTERN,
 } from './wiki-rule'
+import { WIKI_SPACE_HAS_NORMAL_TEMPLATES } from './wiki-template-rule'
 
 export type WikiSpaceInput = {
   key: string
@@ -44,6 +46,19 @@ const errHasNormalPages = (count: number) =>
   new ClientError(
     WIKI_SPACE_HAS_NORMAL_PAGES,
     `The space has ${count} normal page(s). Delete them or change them to design docs before making it a design doc space`,
+  )
+
+const errHasNormalTemplates = (count: number) =>
+  new ClientError(
+    WIKI_SPACE_HAS_NORMAL_TEMPLATES,
+    `The space has ${count} normal page template(s). Delete them or change them to design docs before making it a design doc space`,
+  )
+
+const errCannotBeAnnouncement = (counts: { nested: number; designDocs: number; designDocTemplates: number }) =>
+  new ClientError(
+    WIKI_SPACE_CANNOT_BE_ANNOUNCEMENT,
+    `The space has ${counts.nested} child page(s), ${counts.designDocs} design doc(s) and ${counts.designDocTemplates} design doc template(s). ` +
+      'Announcement spaces only hold flat normal pages: move the child pages to the top level and delete or convert the design docs first',
   )
 
 const assertName = (name: string) => {
@@ -108,8 +123,9 @@ export const createWikiSpace = async (actor: Actor, input: WikiSpaceInput) => {
 
 /**
  * 名前・説明・公開範囲・区分の変更。undefined の項目はそのまま残す。
- * 設計書スペースにできるのは通常ページが無いときだけ。ページの書き込みはスペース行のロックを取ってから区分を読むので、
- * 同じロックを取ってから数える
+ * 設計書スペースにできるのは通常ページ(と通常ページのテンプレート)が無いときだけ。
+ * アナウンス用スペースにできるのは、子を持つページ・設計書ページ・設計書のテンプレートが無いときだけ(ページを平らに置くため)。
+ * ページとテンプレートの書き込みはスペース行のロックを取ってから区分を読むので、同じロックを取ってから数える
  */
 export const updateWikiSpace = async (actor: Actor, spaceId: string, patch: Partial<Omit<WikiSpaceInput, 'key'>>) => {
   if (patch.name !== undefined) {
@@ -123,6 +139,20 @@ export const updateWikiSpace = async (actor: Actor, spaceId: string, patch: Part
       const normalPages = await tx.wikiPage.count({ where: { spaceId, type: 'page' } })
       if (normalPages > 0) {
         throw errHasNormalPages(normalPages)
+      }
+      const normalTemplates = await tx.wikiTemplate.count({ where: { spaceId, type: 'page' } })
+      if (normalTemplates > 0) {
+        throw errHasNormalTemplates(normalTemplates)
+      }
+    }
+    if (patch.type === 'announcement' && access.type !== 'announcement') {
+      const [nested, designDocs, designDocTemplates] = await Promise.all([
+        tx.wikiPage.count({ where: { spaceId, parentId: { not: null } } }),
+        tx.wikiPage.count({ where: { spaceId, type: 'design_doc' } }),
+        tx.wikiTemplate.count({ where: { spaceId, type: 'design_doc' } }),
+      ])
+      if (nested + designDocs + designDocTemplates > 0) {
+        throw errCannotBeAnnouncement({ nested, designDocs, designDocTemplates })
       }
     }
     return tx.wikiSpace.update({

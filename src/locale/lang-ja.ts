@@ -655,6 +655,12 @@ export const ja: DefaultLocaleItems = {
   wiki_add_page: 'ページを作成',
   wiki_add_space: 'スペースを作成',
   wiki_all_spaces: 'すべてのスペース',
+  wiki_announcement_all: 'すべての期間',
+  wiki_announcement_archive: 'バックナンバー',
+  wiki_announcement_count: '${count}件',
+  wiki_announcement_latest: '最新のアナウンス',
+  wiki_announcement_month: '${year}年${month}月',
+  wiki_announcement_year: '${year}年',
   wiki_child_count: '子 ${count}',
   wiki_change_page_type: '種類の変更',
   wiki_child_pages: '子ページ',
@@ -678,6 +684,7 @@ export const ja: DefaultLocaleItems = {
   wiki_discard_draft: '下書きの破棄',
   wiki_move: '移動',
   wiki_move_page: 'ページを移動',
+  wiki_new_announcement: '新しいアナウンス',
   wiki_open_restored_page: '復元したページを開く',
   wiki_page_number: '番号',
   wiki_page_ref: 'ページの指定',
@@ -719,9 +726,11 @@ export const ja: DefaultLocaleItems = {
   wiki_space_root: '${name}(スペース直下)',
   wiki_space_settings: 'スペース設定',
   wiki_space_type: '区分',
+  wiki_space_type_announcement: 'アナウンス',
   wiki_space_type_design_doc: '設計書',
   wiki_space_type_mixed: '混合',
   wiki_switch_space: 'スペースを切り替え',
+  wiki_template_title: 'タイトルの雛形',
   wiki_tree: 'Wikiツリー',
   wiki_updated_by: '${name} が ${at} に更新',
   wiki_visibility: '公開範囲',
@@ -908,6 +917,9 @@ export const ja: DefaultLocaleItems = {
   msg_system_error: 'エラーが発生しました。時間をおいてからお試しください。',
   msg_validation_error: '入力内容が正しくありません。',
   msg_widget_load_failed: '取得できませんでした。時間をおいてリロードしてください。',
+  msg_wiki_announcement_flat:
+    'アナウンス用スペースのページは親子にできず、並べ替え・移動もできません(作成日時の新しい順に並びます)。',
+  msg_wiki_announcements_load_failed: 'アナウンスを読み込めませんでした。リロードしてください。',
   msg_no_matching_assignees: '該当する担当者がありません。',
   msg_no_matching_tickets: '該当するチケットがありません。',
   msg_no_matching_users: '該当するユーザーがありません。',
@@ -918,6 +930,7 @@ export const ja: DefaultLocaleItems = {
     'チケット作成画面でテンプレートを選ぶと、本文・受け入れ条件・タグ・優先度が入力されます(作成前に編集できます)。MCP の get_board で一覧を返し、create_ticket の templateId で指定できます。',
   msg_no_criteria: '受け入れ条件はありません',
   msg_no_tickets: 'チケットがありません。',
+  msg_no_wiki_announcements: 'アナウンスはありません。',
   msg_no_wiki_boards: '割り当てられたボードはありません。',
   msg_no_wiki_design_docs: '設計書はまだありません。',
   msg_no_wiki_groups: '割り当てられたグループはありません。',
@@ -956,6 +969,7 @@ export const ja: DefaultLocaleItems = {
   msg_user_not_exist: 'ユーザーが存在しません。',
   msg_wiki_board_assign:
     'ボードのメンバー(直接・グループ経由)が、選んだロールでこのスペースを使えます。割り当てられるのは、あなたが参加しているボードです。',
+  msg_wiki_cannot_restore_design_doc: 'アナウンス用スペースには設計書を戻せません。',
   msg_wiki_cannot_restore_regular_page: '設計書スペースには通常のページを戻せません。',
   msg_wiki_deleted_pages_hint:
     '削除したページを復元できるのは、削除から ${days} 日のあいだだけです。上から順に復元すると、元の親子関係に戻ります(元の親の下で階層の上限を超えるページは、スペース直下に戻ります)。',
@@ -968,10 +982,12 @@ export const ja: DefaultLocaleItems = {
   msg_wiki_message_not_saved: '内容に変更が無いため、コミットメッセージは残りませんでした。',
   msg_wiki_page_already_restored: '${target} は既に復元されていたため、変更していません。',
   msg_wiki_page_conflict: '編集を始めた後に、他の人がこのページを保存しました。下書きは残っています。',
+  msg_wiki_page_from_template: '種類と本文はテンプレートのものになります。',
   msg_wiki_page_has_children: '子ページがあるため削除できません。配下ごと削除してください。',
   msg_wiki_page_invalid_parent: 'そのページの下には移動できません(自分自身・子孫・別のスペースは選べません)。',
   msg_wiki_page_too_deep: '階層が深すぎます(10階層まで)。',
-  msg_wiki_page_type_not_allowed: '設計書スペースでは、通常のページは作れません(設計書だけです)。',
+  msg_wiki_page_type_not_allowed:
+    'このスペースの区分では、この種類のページは作れません(設計書スペースは設計書だけ、アナウンス用スペースは通常のページだけです)。',
   msg_wiki_pages_already_restored: '${count} ページは既に復元されていたため、変更していません。',
   msg_wiki_restore_excluded_pages: '設計書スペースに戻せない通常のページとその配下(${count} ページ)は、復元しません。',
   msg_wiki_restore_parent_still_deleted:
@@ -989,12 +1005,20 @@ export const ja: DefaultLocaleItems = {
   msg_wiki_search_limit:
     '検索結果は最大${max}件まで表示します。見つからないときは語を増やすか、タグで絞り込んでください。',
   msg_wiki_space_archived: 'このスペースはアーカイブされているため、閲覧のみです。',
+  msg_wiki_space_cannot_be_announcement:
+    '子ページを持つページ、設計書ページ、または種類が設計書のテンプレートがあるため、アナウンス用スペースにできません。子ページをスペース直下へ移し、設計書を削除するか通常のページに変えてください。',
   msg_wiki_space_has_normal_pages:
     '通常のページがあるため、設計書スペースにできません。通常のページを削除するか、種類を設計書に変えてください。',
+  msg_wiki_space_has_normal_templates:
+    '種類が通常ページのテンプレートがあるため、設計書スペースにできません。テンプレートを削除するか、種類を設計書に変えてください。',
   msg_wiki_space_key: 'ページは「キー/番号」(例: DOCS/12)で指定します。キーは作成後に変更できません。',
   msg_wiki_space_no_owner: 'owner が1人もいなくなる変更はできません。先に別の owner を割り当ててください。',
   msg_wiki_space_type:
-    '「設計書」にすると、作れるページは設計書だけになり、スペースのトップに設計書一覧を表示します。通常のページがあるスペースは「設計書」にできません。',
+    '「設計書」にすると、作れるページは設計書だけになり、スペースのトップに設計書一覧を表示します(通常のページや、種類が通常ページのテンプレートがあると選べません)。「アナウンス」にすると、通常のページを親子なしで作成日時の新しい順に並べ、トップに一覧とバックナンバーを表示します(子ページを持つページや設計書があると選べません)。',
+  msg_wiki_template_desc:
+    'ページの作成画面でテンプレートを選ぶと、タイトル・種類・本文が入力されます。{{date}}(作成日 YYYY-MM-DD)・{{month}}(YYYY-MM)・{{user}}(作成者の表示名)は作成時に置き換わります(日付は作成者のタイムゾーン)。MCP の save_wiki_page でも template に名前を指定して使えます。',
+  msg_wiki_template_too_long:
+    'テンプレートの {{user}} などを置き換えると、タイトルか本文が最大の長さを超えます。テンプレートを短くしてください。',
   msg_wiki_tree_changed:
     '他の人の操作でページの構成が変わっていたため、実行しませんでした。ツリーを更新したので、確認してからもう一度操作してください。',
   msg_wiki_visibility:
