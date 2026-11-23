@@ -443,17 +443,35 @@ export const updateWikiPage = async (
   return outcome
 }
 
+/** 移動先の兄弟の中の位置(自分を除いた並びでの番号)。`afterId` があればその直後で、兄弟にいなければ弾く */
+const positionOf = (
+  siblingIds: readonly string[],
+  pageId: string,
+  { position, afterId }: { position?: number; afterId?: string },
+): number | undefined => {
+  if (afterId === undefined) {
+    return position
+  }
+  const at = siblingIds.filter((id) => id !== pageId).indexOf(afterId)
+  if (at < 0) {
+    throw errTreeChanged()
+  }
+  return at + 1
+}
+
 /**
  * 親・兄弟内の位置の変更。自分自身や子孫の下へは移せず、移した後の部分木が深さの上限を超えるなら弾く。
  * 同じ親の中での並べ替えもこれで行う。`parentId` を省略すると、ロックを取った後に読んだ今の親のまま並べ替える。
  * `expectedPlace` は呼び出し側が見ていた親と兄弟の並び(自分を含む)で、今と違えば(他の人が別の親へ移した・兄弟を増減や並べ替えしたなら)弾く。
+ * `afterId` を渡すと `position` の代わりに、ロックを取った後の移動先の兄弟の並びでそのページの直後へ置く(呼び出し側が見ていた番号は、
+ * 兄弟が増減するとずれるため)。そのページが移動先の兄弟にいなければ(別の親へ移された・消された)弾く。
  * 動かしたページも押し出された兄弟と同じく、更新日時と更新者を変えない(移動した人と時刻は moved の版に残る)
  */
 export const moveWikiPage = async (
   actor: Actor,
   writer: WikiWriter,
   pageId: string,
-  target: { parentId?: string | null; position?: number },
+  target: { parentId?: string | null; position?: number; afterId?: string },
   opts: ExpectOpts & { expectedPlace?: { parentId: string | null; siblingIds: readonly string[] } } = {},
 ): Promise<WikiPageWriteResult> => {
   const expected = parseExpectedUpdatedAt(opts.expectedUpdatedAt)
@@ -498,7 +516,7 @@ export const moveWikiPage = async (
 
     // 保存されている order は隙間や同値を含みうるので、変化の有無は兄弟の並び(id の列)で比べる
     const current = siblingIdsOf(rows, parentId)
-    const ordered = placeInSiblings(current, pageId, target.position)
+    const ordered = placeInSiblings(current, pageId, positionOf(current, pageId, target))
     if (parentId === existing.parentId && ordered.every((id, i) => current[i] === id)) {
       return { result: 'unchanged' as const, id: pageId, ref, number: existing.number, updatedAt: existing.updatedAt }
     }

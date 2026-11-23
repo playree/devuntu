@@ -158,6 +158,8 @@ export const MovePageModal: FC<ModalBaseProps & { page: { id: string; title: str
   const afterIndex = siblings.findIndex((item) => item.id === positionKey)
   const position =
     positionKey === FIRST_KEY ? 0 : positionKey === LAST_KEY || afterIndex < 0 ? undefined : afterIndex + 1
+  // サーバーへは番号ではなく基準の兄弟を送る。開いた後に兄弟が増減しても、選んだページの直後に入る
+  const afterId = positionKey === FIRST_KEY ? null : afterIndex < 0 ? undefined : positionKey
   // サーバーと同じく、並べた結果の id の列で比べる(末尾のページで「末尾」を選んだときなども変化なしになる)
   const isUnchanged =
     parentId === currentParentId &&
@@ -166,7 +168,7 @@ export const MovePageModal: FC<ModalBaseProps & { page: { id: string; title: str
   const submit = async () => {
     setPending(true)
     try {
-      const res = await parseAction(moveWikiPage({ id: page.id, parentId, position }))
+      const res = await parseAction(moveWikiPage({ id: page.id, parentId, afterId }))
       // 開いた後に別の操作で同じ位置へ動いていれば unchanged が返る。動かしていないので通知しない
       if (res.result === 'moved') {
         notify.success(t('msg_moved_target', { target: page.title }))
@@ -176,6 +178,10 @@ export const MovePageModal: FC<ModalBaseProps & { page: { id: string; title: str
     } catch (e) {
       if (!(e instanceof ClientError)) {
         throw e
+      }
+      // 選んだ「◯◯ の後」のページが移された・消された。取り直して、開いたまま選び直してもらう
+      if (e.errorType === WIKI_TREE_CHANGED) {
+        reload()
       }
     } finally {
       setPending(false)

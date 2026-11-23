@@ -67,13 +67,16 @@ export const createWikiPage = safeAuthAction
       }),
   )
 
-/** 移動・並べ替え */
+/**
+ * 移動。`afterId` の兄弟の直後へ置き、null なら先頭、省略で末尾。
+ * そのページが移動先の兄弟にいなければ(画面を開いた後に移された・消された)WIKI_TREE_CHANGED で弾く
+ */
 export const moveWikiPage = safeAuthAction
   .metadata({ actionName: 'moveWikiPage', role: 'user' })
   .inputSchema(scMoveWikiPage)
   .action(
-    async ({ ctx: { user }, parsedInput: { id, parentId, position } }) =>
-      await moveWikiPageCore(user, WEB, id, { parentId, position }),
+    async ({ ctx: { user }, parsedInput: { id, parentId, afterId } }) =>
+      await moveWikiPageCore(user, WEB, id, afterId === null ? { parentId, position: 0 } : { parentId, afterId }),
   )
 
 /** 同じ親の中での並べ替え。画面で見ていた親・兄弟の並びが今と違えば WIKI_TREE_CHANGED で弾く */
