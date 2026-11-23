@@ -59,7 +59,11 @@ const errTooManyScheduled = () =>
   )
 
 /** 流量制限で通知キューへ投入できなかった(予約は残して次の周で送る) */
-class AnnounceThrottled extends Error {}
+class AnnounceThrottled extends Error {
+  constructor(readonly senderId: string) {
+    super('wiki announcement throttled')
+  }
+}
 
 const NOTIFY_SELECT = {
   id: true,
@@ -103,7 +107,8 @@ const payloadOf = (
   notify: { kind: WikiAnnouncementNotifyKind; message: string | null },
   fromName: string,
 ): NotifyPayload<'wiki_announcement'> => {
-  const excerpt = announcementText(notify.message ?? page.content)
+  // 一言は利用者がそのまま書いた文なので記法を落とさない(Slack 側のエスケープは配信時に行う)。本文だけを抜粋に整える
+  const excerpt = notify.message ?? announcementText(page.content)
   return {
     spaceId: page.spaceId,
     spaceKey: page.space.key,
@@ -186,6 +191,8 @@ export const scheduleWikiAnnouncement = async (actor: Actor, pageId: string, inp
   const row = await prisma.$transaction(async (tx) => {
     const page = await lockWritableAnnouncement(actor, pageId, tx)
     await assertChannelReady(page.spaceId, tx)
+    // 同じページへの予約を直列にして、上限の数え漏れを防ぐ(スペース行の共有ロック同士は競合しない)
+    await tx.$queryRaw`SELECT "id" FROM "wiki_page" WHERE "id" = ${pageId} FOR NO KEY UPDATE`
     const scheduled = await tx.wikiAnnouncementNotify.count({ where: { pageId, status: 'scheduled' } })
     if (scheduled >= MAX_WIKI_ANNOUNCE_SCHEDULED_PER_PAGE) {
       throw errTooManyScheduled()
@@ -304,7 +311,14 @@ export const skipScheduledWikiAnnouncementsOf = async (tx: Db, pageIds: readonly
 type ScheduledOutcome = 'sent' | 'skipped' | 'gone'
 
 /** 予約 1 件を、送信時点のページ・スペース・送信者で確かめてから送る(または見送る) */
-const sendScheduled = async (tx: Db, notifyId: string, now: Date): Promise<ScheduledOutcome> => {
+const sendScheduled = async (
+  tx: Db,
+  { id: notifyId, spaceId }: { id: string; spaceId: string },
+  now: Date,
+): Promise<ScheduledOutcome> => {
+  // 利用者の操作と同じく、先にスペース行を共有ロックして、アーカイブ・区分の変更・ページの削除・通知先の変更と直列にする
+  // (予約行を先に取ると、スペース行の後に予約行を待つページの削除とデッドロックする)
+  await tx.$queryRaw`SELECT "id" FROM "wiki_space" WHERE "id" = ${spaceId} FOR SHARE`
   // 期限が来ていて、まだ予約中の行だけを取る。他の周・利用者の変更が持っている行は飛ばす
   const locked = await tx.$queryRaw<{ id: string }[]>`
     SELECT "id" FROM "wiki_announcement_notify"
@@ -361,7 +375,7 @@ const sendScheduled = async (tx: Db, notifyId: string, now: Date): Promise<Sched
 
   const payload = payloadOf(page, row, sender.name)
   if (!(await enqueueNotify({ event: 'wiki_announcement', actorId: sender.id, payload }, tx))) {
-    throw new AnnounceThrottled()
+    throw new AnnounceThrottled(sender.id)
   }
   await tx.wikiAnnouncementNotify.update({
     where: { id: notifyId },
@@ -375,26 +389,31 @@ const sendScheduled = async (tx: Db, notifyId: string, now: Date): Promise<Sched
  * 期限の来た予約を送る(ワーカーの 1 周)。戻り値は送った件数。
  *
  * 1 件ずつトランザクションを分け、1 件の失敗で残りを止めない。流量制限で投入できなかったときは
- * 予約のまま残して周を打ち切り、次の周で送り直す
+ * 予約のまま残し、その送信者の分だけをこの周で飛ばして次の周で送り直す(他の送信者の予約は遅らせない)
  */
 export const runWikiAnnouncementSchedule = async (now: Date = nowDate()): Promise<number> => {
   const due = await prisma.wikiAnnouncementNotify.findMany({
     where: { status: 'scheduled', scheduledAt: { lte: now } },
-    select: { id: true },
+    select: { id: true, spaceId: true, createdById: true },
     orderBy: [{ scheduledAt: 'asc' }, { id: 'asc' }],
     take: WIKI_ANNOUNCE_BATCH,
   })
+  const throttled = new Set<string>()
   let sent = 0
-  for (const { id } of due) {
+  for (const row of due) {
+    if (row.createdById && throttled.has(row.createdById)) {
+      continue
+    }
     try {
-      if ((await prisma.$transaction((tx) => sendScheduled(tx, id, now))) === 'sent') {
+      if ((await prisma.$transaction((tx) => sendScheduled(tx, row, now))) === 'sent') {
         sent++
       }
     } catch (error) {
       if (error instanceof AnnounceThrottled) {
-        break
+        throttled.add(error.senderId)
+        continue
       }
-      logger.warn({ error, id }, 'wiki announcement send failed')
+      logger.warn({ error, id: row.id }, 'wiki announcement send failed')
     }
   }
   if (sent > 0) {

@@ -8,6 +8,7 @@
 import { INVALID_OPERATION, TOO_MANY_REQUESTS } from '@/lib/error'
 import { isSlackChannelPostEnabled } from '@/lib/notify/notify-board-setting'
 import { enqueueNotify } from '@/lib/notify/notify-enqueue'
+import type { NotifyPayload } from '@/lib/notify/notify-payload'
 import { prisma } from '@/lib/prisma'
 import { assertWikiSpaceAccess, getWikiSpaceAccess } from '@/lib/wiki/wiki-access'
 import {
@@ -65,7 +66,7 @@ const space = (override: Record<string, unknown> = {}) => ({
   ...override,
 })
 
-const enqueuedPayload = () => vi.mocked(enqueueNotify).mock.calls[0][0].payload
+const enqueuedPayload = () => vi.mocked(enqueueNotify).mock.calls[0][0].payload as NotifyPayload<'wiki_announcement'>
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -114,6 +115,14 @@ describe('notifyWikiAnnouncementNow', () => {
       // 一言が空なら本文を announcementText() に通したもの
       excerpt: 'お知らせ\n\n12/29〜1/3 は休業です',
     })
+  })
+
+  it('一言は記法を落とさずにそのまま載せる', async () => {
+    await notifyWikiAnnouncementNow(actor, PAGE_ID, {
+      kind: 'updated',
+      message: '対象: <v2.0> と **重要** な変更、3 * 4 件',
+    })
+    expect(enqueuedPayload().excerpt).toBe('対象: <v2.0> と **重要** な変更、3 * 4 件')
   })
 
   it('一言があれば本文の代わりに載せる', async () => {
@@ -174,6 +183,11 @@ describe('scheduleWikiAnnouncement', () => {
 
   it('予約中として保存し、この時点では通知キューへ入れない', async () => {
     await scheduleWikiAnnouncement(actor, PAGE_ID, { kind: 'published', scheduledAt: later })
+    // 同じページへの予約を直列にするため、数える前にページ行をロックする
+    const pageLock = (vi.mocked(prisma.$queryRaw).mock.calls as unknown as [TemplateStringsArray, ...unknown[]][]).find(
+      ([strings]) => strings.join('').includes('"wiki_page"'),
+    )
+    expect(pageLock?.[0].join('')).toContain('FOR NO KEY UPDATE')
     expect(vi.mocked(prisma.wikiAnnouncementNotify.create).mock.calls[0][0].data).toMatchObject({
       status: 'scheduled',
       scheduledAt: later,
@@ -290,7 +304,9 @@ describe('runWikiAnnouncementSchedule', () => {
   })
 
   beforeEach(() => {
-    vi.mocked(prisma.wikiAnnouncementNotify.findMany).mockResolvedValue([{ id: 'n1' }] as never)
+    vi.mocked(prisma.wikiAnnouncementNotify.findMany).mockResolvedValue([
+      { id: 'n1', spaceId: SPACE_ID, createdById: 'u1' },
+    ] as never)
     // 予約中で期限の来た行のロックが取れた
     vi.mocked(prisma.$queryRaw).mockResolvedValue([{ id: 'n1' }] as never)
     vi.mocked(prisma.wikiAnnouncementNotify.findUniqueOrThrow).mockResolvedValue(scheduledRow() as never)
@@ -305,9 +321,15 @@ describe('runWikiAnnouncementSchedule', () => {
     expect(vi.mocked(prisma.wikiAnnouncementNotify.findMany).mock.calls[0][0]).toMatchObject({
       where: { status: 'scheduled', scheduledAt: { lte: NOW } },
     })
+    const calls = vi.mocked(prisma.$queryRaw).mock.calls as unknown as [TemplateStringsArray, ...unknown[]][]
+    const sqlOf = ([strings]: [TemplateStringsArray, ...unknown[]]) => strings.join('?')
+    // 利用者の操作と同じく、先にスペース行を共有ロックする(予約行を先に取るとページの削除とデッドロックする)
+    expect(sqlOf(calls[0])).toContain('"wiki_space"')
+    expect(sqlOf(calls[0])).toContain('FOR SHARE')
+    expect(calls[0].slice(1)).toEqual([SPACE_ID])
     // ロックの取り直しでも、予約中で期限が来ていることを条件にする
-    const [strings, ...values] = vi.mocked(prisma.$queryRaw).mock.calls[0] as [TemplateStringsArray, ...unknown[]]
-    const sql = strings.join('?')
+    const [, ...values] = calls[1]
+    const sql = sqlOf(calls[1])
     expect(sql).toContain(`"status" = 'scheduled'`)
     expect(sql).toContain('"scheduledAt" <=')
     expect(sql).toContain('FOR UPDATE SKIP LOCKED')
@@ -379,16 +401,28 @@ describe('runWikiAnnouncementSchedule', () => {
     expect(updated()).toEqual([{ status: 'skipped', skipReason }])
   })
 
-  it('流量制限で投入できなければ予約のまま残し、その周を打ち切る', async () => {
-    vi.mocked(prisma.wikiAnnouncementNotify.findMany).mockResolvedValue([{ id: 'n1' }, { id: 'n2' }] as never)
-    vi.mocked(enqueueNotify).mockResolvedValue(false)
-    expect(await runWikiAnnouncementSchedule(NOW)).toBe(0)
-    expect(prisma.$transaction).toHaveBeenCalledTimes(1)
-    expect(prisma.wikiAnnouncementNotify.update).not.toHaveBeenCalled()
+  it('流量制限で投入できなければ予約のまま残し、その送信者の分だけをこの周で飛ばす', async () => {
+    vi.mocked(prisma.wikiAnnouncementNotify.findMany).mockResolvedValue([
+      { id: 'n1', spaceId: SPACE_ID, createdById: 'u1' },
+      { id: 'n2', spaceId: SPACE_ID, createdById: 'u1' },
+      { id: 'n3', spaceId: SPACE_ID, createdById: 'u2' },
+    ] as never)
+    vi.mocked(prisma.wikiAnnouncementNotify.findUniqueOrThrow)
+      .mockResolvedValueOnce(scheduledRow() as never)
+      .mockResolvedValueOnce(scheduledRow({ createdBy: { ...sender, id: 'u2', name: '別の人' } }) as never)
+    vi.mocked(enqueueNotify).mockResolvedValueOnce(false).mockResolvedValueOnce(true)
+
+    expect(await runWikiAnnouncementSchedule(NOW)).toBe(1)
+    // n2(同じ送信者)は試さず、n3(別の送信者)は送る
+    expect(prisma.$transaction).toHaveBeenCalledTimes(2)
+    expect(updated()).toEqual([{ status: 'sent', sentAt: NOW }])
   })
 
   it('1件が失敗しても残りは送る', async () => {
-    vi.mocked(prisma.wikiAnnouncementNotify.findMany).mockResolvedValue([{ id: 'n1' }, { id: 'n2' }] as never)
+    vi.mocked(prisma.wikiAnnouncementNotify.findMany).mockResolvedValue([
+      { id: 'n1', spaceId: SPACE_ID, createdById: 'u1' },
+      { id: 'n2', spaceId: SPACE_ID, createdById: 'u1' },
+    ] as never)
     vi.mocked(prisma.wikiAnnouncementNotify.findUniqueOrThrow)
       .mockRejectedValueOnce(new Error('P2025'))
       .mockResolvedValue(scheduledRow() as never)

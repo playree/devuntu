@@ -391,14 +391,16 @@ Wiki のアナウンス用スペースのページを、スペースに設定し
 - **予約** : `scheduled` で保存するだけ。変更・取り消しは `updateMany({ where: { id, status: 'scheduled' } })` で行い、
   件数が 0 なら `WIKI_ANNOUNCE_NOT_SCHEDULED`。変更した人を送信者(`createdById`)に置き換え、送る時点の権限もその人で確かめる
 - **ワーカー**(`wiki-announcement-notify-worker.ts`): `createWorkerLoop` で 1 分ごとに回す。`NOTIFY_WORKER_ENABLED` に従う
-  - 期限の来た `scheduled` の ID を引き、1 件ずつトランザクションを分けて `FOR UPDATE SKIP LOCKED` で取り直す(ロックの条件にも `status` と `scheduledAt` を入れる)。
+  - 期限の来た `scheduled` の ID を引き、1 件ずつトランザクションを分けて、スペース行を `FOR SHARE` でロックしてから予約行を `FOR UPDATE SKIP LOCKED` で取り直す(ロックの条件にも `status` と `scheduledAt` を入れる)。スペース行を先に取るのは、利用者の操作と同じ順にしてアーカイブ・区分の変更・ページの削除・通知先の変更と直列にするため(予約行を先に取ると、スペース行の後に予約行を待つページの削除とデッドロックする)。
     利用者の変更・取り消しが行を持っている間は飛ばし、ワーカーが持っている間は利用者の更新が待ってから `status` を見直す
   - 送る時点のページ・スペース・送信者を引き直し、満たさなければ `skipped` にして理由(`skipReason`)を残す:
     `page_deleted` / `archived` / `not_announcement` / `channel_unset` / `slack_disabled` / `no_permission`(退会・BAN を含む)
-  - 満たせば**送る時点の最新のタイトルと本文**で `enqueueNotify()` して `sent` にする。流量制限で投入できなければ予約のまま残して周を打ち切る
+  - 満たせば**送る時点の最新のタイトルと本文**で `enqueueNotify()` して `sent` にする。流量制限で投入できなければ予約のまま残し、その送信者の分だけをこの周で飛ばす(ほかの送信者の予約は遅らせない)
   - 1 件の失敗(想定外の例外)はログに残して次へ進む。行は予約のまま残り、次の周でやり直す
+- 予約の作成は、ページ行を `FOR NO KEY UPDATE` でロックしてから予約中の件数を数える(スペース行の共有ロック同士は競合しないので、1 ページの上限 `MAX_WIKI_ANNOUNCE_SCHEDULED_PER_PAGE` を同時の作成で超えないように)
+- `sent` は通知キューへ投入したことを表す。宛先は配信時点のスペースの設定から引くので、投入の後にチャンネルを外した・Slack への投稿に失敗した場合でも `sent` のまま残る(投稿の失敗はほかの通知と同じくログにだけ残る)
 - ページの削除は、同じトランザクションで配下を含む予約を `skipped(page_deleted)` にする(復元しても予約は戻さない)
-- 抜粋は一言、空なら本文を `announcementText()` に通したもの(2000 文字に丸める)。Wiki の本文はボードのメンバーを持たないので、メンションの名前は引かない
+- 抜粋は一言(利用者がそのまま書いた文なので記法を落とさない。Slack のエスケープは配信時の `buildTicketMessage()` が行う)、空なら本文を `announcementText()` に通したもの(2000 文字に丸める)。Wiki の本文はボードのメンバーを持たないので、メンションの名前は引かない
 - 一覧・サイドバーのバッジ(`listWikiAnnouncements()` の `notifyState`)と履歴は、送る側の情報なので editor 以上にだけ返す
 
 ## エージェント実行結果の通知

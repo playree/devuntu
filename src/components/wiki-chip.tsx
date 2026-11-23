@@ -16,6 +16,7 @@ import type { WikiAnnounceState } from '@/lib/wiki/wiki-announcement-notify-rule
 import type { LocaleItem } from '@/locale'
 import { useLocale } from '@/locale/client'
 import type { FC } from 'react'
+import { tv } from 'tailwind-variants'
 
 const roleChip = createEnumChip<WikiSpaceRole>({
   owner: { item: 'owner', color: 'accent' },
@@ -91,18 +92,25 @@ const announceStateChip = createEnumChip<WikiAnnounceState>({
 export const WikiAnnounceStateChip = announceStateChip.EnumChip
 
 const ANNOUNCE_STATE_ICON = {
-  none: { Icon: BellSlashIcon, item: 'wiki_announce_state_none', className: 'text-muted' },
-  scheduled: { Icon: ClockIcon, item: 'wiki_announce_status_scheduled', className: 'text-warning' },
-  sent: { Icon: BellIcon, item: 'wiki_announce_state_sent', className: 'text-success' },
-} as const satisfies Record<WikiAnnounceState, { Icon: FC<{ width?: number }>; item: LocaleItem; className: string }>
+  none: { Icon: BellSlashIcon, item: 'wiki_announce_state_none' },
+  scheduled: { Icon: ClockIcon, item: 'wiki_announce_status_scheduled' },
+  sent: { Icon: BellIcon, item: 'wiki_announce_state_sent' },
+} as const satisfies Record<WikiAnnounceState, { Icon: FC<{ width?: number }>; item: LocaleItem }>
+
+const announceStateIcon = tv({
+  base: 'inline-flex shrink-0',
+  variants: {
+    state: { none: 'text-muted', scheduled: 'text-warning', sent: 'text-success' },
+  },
+})
 
 /** サイドバー向けの小さな通知の状態。幅を取らないようアイコンだけにし、文言は読み上げとツールチップに出す */
 export const WikiAnnounceStateIcon: FC<{ value: WikiAnnounceState }> = ({ value }) => {
   const { t } = useLocale()
-  const { Icon, item, className } = ANNOUNCE_STATE_ICON[value]
+  const { Icon, item } = ANNOUNCE_STATE_ICON[value]
   const label = t(item)
   return (
-    <span role='img' aria-label={label} title={label} className={`inline-flex shrink-0 ${className}`}>
+    <span role='img' aria-label={label} title={label} className={announceStateIcon({ state: value })}>
       <Icon width={14} />
     </span>
   )
