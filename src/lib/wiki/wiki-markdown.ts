@@ -31,11 +31,17 @@ const stripClosingSequence = (raw: string): string => {
   return end === 0 || body[end - 1] === ' ' || body[end - 1] === '\t' ? body.slice(0, end).trimEnd() : body
 }
 
-/** 本文の見出し(出現順)。`line` は 0 始まりの行番号 */
+/** 本文の見出し(出現順)。`line` は 0 始まりの行番号。先頭の front matter(YAML のコメント行 `# ...`)は見出しにしない */
 export const listMarkdownHeadings = (content: string): MarkdownHeading[] => {
   const headings: MarkdownHeading[] = []
+  const frontMatter = frontMatterLines(content)
+  // 開きと閉じの区切り線を含めた行数
+  const bodyStart = frontMatter ? frontMatter.length + 2 : 0
   let fence: string | null = null
   for (const [line, raw] of content.split('\n').entries()) {
+    if (line < bodyStart) {
+      continue
+    }
     // CRLF の本文でも見出しを拾えるよう、行末の \r は見ない
     const text = raw.replace(/\r$/, '')
     if (fence) {

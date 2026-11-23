@@ -58,6 +58,28 @@ describe('listMarkdownHeadings', () => {
   it('~~~ のフェンスは同じ記号で閉じるまで続く', () => {
     expect(listMarkdownHeadings('~~~\n```\n# 中\n~~~\n# 外')).toEqual([{ level: 1, text: '外', line: 4 }])
   })
+
+  describe('先頭の front matter', () => {
+    const DESIGN_DOC = ['---', 'type: design_doc', '# 版管理メモ', 'title: x', '---', '## 概要', '本文'].join('\n')
+
+    it('中の YAML コメント行(# ...)は見出しにせず、行番号は本文全体で数える', () => {
+      expect(listMarkdownHeadings(DESIGN_DOC)).toEqual([{ level: 2, text: '概要', line: 5 }])
+    })
+
+    it('section にも front matter の中の行は一致しない', () => {
+      expect(extractMarkdownSection(DESIGN_DOC, '版管理メモ')).toBeNull()
+      expect(extractMarkdownSection(DESIGN_DOC, '概要')).toBe('## 概要\n本文')
+    })
+
+    it('BOM と CRLF の front matter も飛ばす', () => {
+      expect(listMarkdownHeadings('﻿---\r\n# メモ\r\n...\r\n# 概要\r\n')).toEqual([{ level: 1, text: '概要', line: 3 }])
+    })
+
+    it('閉じていない・先頭にない区切り線は front matter とみなさない', () => {
+      expect(listMarkdownHeadings('---\n# 見出し\n本文').map(({ text }) => text)).toEqual(['見出し'])
+      expect(listMarkdownHeadings('前書き\n---\n# 見出し\n---').map(({ text }) => text)).toEqual(['見出し'])
+    })
+  })
 })
 
 describe('extractMarkdownSection', () => {
