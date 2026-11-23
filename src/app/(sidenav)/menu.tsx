@@ -77,12 +77,13 @@ export const MenuButton: FC<{
         className='my-0.5 justify-start rounded-xl px-4 hover:bg-mist-100 dark:hover:bg-neutral-900'
         variant='ghost'
         onPress={() => {
-          // 編集中の下書きがあれば、捨てて移るかを確かめる
-          void pushIfLeavable(to)
-          onNavigate?.()
-          if (closeMenu) {
-            closeMenu()
-          }
+          // 編集中の下書きがあれば、捨てて移るかを確かめる。断られたらメニューもタブもそのまま
+          void pushIfLeavable(to).then((moved) => {
+            if (moved) {
+              onNavigate?.()
+              closeMenu?.()
+            }
+          })
         }}
       >
         {icon}

@@ -51,8 +51,11 @@ export const WikiSpaceSwitcher: FC = () => {
         <Dropdown.Menu
           aria-label={t('wiki_switch_space')}
           onAction={(key) => {
-            closeMenu()
-            void pushIfLeavable(key === ALL_SPACES_KEY ? '/wiki' : `/wiki/${key}`)
+            void pushIfLeavable(key === ALL_SPACES_KEY ? '/wiki' : `/wiki/${key}`).then((moved) => {
+              if (moved) {
+                closeMenu()
+              }
+            })
           }}
         >
           <Dropdown.Section

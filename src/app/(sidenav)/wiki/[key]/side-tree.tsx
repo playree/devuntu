@@ -35,6 +35,12 @@ export const WikiSideTree: FC = () => {
   const { space, access, tree, tagsOf, reloadSpace } = useWikiSpace()
   const pushIfLeavable = usePushIfLeavable()
   const { closeMenu } = useSideNav()
+  // 下書きを捨てるかの確認で断られたら、ドロワーは閉じない
+  const closeMenuIfMoved = (moved: boolean) => {
+    if (moved) {
+      closeMenu()
+    }
+  }
   const params = useParams<{ number?: string }>()
   const [isEditMode, setEditMode] = useState(false)
   const [pendingId, setPendingId] = useState<string>()
@@ -108,10 +114,7 @@ export const WikiSideTree: FC = () => {
               className='size-7 min-w-7'
               tooltip={t('settings')}
               icon={<Cog6ToothIcon width={16} />}
-              onPress={() => {
-                closeMenu()
-                void pushIfLeavable(`/wiki/${space.key}/settings`)
-              }}
+              onPress={() => void pushIfLeavable(`/wiki/${space.key}/settings`).then(closeMenuIfMoved)}
             />
           )}
         </span>
@@ -125,8 +128,7 @@ export const WikiSideTree: FC = () => {
           maxLength={MAX_WIKI_SEARCH_KEYWORD}
           onSubmit={(value) => {
             if (value.trim()) {
-              closeMenu()
-              void pushIfLeavable(wikiSearchHref({ spaceKey: space.key, q: value.trim() }))
+              void pushIfLeavable(wikiSearchHref({ spaceKey: space.key, q: value.trim() })).then(closeMenuIfMoved)
             }
           }}
         />

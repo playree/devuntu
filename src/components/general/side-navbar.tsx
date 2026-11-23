@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@heroui/react'
+import { usePathname } from 'next/navigation'
 import { CSSProperties, FC, ReactNode, useCallback, useRef, useState } from 'react'
 import { setCookie } from './cookie/client'
 import { Bars3BottomLeftIcon } from './icons'
@@ -29,12 +30,18 @@ export const SideNavbar: FC<{
   /** 初期の幅(px)。サーバーで Cookie から読んで渡すと、初回の描画から保存した幅で出る */
   defaultWidth?: number
 }> = ({ children, menu, className, defaultWidth = SIDE_NAV_WIDTH_DEFAULT }) => {
-  const [isOpen, setIsOpen] = useState(false)
+  const pathname = usePathname()
+  /**
+   * 開いたときの画面の path。画面が移れば閉じる(下書きの破棄の確認を経てリンクで移ったときのように、
+   * メニュー側で閉じる処理を呼べない移り方もあるため)
+   */
+  const [openedAt, setOpenedAt] = useState<string | null>(null)
+  const isOpen = openedAt === pathname
   const [width, setWidth] = useState(() => clampSideNavWidth(defaultWidth))
   const [isResizing, setIsResizing] = useState(false)
 
   const closeMenu = useCallback(() => {
-    setTimeout(() => setIsOpen(false), 200)
+    setTimeout(() => setOpenedAt(null), 200)
   }, [])
 
   const rootRef = useRef<HTMLDivElement>(null)
@@ -63,7 +70,7 @@ export const SideNavbar: FC<{
             'lg:hidden dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600',
           )}
           onClick={() => {
-            setIsOpen(true)
+            setOpenedAt(pathname)
           }}
         >
           <Bars3BottomLeftIcon width={18} />
@@ -92,7 +99,7 @@ export const SideNavbar: FC<{
         <div
           className={cn('fixed inset-0 z-30 bg-gray-900 opacity-50 dark:opacity-80', isOpen ? '' : 'hidden')}
           onClick={() => {
-            setIsOpen(false)
+            setOpenedAt(null)
           }}
         ></div>
 

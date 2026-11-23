@@ -7,7 +7,8 @@ type ConfirmLeave = () => Promise<boolean>
 
 type LeaveGuardContextValue = {
   setGuard: (confirm: ConfirmLeave | undefined) => void
-  pushIfLeavable: (href: string) => Promise<void>
+  /** 移ったかどうかを返す(確認で断られたら false) */
+  pushIfLeavable: (href: string) => Promise<boolean>
 }
 
 const LeaveGuardContext = createContext<LeaveGuardContextValue | null>(null)
@@ -22,9 +23,11 @@ export const LeaveGuardProvider: FC<{ children: ReactNode }> = ({ children }) =>
   }, [])
   const pushIfLeavable = useCallback(
     async (href: string) => {
-      if (!guard.current || (await guard.current())) {
-        router.push(href)
+      if (guard.current && !(await guard.current())) {
+        return false
       }
+      router.push(href)
+      return true
     },
     [router],
   )
@@ -34,12 +37,18 @@ export const LeaveGuardProvider: FC<{ children: ReactNode }> = ({ children }) =>
 
 /**
  * router.push の代わりに使う。useLeaveGuard が有効なら確認を通してから移る。
- * Provider の外では確認せずに移る
+ * Provider の外では確認せずに移る。移ったかどうかを返すので、メニューを閉じるなどの後始末は移ったときだけ行う
  */
 export const usePushIfLeavable = () => {
   const router = useRouter()
   const context = useContext(LeaveGuardContext)
-  const push = useCallback((href: string) => Promise.resolve(router.push(href)), [router])
+  const push = useCallback(
+    async (href: string) => {
+      router.push(href)
+      return true
+    },
+    [router],
+  )
   return context?.pushIfLeavable ?? push
 }
 
