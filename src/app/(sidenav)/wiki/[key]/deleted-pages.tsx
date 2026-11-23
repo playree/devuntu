@@ -110,6 +110,7 @@ export const DeletedPagesModal: FC<{ state: ReturnType<typeof useModalState<stri
   /**
    * 配下ごと戻す対象(一覧の順)と、戻さない未復元のページの数。
    * 戻せない種類のページは、その配下ごと飛ばす(親が無いと配下はスペース直下へ入るため)。
+   * ただしアナウンス用スペースはどのページもスペース直下へ戻すので、配下は飛ばさない。
    * 復元済みのページは飛ばすが、その配下は対象にする
    */
   const restoreTargetsAt = (index: number): { targets: DeletedPage[]; excluded: number } => {
@@ -123,7 +124,9 @@ export const DeletedPagesModal: FC<{ state: ReturnType<typeof useModalState<stri
       }
       skipBelow = undefined
       if (!canRestore(page)) {
-        skipBelow = page.depth
+        if (!isFlat) {
+          skipBelow = page.depth
+        }
         excluded++
       } else if (!restored.has(page.pageId)) {
         targets.push(page)

@@ -62,7 +62,7 @@ import {
 import { searchWikiPages } from '../wiki/wiki-search'
 import { getWikiSpaceByKey, listWikiSpaces } from '../wiki/wiki-space'
 import { listWikiTags, resolveWikiTagIdsByName } from '../wiki/wiki-tag'
-import { listWikiTemplateNames, renderWikiTemplate } from '../wiki/wiki-template'
+import { assertWikiTemplateFits, listWikiTemplateNames, renderWikiTemplate } from '../wiki/wiki-template'
 import { nestWikiTree } from '../wiki/wiki-tree'
 import { jsonResult, TOOL_ANNOTATIONS } from './mcp'
 import { resolveTicketId } from './mcp-ticket'
@@ -327,6 +327,13 @@ const createWikiPageForMcp = async (auth: ResourceAuth, input: McpSaveWikiPageIn
     )
   }
   const content = input.content ?? template?.content
+  if (template) {
+    // テンプレートから採った項目だけを確かめる(明示した title / content をテンプレートの長さで拒まない)
+    assertWikiTemplateFits(template.name, {
+      title: input.title === undefined ? template.title : undefined,
+      content: input.content === undefined ? template.content : undefined,
+    })
+  }
   const parentId = input.parent ? await resolveParentId(access, input.parent) : null
   const tagIds = input.tags ? await resolveWikiTagIdsByName(access.spaceId, input.tags) : []
   const created = await createWikiPage(

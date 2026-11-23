@@ -24,11 +24,18 @@ import {
   readWikiPageContent,
   updateWikiPage,
 } from '@/lib/wiki/wiki-page'
-import { WIKI_ANNOUNCEMENT_FLAT, WIKI_PAGE_CONFLICT, WIKI_PAGE_TOO_DEEP } from '@/lib/wiki/wiki-rule'
+import {
+  MAX_WIKI_CONTENT,
+  MAX_WIKI_TITLE,
+  WIKI_ANNOUNCEMENT_FLAT,
+  WIKI_PAGE_CONFLICT,
+  WIKI_PAGE_TOO_DEEP,
+} from '@/lib/wiki/wiki-rule'
 import { searchWikiPages } from '@/lib/wiki/wiki-search'
 import { getWikiSpaceByKey, listWikiSpaces } from '@/lib/wiki/wiki-space'
 import { listWikiTags, resolveWikiTagIdsByName } from '@/lib/wiki/wiki-tag'
 import { listWikiTemplateNames, renderWikiTemplate } from '@/lib/wiki/wiki-template'
+import { WIKI_TEMPLATE_TOO_LONG } from '@/lib/wiki/wiki-template-rule'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { connectMcpServer } from '../../helpers/mcp-client'
@@ -56,7 +63,11 @@ vi.mock('@/lib/wiki/wiki-space', () => ({
 vi.mock('@/lib/wiki/wiki-tag', () => ({ listWikiTags: vi.fn(), resolveWikiTagIdsByName: vi.fn() }))
 vi.mock('@/lib/wiki/wiki-search', () => ({ searchWikiPages: vi.fn() }))
 vi.mock('@/lib/wiki/wiki-announcement', () => ({ listRecentWikiAnnouncements: vi.fn() }))
-vi.mock('@/lib/wiki/wiki-template', () => ({ listWikiTemplateNames: vi.fn(), renderWikiTemplate: vi.fn() }))
+vi.mock('@/lib/wiki/wiki-template', async (importOriginal) => ({
+  assertWikiTemplateFits: (await importOriginal<typeof import('@/lib/wiki/wiki-template')>()).assertWikiTemplateFits,
+  listWikiTemplateNames: vi.fn(),
+  renderWikiTemplate: vi.fn(),
+}))
 
 const SPACE_ID = 'space-1'
 const PAGE_ID = 'page-12'
@@ -138,6 +149,33 @@ describe('saveWikiPageForMcp: テンプレートからの作成', () => {
       type: 'page',
     })
     expect(vi.mocked(createWikiPage).mock.calls[0][3]).toMatchObject({ title: '臨時', content: '本文', type: 'page' })
+  })
+
+  it('テンプレートの置き換え後のタイトル・本文が長すぎても、明示した title / content を使うなら作れる', async () => {
+    vi.mocked(renderWikiTemplate).mockResolvedValue({
+      name: '議事録',
+      title: 't'.repeat(MAX_WIKI_TITLE + 1),
+      content: 'c'.repeat(MAX_WIKI_CONTENT + 1),
+      type: 'page',
+    })
+
+    await saveWikiPageForMcp(human, { space: 'DOCS', template: '議事録', title: '議事録', content: '本文' })
+
+    expect(vi.mocked(createWikiPage).mock.calls[0][3]).toMatchObject({ title: '議事録', content: '本文' })
+  })
+
+  it('テンプレートから採るタイトル・本文が長すぎれば WIKI_TEMPLATE_TOO_LONG', async () => {
+    vi.mocked(renderWikiTemplate).mockResolvedValue({
+      name: '議事録',
+      title: '定例',
+      content: 'c'.repeat(MAX_WIKI_CONTENT + 1),
+      type: 'page',
+    })
+
+    const error = await errorOf(saveWikiPageForMcp(human, { space: 'DOCS', template: '議事録' }))
+
+    expect(error.errorType).toBe(WIKI_TEMPLATE_TOO_LONG)
+    expect(createWikiPage).not.toHaveBeenCalled()
   })
 
   it('テンプレートにタイトルが無く title も省いたらエラー', async () => {

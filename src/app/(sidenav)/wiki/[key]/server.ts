@@ -34,7 +34,7 @@ import {
 } from '@/lib/wiki/wiki-revision'
 import { getWikiSpaceByKeyForManage } from '@/lib/wiki/wiki-space'
 import { createWikiTag as createWikiTagCore, listWikiTags } from '@/lib/wiki/wiki-tag'
-import { listWikiTemplateOptions, renderWikiTemplate } from '@/lib/wiki/wiki-template'
+import { assertWikiTemplateFits, listWikiTemplateOptions, renderWikiTemplate } from '@/lib/wiki/wiki-template'
 
 /**
  * スペース内の画面(トップ・ページ・設定)で共通に使う Server Action。
@@ -71,6 +71,10 @@ export const createWikiPage = safeAuthAction
   .inputSchema(scCreateWikiPage)
   .action(async ({ ctx: { user }, parsedInput: { spaceId, parentId, title, type, templateId } }) => {
     const template = templateId ? await renderWikiTemplate(user, spaceId, { id: templateId }) : null
+    // 画面から使うのはテンプレートの本文だけ(タイトルは入力欄の値)なので、本文の長さだけを確かめる
+    if (template) {
+      assertWikiTemplateFits(template.name, { content: template.content })
+    }
     const pageType = template?.type ?? type
     const content = template?.content ?? ''
     return await createWikiPageCore(user, WEB, spaceId, {

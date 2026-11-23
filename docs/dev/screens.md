@@ -91,7 +91,7 @@ Proxy は通るリクエストのボディを既定 10MB まで複製して溜�
   ページ作成のモーダル(`CreatePageModal`)は、開いたときに `getWikiTemplateOptions`(`write`。本文なし)で選択肢を引き、選ぶとタイトルと種類を埋めて `createWikiPage` に `templateId` を渡す。
   サーバーは `renderWikiTemplate` で、`write` を確かめてから同じスペースのテンプレートを引き、作成者の表示名・タイムゾーン(未設定は `DEFAULT_TIMEZONE`)で `{{date}}` / `{{month}}` / `{{user}}` を置き換えた本文と種類で作る(`applyWikiTemplatePlaceholders`。1回の走査で置き換え、置き換えた値は置き換え直さない)。
   タイトルは画面がテンプレートから置き換えて入れたものをそのまま使い、サーバーでは置き換え直さない(表示名の中の `{{date}}` などを置き換えないため)。
-  登録時の長さの検査は置き換える前の値で行うので、置き換えた結果がタイトル・本文の最大長を超えたら `WIKI_TEMPLATE_TOO_LONG` にする。
+  登録時の長さの検査は置き換える前の値で行うので、ページに採るテンプレートの値(画面では本文、MCP では明示しなかったタイトル・本文)が置き換えた結果で最大長を超えたら `WIKI_TEMPLATE_TOO_LONG` にする(`assertWikiTemplateFits`。明示した値で置き換えて使わない項目の長さでは拒まない)。
   更新・削除・並べ替えはスペース行のロックを取ってからテンプレートの有無を確かめ直す(同時の削除で Prisma の行なしエラーにしない)。
   本文の画像は添付の掃除で参照として扱う(`attachment-ref.ts` の `wikiTemplate`)
 - 版(`src/lib/wiki/wiki-revision.ts`)の一覧は本文を含めず、ページ詳細で過去の版を選んだときにその版の本文だけを引く(本文の最大長 × 版数を一度に転送しない)。

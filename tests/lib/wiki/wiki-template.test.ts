@@ -11,6 +11,7 @@ import { prisma } from '@/lib/prisma'
 import { assertWikiSpaceAccess } from '@/lib/wiki/wiki-access'
 import { MAX_WIKI_CONTENT, MAX_WIKI_TITLE, WIKI_PAGE_TYPE_NOT_ALLOWED } from '@/lib/wiki/wiki-rule'
 import {
+  assertWikiTemplateFits,
   createWikiTemplate,
   deleteWikiTemplate,
   listWikiTemplateOptions,
@@ -209,6 +210,25 @@ describe('一覧', () => {
   })
 })
 
+describe('assertWikiTemplateFits', () => {
+  const tooLongTitle = 't'.repeat(MAX_WIKI_TITLE + 1)
+  const tooLongContent = 'c'.repeat(MAX_WIKI_CONTENT + 1)
+
+  it('採るタイトルか本文が最大長を超えたら WIKI_TEMPLATE_TOO_LONG', () => {
+    expect(() => assertWikiTemplateFits('議事録', { title: tooLongTitle })).toThrow(
+      expect.objectContaining({ errorType: WIKI_TEMPLATE_TOO_LONG }),
+    )
+    expect(() => assertWikiTemplateFits('議事録', { content: tooLongContent })).toThrow(
+      expect.objectContaining({ errorType: WIKI_TEMPLATE_TOO_LONG }),
+    )
+  })
+
+  it('渡さない(明示した値で置き換えて使わない)項目の長さは見ない', () => {
+    expect(() => assertWikiTemplateFits('議事録', {})).not.toThrow()
+    expect(() => assertWikiTemplateFits('議事録', { title: '短い', content: '本文' })).not.toThrow()
+  })
+})
+
 describe('renderWikiTemplate', () => {
   const now = new Date('2026-11-30T15:30:00Z')
 
@@ -237,20 +257,14 @@ describe('renderWikiTemplate', () => {
     )
   })
 
-  it('置き換えでタイトルか本文が最大長を超えたら WIKI_TEMPLATE_TOO_LONG', async () => {
-    const longName = 'x'.repeat(50)
-    vi.mocked(prisma.user.findUnique).mockResolvedValue({ name: longName, timezone: null } as never)
+  it('置き換えで最大長を超えても、展開した値をそのまま返す(採るかどうかは呼び出し側が決める)', async () => {
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({ name: 'x'.repeat(50), timezone: null } as never)
     vi.mocked(prisma.wikiTemplate.findFirst).mockResolvedValue({
       ...fields,
       title: `${'t'.repeat(MAX_WIKI_TITLE - 8)}{{user}}`,
     } as never)
-    expect(await errorTypeOf(renderWikiTemplate(actor, SPACE_ID, { id: 't1' }, now))).toBe(WIKI_TEMPLATE_TOO_LONG)
-
-    vi.mocked(prisma.wikiTemplate.findFirst).mockResolvedValue({
-      ...fields,
-      content: `${'c'.repeat(MAX_WIKI_CONTENT - 8)}{{user}}`,
-    } as never)
-    expect(await errorTypeOf(renderWikiTemplate(actor, SPACE_ID, { id: 't1' }, now))).toBe(WIKI_TEMPLATE_TOO_LONG)
+    const rendered = await renderWikiTemplate(actor, SPACE_ID, { id: 't1' }, now)
+    expect(rendered.title.length).toBeGreaterThan(MAX_WIKI_TITLE)
   })
 
   it('タイムゾーン未設定ならサーバーの既定で置き換える', async () => {

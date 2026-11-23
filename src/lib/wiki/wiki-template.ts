@@ -215,15 +215,28 @@ export const renderWikiTemplate = async (
 
   const { name: userName, timezone } = await getUserNameAndTimezone(actor.id)
   const context: WikiTemplateContext = { now, timezone, userName }
-  const title = applyWikiTemplatePlaceholders(template.title, context)
-  const content = applyWikiTemplatePlaceholders(template.content, context)
-  // 登録時は置き換える前の長さで検査しているので、表示名などで伸びた分をここで弾き、テンプレートが原因だと分かるようにする
-  if (title.length > MAX_WIKI_TITLE || content.length > MAX_WIKI_CONTENT) {
+  return {
+    name: template.name,
+    title: applyWikiTemplatePlaceholders(template.title, context),
+    content: applyWikiTemplatePlaceholders(template.content, context),
+    type: template.type,
+  }
+}
+
+/**
+ * テンプレートから採るタイトル・本文が最大長に収まるかを確かめる。NG なら WIKI_TEMPLATE_TOO_LONG。
+ * 登録時は置き換える前の長さで検査しているので、表示名などで伸びた分をここで弾き、テンプレートが原因だと分かるようにする。
+ * 明示された値で置き換えて使わない項目は渡さない(使わない値の長さで作成を拒まない)
+ */
+export const assertWikiTemplateFits = (name: string, adopted: { title?: string; content?: string }): void => {
+  if (
+    (adopted.title !== undefined && adopted.title.length > MAX_WIKI_TITLE) ||
+    (adopted.content !== undefined && adopted.content.length > MAX_WIKI_CONTENT)
+  ) {
     throw new ClientError(
       WIKI_TEMPLATE_TOO_LONG,
-      `The template ${template.name} exceeds the maximum length after replacing placeholders ` +
-        `(title ${MAX_WIKI_TITLE} / content ${MAX_WIKI_CONTENT} characters). Shorten the template`,
+      `The template ${name} exceeds the maximum length after replacing placeholders ` +
+        `(title ${MAX_WIKI_TITLE} / content ${MAX_WIKI_CONTENT} characters). Shorten the template, or pass the title / content yourself`,
     )
   }
-  return { name: template.name, title, content, type: template.type }
 }
