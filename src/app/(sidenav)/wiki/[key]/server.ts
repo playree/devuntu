@@ -129,7 +129,7 @@ export const getWikiPageRevisionContent = safeAuthAction
   .inputSchema(scUUID)
   .action(async ({ ctx: { user }, parsedInput: { id } }) => getWikiPageRevisionContentCore(user, id))
 
-/** 版の削除(編集者以上)。最新の版は消せない。`id` は版 ID */
+/** 版の削除(`canDeleteWikiRevision`: owner と管理者)。最新の版は消せない。`id` は版 ID */
 export const deleteWikiPageRevision = safeAuthAction
   .metadata({ actionName: 'deleteWikiPageRevision', role: 'user' })
   .inputSchema(scUUID)
