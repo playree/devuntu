@@ -281,6 +281,7 @@ export const ja: DefaultLocaleItems = {
   completed_within: '完了の表示期間',
   confirm_archive: 'アーカイブ確認',
   confirm_deletion: '削除確認',
+  confirm_unarchive: 'アーカイブ解除確認',
   confirmed: '確認した',
   consent: 'アクセスの許可',
   consent_apps: '許可済みアプリ',
@@ -661,6 +662,7 @@ export const ja: DefaultLocaleItems = {
   wiki_conflict_open_latest: '最新を別タブで開く',
   wiki_conflict_overwrite: '上書き保存',
   wiki_conflict_title: '保存が競合しました',
+  wiki_delete_page: 'ページを削除',
   wiki_delete_revision: 'この版を削除',
   wiki_deleted_pages: '削除済みのページ',
   wiki_deleted_parent: '元の親: ${path}',
@@ -952,6 +954,7 @@ export const ja: DefaultLocaleItems = {
   msg_user_not_exist: 'ユーザーが存在しません。',
   msg_wiki_board_assign:
     'ボードのメンバー(直接・グループ経由)が、選んだロールでこのスペースを使えます。割り当てられるのは、あなたが参加しているボードです。',
+  msg_wiki_cannot_restore_regular_page: '設計書スペースには通常のページを戻せません。',
   msg_wiki_deleted_pages_hint:
     '削除したページを復元できるのは、削除から ${days} 日のあいだだけです。上から順に復元すると、元の親子関係に戻ります(元の親の下で階層の上限を超えるページは、スペース直下に戻ります)。',
   msg_wiki_design_docs_load_failed: '設計書一覧を取得できませんでした。時間をおいてリロードしてください。',
