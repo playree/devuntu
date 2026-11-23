@@ -1,7 +1,8 @@
 'use client'
 
+import { MultiButton } from '@/components/general/button'
 import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
-import { BookOpenIcon } from '@/components/icon'
+import { ArrowPathIcon, BookOpenIcon } from '@/components/icon'
 import { WikiTagLinks } from '@/components/wiki-tag'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { dayformat } from '@/lib/day'
@@ -22,7 +23,9 @@ export const WikiSearchResults: FC<{
   isLoading: boolean
   /** 横断検索ではパンくずの先頭にスペース名を出す */
   showSpace: boolean
-}> = ({ hits, isLoading, showSpace }) => {
+  /** 取得に失敗したときの検索し直し(同じ条件では URL が変わらず取り直されないため) */
+  onRetry: () => void
+}> = ({ hits, isLoading, showSpace, onRetry }) => {
   const { t } = useLocale()
   const tz = useUserTimezone()
 
@@ -31,11 +34,16 @@ export const WikiSearchResults: FC<{
   }
   if (!hits) {
     return (
-      <NoticePanel // 取得に失敗した(一致するページが無いのと区別する)
-        status='danger'
-      >
-        {t('msg_wiki_search_failed')}
-      </NoticePanel>
+      <div className='flex flex-col items-start gap-2'>
+        <NoticePanel // 取得に失敗した(一致するページが無いのと区別する)
+          status='danger'
+        >
+          {t('msg_wiki_search_failed')}
+        </NoticePanel>
+        <MultiButton size='sm' icon={<ArrowPathIcon />} onPress={onRetry}>
+          {t('reload')}
+        </MultiButton>
+      </div>
     )
   }
   if (hits.length === 0) {
@@ -44,7 +52,11 @@ export const WikiSearchResults: FC<{
 
   return (
     <section className='space-y-2'>
-      <p className='text-muted text-xs'>{t('wiki_search_result_count', { count: hits.length })}</p>
+      <p className='text-muted text-xs'>
+        {t(hits.length >= MAX_WIKI_SEARCH_LIMIT ? 'wiki_search_result_count_over' : 'wiki_search_result_count', {
+          count: hits.length,
+        })}
+      </p>
       <ul className='divide-y rounded-xl border'>
         {hits.map((hit) => {
           const breadcrumbs = showSpace ? [hit.space.name, ...hit.breadcrumbs] : hit.breadcrumbs

@@ -33,7 +33,11 @@ export const WikiSpacesClient: FC<{ keyword: string }> = ({ keyword }) => {
   const addModalState = useModalState()
   // 検索中はスイッチを隠すので、出し直したときに今の絞り込みと合うよう選択状態を持つ
   const [showArchived, setShowArchived] = useState(false)
-  const { data: hits, isLoading: isSearching } = useActionData(() => searchWikiPages({ keyword }), {
+  const {
+    data: hits,
+    isLoading: isSearching,
+    reload: retrySearch,
+  } = useActionData(() => searchWikiPages({ keyword }), {
     key: keyword,
     skip: !keyword,
   })
@@ -94,7 +98,7 @@ export const WikiSpacesClient: FC<{ keyword: string }> = ({ keyword }) => {
       />
 
       {keyword ? (
-        <WikiSearchResults hits={hits} isLoading={isSearching} showSpace />
+        <WikiSearchResults hits={hits} isLoading={isSearching} showSpace onRetry={retrySearch} />
       ) : (
         <MultiTable
           aria-label='wiki space list'

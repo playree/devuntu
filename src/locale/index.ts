@@ -716,6 +716,7 @@ export type LocaleItemBase =
   | 'wiki_search'
   | 'wiki_search_placeholder'
   | 'wiki_search_result_count'
+  | 'wiki_search_result_count_over'
   | 'wiki_space_boards'
   | 'wiki_space_groups'
   | 'wiki_space_key'

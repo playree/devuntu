@@ -710,7 +710,8 @@ export const en: DefaultLocaleItems = {
   wiki_role_viewer: 'Viewer',
   wiki_search: 'Search',
   wiki_search_placeholder: 'Search titles, content and tags',
-  wiki_search_result_count: '${count} results',
+  wiki_search_result_count: '${count} found',
+  wiki_search_result_count_over: '${count}+ found',
   wiki_space_boards: 'Board Assignment',
   wiki_space_groups: 'Group Assignment',
   wiki_space_key: 'Space Key',
@@ -987,7 +988,7 @@ Please copy and use the connection information above.
   msg_wiki_viewing_revision: 'Showing a past version (${target}).',
   msg_wiki_role_note:
     'Viewers can read, editors can create, edit, move and delete pages, and owners can also change settings. At least one owner is required.',
-  msg_wiki_search_failed: 'Search failed. Please wait a moment and try again.',
+  msg_wiki_search_failed: 'Search failed. Please wait a moment and reload.',
   msg_wiki_search_hint: 'Enter keywords or choose tags. Words of two characters or fewer may take longer to search.',
   msg_wiki_search_limit: 'Up to ${max} results are shown. If you cannot find the page, add words or filter by tags.',
   msg_wiki_space_archived: 'This space is archived and read-only.',
