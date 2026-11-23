@@ -105,20 +105,24 @@ describe('shouldMergeWikiRevision', () => {
     ticketId: null,
     message: null,
   }
-  const latest = (override: Partial<WikiRevisionOrigin & { createdAt: Date }> = {}) => ({
+  /** 保持期限(保持 7 日)。これより前に最後に保存した版は、掃除が基準版として残す */
+  const CUTOFF = new Date('2026-11-01T10:00:00.000Z')
+  const latest = (override: Partial<WikiRevisionOrigin & { createdAt: Date; updatedAt: Date }> = {}) => ({
     ...origin,
     createdAt: new Date('2026-11-08T09:55:00.000Z'),
+    updatedAt: new Date('2026-11-08T09:58:00.000Z'),
     ...override,
   })
+  const merge = (mergeMinutes: number, retentionCutoff: Date = CUTOFF) => ({ mergeMinutes, retentionCutoff })
 
   it('同じ人・経路・チケットの updated が時間内に続けばまとめる', () => {
-    expect(shouldMergeWikiRevision(latest(), origin, NOW, 10)).toBe(true)
+    expect(shouldMergeWikiRevision(latest(), origin, NOW, merge(10))).toBe(true)
   })
 
   it('最新の版の作成からちょうど上限の時間まではまとめる', () => {
-    expect(shouldMergeWikiRevision(latest({ createdAt: new Date('2026-11-08T09:50:00.000Z') }), origin, NOW, 10)).toBe(
-      true,
-    )
+    expect(
+      shouldMergeWikiRevision(latest({ createdAt: new Date('2026-11-08T09:50:00.000Z') }), origin, NOW, merge(10)),
+    ).toBe(true)
   })
 
   it.each([
@@ -133,7 +137,27 @@ describe('shouldMergeWikiRevision', () => {
     ['今回にコミットメッセージがある', latest(), { ...origin, message: '誤字の修正' }, 10],
     ['最新の版にコミットメッセージがある', latest({ message: '誤字の修正' }), origin, 10],
   ] as const)('%s ならまとめない', (_, last, next, minutes) => {
-    expect(shouldMergeWikiRevision(last, next, NOW, minutes)).toBe(false)
+    expect(shouldMergeWikiRevision(last, next, NOW, merge(minutes))).toBe(false)
+  })
+
+  describe('まとめる時間が保持期間より長い(14 日分)', () => {
+    const LONG = 14 * 24 * 60
+
+    it('最新の版の最後の保存が保持期限より前ならまとめない(保持期間より前の基準版を上書きしない)', () => {
+      const old = new Date('2026-10-30T10:00:00.000Z')
+      expect(shouldMergeWikiRevision(latest({ createdAt: old, updatedAt: old }), origin, NOW, merge(LONG))).toBe(false)
+    })
+
+    it('最新の版の最後の保存がちょうど保持期限ならまとめる', () => {
+      expect(
+        shouldMergeWikiRevision(
+          latest({ createdAt: new Date('2026-10-30T10:00:00.000Z'), updatedAt: CUTOFF }),
+          origin,
+          NOW,
+          merge(LONG),
+        ),
+      ).toBe(true)
+    })
   })
 })
 

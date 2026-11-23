@@ -29,7 +29,7 @@ export const WikiSpaceProfile: FC<{ space: Space; reload: () => Promise<void> }>
     control,
     handleSubmit,
     reset,
-    formState: { isSubmitting, errors },
+    formState: { isSubmitting, isDirty, errors },
   } = useForm<UpdateWikiSpace>({
     resolver: zodResolver(scUpdateWikiSpace),
     mode: 'onChange',
@@ -100,7 +100,14 @@ export const WikiSpaceProfile: FC<{ space: Space; reload: () => Promise<void> }>
           />
         </div>
         <div className='col-span-12 flex items-center gap-2'>
-          <MultiButton className='ml-auto' type='submit' size='sm' icon={<CheckIcon />} isPending={isSubmitting}>
+          <MultiButton
+            className='ml-auto'
+            type='submit'
+            size='sm'
+            icon={<CheckIcon />}
+            isPending={isSubmitting}
+            isDisabled={!isDirty}
+          >
             {t('save')}
           </MultiButton>
         </div>

@@ -20,7 +20,7 @@ import { useLocale } from '@/locale/client'
 import { Table } from '@heroui/react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { FC } from 'react'
+import { FC, useState } from 'react'
 import { AddSpaceModal } from './modals'
 import { WikiSearchResults } from './search-results'
 import { getWikiSpaces, searchWikiPages } from './server'
@@ -31,7 +31,13 @@ export const WikiSpacesClient: FC<{ keyword: string }> = ({ keyword }) => {
   const { t } = useLocale()
   const router = useRouter()
   const addModalState = useModalState()
-  const { data: hits, isLoading: isSearching } = useActionData(() => searchWikiPages({ keyword }), {
+  // 検索中はスイッチを隠すので、出し直したときに今の絞り込みと合うよう選択状態を持つ
+  const [showArchived, setShowArchived] = useState(false)
+  const {
+    data: hits,
+    isLoading: isSearching,
+    reload: retrySearch,
+  } = useActionData(() => searchWikiPages({ keyword }), {
     key: keyword,
     skip: !keyword,
   })
@@ -57,12 +63,18 @@ export const WikiSpacesClient: FC<{ keyword: string }> = ({ keyword }) => {
         icon={<BookOpenIcon />}
         title={t('wiki')}
         extra={
-          <SwitchField
-            id='show-archived'
-            label={t('show_archived')}
-            isSmart
-            onChange={(isSelected) => list.setFilter({ showArchived: isSelected ? '1' : '' })}
-          />
+          !keyword && ( // 検索結果には効かないので、検索中は出さない
+            <SwitchField
+              id='show-archived'
+              label={t('show_archived')}
+              isSmart
+              isSelected={showArchived}
+              onChange={(isSelected) => {
+                setShowArchived(isSelected)
+                list.setFilter({ showArchived: isSelected ? '1' : '' })
+              }}
+            />
+          )
         }
       >
         <MultiButton
@@ -86,7 +98,7 @@ export const WikiSpacesClient: FC<{ keyword: string }> = ({ keyword }) => {
       />
 
       {keyword ? (
-        <WikiSearchResults hits={hits} isLoading={isSearching} showSpace />
+        <WikiSearchResults hits={hits} isLoading={isSearching} showSpace onRetry={retrySearch} />
       ) : (
         <MultiTable
           aria-label='wiki space list'

@@ -22,7 +22,11 @@ export const WikiSpaceSearchClient: FC<{ keyword: string; tags: string[] }> = ({
   const router = useRouter()
   const { space, access, tags: spaceTags } = useWikiSpace()
   const hasCondition = keyword !== '' || tags.length > 0
-  const { data: hits, isLoading } = useActionData(() => searchWikiPages({ keyword, space: space.key, tags }), {
+  const {
+    data: hits,
+    isLoading,
+    reload,
+  } = useActionData(() => searchWikiPages({ keyword, space: space.key, tags }), {
     key: JSON.stringify([space.key, keyword, tags]),
     skip: !hasCondition || !access.canView,
   })
@@ -75,7 +79,7 @@ export const WikiSpaceSearchClient: FC<{ keyword: string; tags: string[] }> = ({
           </div>
 
           {hasCondition ? (
-            <WikiSearchResults hits={hits} isLoading={isLoading} showSpace={false} />
+            <WikiSearchResults hits={hits} isLoading={isLoading} showSpace={false} onRetry={reload} />
           ) : (
             <p className='text-muted text-sm'>{t('msg_wiki_search_hint')}</p>
           )}

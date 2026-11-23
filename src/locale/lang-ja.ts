@@ -709,6 +709,8 @@ export const ja: DefaultLocaleItems = {
   wiki_role_viewer: '閲覧者',
   wiki_search: '検索',
   wiki_search_placeholder: 'タイトル・本文・タグ名で検索',
+  wiki_search_result_count: '${count}件',
+  wiki_search_result_count_over: '${count}件以上',
   wiki_space_boards: 'ボードアサイン',
   wiki_space_groups: 'グループアサイン',
   wiki_space_key: 'スペースキー',
@@ -981,6 +983,7 @@ export const ja: DefaultLocaleItems = {
   msg_wiki_viewing_revision: '過去の版(${target})を表示しています。',
   msg_wiki_role_note:
     '閲覧者は読むだけ、編集者はページの作成・編集・移動・削除、owner は設定も変更できます。owner は1人以上必要です。',
+  msg_wiki_search_failed: '検索できませんでした。時間をおいてリロードしてください。',
   msg_wiki_search_hint:
     'キーワードを入力するか、タグを選んでください。2文字以下の語は検索に時間がかかることがあります。',
   msg_wiki_search_limit:
