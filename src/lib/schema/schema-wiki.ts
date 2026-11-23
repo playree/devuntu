@@ -221,6 +221,9 @@ export const scWikiAnnouncementQuery = z.object({
   rowsPerPage: z.number().int().min(1).max(MAX_WIKI_ANNOUNCEMENT_PAGE_SIZE),
 })
 
+/** アナウンスのバックナンバー。`id` はスペース ID。タグを渡すとそのタグを持つものだけを数える */
+export const scWikiAnnouncementArchive = z.object({ id: z.uuidv7(), tagId: z.uuidv7().optional() })
+
 /** `space` を省略すると、閲覧できる全スペース(アーカイブ済みを除く)を探す */
 export const scWikiSearch = z.object({
   keyword: z.string().trim().max(MAX_WIKI_SEARCH_KEYWORD).default(''),

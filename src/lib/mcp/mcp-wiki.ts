@@ -20,7 +20,8 @@ import { zWikiPageType } from '../schema/schema-wiki'
 import { makeUrl } from '../server-utils'
 import { extractUploadKeys } from '../storage/upload'
 import { type WikiSpaceAccess } from '../wiki/wiki-access'
-import { listAllWikiAnnouncements } from '../wiki/wiki-announcement'
+import { listRecentWikiAnnouncements } from '../wiki/wiki-announcement'
+import { MAX_WIKI_ANNOUNCEMENT_TREE } from '../wiki/wiki-announcement-rule'
 import {
   applyTextEdits,
   extractMarkdownSection,
@@ -32,6 +33,7 @@ import {
   assertWikiPageNotConflicted,
   createWikiPage,
   deleteWikiPage,
+  errWikiAnnouncementFlat,
   findWikiPageByNumber,
   getWikiPage,
   getWikiTree,
@@ -42,6 +44,7 @@ import {
 } from '../wiki/wiki-page'
 import {
   DEFAULT_WIKI_SEARCH_LIMIT,
+  isFlatWikiSpace,
   MAX_WIKI_CONTENT,
   MAX_WIKI_DEPTH,
   MAX_WIKI_PAGE_TAGS,
@@ -140,8 +143,8 @@ const getAnnouncementTreeForMcp = async (
   if (input.root) {
     throw errValidation(`${space.key} is an announcement space: its pages are flat, so root cannot be specified`)
   }
-  const [rows, tags, templates] = await Promise.all([
-    listAllWikiAnnouncements(auth.user, space.id),
+  const [{ items: rows, total }, tags, templates] = await Promise.all([
+    listRecentWikiAnnouncements(auth.user, space.id),
     listWikiTags(space.id),
     access.canWrite ? listWikiTemplateNames(space.id) : [],
   ])
@@ -157,7 +160,9 @@ const getAnnouncementTreeForMcp = async (
         createdAt,
       }
     }),
-    totalPages: rows.length,
+    totalPages: total,
+    /** 新しいものから上限まで返したときは、古いアナウンスがほかにもある(search_wiki で探す) */
+    ...(rows.length < total ? { limitReached: true } : {}),
     ...(templates.length > 0 ? { templates: templates.map(({ name, type }) => ({ name, type })) } : {}),
   }
 }
@@ -386,6 +391,10 @@ const updateWikiPageForMcp = async (
     input.title !== undefined || content !== undefined || input.type !== undefined || tagIds !== undefined
   // 位置を省いた移動は末尾へ送るので、今と同じ親を位置なしで渡されたときは動かさない
   const wantsMove = input.position !== undefined || (parentId !== undefined && parentId !== page.parentId)
+  // アナウンス用スペースでは移動できないので、内容だけを保存してから移動で失敗する、という途中までの書き込みを残さない
+  if (wantsMove && isFlatWikiSpace(access.type)) {
+    throw errWikiAnnouncementFlat()
+  }
   if (!wantsUpdate && !wantsMove) {
     if (input.parent !== undefined) {
       return writeResult(
@@ -531,7 +540,8 @@ export const registerWikiTools = (server: McpServer, auth: ResourceAuth) => {
         'Returns the page hierarchy of a Wiki space (ref, title and tags only, no content). ' +
         'Pass root to get only the pages under it, and depth to limit the levels (deeper pages are summarized as childCount). ' +
         'If you can write to the space, templates lists the page templates (name, type) you can pass to save_wiki_page. ' +
-        'For an announcement space, pages is a flat list newest first with createdAt (root and depth are not used)',
+        `For an announcement space, pages is a flat list of up to ${MAX_WIKI_ANNOUNCEMENT_TREE} announcements newest first with createdAt ` +
+        '(limitReached means older ones exist: find them with search_wiki). depth is ignored and root is an error there',
       inputSchema: z.strictObject({
         space: zSpaceKey.describe('Space key (e.g. DOCS)'),
         root: zWikiPageRef.optional().describe('ref of the page whose descendants to return'),

@@ -78,7 +78,7 @@ const errTypeNotAllowed = (access: WikiSpaceAccess) =>
       ? 'This space is an announcement space: its pages must be normal pages (type=page)'
       : 'This space is a design doc space: its pages must be design docs (type=design_doc)',
   )
-const errFlat = () =>
+export const errWikiAnnouncementFlat = () =>
   new ClientError(
     WIKI_ANNOUNCEMENT_FLAT,
     'This space is an announcement space: pages are flat and ordered by creation date, so parent, position and moving are not available',
@@ -287,7 +287,7 @@ export const createWikiPage = async (
     // アナウンス用スペースは平らで並びを持たないので、親・位置を受けず、増え続ける全件の木も読まない
     const isFlat = isFlatWikiSpace(access.type)
     if (isFlat && (parentId !== null || input.position !== undefined)) {
-      throw errFlat()
+      throw errWikiAnnouncementFlat()
     }
     const rows = isFlat ? [] : await loadTree(tx, spaceId)
     if (parentId) {
@@ -494,7 +494,7 @@ export const moveWikiPage = async (
     await lockSpaceForStructure(tx, spaceId)
     const access = await assertWikiSpaceAccess(actor, spaceId, 'write', tx)
     if (isFlatWikiSpace(access.type)) {
-      throw errFlat()
+      throw errWikiAnnouncementFlat()
     }
     const rows = await loadTree(tx, spaceId)
     const index = indexWikiTree(rows)
@@ -580,12 +580,17 @@ export const deleteWikiPage = async (
   const spaceId = await findPageSpace(pageId)
   const deleted = await prisma.$transaction(async (tx) => {
     await lockSpaceForStructure(tx, spaceId)
-    await assertWikiSpaceAccess(actor, spaceId, 'write', tx)
-    const index = indexWikiTree(await loadTree(tx, spaceId))
-    if (!index.byId.has(pageId)) {
+    const access = await assertWikiSpaceAccess(actor, spaceId, 'write', tx)
+    // アナウンス用スペースは平らで子を持たないので、増え続ける全件の木は読まずにページの有無だけを見る
+    const isFlat = isFlatWikiSpace(access.type)
+    const index = isFlat ? null : indexWikiTree(await loadTree(tx, spaceId))
+    const exists = index
+      ? index.byId.has(pageId)
+      : (await tx.wikiPage.findFirst({ where: { id: pageId, spaceId }, select: { id: true } })) !== null
+    if (!exists) {
       throw errInvalidOperation()
     }
-    const descendants = descendantIds(index, pageId)
+    const descendants = index ? descendantIds(index, pageId) : []
     if (opts.expectedDescendantIds) {
       const expectedIds = new Set(opts.expectedDescendantIds)
       if (expectedIds.size !== descendants.length || descendants.some((id) => !expectedIds.has(id))) {
@@ -602,7 +607,7 @@ export const deleteWikiPage = async (
     await lockPageRows(tx, targetIds)
     const targets = await tx.wikiPage.findMany({
       where: { id: { in: targetIds } },
-      select: { ...SNAPSHOT_SELECT, id: true, number: true },
+      select: { ...SNAPSHOT_SELECT, id: true, number: true, createdAt: true, createdById: true },
     })
     for (const target of targets) {
       await writeWikiPageRevision(tx, {
@@ -614,6 +619,8 @@ export const deleteWikiPage = async (
         actorId: actor.id,
         via: writer.via,
         ticketId,
+        pageCreatedAt: target.createdAt,
+        pageCreatedById: target.createdById,
       })
     }
     // 子孫は parentId の Cascade で一緒に消える
@@ -636,6 +643,31 @@ const RESTORE_SOURCE_SELECT = {
   type: true,
   tagIds: true,
 } as const
+
+/**
+ * 削除済みのページを作り直すときの作成日時・作成者。最後の削除の版に残した値を使い(作成の版が保持期間や件数の上限で
+ * 消えていても元の作成日時に戻す)、無ければ(列を足す前に削除した版)残っている最も古い版から取る。
+ * 作成者が退会していれば空にする。戻し元の版をロックの後で読めているので、版はどちらかが見つかる
+ */
+const originalCreationOf = async (tx: Db, pageId: string): Promise<{ at: Date; byId: string | null } | null> => {
+  const deleted = await tx.wikiPageRevision.findFirst({
+    where: { pageId, action: 'deleted', pageCreatedAt: { not: null } },
+    select: { pageCreatedAt: true, pageCreatedById: true },
+    orderBy: WIKI_REVISION_ORDER,
+  })
+  if (deleted?.pageCreatedAt) {
+    const creator = deleted.pageCreatedById
+      ? await tx.user.findUnique({ where: { id: deleted.pageCreatedById }, select: { id: true } })
+      : null
+    return { at: deleted.pageCreatedAt, byId: creator?.id ?? null }
+  }
+  const oldest = await tx.wikiPageRevision.findFirst({
+    where: { pageId },
+    select: { actorId: true, createdAt: true },
+    orderBy: { number: 'asc' },
+  })
+  return oldest ? { at: oldest.createdAt, byId: oldest.actorId } : null
+}
 
 /**
  * 版の内容へ戻し、restored の版を残す。タグは ID で引き当て(改名したタグは今の名前で付く)、スペースから消えたタグは外す。
@@ -744,14 +776,9 @@ export const restoreWikiPageRevision = async (
       parentId === revision.parentId ? revision.order : undefined,
     )
     const order = isFlat ? 0 : ordered.indexOf(pageId)
-    // 戻し元の版をロックの後で読めているので見つかる。見つからなければ(型の上だけ)復元した人・時刻にする
-    const oldest = await tx.wikiPageRevision.findFirst({
-      where: { pageId },
-      select: { actorId: true, createdAt: true },
-      orderBy: { number: 'asc' },
-    })
+    const created = await originalCreationOf(tx, pageId)
     await applySiblingOrders(tx, rows, ordered, pageId)
-    const created = await tx.wikiPage.create({
+    const recreated = await tx.wikiPage.create({
       data: {
         id: pageId,
         spaceId,
@@ -761,8 +788,8 @@ export const restoreWikiPageRevision = async (
         content: revision.content,
         type: revision.type,
         order,
-        createdById: oldest ? oldest.actorId : actor.id,
-        ...(oldest ? { createdAt: oldest.createdAt } : {}),
+        createdById: created ? created.byId : actor.id,
+        ...(created ? { createdAt: created.at } : {}),
         updatedById: actor.id,
         updatedVia: writer.via,
       },
@@ -777,7 +804,7 @@ export const restoreWikiPageRevision = async (
       type: revision.type,
       tags,
     })
-    return { result: 'created' as const, id: pageId, ref, number, updatedAt: created.updatedAt }
+    return { result: 'created' as const, id: pageId, ref, number, updatedAt: recreated.updatedAt }
   })
 
   if (outcome.result !== 'unchanged') {
@@ -847,7 +874,8 @@ export const getWikiPage = async (actor: Actor, key: string, number: number) => 
       },
       { isolationLevel: 'RepeatableRead' },
     ),
-    loadTree(prisma, space.id),
+    // アナウンス用スペースは平らで先祖・子を持たないので、増え続ける全件の木は読まない
+    isFlatWikiSpace(space.type) ? [] : loadTree(prisma, space.id),
   ])
   if (!page) {
     throw errInvalidOperation()

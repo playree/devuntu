@@ -93,7 +93,7 @@ export const WikiSideTree: FC = () => {
                 size='sm'
                 variant='ghost'
                 className='size-7 min-w-7'
-                tooltip={t('wiki_add_page')}
+                tooltip={isAnnouncement ? t('wiki_new_announcement') : t('wiki_add_page')}
                 icon={<DocumentPlusIcon width={16} />}
                 onPress={() => createModalState.open()}
               />

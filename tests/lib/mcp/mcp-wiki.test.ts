@@ -13,7 +13,7 @@ import {
   searchWikiForMcp,
   WIKI_AGENT_RECURSIVE_DELETE_DENIED,
 } from '@/lib/mcp/mcp-wiki'
-import { listAllWikiAnnouncements } from '@/lib/wiki/wiki-announcement'
+import { listRecentWikiAnnouncements } from '@/lib/wiki/wiki-announcement'
 import {
   createWikiPage,
   deleteWikiPage,
@@ -24,7 +24,7 @@ import {
   readWikiPageContent,
   updateWikiPage,
 } from '@/lib/wiki/wiki-page'
-import { WIKI_PAGE_CONFLICT, WIKI_PAGE_TOO_DEEP } from '@/lib/wiki/wiki-rule'
+import { WIKI_ANNOUNCEMENT_FLAT, WIKI_PAGE_CONFLICT, WIKI_PAGE_TOO_DEEP } from '@/lib/wiki/wiki-rule'
 import { searchWikiPages } from '@/lib/wiki/wiki-search'
 import { getWikiSpaceByKey, listWikiSpaces } from '@/lib/wiki/wiki-space'
 import { listWikiTags, resolveWikiTagIdsByName } from '@/lib/wiki/wiki-tag'
@@ -39,6 +39,7 @@ vi.mock('@/lib/mcp/mcp-ticket', () => ({ resolveTicketId: vi.fn() }))
 vi.mock('@/lib/wiki/wiki-page', async (importOriginal) => ({
   assertWikiPageNotConflicted: (await importOriginal<typeof import('@/lib/wiki/wiki-page')>())
     .assertWikiPageNotConflicted,
+  errWikiAnnouncementFlat: (await importOriginal<typeof import('@/lib/wiki/wiki-page')>()).errWikiAnnouncementFlat,
   createWikiPage: vi.fn(),
   deleteWikiPage: vi.fn(),
   findWikiPageByNumber: vi.fn(),
@@ -54,7 +55,7 @@ vi.mock('@/lib/wiki/wiki-space', () => ({
 }))
 vi.mock('@/lib/wiki/wiki-tag', () => ({ listWikiTags: vi.fn(), resolveWikiTagIdsByName: vi.fn() }))
 vi.mock('@/lib/wiki/wiki-search', () => ({ searchWikiPages: vi.fn() }))
-vi.mock('@/lib/wiki/wiki-announcement', () => ({ listAllWikiAnnouncements: vi.fn() }))
+vi.mock('@/lib/wiki/wiki-announcement', () => ({ listRecentWikiAnnouncements: vi.fn() }))
 vi.mock('@/lib/wiki/wiki-template', () => ({ listWikiTemplateNames: vi.fn(), renderWikiTemplate: vi.fn() }))
 
 const SPACE_ID = 'space-1'
@@ -396,6 +397,19 @@ describe('saveWikiPageForMcp: 更新', () => {
     expect(vi.mocked(moveWikiPage).mock.calls[0][3]).toEqual({ parentId: null, position: undefined })
   })
 
+  it('アナウンス用スペースで内容と移動を一度に渡すと、内容も書かずに WIKI_ANNOUNCEMENT_FLAT', async () => {
+    vi.mocked(getWikiSpaceByKey).mockResolvedValue({
+      space: { id: SPACE_ID, key: 'DOCS', name: 'お知らせ', type: 'announcement' },
+      access: { spaceId: SPACE_ID, key: 'DOCS', canWrite: true, type: 'announcement' },
+    } as never)
+
+    const error = await errorOf(saveWikiPageForMcp(human, { ref: 'DOCS/12', content: '新しい本文', position: 1 }))
+
+    expect(error.errorType).toBe(WIKI_ANNOUNCEMENT_FLAT)
+    expect(updateWikiPage).not.toHaveBeenCalled()
+    expect(moveWikiPage).not.toHaveBeenCalled()
+  })
+
   it('内容と移動を一度に渡すと、更新の後に、更新後の updatedAt で移動する', async () => {
     const result = await saveWikiPageForMcp(human, { ref: 'DOCS/12', title: '改名', parent: 'DOCS/3' })
 
@@ -630,10 +644,13 @@ describe('getWikiTreeForMcp', () => {
       access: { canWrite: false },
     } as never)
     const createdAt = new Date('2026-11-20T00:00:00.000Z')
-    vi.mocked(listAllWikiAnnouncements).mockResolvedValue([
-      { number: 5, title: '新しい', createdAt, tagIds: ['t1'] },
-      { number: 4, title: '古い', createdAt: new Date('2026-10-01T00:00:00.000Z'), tagIds: [] },
-    ])
+    vi.mocked(listRecentWikiAnnouncements).mockResolvedValue({
+      items: [
+        { number: 5, title: '新しい', createdAt, tagIds: ['t1'] },
+        { number: 4, title: '古い', createdAt: new Date('2026-10-01T00:00:00.000Z'), tagIds: [] },
+      ],
+      total: 230,
+    })
 
     expect(await getWikiTreeForMcp(human, { space: 'NEWS', depth: 1 })).toEqual({
       space: { key: 'NEWS', name: 'お知らせ', type: 'announcement' },
@@ -641,7 +658,8 @@ describe('getWikiTreeForMcp', () => {
         { ref: 'NEWS/5', title: '新しい', tags: ['設計'], createdAt },
         { ref: 'NEWS/4', title: '古い', createdAt: new Date('2026-10-01T00:00:00.000Z') },
       ],
-      totalPages: 2,
+      totalPages: 230,
+      limitReached: true,
     })
     expect(getWikiTree).not.toHaveBeenCalled()
     expect((await errorOf(getWikiTreeForMcp(human, { space: 'NEWS', root: 'NEWS/5' }))).errorType).toBe(

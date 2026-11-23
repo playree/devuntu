@@ -969,6 +969,7 @@ export const ja: DefaultLocaleItems = {
   msg_user_not_exist: 'ユーザーが存在しません。',
   msg_wiki_board_assign:
     'ボードのメンバー(直接・グループ経由)が、選んだロールでこのスペースを使えます。割り当てられるのは、あなたが参加しているボードです。',
+  msg_wiki_cannot_restore_design_doc: 'アナウンス用スペースには設計書を戻せません。',
   msg_wiki_cannot_restore_regular_page: '設計書スペースには通常のページを戻せません。',
   msg_wiki_deleted_pages_hint:
     '削除したページを復元できるのは、削除から ${days} 日のあいだだけです。上から順に復元すると、元の親子関係に戻ります(元の親の下で階層の上限を超えるページは、スペース直下に戻ります)。',
@@ -985,7 +986,8 @@ export const ja: DefaultLocaleItems = {
   msg_wiki_page_has_children: '子ページがあるため削除できません。配下ごと削除してください。',
   msg_wiki_page_invalid_parent: 'そのページの下には移動できません(自分自身・子孫・別のスペースは選べません)。',
   msg_wiki_page_too_deep: '階層が深すぎます(10階層まで)。',
-  msg_wiki_page_type_not_allowed: '設計書スペースでは、通常のページは作れません(設計書だけです)。',
+  msg_wiki_page_type_not_allowed:
+    'このスペースの区分では、この種類のページは作れません(設計書スペースは設計書だけ、アナウンス用スペースは通常のページだけです)。',
   msg_wiki_pages_already_restored: '${count} ページは既に復元されていたため、変更していません。',
   msg_wiki_restore_excluded_pages: '設計書スペースに戻せない通常のページとその配下(${count} ページ)は、復元しません。',
   msg_wiki_restore_parent_still_deleted:

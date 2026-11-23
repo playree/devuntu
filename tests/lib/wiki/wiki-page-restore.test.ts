@@ -17,10 +17,14 @@ vi.mock('@/lib/prisma', async () =>
   (await import('../../helpers/prisma')).mockPrisma({
     wikiPage: ['findUnique', 'findMany', 'create', 'update'],
     wikiPageRevision: ['findUnique', 'findFirst'],
+    user: ['findUnique'],
   }),
 )
 vi.mock('@/lib/wiki/wiki-access', () => ({ assertWikiSpaceAccess: vi.fn() }))
-vi.mock('@/lib/wiki/wiki-revision', () => ({ writeWikiPageRevision: vi.fn() }))
+vi.mock('@/lib/wiki/wiki-revision', async (importOriginal) => ({
+  WIKI_REVISION_ORDER: (await importOriginal<typeof import('@/lib/wiki/wiki-revision')>()).WIKI_REVISION_ORDER,
+  writeWikiPageRevision: vi.fn(),
+}))
 vi.mock('@/lib/wiki/wiki-space', () => ({ getWikiSpaceByKey: vi.fn() }))
 vi.mock('@/lib/board/board-access', () => ({ getTicketAccess: vi.fn() }))
 vi.mock('@/lib/wiki/wiki-tag', () => ({
@@ -114,7 +118,10 @@ beforeEach(() => {
   vi.mocked(prisma.wikiPage.update).mockResolvedValue({ updatedAt: new Date() } as never)
   vi.mocked(prisma.wikiPage.create).mockResolvedValue({ updatedAt: new Date() } as never)
   vi.mocked(prisma.$queryRaw).mockResolvedValue([] as never)
-  vi.mocked(prisma.wikiPageRevision.findFirst).mockResolvedValue(OLDEST_REVISION as never)
+  // 最後の削除の版に作成日時が無い(列を足す前に削除した)ときは、最も古い版を引く
+  vi.mocked(prisma.wikiPageRevision.findFirst).mockImplementation((async ({ where }: { where: { action?: string } }) =>
+    where.action === 'deleted' ? null : OLDEST_REVISION) as never)
+  vi.mocked(prisma.user.findUnique).mockResolvedValue({ id: 'creator' } as never)
   vi.mocked(findWikiTagsByIds).mockImplementation(async (_tx, _spaceId, ids) =>
     TAGS.filter(({ id }) => ids.includes(id)),
   )
@@ -255,7 +262,7 @@ describe('restoreWikiPageRevision(削除済みのページ)', () => {
   it('作成者・作成日時は、復元した人・時刻ではなく最も古い版のものにする', async () => {
     await restoreWikiPageRevision(actor, WEB, 'rev-1')
 
-    expect(vi.mocked(prisma.wikiPageRevision.findFirst).mock.calls[0][0]).toMatchObject({
+    expect(vi.mocked(prisma.wikiPageRevision.findFirst).mock.calls.at(-1)?.[0]).toMatchObject({
       where: { pageId: 'x' },
       orderBy: { number: 'asc' },
     })
@@ -267,13 +274,51 @@ describe('restoreWikiPageRevision(削除済みのページ)', () => {
   })
 
   it('最も古い版の作成者のユーザーが削除済み(null)なら、作成者は空のままにする', async () => {
-    vi.mocked(prisma.wikiPageRevision.findFirst).mockResolvedValue({ ...OLDEST_REVISION, actorId: null } as never)
+    vi.mocked(prisma.wikiPageRevision.findFirst).mockImplementation((async ({
+      where,
+    }: {
+      where: { action?: string }
+    }) => (where.action === 'deleted' ? null : { ...OLDEST_REVISION, actorId: null })) as never)
 
     await restoreWikiPageRevision(actor, WEB, 'rev-1')
 
     expect(vi.mocked(prisma.wikiPage.create).mock.calls[0][0].data).toMatchObject({
       createdById: null,
       createdAt: OLDEST_REVISION.createdAt,
+    })
+  })
+
+  it('最後の削除の版に作成日時・作成者が残っていれば、作成の版が消えていてもそれに戻す', async () => {
+    const pageCreatedAt = new Date('2026-01-05T00:00:00.000Z')
+    vi.mocked(prisma.wikiPageRevision.findFirst).mockImplementation((async ({
+      where,
+    }: {
+      where: { action?: string }
+    }) => (where.action === 'deleted' ? { pageCreatedAt, pageCreatedById: 'author' } : OLDEST_REVISION)) as never)
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({ id: 'author' } as never)
+
+    await restoreWikiPageRevision(actor, WEB, 'rev-1')
+
+    expect(vi.mocked(prisma.wikiPage.create).mock.calls[0][0].data).toMatchObject({
+      createdById: 'author',
+      createdAt: pageCreatedAt,
+    })
+  })
+
+  it('削除の版に残した作成者が退会していれば、作成者は空にする(外部キーの違反にしない)', async () => {
+    const pageCreatedAt = new Date('2026-01-05T00:00:00.000Z')
+    vi.mocked(prisma.wikiPageRevision.findFirst).mockImplementation((async ({
+      where,
+    }: {
+      where: { action?: string }
+    }) => (where.action === 'deleted' ? { pageCreatedAt, pageCreatedById: 'gone' } : OLDEST_REVISION)) as never)
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(null)
+
+    await restoreWikiPageRevision(actor, WEB, 'rev-1')
+
+    expect(vi.mocked(prisma.wikiPage.create).mock.calls[0][0].data).toMatchObject({
+      createdById: null,
+      createdAt: pageCreatedAt,
     })
   })
 

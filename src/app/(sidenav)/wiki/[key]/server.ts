@@ -9,6 +9,7 @@ import {
   scDeleteWikiPage,
   scMoveWikiPage,
   scReorderWikiPage,
+  scWikiAnnouncementArchive,
   scWikiAnnouncementQuery,
   scWikiSpaceKey,
 } from '@/lib/schema/schema-wiki'
@@ -198,8 +199,10 @@ export const getWikiAnnouncements = safeAuthAction
   .action(async ({ ctx: { user }, parsedInput: { id, ...query } }) => await listWikiAnnouncements(user, id, query))
 export type GetWikiAnnouncementsReturnType = Awaited<ReturnType<typeof getWikiAnnouncements>>['data']
 
-/** アナウンス用スペースのバックナンバー(年月ごとの件数、新しい順)。`id` はスペース ID */
+/** アナウンス用スペースのバックナンバー(年月ごとの件数、新しい順)。`id` はスペース ID。タグで絞り込める */
 export const getWikiAnnouncementArchive = safeAuthAction
   .metadata({ actionName: 'getWikiAnnouncementArchive', role: 'user' })
-  .inputSchema(scUUID)
-  .action(async ({ ctx: { user }, parsedInput: { id } }) => await getWikiAnnouncementArchiveCore(user, id))
+  .inputSchema(scWikiAnnouncementArchive)
+  .action(
+    async ({ ctx: { user }, parsedInput: { id, tagId } }) => await getWikiAnnouncementArchiveCore(user, id, { tagId }),
+  )

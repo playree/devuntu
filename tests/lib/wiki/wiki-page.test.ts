@@ -27,7 +27,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/prisma', async () =>
   (await import('../../helpers/prisma')).mockPrisma({
-    wikiPage: ['findUnique', 'findUniqueOrThrow', 'findMany', 'create', 'update', 'delete'],
+    wikiPage: ['findUnique', 'findUniqueOrThrow', 'findFirst', 'findMany', 'create', 'update', 'delete'],
     wikiPageRevision: ['findFirst'],
   }),
 )
@@ -52,6 +52,7 @@ const WEB: WikiWriter = { via: 'web' }
 const MCP: WikiWriter = { via: 'mcp' }
 const SPACE_ID = 's1'
 const UPDATED_AT = new Date('2026-11-01T00:00:00.000Z')
+const CREATED_AT = new Date('2026-10-01T00:00:00.000Z')
 
 type Row = { id: string; parentId: string | null; order: number }
 
@@ -85,6 +86,8 @@ const pageRow = (id: string, override: Record<string, unknown> = {}) => {
     spaceId: SPACE_ID,
     number: 10,
     updatedAt: UPDATED_AT,
+    createdAt: CREATED_AT,
+    createdById: 'creator',
     ...override,
   }
 }
@@ -280,6 +283,28 @@ describe('アナウンス用スペース', () => {
     expect(await errorTypeOf(createWikiPage(actor, MCP, SPACE_ID, { title: 'x', type: 'design_doc' }))).toBe(
       WIKI_PAGE_TYPE_NOT_ALLOWED,
     )
+  })
+
+  it('削除は全件の木を読まず、ページの有無だけを見て消す', async () => {
+    vi.mocked(prisma.wikiPage.findFirst).mockResolvedValue({ id: 'e' } as never)
+    vi.mocked(prisma.wikiPage.findMany).mockImplementation((async (args: { where: { id?: { in: string[] } } }) =>
+      (args.where.id?.in ?? []).map((id) => pageRow(id))) as never)
+
+    expect(await deleteWikiPage(actor, WEB, 'e')).toEqual({ deleted: 1 })
+    expect(vi.mocked(prisma.wikiPage.findMany).mock.calls.every(([args]) => args?.where?.id)).toBe(true)
+  })
+
+  it('ページ詳細は全件の木を読まず、先祖・子を空で返す', async () => {
+    vi.mocked(getWikiSpaceByKey).mockResolvedValue({
+      space: { id: SPACE_ID, type: 'announcement' },
+      access: {},
+    } as never)
+    vi.mocked(prisma.wikiPage.findUnique).mockResolvedValue({ id: 'b' } as never)
+
+    const detail = await getWikiPage(actor, 'NEWS', 3)
+
+    expect(prisma.wikiPage.findMany).not.toHaveBeenCalled()
+    expect(detail).toMatchObject({ ancestors: [], children: [] })
   })
 
   it('移動・並べ替えは WIKI_ANNOUNCEMENT_FLAT(ロックの後で区分を読んで弾く)', async () => {
@@ -642,6 +667,15 @@ describe('deleteWikiPage', () => {
     // 子孫は parentId の Cascade で消えるので、消すのは指定したページだけ
     expect(prisma.wikiPage.delete).toHaveBeenCalledTimes(1)
     expect(vi.mocked(prisma.wikiPage.delete).mock.calls[0][0]).toMatchObject({ where: { id: 'a' } })
+  })
+
+  it('deleted の版に、ページの作成日時と作成者を残す(復元で元の作成日時に戻すため)', async () => {
+    await deleteWikiPage(actor, WEB, 'e')
+    expect(vi.mocked(writeWikiPageRevision).mock.calls[0][1]).toMatchObject({
+      action: 'deleted',
+      pageCreatedAt: CREATED_AT,
+      pageCreatedById: 'creator',
+    })
   })
 
   it('消すページの行をロックしてから内容を読む(並行する更新の後の内容を版に残す)', async () => {

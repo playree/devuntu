@@ -906,6 +906,7 @@ export type LocaleItemBase =
   | 'msg_wiki_announcement_flat'
   | 'msg_wiki_announcements_load_failed'
   | 'msg_wiki_board_assign'
+  | 'msg_wiki_cannot_restore_design_doc'
   | 'msg_wiki_cannot_restore_regular_page'
   | 'msg_wiki_deleted_pages_hint'
   | 'msg_wiki_design_docs_load_failed'

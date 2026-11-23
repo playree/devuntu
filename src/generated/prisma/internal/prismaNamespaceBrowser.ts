@@ -1191,6 +1191,8 @@ export const WikiPageRevisionScalarFieldEnum = {
   via: 'via',
   ticketId: 'ticketId',
   restoredFromId: 'restoredFromId',
+  pageCreatedAt: 'pageCreatedAt',
+  pageCreatedById: 'pageCreatedById',
   message: 'message',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'

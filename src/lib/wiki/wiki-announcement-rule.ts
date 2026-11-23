@@ -8,6 +8,8 @@ import { addMonthsDateOnly, zonedDayBounds } from '../day'
 
 /** サイドバーに出す最新のアナウンスの件数 */
 export const WIKI_ANNOUNCEMENT_SIDEBAR_LIMIT = 10
+/** MCP の get_wiki_tree で返すアナウンスの件数の上限(新しい順) */
+export const MAX_WIKI_ANNOUNCEMENT_TREE = 200
 /** 一覧の 1 ページの件数の上限 */
 export const MAX_WIKI_ANNOUNCEMENT_PAGE_SIZE = 100
 

@@ -660,7 +660,7 @@ export const en: DefaultLocaleItems = {
   wiki_announcement_archive: 'Archive',
   wiki_announcement_count: '${count}',
   wiki_announcement_latest: 'Latest announcements',
-  wiki_announcement_month: '${year}-${month}',
+  wiki_announcement_month: '${year}-${mm}',
   wiki_announcement_year: '${year}',
   wiki_child_count: '${count} children',
   wiki_change_page_type: 'Change Type',
@@ -973,6 +973,7 @@ Please copy and use the connection information above.
   msg_user_not_exist: 'User does not exist.',
   msg_wiki_board_assign:
     'Members of the board (direct or via groups) can use this space with the chosen role. You can assign boards you belong to.',
+  msg_wiki_cannot_restore_design_doc: 'Design docs cannot be restored to an announcement space.',
   msg_wiki_cannot_restore_regular_page: 'Regular pages cannot be restored to a design doc space.',
   msg_wiki_deleted_pages_hint:
     'Deleted pages can be restored only for ${days} days after deletion. Restoring them from the top puts them back in their original hierarchy (a page that would exceed the depth limit under its original parent goes to the top level).',
@@ -989,7 +990,8 @@ Please copy and use the connection information above.
   msg_wiki_page_has_children: 'The page has child pages. Delete it together with its descendants.',
   msg_wiki_page_invalid_parent: 'The page cannot be moved there (not under itself, its descendants, or another space).',
   msg_wiki_page_too_deep: 'Pages can be nested at most 10 levels deep.',
-  msg_wiki_page_type_not_allowed: 'Only design docs can be created in a design doc space.',
+  msg_wiki_page_type_not_allowed:
+    'This type of page is not allowed in this space (a design doc space only holds design docs, an announcement space only normal pages).',
   msg_wiki_pages_already_restored: '${count} pages had already been restored, so they were left unchanged.',
   msg_wiki_restore_excluded_pages:
     ' Regular pages, which cannot be restored to a design doc space, and their descendants (${count} pages) are not restored.',

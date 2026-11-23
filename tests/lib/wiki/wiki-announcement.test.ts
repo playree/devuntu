@@ -7,9 +7,10 @@ import { prisma } from '@/lib/prisma'
 import { assertWikiSpaceAccess } from '@/lib/wiki/wiki-access'
 import {
   getWikiAnnouncementArchive,
-  listAllWikiAnnouncements,
+  listRecentWikiAnnouncements,
   listWikiAnnouncements,
 } from '@/lib/wiki/wiki-announcement'
+import { MAX_WIKI_ANNOUNCEMENT_TREE } from '@/lib/wiki/wiki-announcement-rule'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/prisma', async () =>
@@ -105,7 +106,13 @@ describe('getWikiAnnouncementArchive', () => {
     vi.mocked(prisma.$queryRaw).mockResolvedValue([{ month: '2026-11', count: 2 }] as never)
 
     expect(await getWikiAnnouncementArchive(actor, SPACE_ID)).toEqual([{ month: '2026-11', count: 2 }])
-    expect(vi.mocked(prisma.$queryRaw).mock.calls[0].slice(1)).toEqual(['Asia/Tokyo', SPACE_ID])
+    expect(vi.mocked(prisma.$queryRaw).mock.calls[0].slice(1, 3)).toEqual(['Asia/Tokyo', SPACE_ID])
+  })
+
+  it('タグを渡すと、そのタグを持つアナウンスだけを数える', async () => {
+    vi.mocked(prisma.$queryRaw).mockResolvedValue([] as never)
+    await getWikiAnnouncementArchive(actor, SPACE_ID, { tagId: 't1' })
+    expect(JSON.stringify(vi.mocked(prisma.$queryRaw).mock.calls[0])).toContain('t1')
   })
 
   it('タイムゾーンが未設定ならサーバーの既定で数える', async () => {
@@ -122,18 +129,19 @@ describe('getWikiAnnouncementArchive', () => {
   })
 })
 
-describe('listAllWikiAnnouncements', () => {
-  it('全ページを作成日時の新しい順で、本文なしで返す', async () => {
+describe('listRecentWikiAnnouncements', () => {
+  it('新しい順に上限まで、本文なしで返し、総件数を添える', async () => {
     vi.mocked(prisma.wikiPage.findMany).mockResolvedValue([
       { number: 3, title: 'お知らせ', createdAt: CREATED_AT, tags: [{ tagId: 't1' }] },
     ] as never)
 
-    expect(await listAllWikiAnnouncements(actor, SPACE_ID)).toEqual([
-      { number: 3, title: 'お知らせ', createdAt: CREATED_AT, tagIds: ['t1'] },
-    ])
-    expect(vi.mocked(prisma.wikiPage.findMany).mock.calls[0][0]?.orderBy).toEqual([
-      { createdAt: 'desc' },
-      { number: 'desc' },
-    ])
+    expect(await listRecentWikiAnnouncements(actor, SPACE_ID)).toEqual({
+      items: [{ number: 3, title: 'お知らせ', createdAt: CREATED_AT, tagIds: ['t1'] }],
+      total: 25,
+    })
+    expect(vi.mocked(prisma.wikiPage.findMany).mock.calls[0][0]).toMatchObject({
+      orderBy: [{ createdAt: 'desc' }, { number: 'desc' }],
+      take: MAX_WIKI_ANNOUNCEMENT_TREE,
+    })
   })
 })

@@ -57,6 +57,8 @@ export type WikiPageRevisionMinAggregateOutputType = {
   via: $Enums.WikiVia | null
   ticketId: string | null
   restoredFromId: string | null
+  pageCreatedAt: Date | null
+  pageCreatedById: string | null
   message: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -78,6 +80,8 @@ export type WikiPageRevisionMaxAggregateOutputType = {
   via: $Enums.WikiVia | null
   ticketId: string | null
   restoredFromId: string | null
+  pageCreatedAt: Date | null
+  pageCreatedById: string | null
   message: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -101,6 +105,8 @@ export type WikiPageRevisionCountAggregateOutputType = {
   via: number
   ticketId: number
   restoredFromId: number
+  pageCreatedAt: number
+  pageCreatedById: number
   message: number
   createdAt: number
   updatedAt: number
@@ -136,6 +142,8 @@ export type WikiPageRevisionMinAggregateInputType = {
   via?: true
   ticketId?: true
   restoredFromId?: true
+  pageCreatedAt?: true
+  pageCreatedById?: true
   message?: true
   createdAt?: true
   updatedAt?: true
@@ -157,6 +165,8 @@ export type WikiPageRevisionMaxAggregateInputType = {
   via?: true
   ticketId?: true
   restoredFromId?: true
+  pageCreatedAt?: true
+  pageCreatedById?: true
   message?: true
   createdAt?: true
   updatedAt?: true
@@ -180,6 +190,8 @@ export type WikiPageRevisionCountAggregateInputType = {
   via?: true
   ticketId?: true
   restoredFromId?: true
+  pageCreatedAt?: true
+  pageCreatedById?: true
   message?: true
   createdAt?: true
   updatedAt?: true
@@ -290,6 +302,8 @@ export type WikiPageRevisionGroupByOutputType = {
   via: $Enums.WikiVia
   ticketId: string | null
   restoredFromId: string | null
+  pageCreatedAt: Date | null
+  pageCreatedById: string | null
   message: string | null
   createdAt: Date
   updatedAt: Date
@@ -336,6 +350,8 @@ export type WikiPageRevisionWhereInput = {
   via?: Prisma.EnumWikiViaFilter<"WikiPageRevision"> | $Enums.WikiVia
   ticketId?: Prisma.StringNullableFilter<"WikiPageRevision"> | string | null
   restoredFromId?: Prisma.StringNullableFilter<"WikiPageRevision"> | string | null
+  pageCreatedAt?: Prisma.DateTimeNullableFilter<"WikiPageRevision"> | Date | string | null
+  pageCreatedById?: Prisma.StringNullableFilter<"WikiPageRevision"> | string | null
   message?: Prisma.StringNullableFilter<"WikiPageRevision"> | string | null
   createdAt?: Prisma.DateTimeFilter<"WikiPageRevision"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"WikiPageRevision"> | Date | string
@@ -362,6 +378,8 @@ export type WikiPageRevisionOrderByWithRelationInput = {
   via?: Prisma.SortOrder
   ticketId?: Prisma.SortOrderInput | Prisma.SortOrder
   restoredFromId?: Prisma.SortOrderInput | Prisma.SortOrder
+  pageCreatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  pageCreatedById?: Prisma.SortOrderInput | Prisma.SortOrder
   message?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -392,6 +410,8 @@ export type WikiPageRevisionWhereUniqueInput = Prisma.AtLeast<{
   via?: Prisma.EnumWikiViaFilter<"WikiPageRevision"> | $Enums.WikiVia
   ticketId?: Prisma.StringNullableFilter<"WikiPageRevision"> | string | null
   restoredFromId?: Prisma.StringNullableFilter<"WikiPageRevision"> | string | null
+  pageCreatedAt?: Prisma.DateTimeNullableFilter<"WikiPageRevision"> | Date | string | null
+  pageCreatedById?: Prisma.StringNullableFilter<"WikiPageRevision"> | string | null
   message?: Prisma.StringNullableFilter<"WikiPageRevision"> | string | null
   createdAt?: Prisma.DateTimeFilter<"WikiPageRevision"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"WikiPageRevision"> | Date | string
@@ -418,6 +438,8 @@ export type WikiPageRevisionOrderByWithAggregationInput = {
   via?: Prisma.SortOrder
   ticketId?: Prisma.SortOrderInput | Prisma.SortOrder
   restoredFromId?: Prisma.SortOrderInput | Prisma.SortOrder
+  pageCreatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  pageCreatedById?: Prisma.SortOrderInput | Prisma.SortOrder
   message?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -449,6 +471,8 @@ export type WikiPageRevisionScalarWhereWithAggregatesInput = {
   via?: Prisma.EnumWikiViaWithAggregatesFilter<"WikiPageRevision"> | $Enums.WikiVia
   ticketId?: Prisma.StringNullableWithAggregatesFilter<"WikiPageRevision"> | string | null
   restoredFromId?: Prisma.StringNullableWithAggregatesFilter<"WikiPageRevision"> | string | null
+  pageCreatedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"WikiPageRevision"> | Date | string | null
+  pageCreatedById?: Prisma.StringNullableWithAggregatesFilter<"WikiPageRevision"> | string | null
   message?: Prisma.StringNullableWithAggregatesFilter<"WikiPageRevision"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"WikiPageRevision"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"WikiPageRevision"> | Date | string
@@ -469,6 +493,8 @@ export type WikiPageRevisionCreateInput = {
   tagNames?: Prisma.WikiPageRevisionCreatetagNamesInput | string[]
   via: $Enums.WikiVia
   restoredFromId?: string | null
+  pageCreatedAt?: Date | string | null
+  pageCreatedById?: string | null
   message?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -495,6 +521,8 @@ export type WikiPageRevisionUncheckedCreateInput = {
   via: $Enums.WikiVia
   ticketId?: string | null
   restoredFromId?: string | null
+  pageCreatedAt?: Date | string | null
+  pageCreatedById?: string | null
   message?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -515,6 +543,8 @@ export type WikiPageRevisionUpdateInput = {
   tagNames?: Prisma.WikiPageRevisionUpdatetagNamesInput | string[]
   via?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
   restoredFromId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pageCreatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  pageCreatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -541,6 +571,8 @@ export type WikiPageRevisionUncheckedUpdateInput = {
   via?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
   ticketId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   restoredFromId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pageCreatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  pageCreatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -564,6 +596,8 @@ export type WikiPageRevisionCreateManyInput = {
   via: $Enums.WikiVia
   ticketId?: string | null
   restoredFromId?: string | null
+  pageCreatedAt?: Date | string | null
+  pageCreatedById?: string | null
   message?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -584,6 +618,8 @@ export type WikiPageRevisionUpdateManyMutationInput = {
   tagNames?: Prisma.WikiPageRevisionUpdatetagNamesInput | string[]
   via?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
   restoredFromId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pageCreatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  pageCreatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -607,6 +643,8 @@ export type WikiPageRevisionUncheckedUpdateManyInput = {
   via?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
   ticketId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   restoredFromId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pageCreatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  pageCreatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -645,6 +683,8 @@ export type WikiPageRevisionCountOrderByAggregateInput = {
   via?: Prisma.SortOrder
   ticketId?: Prisma.SortOrder
   restoredFromId?: Prisma.SortOrder
+  pageCreatedAt?: Prisma.SortOrder
+  pageCreatedById?: Prisma.SortOrder
   message?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -672,6 +712,8 @@ export type WikiPageRevisionMaxOrderByAggregateInput = {
   via?: Prisma.SortOrder
   ticketId?: Prisma.SortOrder
   restoredFromId?: Prisma.SortOrder
+  pageCreatedAt?: Prisma.SortOrder
+  pageCreatedById?: Prisma.SortOrder
   message?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -693,6 +735,8 @@ export type WikiPageRevisionMinOrderByAggregateInput = {
   via?: Prisma.SortOrder
   ticketId?: Prisma.SortOrder
   restoredFromId?: Prisma.SortOrder
+  pageCreatedAt?: Prisma.SortOrder
+  pageCreatedById?: Prisma.SortOrder
   message?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -867,6 +911,8 @@ export type WikiPageRevisionCreateWithoutTicketInput = {
   tagNames?: Prisma.WikiPageRevisionCreatetagNamesInput | string[]
   via: $Enums.WikiVia
   restoredFromId?: string | null
+  pageCreatedAt?: Date | string | null
+  pageCreatedById?: string | null
   message?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -891,6 +937,8 @@ export type WikiPageRevisionUncheckedCreateWithoutTicketInput = {
   actorId?: string | null
   via: $Enums.WikiVia
   restoredFromId?: string | null
+  pageCreatedAt?: Date | string | null
+  pageCreatedById?: string | null
   message?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -943,6 +991,8 @@ export type WikiPageRevisionScalarWhereInput = {
   via?: Prisma.EnumWikiViaFilter<"WikiPageRevision"> | $Enums.WikiVia
   ticketId?: Prisma.StringNullableFilter<"WikiPageRevision"> | string | null
   restoredFromId?: Prisma.StringNullableFilter<"WikiPageRevision"> | string | null
+  pageCreatedAt?: Prisma.DateTimeNullableFilter<"WikiPageRevision"> | Date | string | null
+  pageCreatedById?: Prisma.StringNullableFilter<"WikiPageRevision"> | string | null
   message?: Prisma.StringNullableFilter<"WikiPageRevision"> | string | null
   createdAt?: Prisma.DateTimeFilter<"WikiPageRevision"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"WikiPageRevision"> | Date | string
@@ -963,6 +1013,8 @@ export type WikiPageRevisionCreateWithoutActorInput = {
   tagNames?: Prisma.WikiPageRevisionCreatetagNamesInput | string[]
   via: $Enums.WikiVia
   restoredFromId?: string | null
+  pageCreatedAt?: Date | string | null
+  pageCreatedById?: string | null
   message?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -987,6 +1039,8 @@ export type WikiPageRevisionUncheckedCreateWithoutActorInput = {
   via: $Enums.WikiVia
   ticketId?: string | null
   restoredFromId?: string | null
+  pageCreatedAt?: Date | string | null
+  pageCreatedById?: string | null
   message?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1033,6 +1087,8 @@ export type WikiPageRevisionCreateWithoutSpaceInput = {
   tagNames?: Prisma.WikiPageRevisionCreatetagNamesInput | string[]
   via: $Enums.WikiVia
   restoredFromId?: string | null
+  pageCreatedAt?: Date | string | null
+  pageCreatedById?: string | null
   message?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1057,6 +1113,8 @@ export type WikiPageRevisionUncheckedCreateWithoutSpaceInput = {
   via: $Enums.WikiVia
   ticketId?: string | null
   restoredFromId?: string | null
+  pageCreatedAt?: Date | string | null
+  pageCreatedById?: string | null
   message?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1105,6 +1163,8 @@ export type WikiPageRevisionCreateManyTicketInput = {
   actorId?: string | null
   via: $Enums.WikiVia
   restoredFromId?: string | null
+  pageCreatedAt?: Date | string | null
+  pageCreatedById?: string | null
   message?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1125,6 +1185,8 @@ export type WikiPageRevisionUpdateWithoutTicketInput = {
   tagNames?: Prisma.WikiPageRevisionUpdatetagNamesInput | string[]
   via?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
   restoredFromId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pageCreatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  pageCreatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1149,6 +1211,8 @@ export type WikiPageRevisionUncheckedUpdateWithoutTicketInput = {
   actorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   via?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
   restoredFromId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pageCreatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  pageCreatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1171,6 +1235,8 @@ export type WikiPageRevisionUncheckedUpdateManyWithoutTicketInput = {
   actorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   via?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
   restoredFromId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pageCreatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  pageCreatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1193,6 +1259,8 @@ export type WikiPageRevisionCreateManyActorInput = {
   via: $Enums.WikiVia
   ticketId?: string | null
   restoredFromId?: string | null
+  pageCreatedAt?: Date | string | null
+  pageCreatedById?: string | null
   message?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1213,6 +1281,8 @@ export type WikiPageRevisionUpdateWithoutActorInput = {
   tagNames?: Prisma.WikiPageRevisionUpdatetagNamesInput | string[]
   via?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
   restoredFromId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pageCreatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  pageCreatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1237,6 +1307,8 @@ export type WikiPageRevisionUncheckedUpdateWithoutActorInput = {
   via?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
   ticketId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   restoredFromId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pageCreatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  pageCreatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1259,6 +1331,8 @@ export type WikiPageRevisionUncheckedUpdateManyWithoutActorInput = {
   via?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
   ticketId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   restoredFromId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pageCreatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  pageCreatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1281,6 +1355,8 @@ export type WikiPageRevisionCreateManySpaceInput = {
   via: $Enums.WikiVia
   ticketId?: string | null
   restoredFromId?: string | null
+  pageCreatedAt?: Date | string | null
+  pageCreatedById?: string | null
   message?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1301,6 +1377,8 @@ export type WikiPageRevisionUpdateWithoutSpaceInput = {
   tagNames?: Prisma.WikiPageRevisionUpdatetagNamesInput | string[]
   via?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
   restoredFromId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pageCreatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  pageCreatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1325,6 +1403,8 @@ export type WikiPageRevisionUncheckedUpdateWithoutSpaceInput = {
   via?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
   ticketId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   restoredFromId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pageCreatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  pageCreatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1347,6 +1427,8 @@ export type WikiPageRevisionUncheckedUpdateManyWithoutSpaceInput = {
   via?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
   ticketId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   restoredFromId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pageCreatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  pageCreatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1372,6 +1454,8 @@ export type WikiPageRevisionSelect<ExtArgs extends runtime.Types.Extensions.Inte
   via?: boolean
   ticketId?: boolean
   restoredFromId?: boolean
+  pageCreatedAt?: boolean
+  pageCreatedById?: boolean
   message?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1398,6 +1482,8 @@ export type WikiPageRevisionSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   via?: boolean
   ticketId?: boolean
   restoredFromId?: boolean
+  pageCreatedAt?: boolean
+  pageCreatedById?: boolean
   message?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1424,6 +1510,8 @@ export type WikiPageRevisionSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   via?: boolean
   ticketId?: boolean
   restoredFromId?: boolean
+  pageCreatedAt?: boolean
+  pageCreatedById?: boolean
   message?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1450,12 +1538,14 @@ export type WikiPageRevisionSelectScalar = {
   via?: boolean
   ticketId?: boolean
   restoredFromId?: boolean
+  pageCreatedAt?: boolean
+  pageCreatedById?: boolean
   message?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type WikiPageRevisionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "spaceId" | "pageId" | "pageNumber" | "number" | "action" | "parentId" | "order" | "title" | "content" | "type" | "tagIds" | "tagNames" | "actorId" | "via" | "ticketId" | "restoredFromId" | "message" | "createdAt" | "updatedAt", ExtArgs["result"]["wikiPageRevision"]>
+export type WikiPageRevisionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "spaceId" | "pageId" | "pageNumber" | "number" | "action" | "parentId" | "order" | "title" | "content" | "type" | "tagIds" | "tagNames" | "actorId" | "via" | "ticketId" | "restoredFromId" | "pageCreatedAt" | "pageCreatedById" | "message" | "createdAt" | "updatedAt", ExtArgs["result"]["wikiPageRevision"]>
 export type WikiPageRevisionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   space?: boolean | Prisma.WikiSpaceDefaultArgs<ExtArgs>
   actor?: boolean | Prisma.WikiPageRevision$actorArgs<ExtArgs>
@@ -1521,6 +1611,15 @@ export type $WikiPageRevisionPayload<ExtArgs extends runtime.Types.Extensions.In
      * action=restored のときの戻し元の版
      */
     restoredFromId: string | null
+    /**
+     * action=deleted のとき、削除したページの作成日時と作成者。削除済みページの復元でそのまま戻す
+     * (作成の版が保持期間や件数の上限で消えていても、作成日時で並ぶアナウンスを元の位置に戻すため)
+     */
+    pageCreatedAt: Date | null
+    /**
+     * 作成者の User.id。退会しても版は残すので外部キーは張らない(戻すときに居なければ空にする)
+     */
+    pageCreatedById: string | null
     /**
      * 保存時に付けたコミットメッセージ(任意)。付いた版は連続保存のまとめの対象にしない
      */
@@ -1976,6 +2075,8 @@ export interface WikiPageRevisionFieldRefs {
   readonly via: Prisma.FieldRef<"WikiPageRevision", 'WikiVia'>
   readonly ticketId: Prisma.FieldRef<"WikiPageRevision", 'String'>
   readonly restoredFromId: Prisma.FieldRef<"WikiPageRevision", 'String'>
+  readonly pageCreatedAt: Prisma.FieldRef<"WikiPageRevision", 'DateTime'>
+  readonly pageCreatedById: Prisma.FieldRef<"WikiPageRevision", 'String'>
   readonly message: Prisma.FieldRef<"WikiPageRevision", 'String'>
   readonly createdAt: Prisma.FieldRef<"WikiPageRevision", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"WikiPageRevision", 'DateTime'>

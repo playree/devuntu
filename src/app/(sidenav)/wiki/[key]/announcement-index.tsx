@@ -39,6 +39,13 @@ const useOnSpaceReloaded = (callback: () => void) => {
   }, [tree])
 }
 
+/** 年月(YYYY-MM)の表示。月は 0 埋めしない数(「11月」)と、0 埋めした 2 桁(「11/2026」の 11)の両方を渡す */
+const useMonthLabel = () => {
+  const { t } = useLocale()
+  return (month: string) =>
+    t('wiki_announcement_month', { year: month.slice(0, 4), month: Number(month.slice(5, 7)), mm: month.slice(5, 7) })
+}
+
 /** アナウンスの 1 行。タイトル・作成日時・作成者・タグ */
 const AnnouncementRow: FC<{ item: Announcement }> = ({ item }) => {
   const { space, tagsOf } = useWikiSpace()
@@ -102,14 +109,16 @@ const archiveLink = tv({
 })
 
 /** 年月ごとの件数。月(年)を押すとその期間だけにする */
-const AnnouncementArchive: FC<{ filter: WikiAnnouncementFilter }> = ({ filter }) => {
+const AnnouncementArchive: FC<{ filter: WikiAnnouncementFilter; tagId: string | undefined }> = ({ filter, tagId }) => {
   const { t } = useLocale()
   const { space } = useWikiSpace()
-  const { data, isLoading, refresh } = useActionData(() => getWikiAnnouncementArchive({ id: space.id }), {
-    key: space.id,
+  // タグで絞り込んでいる間は、件数もそのタグのアナウンスだけを数える(押した先の一覧の件数と揃える)
+  const { data, isLoading, refresh } = useActionData(() => getWikiAnnouncementArchive({ id: space.id, tagId }), {
+    key: `${space.id}/${tagId ?? ''}`,
   })
   useOnSpaceReloaded(refresh)
   const years = useMemo(() => groupWikiAnnouncementArchive(data ?? []), [data])
+  const monthLabel = useMonthLabel()
   const hrefOf = (period: Pick<WikiAnnouncementFilter, 'month' | 'year'>) =>
     wikiAnnouncementHref(space.key, { ...period, tag: filter.tag })
   const isAll = !filter.month && !filter.year
@@ -139,7 +148,7 @@ const AnnouncementArchive: FC<{ filter: WikiAnnouncementFilter }> = ({ filter })
                     href={hrefOf({ month })}
                     className={archiveLink({ isActive: filter.month === month })}
                   >
-                    {t('wiki_announcement_month', { year: month.slice(0, 4), month: Number(month.slice(5, 7)) })}
+                    {monthLabel(month)}
                     <span className='text-muted ml-1 text-xs'>
                       {t('wiki_announcement_count', { count: monthCount })}
                     </span>
@@ -166,8 +175,9 @@ export const WikiAnnouncementIndex: FC<{ filter: WikiAnnouncementFilter }> = ({ 
   const tagId = filter.tag ? tags.find((tag) => tag.name === filter.tag)?.id : undefined
   // 無いタグ名(削除・改名された)で開いたときは、絞り込まずに全件を出す
   const shownTag = tagId ? filter.tag : undefined
+  const monthLabel = useMonthLabel()
   const periodLabel = filter.month
-    ? t('wiki_announcement_month', { year: filter.month.slice(0, 4), month: Number(filter.month.slice(5, 7)) })
+    ? monthLabel(filter.month)
     : filter.year
       ? t('wiki_announcement_year', { year: filter.year })
       : t('wiki_announcement_all')
@@ -201,7 +211,7 @@ export const WikiAnnouncementIndex: FC<{ filter: WikiAnnouncementFilter }> = ({ 
         />
       </section>
       <aside className='shrink-0 lg:w-48'>
-        <AnnouncementArchive filter={{ ...filter, tag: shownTag }} />
+        <AnnouncementArchive filter={{ ...filter, tag: shownTag }} tagId={tagId} />
       </aside>
     </div>
   )

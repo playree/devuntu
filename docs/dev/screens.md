@@ -102,7 +102,7 @@ Proxy は通るリクエストのボディを既定 10MB まで複製して溜�
   過去の版の表示中は「差分」で、その版から最新への差分に切り替えられる(状態は `useWikiPageRevisions` が持ち、選択を外すと戻す)。表示の形は最新の種類で決め、
   設計書は `DesignDocView` に最新の本文と `compareWith`(選んだ版の本文)を渡して embed の差分表示を使い(差分バーの × は `onCloseDiff` で切り替えを戻す)、通常のページは `TextDiffView` で行単位に出す(タイトル・種類・タグの変化は `WikiRevisionFieldChanges` で本文の上に出す)。出力メニューは差分中も選んだ版の内容が対象。
   保存時のコミットメッセージ(`WikiPageRevision.message`)が付いた版は、連続保存のまとめ(`shouldMergeWikiRevision`)の対象にしない。
-  復元(`restoreWikiPageRevision`)は、存在するページならタイトル・本文・種類・タグだけを戻して位置を変えず、削除済みなら同じ id・番号で作り直す(親が無い・深さの上限を超えるならスペース直下)。作り直したページの作成者・作成日時は、残っている最も古い版(版番号の昇順の先頭)の `actorId` / `createdAt` にする。
+  復元(`restoreWikiPageRevision`)は、存在するページならタイトル・本文・種類・タグだけを戻して位置を変えず、削除済みなら同じ id・番号で作り直す(親が無い・深さの上限を超えるならスペース直下)。作り直したページの作成者・作成日時は、最後の削除の版に残した削除時の値(`pageCreatedAt` / `pageCreatedById`。作成の版が保持期間や件数の上限で消えていても元の作成日時に戻すため。作成者が退会していれば空)にし、それが無い版(列を足す前の削除)なら残っている最も古い版(版番号の昇順の先頭)の `actorId` / `createdAt` にする。
   版のタグは ID と書いたときの名前を同じ並びで持ち(`tagIds` / `tagNames`)、表示・出力・復元では ID で今のタグに引き当てる(`resolveWikiRevisionTags` / `findWikiTagsByIds`)。改名しても外れず、削除したタグは同名で作り直しても引き当てない。名前は差分で削除済みのタグを出すためだけに使う(`wikiRevisionTagLabels`)。
   スペースのトップの「削除済みのページ」は、ページごとに最後の `deleted` の版を引き、いま存在するページを除いて出す。
   版の `parentId` / `order` で元の親 → 子の前順に並べ(`arrangeDeletedWikiPages`)、元の親の状態(スペース直下 / 存在する親のパンくず / 削除済み / 残っていない)を添える。
@@ -119,10 +119,10 @@ Proxy は通るリクエストのボディを既定 10MB まで複製して溜�
   設計書の印刷は `design-doc-print-view.tsx` が `createViewer` で目次なしに描き、`ready` まで `data-markdown-loading` を置いて描画の完了を待たせる。
   ビューアの内部スクロールは `globals.css` の `.design-doc-print` で外す。描画の完了待ち(`useWhenRendered`)は、ワイヤーフレームの shadow root の中の画像も待つ
 - スペースの区分(`WikiSpaceType`)が `announcement` のスペース(アナウンス用スペース)には、通常のページだけを平らに置く(`isFlatWikiSpace`)
-  - `createWikiPage` は親・位置の指定を、`moveWikiPage` は常に `WIKI_ANNOUNCEMENT_FLAT` で弾く(どちらもスペース行のロックの後に読んだ区分で判定する)。作成と削除済みページの作り直しは、全件の木を読まずにスペース直下・`order` 0 で置く
+  - `createWikiPage` は親・位置の指定を、`moveWikiPage` は常に `WIKI_ANNOUNCEMENT_FLAT` で弾く(どちらもスペース行のロックの後に読んだ区分で判定する)。作成・削除・削除済みページの作り直し・ページ詳細(`getWikiPage`)は、全件の木を読まない(作成と作り直しはスペース直下・`order` 0 に置く)
   - 並びは作成日時の新しい順(同時刻は番号の大きい順)。索引 `wiki_page(spaceId, createdAt)` を使う
   - `getWikiSpace` はツリーを返さない(`tree: []`)。トップの一覧(`announcement-index.tsx`)とサイドメニュー(`side-announcements.tsx`、最新 `WIKI_ANNOUNCEMENT_SIDEBAR_LIMIT` 件)は `getWikiAnnouncements`(`src/lib/wiki/wiki-announcement.ts` の `listWikiAnnouncements`。`useServerPagingList` でページごとに引く)で、
-    バックナンバーは `getWikiAnnouncementArchive`(年月ごとの件数の `GROUP BY`)で取得する。どちらもスペースを取り直したとき(`tree` の参照が変わる)に取り直す
+    バックナンバーは `getWikiAnnouncementArchive`(年月ごとの件数の `GROUP BY`。タグで絞り込んでいる間はそのタグのものだけを数える)で取得する。どちらもスペースを取り直したとき(`tree` の参照が変わる)に取り直す
   - 年・月の範囲と集計は、閲覧者のタイムゾーン(未設定なら `DEFAULT_TIMEZONE`)で区切る(`wikiAnnouncementPeriodRange` / `to_char(... AT TIME ZONE tz)`)
   - `announcement` への切り替え(`updateWikiSpace`)は、スペース行のロックを取ってから、子を持つページ・設計書ページ・設計書のテンプレートを数え、1件でもあれば拒む(`WIKI_SPACE_CANNOT_BE_ANNOUNCEMENT`)
 - スペースの区分(`WikiSpaceType`)が `design_doc` のスペース(設計書スペース)には設計書だけを置く

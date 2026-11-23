@@ -237,8 +237,8 @@ everyone は全員に公開する文書として作るものなので、エー�
   見つからなければ見出しの一覧を添えたエラーにする
 - `get_wiki_tree` は兄弟の並び順の入れ子で返す。`root` を渡すとその子孫だけ(`root` 自身は `root` 項目に分ける)、
   `depth` を渡すとその段数まで返し、それより深い子は `childCount` だけを返す。
-  アナウンス用スペースでは、作成日時の新しい順の平らな一覧(`ref` / `title` / `tags` / `createdAt`)を返し、`space.type` に `announcement` を添える。
-  `depth` は使わず、`root` を渡すと入力不正にする。
+  アナウンス用スペースでは、作成日時の新しい順の平らな一覧(`ref` / `title` / `tags` / `createdAt`)を新しいものから 200 件(`MAX_WIKI_ANNOUNCEMENT_TREE`)まで返し、`space.type` に `announcement` を添える。
+  `totalPages` は総件数で、上限で打ち切ったときは `limitReached: true` を付ける(古いものは `search_wiki` で探す)。`depth` は使わず、`root` を渡すと入力不正にする。
   書けるスペースにページテンプレートがあれば、`templates`(`[{ name, type }]`、表示順)を添える(0件か書けなければ項目ごと省く)
 - `search_wiki` の条件と並び順は画面の検索と同じ(全語の AND、タイトル一致 → 更新日時の新しい順)。`keyword` か `tags` のどちらかが要る。
   `tags` はどれかを持つページに絞り、タグ名は `keyword` でのタグ名の照合と同じく大文字小文字を問わない。
@@ -264,7 +264,8 @@ everyone は全員に公開する文書として作るものなので、エー�
   - 設計書スペース(区分 `type` が `design_doc`)では、作成で `type` を省くと本文によらず `design_doc` にする。
     `type: page` での作成・更新と、通常ページの版の復元は `WIKI_PAGE_TYPE_NOT_ALLOWED` のエラーにする
   - アナウンス用スペース(区分 `type` が `announcement`)はページが平らで、並びは作成日時で決まる。
-    作成での `parent`(null 以外)・`position` と、更新での `parent` / `position`(移動)は `WIKI_ANNOUNCEMENT_FLAT`、`type: design_doc` は `WIKI_PAGE_TYPE_NOT_ALLOWED` のエラーにする
+    作成での `parent`(null 以外)・`position` と、更新での `parent` / `position`(移動)は `WIKI_ANNOUNCEMENT_FLAT`、`type: design_doc` は `WIKI_PAGE_TYPE_NOT_ALLOWED` のエラーにする。
+    内容と移動を一度に渡したときも、内容を書く前に弾く(内容だけが保存された状態を残さない)
   - `tags` はページのタグを丸ごと置き換える。スペースに既にあるタグの**名前**で渡し、無い名前は作らずに既存のタグ名を添えたエラーにする
     (AI に表記ゆれのタグを増やさせない)
   - 応答は `result`(`created` / `updated` / `moved` / `updated+moved` / `unchanged`)・`ref`・`url`・`updatedAt`
