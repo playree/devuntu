@@ -27,7 +27,7 @@ export const WikiSpaceDangerZone: FC<{ space: Space; reload: () => Promise<void>
     const next = !space.archived
     await confirmAction(
       {
-        title: t('confirm_archive'),
+        title: next ? t('confirm_archive') : t('confirm_unarchive'),
         text: next
           ? t('msg_confirm_archive_wiki_space', { target: space.name })
           : t('msg_confirm_unarchive_wiki_space', { target: space.name }),

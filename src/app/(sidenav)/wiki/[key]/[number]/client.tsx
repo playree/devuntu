@@ -138,7 +138,7 @@ export const WikiPageClient: FC<{ spaceKey: string; number: number }> = ({ space
           {access.canWrite && (
             <MultiButton
               isIconOnly
-              tooltip={t('delete')}
+              tooltip={t('wiki_delete_page')}
               icon={<TrashIcon />}
               onPress={() => deletePage(page, parentHref, reloadAll)}
             >

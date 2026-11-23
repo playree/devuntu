@@ -197,6 +197,13 @@ export const DeletedPagesModal: FC<{ state: ReturnType<typeof useModalState<stri
                         </div>
                       )}
                       <UpdatedBy name={page.actorName} isAgent={page.actorIsAgent} via={page.via} at={page.updatedAt} />
+                      {access.canWrite && !isRestored && !canRestore(page) && (
+                        <div // 無効のボタンには tooltip が出ないので、押せない理由を行に出す
+                          className='text-warning text-xs'
+                        >
+                          {t('msg_wiki_cannot_restore_regular_page')}
+                        </div>
+                      )}
                     </div>
                     {isRestored ? (
                       <MultiButton

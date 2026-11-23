@@ -143,12 +143,14 @@ export const WikiSideTree: FC = () => {
           renderActions={
             canEdit
               ? (item, place) => (
-                  <span className='flex shrink-0 items-center'>
+                  <span // lg 未満は指で押し分けられるよう、ツリーの行(32px)に合わせて大きくする
+                    className='flex shrink-0 items-center'
+                  >
                     <MultiButton
                       isIconOnly
                       size='sm'
                       variant='ghost'
-                      className='size-6 min-w-6'
+                      className='size-6 min-w-6 max-lg:size-8 max-lg:min-w-8'
                       tooltip={t('move_up')}
                       icon={<ChevronUpIcon width={14} />}
                       isDisabled={place.index === 0 || !!pendingId}
@@ -158,7 +160,7 @@ export const WikiSideTree: FC = () => {
                       isIconOnly
                       size='sm'
                       variant='ghost'
-                      className='size-6 min-w-6'
+                      className='size-6 min-w-6 max-lg:size-8 max-lg:min-w-8'
                       tooltip={t('move_down')}
                       icon={<ChevronDownIcon width={14} />}
                       isDisabled={place.index === place.siblingCount - 1 || !!pendingId}
@@ -168,7 +170,7 @@ export const WikiSideTree: FC = () => {
                       isIconOnly
                       size='sm'
                       variant='ghost'
-                      className='size-6 min-w-6'
+                      className='size-6 min-w-6 max-lg:size-8 max-lg:min-w-8'
                       tooltip={t('wiki_move')}
                       icon={<FolderArrowRightIcon width={14} />}
                       isDisabled={!!pendingId}

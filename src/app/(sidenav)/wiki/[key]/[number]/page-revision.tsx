@@ -381,25 +381,32 @@ export const WikiRevisionDeleteButton: FC<{ revisions: WikiPageRevisions }> = ({
     )
 
   return (
-    <MultiButton
-      isIconOnly
+    <MultiButton // ヘッダーのページの削除(アイコンのみ)と見分けられるよう、文言を出す
       size='sm'
       variant='danger-soft'
-      tooltip={t('wiki_delete_revision')}
+      className='shrink-0'
       icon={<TrashIcon width={16} />}
       onPress={remove}
-    />
+    >
+      {t('wiki_delete_revision')}
+    </MultiButton>
   )
 }
 
-/** 過去の版を表示していることの注記。コミットメッセージ・チケット・版の保持期間も添える */
-export const WikiPastRevisionNotice: FC<{ revisions: WikiPageRevisions }> = ({
+/**
+ * 過去の版を表示していることの注記。コミットメッセージ・チケット・版の保持期間も添える。
+ * 「この版に戻す」を押せない(設計書スペースの通常ページの版)ときは、その理由も出す
+ */
+export const WikiPastRevisionNotice: FC<{ revisions: WikiPageRevisions; canWrite: boolean }> = ({
   revisions: { past, retention, isDiff },
+  canWrite,
 }) => {
   const { t } = useLocale()
+  const { space } = useWikiSpace()
   if (!past) {
     return null
   }
+  const cannotRestore = canWrite && !isWikiPageTypeAllowed(space.type, past.type)
   return (
     <NoticePanel status='warning'>
       {t(isDiff ? 'msg_wiki_viewing_diff' : 'msg_wiki_viewing_revision', { target: `v${past.number}` })}
@@ -417,6 +424,7 @@ export const WikiPastRevisionNotice: FC<{ revisions: WikiPageRevisions }> = ({
         keep: retention?.keepRecent ?? '-',
         max: retention?.maxPerPage ?? '-',
       })}`}
+      {cannotRestore && `\n${t('msg_wiki_cannot_restore_regular_page')}`}
     </NoticePanel>
   )
 }

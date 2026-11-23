@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { CSSProperties, FC, Fragment, ReactNode, RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import { tv } from 'tailwind-variants'
+import { treeIdsToExpand } from './tree-expand'
 import { useGeneralUiText } from './ui-text'
 
 export type TreeViewItem = {
@@ -19,8 +20,9 @@ export type TreeViewItem = {
 /** 行の操作(renderActions)に渡す、兄弟の中での位置 */
 export type TreeViewItemPlace = { index: number; siblingCount: number }
 
+/** lg 未満(スマホ)は指で押せるよう、行・開閉ボタン・ラベルを 32px の高さにする */
 const rowStyles = tv({
-  base: 'relative flex min-h-6 items-center gap-0.5 rounded-lg pr-1 text-sm',
+  base: 'relative flex min-h-6 items-center gap-0.5 rounded-lg pr-1 text-sm max-lg:min-h-8',
   variants: {
     isSelected: {
       true: 'bg-accent-soft text-accent-soft-foreground font-semibold',
@@ -99,9 +101,15 @@ const TreeGuides: FC<{ path: readonly boolean[]; hasChildren: boolean; isExpande
 }
 
 /**
+ * 行のラベル(リンク / 文字)。lg 未満は行の高さ(32px)いっぱいを押せるよう上下を広げ、
+ * 開閉ボタンのはみ出し(右に 4px)と重ならないよう左を空ける
+ */
+const labelStyles = 'min-w-0 flex-1 truncate py-0.5 max-lg:ml-0.5 max-lg:py-1.5'
+
+/**
  * 階層を持つ項目の一覧(サイドメニューのツリーなど)。
  *
- * - 開閉は内部で持つ。`selectedId` が変わると、その先祖を開いて見える位置までスクロールする
+ * - 開閉は内部で持つ。`selectedId` が変わると、その先祖と自分を開いて見える位置までスクロールする
  * - 入れ子の `ul` と開閉ボタン(aria-expanded)で組み、行の移動は Tab で行う
  * - 長いラベルは省略し、title 属性で全文を出す
  */
@@ -129,18 +137,19 @@ export const TreeView: FC<{
 
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set())
 
-  // 選択が変わったら先祖を開く(閉じているものだけを足し、利用者が開いた枝はそのまま残す)
+  /**
+   * 選択が変わったら先祖と自分を開き(子を辿るのに開閉ボタンを押し直さずに済む)、項目が変わったら先祖を開く。
+   * 閉じているものだけを足し、利用者が開いた枝はそのまま残す。
+   * 自分は子を持つときだけ足す(葉を開いたままにしておくと、後で子ができたときに開いて出てしまう)。
+   * 項目の取り直しでは自分を足さないので、選んだ後に利用者が閉じた枝は閉じたまま
+   */
   const [prevSelected, setPrevSelected] = useState<{ id: string | null | undefined; byId: typeof byId }>()
   if (prevSelected?.id !== selectedId || prevSelected?.byId !== byId) {
     setPrevSelected({ id: selectedId, byId })
-    const ancestors: string[] = []
-    const seen = new Set<string>()
-    for (let id = selectedId && byId.get(selectedId)?.parentId; id && !seen.has(id); id = byId.get(id)?.parentId) {
-      seen.add(id)
-      ancestors.push(id)
-    }
-    if (ancestors.some((id) => !expanded.has(id))) {
-      setExpanded(new Set([...expanded, ...ancestors]))
+    const withSelf = prevSelected?.id !== selectedId && !!selectedId && children.has(selectedId)
+    const ids = treeIdsToExpand(byId, selectedId, withSelf)
+    if (ids.some((id) => !expanded.has(id))) {
+      setExpanded(new Set([...expanded, ...ids]))
     }
   }
 
@@ -209,8 +218,11 @@ const TreeLevel: FC<{
               {hasChildren ? (
                 <button
                   type='button'
-                  // relative: 線(absolute)より手前に出し、ホバーの背景で線の端を隠す。背景は選択行(bg-accent-soft)の上でも見える色にする
-                  className='text-muted hover:text-foreground hover:bg-default relative flex size-6 shrink-0 items-center justify-center rounded-[3px]'
+                  /**
+                   * relative: 線(absolute)より手前に出し、ホバーの背景で線の端を隠す。背景は選択行(bg-accent-soft)の上でも見える色にする。
+                   * lg 未満は 32px にするが、負のマージンで占める幅を 24px のままにして、中心(LINE_X)と字下げを変えない
+                   */
+                  className='text-muted hover:text-foreground hover:bg-default relative flex size-6 shrink-0 items-center justify-center rounded-[3px] max-lg:-mx-1 max-lg:size-8'
                   aria-expanded={isExpanded}
                   aria-label={isExpanded ? uiText.treeCollapse(item.label) : uiText.treeExpand(item.label)}
                   onClick={() => toggle(item.id)}
@@ -226,13 +238,13 @@ const TreeLevel: FC<{
                   ref={isSelected ? selectedRef : undefined}
                   aria-current={isSelected ? 'page' : undefined}
                   title={item.label}
-                  className='min-w-0 flex-1 truncate py-0.5'
+                  className={labelStyles}
                   onClick={onNavigate}
                 >
                   {item.label}
                 </Link>
               ) : (
-                <span title={item.label} className='min-w-0 flex-1 truncate py-0.5'>
+                <span title={item.label} className={labelStyles}>
                   {item.label}
                 </span>
               )}

@@ -389,8 +389,8 @@ export const WikiPageBody: FC<{
           <div className='flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1'>
             <h1 className='min-w-0 text-2xl font-bold wrap-break-word'>{shown.title}</h1>
             <WikiTagLinks spaceKey={space.key} tags={shown.tags} />
-            <div // 差分・編集・戻す・出力・削除は版の選択のすぐ右に置き、版に対する操作だと分かるようにする(折り返しても離さない)
-              className='flex items-center gap-2'
+            <div // 差分・編集・戻す・出力・削除は版の選択のすぐ右に置き、版に対する操作だと分かるようにする(タイトルの後で折り返しても離さない。幅が足りなければこの中で折り返す)
+              className='flex flex-wrap items-center gap-2'
             >
               <WikiRevisionSelect revisions={revisions} updatedText={updatedText} />
               {!isEditing && <WikiRevisionDiffToggle revisions={revisions} />}
@@ -410,7 +410,7 @@ export const WikiPageBody: FC<{
           </div>
         )}
       </div>
-      {!isEditing && <WikiPastRevisionNotice revisions={revisions} />}
+      {!isEditing && <WikiPastRevisionNotice revisions={revisions} canWrite={canWrite} />}
       {isDiff && pastView && (
         <WikiRevisionFieldChanges
           before={{ ...pastView, tags: pastView.revisionTags }}

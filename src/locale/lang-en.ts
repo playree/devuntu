@@ -282,6 +282,7 @@ export const en: DefaultLocaleItems = {
   completed_within: 'Completed Within',
   confirm_archive: 'Confirm archive',
   confirm_deletion: 'Confirm deletion',
+  confirm_unarchive: 'Confirm unarchive',
   confirmed: 'Confirmed',
   consent: 'Authorize Access',
   consent_apps: 'Authorized Apps',
@@ -662,6 +663,7 @@ export const en: DefaultLocaleItems = {
   wiki_conflict_open_latest: 'Open Latest in New Tab',
   wiki_conflict_overwrite: 'Overwrite',
   wiki_conflict_title: 'Save Conflict',
+  wiki_delete_page: 'Delete page',
   wiki_delete_revision: 'Delete this version',
   wiki_deleted_pages: 'Deleted pages',
   wiki_deleted_parent: 'Original parent: ${path}',
@@ -956,6 +958,7 @@ Please copy and use the connection information above.
   msg_user_not_exist: 'User does not exist.',
   msg_wiki_board_assign:
     'Members of the board (direct or via groups) can use this space with the chosen role. You can assign boards you belong to.',
+  msg_wiki_cannot_restore_regular_page: 'Regular pages cannot be restored to a design doc space.',
   msg_wiki_deleted_pages_hint:
     'Deleted pages can be restored only for ${days} days after deletion. Restoring them from the top puts them back in their original hierarchy (a page that would exceed the depth limit under its original parent goes to the top level).',
   msg_wiki_design_docs_load_failed: 'Failed to load the design doc list. Please wait a moment and reload.',

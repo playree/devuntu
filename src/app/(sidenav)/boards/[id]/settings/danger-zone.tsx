@@ -29,7 +29,7 @@ export const DangerZone: FC<{ board: Board; reload: () => void }> = ({ board, re
     const next = !board.archived
     await confirmAction(
       {
-        title: t('confirm_archive'),
+        title: next ? t('confirm_archive') : t('confirm_unarchive'),
         text: next
           ? t('msg_confirm_archive_board', { target: name })
           : t('msg_confirm_unarchive_board', { target: name }),
