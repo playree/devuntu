@@ -624,7 +624,8 @@ const RESTORE_SOURCE_SELECT = {
  * 版の内容へ戻し、restored の版を残す。タグは ID で引き当て(改名したタグは今の名前で付く)、スペースから消えたタグは外す。
  * - ページが残っている: タイトル・本文・種類・タグだけを戻す。位置(親・並び)は変えない(位置は移動で変える)
  * - 削除済み: 同じ id・番号で作り直す。版の親が残っていて深さの上限に収まればその下の元の位置へ、
- *   そうでなければスペース直下の末尾へ戻す。配下ごと削除したページは1ページずつ戻す
+ *   そうでなければスペース直下の末尾へ戻す。配下ごと削除したページは1ページずつ戻す。
+ *   作成者・作成日時は、残っている最も古い版(作成の版が残っていればそれ)の作成者・作成日時にする
  *
  * `deletedOnly` は削除済みのページの一覧からの復元。一覧を開いた後に別の人が戻して編集したページを、削除の版で上書きしないよう、
  * ロックの後でページが存在すれば何もせず unchanged を返す
@@ -723,6 +724,12 @@ export const restoreWikiPageRevision = async (
       parentId === revision.parentId ? revision.order : undefined,
     )
     const order = ordered.indexOf(pageId)
+    // 戻し元の版をロックの後で読めているので見つかる。見つからなければ(型の上だけ)復元した人・時刻にする
+    const oldest = await tx.wikiPageRevision.findFirst({
+      where: { pageId },
+      select: { actorId: true, createdAt: true },
+      orderBy: { number: 'asc' },
+    })
     await applySiblingOrders(tx, rows, ordered, pageId)
     const created = await tx.wikiPage.create({
       data: {
@@ -734,7 +741,8 @@ export const restoreWikiPageRevision = async (
         content: revision.content,
         type: revision.type,
         order,
-        createdById: actor.id,
+        createdById: oldest ? oldest.actorId : actor.id,
+        ...(oldest ? { createdAt: oldest.createdAt } : {}),
         updatedById: actor.id,
         updatedVia: writer.via,
       },

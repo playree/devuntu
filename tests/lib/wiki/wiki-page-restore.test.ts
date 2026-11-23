@@ -16,7 +16,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('@/lib/prisma', async () =>
   (await import('../../helpers/prisma')).mockPrisma({
     wikiPage: ['findUnique', 'findMany', 'create', 'update'],
-    wikiPageRevision: ['findUnique'],
+    wikiPageRevision: ['findUnique', 'findFirst'],
   }),
 )
 vi.mock('@/lib/wiki/wiki-access', () => ({ assertWikiSpaceAccess: vi.fn() }))
@@ -81,6 +81,9 @@ const existingPage = (override: Record<string, unknown> = {}) => ({
   ...override,
 })
 
+/** ページの最も古い版(作成の版)。作り直すページの作成者・作成日時はこれにする */
+const OLDEST_REVISION = { actorId: 'creator', createdAt: new Date('2026-10-01T00:00:00.000Z') }
+
 let tree: Row[] = TREE
 
 /** 兄弟の並びの振り直し($executeRaw の VALUES)を [id, order] の列で取り出す */
@@ -111,6 +114,7 @@ beforeEach(() => {
   vi.mocked(prisma.wikiPage.update).mockResolvedValue({ updatedAt: new Date() } as never)
   vi.mocked(prisma.wikiPage.create).mockResolvedValue({ updatedAt: new Date() } as never)
   vi.mocked(prisma.$queryRaw).mockResolvedValue([] as never)
+  vi.mocked(prisma.wikiPageRevision.findFirst).mockResolvedValue(OLDEST_REVISION as never)
   vi.mocked(findWikiTagsByIds).mockImplementation(async (_tx, _spaceId, ids) =>
     TAGS.filter(({ id }) => ids.includes(id)),
   )
@@ -245,6 +249,31 @@ describe('restoreWikiPageRevision(削除済みのページ)', () => {
       action: 'restored',
       restoredFromId: 'rev-1',
       snapshot: { parentId: 'a', order: 1, type: 'design_doc', tags: [{ id: 'tag-a', name: '設計' }] },
+    })
+  })
+
+  it('作成者・作成日時は、復元した人・時刻ではなく最も古い版のものにする', async () => {
+    await restoreWikiPageRevision(actor, WEB, 'rev-1')
+
+    expect(vi.mocked(prisma.wikiPageRevision.findFirst).mock.calls[0][0]).toMatchObject({
+      where: { pageId: 'x' },
+      orderBy: { number: 'asc' },
+    })
+    expect(vi.mocked(prisma.wikiPage.create).mock.calls[0][0].data).toMatchObject({
+      createdById: 'creator',
+      createdAt: OLDEST_REVISION.createdAt,
+      updatedById: 'u1',
+    })
+  })
+
+  it('最も古い版の作成者のユーザーが削除済み(null)なら、作成者は空のままにする', async () => {
+    vi.mocked(prisma.wikiPageRevision.findFirst).mockResolvedValue({ ...OLDEST_REVISION, actorId: null } as never)
+
+    await restoreWikiPageRevision(actor, WEB, 'rev-1')
+
+    expect(vi.mocked(prisma.wikiPage.create).mock.calls[0][0].data).toMatchObject({
+      createdById: null,
+      createdAt: OLDEST_REVISION.createdAt,
     })
   })
 
