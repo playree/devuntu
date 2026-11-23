@@ -29,7 +29,6 @@ import {
 import { getWikiSpaceByKeyForManage } from '@/lib/wiki/wiki-space'
 import { createWikiTag as createWikiTagCore, listWikiTags } from '@/lib/wiki/wiki-tag'
 import { listWikiTemplateOptions, renderWikiTemplate } from '@/lib/wiki/wiki-template'
-import { applyWikiTemplatePlaceholders } from '@/lib/wiki/wiki-template-rule'
 
 /**
  * スペース内の画面(トップ・ページ・設定)で共通に使う Server Action。
@@ -56,23 +55,22 @@ export type GetWikiSpaceReturnType = Awaited<ReturnType<typeof getWikiSpace>>['d
 
 /**
  * ページの作成。親の子(親が無ければスペース直下)の末尾に置く。
- * テンプレートを指定すると、種類と本文はテンプレートのもの(プレースホルダーを置き換える)にし、タイトルにも置き換えをかける。
+ * テンプレートを指定すると、種類と本文はテンプレートのもの(プレースホルダーを置き換える)にする。
+ * タイトルは画面がテンプレートから置き換えて入れたものを、入力のまま使う(置き換え直すと表示名の中の `{{date}}` なども置き換わるため)。
  * 本文が空の設計書は最小の front matter を入れて作る(ビューアの設計書ヘッダになる)
  */
 export const createWikiPage = safeAuthAction
   .metadata({ actionName: 'createWikiPage', role: 'user' })
   .inputSchema(scCreateWikiPage)
   .action(async ({ ctx: { user }, parsedInput: { spaceId, parentId, title, type, templateId } }) => {
-    const now = new Date()
-    const template = templateId ? await renderWikiTemplate(user, spaceId, { id: templateId }, now) : null
-    const pageTitle = template ? applyWikiTemplatePlaceholders(title, template.context) : title
+    const template = templateId ? await renderWikiTemplate(user, spaceId, { id: templateId }) : null
     const pageType = template?.type ?? type
     const content = template?.content ?? ''
     return await createWikiPageCore(user, WEB, spaceId, {
-      title: pageTitle,
+      title,
       parentId,
       type: pageType,
-      content: pageType === 'design_doc' && content === '' ? designDocFrontMatter(pageTitle) : content,
+      content: pageType === 'design_doc' && content === '' ? designDocFrontMatter(title) : content,
     })
   })
 

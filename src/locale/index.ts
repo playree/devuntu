@@ -928,6 +928,7 @@ export type LocaleItemBase =
   | 'msg_wiki_space_no_owner'
   | 'msg_wiki_space_type'
   | 'msg_wiki_template_desc'
+  | 'msg_wiki_template_too_long'
   | 'msg_wiki_tree_changed'
   | 'msg_wiki_visibility'
   | 'msg_within_a_day'

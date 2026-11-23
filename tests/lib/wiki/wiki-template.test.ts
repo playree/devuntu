@@ -9,7 +9,7 @@ import { DUPLICATED_TEMPLATE_NAME } from '@/lib/board/ticket-template-rule'
 import { INVALID_OPERATION, VALIDATION_ERROR } from '@/lib/error'
 import { prisma } from '@/lib/prisma'
 import { assertWikiSpaceAccess } from '@/lib/wiki/wiki-access'
-import { WIKI_PAGE_TYPE_NOT_ALLOWED } from '@/lib/wiki/wiki-rule'
+import { MAX_WIKI_CONTENT, MAX_WIKI_TITLE, WIKI_PAGE_TYPE_NOT_ALLOWED } from '@/lib/wiki/wiki-rule'
 import {
   createWikiTemplate,
   deleteWikiTemplate,
@@ -19,7 +19,7 @@ import {
   renderWikiTemplate,
   updateWikiTemplate,
 } from '@/lib/wiki/wiki-template'
-import { MAX_WIKI_TEMPLATES_PER_SPACE } from '@/lib/wiki/wiki-template-rule'
+import { MAX_WIKI_TEMPLATES_PER_SPACE, WIKI_TEMPLATE_TOO_LONG } from '@/lib/wiki/wiki-template-rule'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/prisma', async () =>
@@ -133,6 +133,21 @@ describe('updateWikiTemplate / deleteWikiTemplate', () => {
     expect(prisma.wikiTemplate.update).not.toHaveBeenCalled()
   })
 
+  it('ロックを待つ間に消されていれば、書かずに errInvalidOperation', async () => {
+    vi.mocked(prisma.wikiTemplate.findUnique)
+      .mockResolvedValueOnce({ spaceId: SPACE_ID } as never)
+      .mockResolvedValueOnce(null)
+    expect(await errorTypeOf(updateWikiTemplate(actor, { id: 't1', ...fields }))).toBe(INVALID_OPERATION)
+    expect(prisma.wikiTemplate.update).not.toHaveBeenCalled()
+  })
+
+  it('削除もスペース行をロックしてから行う', async () => {
+    await deleteWikiTemplate(actor, 't1')
+    expect(vi.mocked(prisma.$queryRaw).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(prisma.wikiTemplate.delete).mock.invocationCallOrder[0],
+    )
+  })
+
   it('無いテンプレートは errInvalidOperation', async () => {
     vi.mocked(prisma.wikiTemplate.findUnique).mockResolvedValue(null)
     expect(await errorTypeOf(updateWikiTemplate(actor, { id: 'x', ...fields }))).toBe(INVALID_OPERATION)
@@ -220,6 +235,22 @@ describe('renderWikiTemplate', () => {
     expect(prisma.wikiTemplate.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({ where: { spaceId: SPACE_ID, id: 't1' } }),
     )
+  })
+
+  it('置き換えでタイトルか本文が最大長を超えたら WIKI_TEMPLATE_TOO_LONG', async () => {
+    const longName = 'x'.repeat(50)
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({ name: longName, timezone: null } as never)
+    vi.mocked(prisma.wikiTemplate.findFirst).mockResolvedValue({
+      ...fields,
+      title: `${'t'.repeat(MAX_WIKI_TITLE - 8)}{{user}}`,
+    } as never)
+    expect(await errorTypeOf(renderWikiTemplate(actor, SPACE_ID, { id: 't1' }, now))).toBe(WIKI_TEMPLATE_TOO_LONG)
+
+    vi.mocked(prisma.wikiTemplate.findFirst).mockResolvedValue({
+      ...fields,
+      content: `${'c'.repeat(MAX_WIKI_CONTENT - 8)}{{user}}`,
+    } as never)
+    expect(await errorTypeOf(renderWikiTemplate(actor, SPACE_ID, { id: 't1' }, now))).toBe(WIKI_TEMPLATE_TOO_LONG)
   })
 
   it('タイムゾーン未設定ならサーバーの既定で置き換える', async () => {

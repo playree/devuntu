@@ -45,7 +45,7 @@ import {
   WIKI_SPACE_NO_OWNER,
   WIKI_TREE_CHANGED,
 } from '../wiki/wiki-rule'
-import { WIKI_SPACE_HAS_NORMAL_TEMPLATES } from '../wiki/wiki-template-rule'
+import { WIKI_SPACE_HAS_NORMAL_TEMPLATES, WIKI_TEMPLATE_TOO_LONG } from '../wiki/wiki-template-rule'
 
 export type ActionErrorMessage = {
   item: LocaleItemBase
@@ -90,6 +90,7 @@ export const ACTION_ERROR_MESSAGES: Record<string, ActionErrorMessage> = {
   [WIKI_PAGE_TYPE_NOT_ALLOWED]: { item: 'msg_wiki_page_type_not_allowed', level: 'warn' },
   [WIKI_SPACE_HAS_NORMAL_PAGES]: { item: 'msg_wiki_space_has_normal_pages', level: 'warn' },
   [WIKI_SPACE_HAS_NORMAL_TEMPLATES]: { item: 'msg_wiki_space_has_normal_templates', level: 'warn' },
+  [WIKI_TEMPLATE_TOO_LONG]: { item: 'msg_wiki_template_too_long', level: 'warn' },
 }
 
 export const resolveActionErrorMessage = (errorType: string): ActionErrorMessage =>

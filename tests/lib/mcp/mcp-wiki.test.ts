@@ -111,7 +111,6 @@ describe('saveWikiPageForMcp: テンプレートからの作成', () => {
       title: '2026-11-23 定例',
       content: '# 議題',
       type: 'design_doc',
-      context: { now: new Date(), timezone: 'Asia/Tokyo', userName: 'agent' },
     })
   })
 
@@ -144,12 +143,22 @@ describe('saveWikiPageForMcp: テンプレートからの作成', () => {
       title: '',
       content: '',
       type: 'page',
-      context: { now: new Date(), timezone: 'Asia/Tokyo', userName: 'agent' },
     })
     expect((await errorOf(saveWikiPageForMcp(human, { space: 'DOCS', template: '議事録' }))).errorType).toBe(
       VALIDATION_ERROR,
     )
     expect(createWikiPage).not.toHaveBeenCalled()
+  })
+
+  it('指定した title はテンプレートの置き換えをかけずにそのまま使う(画面のタイトルと同じ)', async () => {
+    await saveWikiPageForMcp(human, { space: 'DOCS', template: '議事録', title: '{{date}} 臨時' })
+    expect(vi.mocked(createWikiPage).mock.calls[0][3]).toMatchObject({ title: '{{date}} 臨時' })
+  })
+
+  it('title も template も無ければ、テンプレートに触れないエラー', async () => {
+    const error = await errorOf(saveWikiPageForMcp(human, { space: 'DOCS' }))
+    expect(error.errorType).toBe(VALIDATION_ERROR)
+    expect(error.message).not.toContain('undefined')
   })
 
   it('更新(ref あり)では template を受けない', async () => {

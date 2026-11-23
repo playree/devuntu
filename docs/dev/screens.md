@@ -89,7 +89,10 @@ Proxy は通るリクエストのボディを既定 10MB まで複製して溜�
 - ページテンプレート(`WikiTemplate`。`src/lib/wiki/wiki-template.ts`)はスペースごと(20件まで、`MAX_WIKI_TEMPLATES_PER_SPACE`)。設定画面の一覧(本文込み)・追加・編集・削除・並べ替えは `manage` かつ未アーカイブ(`wiki/[key]/settings/space-templates.tsx`)。
   種類は `isWikiPageTypeAllowed` で区分に合うものに限り、追加・編集はスペース行のロックの後で区分を読む。並べ替え(`moveWikiTemplate`)はロックの下で今の並びの隣と入れ替えて `order` を 0 から振り直す。
   ページ作成のモーダル(`CreatePageModal`)は、開いたときに `getWikiTemplateOptions`(`write`。本文なし)で選択肢を引き、選ぶとタイトルと種類を埋めて `createWikiPage` に `templateId` を渡す。
-  サーバーは `renderWikiTemplate` で、`write` を確かめてから同じスペースのテンプレートを引き、作成者の表示名・タイムゾーン(未設定は `DEFAULT_TIMEZONE`)で `{{date}}` / `{{month}}` / `{{user}}` を置き換えた本文と種類で作る(`applyWikiTemplatePlaceholders`。1回の走査で置き換え、置き換えた値は置き換え直さない。タイトルにも同じ値で置き換えをかける)。
+  サーバーは `renderWikiTemplate` で、`write` を確かめてから同じスペースのテンプレートを引き、作成者の表示名・タイムゾーン(未設定は `DEFAULT_TIMEZONE`)で `{{date}}` / `{{month}}` / `{{user}}` を置き換えた本文と種類で作る(`applyWikiTemplatePlaceholders`。1回の走査で置き換え、置き換えた値は置き換え直さない)。
+  タイトルは画面がテンプレートから置き換えて入れたものをそのまま使い、サーバーでは置き換え直さない(表示名の中の `{{date}}` などを置き換えないため)。
+  登録時の長さの検査は置き換える前の値で行うので、置き換えた結果がタイトル・本文の最大長を超えたら `WIKI_TEMPLATE_TOO_LONG` にする。
+  更新・削除・並べ替えはスペース行のロックを取ってからテンプレートの有無を確かめ直す(同時の削除で Prisma の行なしエラーにしない)。
   本文の画像は添付の掃除で参照として扱う(`attachment-ref.ts` の `wikiTemplate`)
 - 版(`src/lib/wiki/wiki-revision.ts`)の一覧は本文を含めず、ページ詳細で過去の版を選んだときにその版の本文だけを引く(本文の最大長 × 版数を一度に転送しない)。
   版の選択は更新者・日時の表示を兼ね(`wiki/[key]/[number]/page-revision.tsx`)、過去の版の表示中は編集させず、ロールバックと版の削除(`deleteWikiPageRevision`。最新の版は消せない)だけを出す。

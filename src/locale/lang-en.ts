@@ -1004,6 +1004,8 @@ Please copy and use the connection information above.
     'With "Design docs", only design docs can be created and the space top shows the list of design docs. A space with normal pages or normal page templates cannot be changed to it.',
   msg_wiki_template_desc:
     "Choose a template when creating a page to fill in its title, type and content. {{date}} (YYYY-MM-DD), {{month}} (YYYY-MM) and {{user}} (the creator's display name) are replaced on creation, using the creator's time zone. Templates can also be used by name with template in the MCP tool save_wiki_page.",
+  msg_wiki_template_too_long:
+    'After replacing placeholders such as {{user}}, the template title or content exceeds the maximum length. Shorten the template.',
   msg_wiki_tree_changed:
     'The page tree was changed by someone else, so nothing was done. The tree has been refreshed; check it and try again.',
   msg_wiki_visibility:

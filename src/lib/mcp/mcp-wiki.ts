@@ -269,18 +269,22 @@ const writeResult = (result: string, written: WikiPageWriteResult, key: string) 
 
 const createWikiPageForMcp = async (auth: ResourceAuth, input: McpSaveWikiPageInput, ticketId: string | null) => {
   if (!input.space || (input.title === undefined && input.template === undefined)) {
-    throw errValidation('space and title are required to create a page. Pass ref to update an existing page')
+    throw errValidation(
+      'space and title (or template) are required to create a page. Pass ref to update an existing page',
+    )
   }
   if (input.edits || input.expectedUpdatedAt) {
     throw errValidation('edits and expectedUpdatedAt are only for updating an existing page (pass ref)')
   }
   // 親やタグ・テンプレートの有無で他のスペースの中身を探れないよう、先に権限を確かめる
   const access = await resolveSpace(auth, input.space, 'write')
-  // 明示した title / content / type を優先し、無い項目だけをテンプレートで埋める
+  // 明示した title / content / type を優先し、無い項目だけをテンプレートで埋める(明示した値は置き換えない。画面のタイトルと同じ)
   const template = input.template ? await renderWikiTemplate(auth.user, access.spaceId, { name: input.template }) : null
   const title = input.title ?? template?.title ?? ''
   if (title.trim() === '') {
-    throw errValidation(`title is required: the template ${input.template} has no title`)
+    throw errValidation(
+      input.template ? `title is required: the template ${input.template} has no title` : 'title is required',
+    )
   }
   const content = input.content ?? template?.content
   const parentId = input.parent ? await resolveParentId(access, input.parent) : null
@@ -558,7 +562,7 @@ export const registerWikiTools = (server: McpServer, auth: ResourceAuth) => {
       title: 'Save wiki page',
       annotations: TOOL_ANNOTATIONS.destructive,
       description:
-        'Creates a Wiki page when ref is omitted (space and title required), or updates the page with ref: only the fields you pass change. ' +
+        'Creates a Wiki page when ref is omitted (space and title, or a template with a title, required), or updates the page with ref: only the fields you pass change. ' +
         'When creating, template (a name from templates in get_wiki_tree) fills the title, type and content you omit; ' +
         '{{date}}, {{month}} and {{user}} in it are replaced with the creation date and your name. ' +
         'Before updating, read the page with get_wiki_page and pass its updatedAt as expectedUpdatedAt so you do not overwrite changes by others. ' +
@@ -571,7 +575,12 @@ export const registerWikiTools = (server: McpServer, auth: ResourceAuth) => {
       inputSchema: z.strictObject({
         ref: zWikiPageRef.optional().describe('Page ref KEY/number to update. Omit to create a page'),
         space: zSpaceKey.optional().describe('Space key to create the page in. Only when creating'),
-        title: z.string().min(1).max(MAX_WIKI_TITLE).optional().describe('Required when creating'),
+        title: z
+          .string()
+          .min(1)
+          .max(MAX_WIKI_TITLE)
+          .optional()
+          .describe('Required when creating, unless the template has a title'),
         content: z.string().max(MAX_WIKI_CONTENT).optional().describe('Markdown body. Replaces the whole content'),
         type: zWikiPageType
           .optional()

@@ -17,10 +17,11 @@ import { logger } from '../logger'
 import { isUniqueViolation, prisma, type Db } from '../prisma'
 import type { CreateWikiTemplate, UpdateWikiTemplate } from '../schema/schema-wiki'
 import { assertWikiSpaceAccess, type WikiSpaceAccess } from './wiki-access'
-import { isWikiPageTypeAllowed, WIKI_PAGE_TYPE_NOT_ALLOWED } from './wiki-rule'
+import { isWikiPageTypeAllowed, MAX_WIKI_CONTENT, MAX_WIKI_TITLE, WIKI_PAGE_TYPE_NOT_ALLOWED } from './wiki-rule'
 import {
   applyWikiTemplatePlaceholders,
   MAX_WIKI_TEMPLATES_PER_SPACE,
+  WIKI_TEMPLATE_TOO_LONG,
   type WikiTemplateContext,
 } from './wiki-template-rule'
 
@@ -30,14 +31,8 @@ export type WikiTemplateOption = { id: string; name: string; title: string; type
 /** 管理画面の一覧 */
 export type WikiTemplateItem = WikiTemplateOption & { content: string; order: number }
 
-/** 置き換えた後のテンプレート。`context` は置き換えに使った値(入力されたタイトルにも同じ値で置き換えをかける) */
-export type RenderedWikiTemplate = {
-  name: string
-  title: string
-  content: string
-  type: WikiPageType
-  context: WikiTemplateContext
-}
+/** 置き換えた後のテンプレート */
+export type RenderedWikiTemplate = { name: string; title: string; content: string; type: WikiPageType }
 
 const OPTION_SELECT = { id: true, name: true, title: true, type: true } as const
 const ITEM_SELECT = { ...OPTION_SELECT, content: true, order: true } as const
@@ -80,6 +75,17 @@ const findTemplateSpace = async (id: string, tx: Db) => {
     throw errInvalidOperation()
   }
   return template.spaceId
+}
+
+/**
+ * テンプレートのスペース行をロックし、スペース ID を返す。
+ * ロックを待つ間に同じスペースで消されていれば errInvalidOperation()(更新・並べ替えで Prisma の行なしエラーにしない)
+ */
+const lockTemplateSpace = async (tx: Db, id: string) => {
+  const spaceId = await findTemplateSpace(id, tx)
+  await lockSpace(tx, spaceId)
+  await findTemplateSpace(id, tx)
+  return spaceId
 }
 
 /** 管理画面の一覧(本文込み、表示順)。アーカイブ済みでも読める(画面側で編集を閉じる) */
@@ -130,8 +136,7 @@ export const updateWikiTemplate = async (
 ): Promise<WikiTemplateOption> => {
   const template = await prisma
     .$transaction(async (tx) => {
-      const spaceId = await findTemplateSpace(id, tx)
-      await lockSpace(tx, spaceId)
+      const spaceId = await lockTemplateSpace(tx, id)
       const access = await assertManageable(actor, spaceId, tx)
       assertTypeAllowed(access, fields.type)
       return tx.wikiTemplate.update({
@@ -148,7 +153,7 @@ export const updateWikiTemplate = async (
 
 export const deleteWikiTemplate = async (actor: Actor, id: string): Promise<void> => {
   await prisma.$transaction(async (tx) => {
-    await assertManageable(actor, await findTemplateSpace(id, tx), tx)
+    await assertManageable(actor, await lockTemplateSpace(tx, id), tx)
     await tx.wikiTemplate.delete({ where: { id } })
   })
 
@@ -161,8 +166,7 @@ export const deleteWikiTemplate = async (actor: Actor, id: string): Promise<void
  */
 export const moveWikiTemplate = async (actor: Actor, id: string, direction: 'up' | 'down'): Promise<void> => {
   await prisma.$transaction(async (tx) => {
-    const spaceId = await findTemplateSpace(id, tx)
-    await lockSpace(tx, spaceId)
+    const spaceId = await lockTemplateSpace(tx, id)
     await assertManageable(actor, spaceId, tx)
     const ids = (
       await tx.wikiTemplate.findMany({ where: { spaceId }, select: { id: true }, orderBy: [...ORDER_BY] })
@@ -215,11 +219,15 @@ export const renderWikiTemplate = async (
     timezone: user?.timezone ?? envu.server.DEFAULT_TIMEZONE,
     userName: user?.name ?? '',
   }
-  return {
-    name: template.name,
-    title: applyWikiTemplatePlaceholders(template.title, context),
-    content: applyWikiTemplatePlaceholders(template.content, context),
-    type: template.type,
-    context,
+  const title = applyWikiTemplatePlaceholders(template.title, context)
+  const content = applyWikiTemplatePlaceholders(template.content, context)
+  // 登録時は置き換える前の長さで検査しているので、表示名などで伸びた分をここで弾き、テンプレートが原因だと分かるようにする
+  if (title.length > MAX_WIKI_TITLE || content.length > MAX_WIKI_CONTENT) {
+    throw new ClientError(
+      WIKI_TEMPLATE_TOO_LONG,
+      `The template ${template.name} exceeds the maximum length after replacing placeholders ` +
+        `(title ${MAX_WIKI_TITLE} / content ${MAX_WIKI_CONTENT} characters). Shorten the template`,
+    )
   }
+  return { name: template.name, title, content, type: template.type }
 }
