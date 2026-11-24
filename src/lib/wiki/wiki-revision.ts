@@ -6,12 +6,12 @@
  * 編集者は上限まで保存を重ねれば古い版を押し出せるが、その保存は本人の名前で版に残り追跡できるので許容する
  * (手での版の削除は owner と管理者に限る)。
  * 保持期間(`WIKI_REVISION_RETENTION_DAYS`)を過ぎた版は自動メンテナンス(`sweepWikiPageRevisions`)で消す。
- * ただし存在するページの最新の版と直近の `WIKI_REVISION_KEEP_RECENT` 版は残す。
- * 復元は `wiki-page.ts` の `restoreWikiPageRevision`。
+ * ただしページ(削除済みを含む)の最新の版と直近の `WIKI_REVISION_KEEP_RECENT` 版は残す。版はページの物理削除で一緒に消える。
+ * 版の内容への復元は `wiki-page.ts` の `restoreWikiPageRevision`、削除済みのページの復元は `restoreDeletedWikiPage`。
  */
 
 import type { Prisma } from '@/generated/prisma/client'
-import type { WikiPageRevisionAction, WikiVia } from '@/generated/prisma/enums'
+import type { WikiPageRevisionAction, WikiPageType, WikiVia } from '@/generated/prisma/enums'
 import { approvableAgentWhere } from '../agent/agent-approver'
 import type { Actor } from '../board/board-access'
 import { ticketDisplayId } from '../board/ticket-id'
@@ -25,9 +25,10 @@ import { assertWikiSpaceAccess } from './wiki-access'
 import {
   canDeleteWikiRevision,
   resolveWikiRevisionTags,
-  revisionTagColumns,
+  revisionTagsJson,
   revisionTagsOf,
   shouldMergeWikiRevision,
+  WIKI_PAGE_ALIVE,
   wikiPageRef,
   type WikiPageSnapshot,
   type WikiRevisionTag,
@@ -41,7 +42,6 @@ export const wikiRevisionCutoff = (now: Date): Date => msBefore(now, envu.server
 export type WriteWikiPageRevision = {
   spaceId: string
   pageId: string
-  pageNumber: number
   action: WikiPageRevisionAction
   snapshot: WikiPageSnapshot
   actorId: string
@@ -50,9 +50,6 @@ export type WriteWikiPageRevision = {
   restoredFromId?: string | null
   /** コミットメッセージ(正規化済み。空は null) */
   message?: string | null
-  /** action=deleted のときの、削除したページの作成日時と作成者(復元で戻す) */
-  pageCreatedAt?: Date | null
-  pageCreatedById?: string | null
 }
 
 /**
@@ -98,7 +95,7 @@ export const writeWikiPageRevision = async (
   ) {
     await tx.wikiPageRevision.update({
       where: { id: latest.id },
-      data: { ...snapshot, ...revisionTagColumns(tags), updatedAt: now },
+      data: { ...snapshot, tags: revisionTagsJson(tags), updatedAt: now },
     })
     return 'merged'
   }
@@ -110,7 +107,7 @@ export const writeWikiPageRevision = async (
       ticketId,
       message,
       ...snapshot,
-      ...revisionTagColumns(tags),
+      tags: revisionTagsJson(tags),
       createdAt: now,
       updatedAt: now,
     },
@@ -131,15 +128,13 @@ export const writeWikiPageRevision = async (
 const REVISION_SUMMARY_SELECT = {
   id: true,
   pageId: true,
-  pageNumber: true,
   number: true,
   action: true,
   parentId: true,
   order: true,
   title: true,
   type: true,
-  tagIds: true,
-  tagNames: true,
+  tags: true,
   via: true,
   restoredFromId: true,
   message: true,
@@ -151,7 +146,7 @@ const REVISION_SUMMARY_SELECT = {
 
 type RevisionSummaryRow = Prisma.WikiPageRevisionGetPayload<{ select: typeof REVISION_SUMMARY_SELECT }>
 
-export type WikiPageRevisionSummary = Omit<RevisionSummaryRow, 'actor' | 'ticket' | 'tagIds' | 'tagNames'> & {
+export type WikiPageRevisionSummary = Omit<RevisionSummaryRow, 'actor' | 'ticket' | 'tags'> & {
   /** 書いたときのタグ。今のタグへは ID で引き当てる(`resolveWikiRevisionTags`) */
   tags: WikiRevisionTag[]
   actorName: string
@@ -182,12 +177,12 @@ const viewableTicketIds = async (actor: Actor, rows: readonly Pick<RevisionSumma
 }
 
 const toRevisionSummary = (
-  { actor, ticket, tagIds, tagNames, ...row }: RevisionSummaryRow,
+  { actor, ticket, tags, ...row }: RevisionSummaryRow,
   cutoff: Date,
   viewableTickets: ReadonlySet<string>,
 ): WikiPageRevisionSummary => ({
   ...row,
-  tags: revisionTagsOf({ tagIds, tagNames }),
+  tags: revisionTagsOf(tags),
   actorName: actor?.name ?? '',
   actorIsAgent: actor?.isAgent ?? false,
   ticketDisplayId:
@@ -195,15 +190,13 @@ const toRevisionSummary = (
   beforeRetention: row.updatedAt < cutoff,
 })
 
-/** ページのスペース。削除済みのページは版から引く */
+/** ページ(削除済みを含む)のスペース */
 const spaceIdOfPage = async (pageId: string): Promise<string> => {
-  const owner =
-    (await prisma.wikiPage.findUnique({ where: { id: pageId }, select: { spaceId: true } })) ??
-    (await prisma.wikiPageRevision.findFirst({ where: { pageId }, select: { spaceId: true } }))
-  if (!owner) {
+  const page = await prisma.wikiPage.findUnique({ where: { id: pageId }, select: { spaceId: true } })
+  if (!page) {
     throw errInvalidOperation()
   }
-  return owner.spaceId
+  return page.spaceId
 }
 
 export type WikiPageRevisionList = {
@@ -226,7 +219,7 @@ export const listWikiPageRevisions = async (
   // ページと版は同じトランザクションで書くので、同じスナップショットで読めば最新の版とページの更新日時がそろう
   const [page, rows] = await prisma.$transaction(
     [
-      prisma.wikiPage.findUnique({ where: { id: pageId }, select: { updatedAt: true } }),
+      prisma.wikiPage.findUnique({ where: { id: pageId, ...WIKI_PAGE_ALIVE }, select: { updatedAt: true } }),
       prisma.wikiPageRevision.findMany({
         where: { pageId },
         select: REVISION_SUMMARY_SELECT,
@@ -322,63 +315,88 @@ export type DeletedWikiPageParent =
   | { state: 'alive'; path: string[] }
   /** 削除済み(一覧にいる)。先に戻せば子も元の位置へ戻る */
   | { state: 'deleted'; pageId: string; title: string }
-  /** 存在せず一覧にも無い(復元するとスペース直下へ戻る) */
-  | { state: 'missing' }
 
-export type DeletedWikiPage = WikiPageRevisionSummary & {
+export type DeletedWikiPage = {
+  /** ページ ID(復元に使う) */
+  id: string
+  number: number
   /** `KEY/番号` */
   ref: string
+  title: string
+  type: WikiPageType
+  deletedAt: Date
+  deletedByName: string
+  deletedByIsAgent: boolean
+  /** 削除した経路(削除の版のもの) */
+  via: WikiVia
   /** 削除済み同士の段数(0 始まり)。一覧は親 → 子の順 */
   depth: number
   parent: DeletedWikiPageParent
 }
 
 /**
- * 削除済みのページ(いまは存在しないもの)を、最後に削除された版で返す。復元はその版から行う。
- * 上から順に復元すれば元の親子関係に戻るよう、元の親を子より先に並べる(`arrangeDeletedWikiPages`)
+ * 削除済みのページ。上から順に復元すれば元の親子関係に戻るよう、元の親を子より先に並べる(`arrangeDeletedWikiPages`)。
+ * 生きているページの親は常に生きているので、削除済みのページの親は「スペース直下・生きている・削除済み」のどれか
  */
-export const listDeletedWikiPages = async (
-  actor: Actor,
-  spaceId: string,
-  now: Date = new Date(),
-): Promise<DeletedWikiPage[]> => {
+export const listDeletedWikiPages = async (actor: Actor, spaceId: string): Promise<DeletedWikiPage[]> => {
   const access = await assertWikiSpaceAccess(actor, spaceId, 'view')
-  const rows = await prisma.wikiPageRevision.findMany({
-    where: { spaceId, action: 'deleted' },
-    select: REVISION_SUMMARY_SELECT,
-    // ページをまたいで並べるので、番号ではなく削除した日時の新しい順にする
-    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-    distinct: ['pageId'],
+  const rows = await prisma.wikiPage.findMany({
+    where: { spaceId, deletedAt: { not: null } },
+    select: {
+      id: true,
+      parentId: true,
+      number: true,
+      order: true,
+      title: true,
+      type: true,
+      deletedAt: true,
+      deletedBy: { select: { name: true, isAgent: true } },
+    },
+    orderBy: [{ deletedAt: 'desc' }, { number: 'desc' }],
   })
   if (rows.length === 0) {
     return []
   }
-  // いま存在するページは除き、元の親のパンくずにも使う
-  const alive = await prisma.wikiPage.findMany({
-    where: { spaceId },
-    select: { id: true, parentId: true, title: true },
-  })
+  // 削除済みのページには書き込めないので、最新の版が削除の版
+  const [alive, latest] = await Promise.all([
+    prisma.wikiPage.findMany({
+      where: { spaceId, ...WIKI_PAGE_ALIVE },
+      select: { id: true, parentId: true, title: true },
+    }),
+    prisma.wikiPageRevision.findMany({
+      where: { pageId: { in: rows.map(({ id }) => id) }, action: 'deleted' },
+      select: { pageId: true, via: true },
+      orderBy: [{ pageId: 'asc' }, WIKI_REVISION_ORDER],
+      distinct: ['pageId'],
+    }),
+  ])
   const aliveIndex = indexWikiTree(alive)
   const aliveTitles = new Map(alive.map(({ id, title }) => [id, title]))
-  const deleted = arrangeDeletedWikiPages(rows.filter(({ pageId }) => !aliveTitles.has(pageId)))
-  const deletedTitles = new Map(deleted.map(({ pageId, title }) => [pageId, title]))
+  const viaOf = new Map(latest.map(({ pageId, via }) => [pageId, via]))
+  const deleted = arrangeDeletedWikiPages(rows)
+  const deletedTitles = new Map(deleted.map(({ id, title }) => [id, title]))
   const parentOf = ({ parentId }: { parentId: string | null }): DeletedWikiPageParent => {
     if (parentId === null) {
       return { state: 'root' }
     }
-    if (aliveTitles.has(parentId)) {
-      const path = [parentId, ...ancestorIds(aliveIndex, parentId)].toReversed()
-      return { state: 'alive', path: path.map((id) => aliveTitles.get(id) ?? '') }
-    }
     const title = deletedTitles.get(parentId)
-    return title === undefined ? { state: 'missing' } : { state: 'deleted', pageId: parentId, title }
+    if (title !== undefined) {
+      return { state: 'deleted', pageId: parentId, title }
+    }
+    const path = [parentId, ...ancestorIds(aliveIndex, parentId)].toReversed()
+    return { state: 'alive', path: path.map((id) => aliveTitles.get(id) ?? '') }
   }
-  const cutoff = wikiRevisionCutoff(now)
-  const viewableTickets = await viewableTicketIds(actor, deleted)
-  return deleted.map(({ depth, ...row }) => ({
-    ...toRevisionSummary(row, cutoff, viewableTickets),
-    ref: wikiPageRef({ key: access.key, number: row.pageNumber }),
-    depth,
+  return deleted.map((row) => ({
+    id: row.id,
+    number: row.number,
+    ref: wikiPageRef({ key: access.key, number: row.number }),
+    title: row.title,
+    type: row.type,
+    deletedAt: row.deletedAt ?? new Date(0),
+    deletedByName: row.deletedBy?.name ?? '',
+    deletedByIsAgent: row.deletedBy?.isAgent ?? false,
+    via: viaOf.get(row.id) ?? 'web',
+    depth: row.depth,
     parent: parentOf(row),
   }))
 }

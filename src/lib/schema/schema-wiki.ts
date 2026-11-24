@@ -67,13 +67,15 @@ export const scCreateWikiSpace = z.object({
 })
 export type CreateWikiSpace = z.infer<typeof scCreateWikiSpace>
 
-/** キーは作成後に変えない(共有済みの `KEY/番号` が別のページを指さないように) */
+/**
+ * キーは作成後に変えない(共有済みの `KEY/番号` が別のページを指さないように)。
+ * 区分も作成後に変えない(作れるページの種類・ページの置き方が区分で決まるため)
+ */
 export const scUpdateWikiSpace = z.object({
   id: z.uuidv7(),
   name: zWikiSpaceName,
   description: zWikiSpaceDescription,
   visibility: zWikiVisibility,
-  type: zWikiSpaceType,
 })
 export type UpdateWikiSpace = z.infer<typeof scUpdateWikiSpace>
 
@@ -132,6 +134,15 @@ export const scReorderWikiPage = z.object({
   parentId: z.uuidv7().nullable(),
   siblingIds: z.array(z.uuidv7()).min(1),
   position: z.number().int().min(0),
+})
+
+/**
+ * 削除済みのページの復元。`id` はページ ID。
+ * descendantIds は確認で見せた、一緒に戻す削除済みの配下。今の配下と違えば戻さずに弾く(1件以上なら配下ごと戻す)
+ */
+export const scRestoreDeletedWikiPage = z.object({
+  id: z.uuidv7(),
+  descendantIds: z.array(z.uuidv7()),
 })
 
 /** descendantIds は確認で見せた配下のページ。今の配下と違えば消さずに弾く(1件以上なら配下ごと消す) */

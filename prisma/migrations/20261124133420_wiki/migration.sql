@@ -14,13 +14,29 @@ CREATE TYPE "WikiAssignRole" AS ENUM ('viewer', 'editor');
 CREATE TYPE "WikiVia" AS ENUM ('web', 'mcp');
 
 -- CreateEnum
-CREATE TYPE "WikiSpaceType" AS ENUM ('mixed', 'design_doc');
+CREATE TYPE "WikiSpaceType" AS ENUM ('mixed', 'design_doc', 'announcement');
 
 -- CreateEnum
 CREATE TYPE "WikiPageType" AS ENUM ('page', 'design_doc');
 
 -- CreateEnum
 CREATE TYPE "WikiPageRevisionAction" AS ENUM ('created', 'updated', 'moved', 'deleted', 'restored');
+
+-- CreateEnum
+CREATE TYPE "WikiAnnouncementNotifyKind" AS ENUM ('published', 'updated');
+
+-- CreateEnum
+CREATE TYPE "WikiAnnouncementNotifyStatus" AS ENUM ('scheduled', 'sent', 'canceled', 'skipped');
+
+-- CreateEnum
+CREATE TYPE "WikiAnnouncementNotifySkipReason" AS ENUM ('archived', 'channel_unset', 'slack_disabled', 'no_permission', 'page_deleted');
+
+-- AlterEnum
+ALTER TYPE "NotifyEvent" ADD VALUE 'wiki_announcement';
+
+-- AlterTable
+ALTER TABLE "attachment" ADD COLUMN     "detachedAt" TIMESTAMP(3),
+ADD COLUMN     "wikiSpaceId" TEXT;
 
 -- CreateTable
 CREATE TABLE "wiki_space" (
@@ -32,6 +48,7 @@ CREATE TABLE "wiki_space" (
     "type" "WikiSpaceType" NOT NULL DEFAULT 'mixed',
     "pageSeq" INTEGER NOT NULL DEFAULT 0,
     "archived" BOOLEAN NOT NULL DEFAULT false,
+    "announceSlackChannelId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -92,6 +109,8 @@ CREATE TABLE "wiki_page" (
     "createdById" TEXT,
     "updatedById" TEXT,
     "updatedVia" "WikiVia" NOT NULL DEFAULT 'web',
+    "deletedAt" TIMESTAMP(3),
+    "deletedById" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -126,7 +145,6 @@ CREATE TABLE "wiki_page_revision" (
     "id" TEXT NOT NULL,
     "spaceId" TEXT NOT NULL,
     "pageId" TEXT NOT NULL,
-    "pageNumber" INTEGER NOT NULL,
     "number" INTEGER NOT NULL,
     "action" "WikiPageRevisionAction" NOT NULL,
     "parentId" TEXT,
@@ -134,8 +152,7 @@ CREATE TABLE "wiki_page_revision" (
     "title" TEXT NOT NULL,
     "content" TEXT NOT NULL,
     "type" "WikiPageType" NOT NULL DEFAULT 'page',
-    "tagIds" TEXT[] DEFAULT ARRAY[]::TEXT[],
-    "tagNames" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "tags" JSONB NOT NULL DEFAULT '[]',
     "actorId" TEXT,
     "via" "WikiVia" NOT NULL,
     "ticketId" TEXT,
@@ -145,6 +162,41 @@ CREATE TABLE "wiki_page_revision" (
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "wiki_page_revision_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "wiki_template" (
+    "id" TEXT NOT NULL,
+    "spaceId" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "title" TEXT NOT NULL DEFAULT '',
+    "content" TEXT NOT NULL DEFAULT '',
+    "type" "WikiPageType" NOT NULL DEFAULT 'page',
+    "order" INTEGER NOT NULL DEFAULT 0,
+    "createdById" TEXT,
+    "updatedById" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "wiki_template_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "wiki_announcement_notify" (
+    "id" TEXT NOT NULL,
+    "spaceId" TEXT NOT NULL,
+    "pageId" TEXT NOT NULL,
+    "kind" "WikiAnnouncementNotifyKind" NOT NULL,
+    "message" TEXT,
+    "scheduledAt" TIMESTAMP(3) NOT NULL,
+    "status" "WikiAnnouncementNotifyStatus" NOT NULL,
+    "sentAt" TIMESTAMP(3),
+    "skipReason" "WikiAnnouncementNotifySkipReason",
+    "senderId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "wiki_announcement_notify_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -169,10 +221,19 @@ CREATE INDEX "wiki_space_board_boardId_idx" ON "wiki_space_board"("boardId");
 CREATE UNIQUE INDEX "wiki_space_board_spaceId_boardId_key" ON "wiki_space_board"("spaceId", "boardId");
 
 -- CreateIndex
+CREATE INDEX "wiki_page_spaceId_deletedAt_idx" ON "wiki_page"("spaceId", "deletedAt");
+
+-- CreateIndex
+CREATE INDEX "wiki_page_deletedAt_idx" ON "wiki_page"("deletedAt");
+
+-- CreateIndex
 CREATE INDEX "wiki_page_spaceId_parentId_order_idx" ON "wiki_page"("spaceId", "parentId", "order");
 
 -- CreateIndex
 CREATE INDEX "wiki_page_parentId_idx" ON "wiki_page"("parentId");
+
+-- CreateIndex
+CREATE INDEX "wiki_page_spaceId_createdAt_idx" ON "wiki_page"("spaceId", "createdAt");
 
 -- CreateIndex
 CREATE INDEX "wiki_page_title_trgm_idx" ON "wiki_page" USING GIN ("title" gin_trgm_ops);
@@ -207,11 +268,26 @@ CREATE INDEX "wiki_page_revision_ticketId_idx" ON "wiki_page_revision"("ticketId
 -- CreateIndex
 CREATE UNIQUE INDEX "wiki_page_revision_pageId_number_key" ON "wiki_page_revision"("pageId", "number");
 
--- AlterTable
-ALTER TABLE "attachment" ADD COLUMN     "wikiSpaceId" TEXT;
+-- CreateIndex
+CREATE UNIQUE INDEX "wiki_template_spaceId_name_key" ON "wiki_template"("spaceId", "name");
+
+-- CreateIndex
+CREATE INDEX "wiki_announcement_notify_status_scheduledAt_idx" ON "wiki_announcement_notify"("status", "scheduledAt");
+
+-- CreateIndex
+CREATE INDEX "wiki_announcement_notify_pageId_createdAt_idx" ON "wiki_announcement_notify"("pageId", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "wiki_announcement_notify_spaceId_idx" ON "wiki_announcement_notify"("spaceId");
+
+-- CreateIndex
+CREATE INDEX "wiki_announcement_notify_senderId_idx" ON "wiki_announcement_notify"("senderId");
 
 -- CreateIndex
 CREATE INDEX "attachment_wikiSpaceId_idx" ON "attachment"("wikiSpaceId");
+
+-- AddForeignKey
+ALTER TABLE "attachment" ADD CONSTRAINT "attachment_wikiSpaceId_fkey" FOREIGN KEY ("wikiSpaceId") REFERENCES "wiki_space"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "wiki_space_member" ADD CONSTRAINT "wiki_space_member_spaceId_fkey" FOREIGN KEY ("spaceId") REFERENCES "wiki_space"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -244,6 +320,9 @@ ALTER TABLE "wiki_page" ADD CONSTRAINT "wiki_page_createdById_fkey" FOREIGN KEY 
 ALTER TABLE "wiki_page" ADD CONSTRAINT "wiki_page_updatedById_fkey" FOREIGN KEY ("updatedById") REFERENCES "user"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "wiki_page" ADD CONSTRAINT "wiki_page_deletedById_fkey" FOREIGN KEY ("deletedById") REFERENCES "user"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "wiki_tag" ADD CONSTRAINT "wiki_tag_spaceId_fkey" FOREIGN KEY ("spaceId") REFERENCES "wiki_space"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -256,13 +335,44 @@ ALTER TABLE "wiki_page_tag" ADD CONSTRAINT "wiki_page_tag_tagId_fkey" FOREIGN KE
 ALTER TABLE "wiki_page_revision" ADD CONSTRAINT "wiki_page_revision_spaceId_fkey" FOREIGN KEY ("spaceId") REFERENCES "wiki_space"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "wiki_page_revision" ADD CONSTRAINT "wiki_page_revision_pageId_fkey" FOREIGN KEY ("pageId") REFERENCES "wiki_page"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "wiki_page_revision" ADD CONSTRAINT "wiki_page_revision_actorId_fkey" FOREIGN KEY ("actorId") REFERENCES "user"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "wiki_page_revision" ADD CONSTRAINT "wiki_page_revision_ticketId_fkey" FOREIGN KEY ("ticketId") REFERENCES "ticket"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "attachment" ADD CONSTRAINT "attachment_wikiSpaceId_fkey" FOREIGN KEY ("wikiSpaceId") REFERENCES "wiki_space"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "wiki_template" ADD CONSTRAINT "wiki_template_spaceId_fkey" FOREIGN KEY ("spaceId") REFERENCES "wiki_space"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "wiki_template" ADD CONSTRAINT "wiki_template_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "user"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "wiki_template" ADD CONSTRAINT "wiki_template_updatedById_fkey" FOREIGN KEY ("updatedById") REFERENCES "user"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "wiki_announcement_notify" ADD CONSTRAINT "wiki_announcement_notify_spaceId_fkey" FOREIGN KEY ("spaceId") REFERENCES "wiki_space"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "wiki_announcement_notify" ADD CONSTRAINT "wiki_announcement_notify_pageId_fkey" FOREIGN KEY ("pageId") REFERENCES "wiki_page"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "wiki_announcement_notify" ADD CONSTRAINT "wiki_announcement_notify_senderId_fkey" FOREIGN KEY ("senderId") REFERENCES "user"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- 添付先はボードか Wiki スペースのどちらか一方(どちらも無ければ全ログインユーザーへ配信する)。
+-- 削除待ち(detachedAt)の添付は紐付けを外してあり、どちらも持たない
+ALTER TABLE "attachment" ADD CONSTRAINT "attachment_owner_check"
+  CHECK (num_nonnulls("boardId", "wikiSpaceId") <= 1);
+ALTER TABLE "attachment" ADD CONSTRAINT "attachment_detached_check"
+  CHECK ("detachedAt" IS NULL OR ("boardId" IS NULL AND "wikiSpaceId" IS NULL));
+
+-- 送った日時は送信済みのときだけ、見送りの理由は見送ったときだけ持つ
+ALTER TABLE "wiki_announcement_notify" ADD CONSTRAINT "wiki_announcement_notify_sent_check"
+  CHECK (("status" = 'sent') = ("sentAt" IS NOT NULL));
+ALTER TABLE "wiki_announcement_notify" ADD CONSTRAINT "wiki_announcement_notify_skipped_check"
+  CHECK (("status" = 'skipped') = ("skipReason" IS NOT NULL));
 
 -- サンプルのスペースとページ。全員が閲覧でき、編集するには管理者がスペースの設定で割り当てる。
 -- ID は DB に既定が無い(アプリで採番する)ので固定値を使い、本文はドル引用で書く
@@ -429,7 +539,7 @@ $md$,
 
 - 本文の先頭の front matter(`type: design_doc` / `title` / `version` / `status` など)は、設計書ヘッダとして出ます
 - 編集は Markdown のソースで行い、広い画面では右にプレビューが出ます
-- スペースの区分を「設計書」にすると、スペースのトップに設計書の一覧が出ます
+- 区分を「設計書」にして作ったスペースでは、スペースのトップに設計書の一覧が出ます(区分はスペースの作成時に選び、後から変えられません)
 
 ## サンプル
 
@@ -931,16 +1041,15 @@ VALUES
   ('019a9000-0000-7000-8000-000000000206', '019a9000-0000-7000-8000-000000000106', '019a9000-0000-7000-8000-000000000012'),
   ('019a9000-0000-7000-8000-000000000207', '019a9000-0000-7000-8000-000000000107', '019a9000-0000-7000-8000-000000000012');
 
--- 各ページの版 1(作成)。本文・タグ(ID と名前を同じ並びで)は上で入れたページから写す
+-- 各ページの版 1(作成)。本文・タグ(`[{ id, name }]`、タグの表示順)は上で入れたページから写す
 INSERT INTO "wiki_page_revision" (
-  "id", "spaceId", "pageId", "pageNumber", "number", "action",
-  "parentId", "order", "title", "content", "type", "tagIds", "tagNames", "via"
+  "id", "spaceId", "pageId", "number", "action",
+  "parentId", "order", "title", "content", "type", "tags", "via"
 )
 SELECT
   '019a9000-0000-7000-8000-0000000003' || lpad(p."number"::text, 2, '0'),
   p."spaceId",
   p."id",
-  p."number",
   1,
   'created',
   p."parentId",
@@ -950,21 +1059,12 @@ SELECT
   p."type",
   COALESCE(
     (
-      SELECT array_agg(t."id" ORDER BY t."order", t."name")
+      SELECT jsonb_agg(jsonb_build_object('id', t."id", 'name', t."name") ORDER BY t."order", t."name")
       FROM "wiki_page_tag" AS pt
       JOIN "wiki_tag" AS t ON t."id" = pt."tagId"
       WHERE pt."pageId" = p."id"
     ),
-    ARRAY[]::TEXT[]
-  ),
-  COALESCE(
-    (
-      SELECT array_agg(t."name" ORDER BY t."order", t."name")
-      FROM "wiki_page_tag" AS pt
-      JOIN "wiki_tag" AS t ON t."id" = pt."tagId"
-      WHERE pt."pageId" = p."id"
-    ),
-    ARRAY[]::TEXT[]
+    '[]'::jsonb
   ),
   'web'
 FROM "wiki_page" AS p

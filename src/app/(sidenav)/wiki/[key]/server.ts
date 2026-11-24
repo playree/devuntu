@@ -9,6 +9,7 @@ import {
   scDeleteWikiPage,
   scMoveWikiPage,
   scReorderWikiPage,
+  scRestoreDeletedWikiPage,
   scWikiAnnouncementArchive,
   scWikiAnnouncementQuery,
   scWikiSpaceKey,
@@ -24,6 +25,7 @@ import {
   deleteWikiPage as deleteWikiPageCore,
   getWikiTree,
   moveWikiPage as moveWikiPageCore,
+  restoreDeletedWikiPage as restoreDeletedWikiPageCore,
   restoreWikiPageRevision as restoreWikiPageRevisionCore,
 } from '@/lib/wiki/wiki-page'
 import {
@@ -163,7 +165,7 @@ export const deleteWikiPageRevision = safeAuthAction
     return { id }
   })
 
-/** 削除済みのページ(最後に削除された版)と保持期間(日)。`id` はスペース ID */
+/** 削除済みのページ(元の親 → 子の順)と保持期間(日)。`id` はスペース ID */
 export const getDeletedWikiPages = safeAuthAction
   .metadata({ actionName: 'getDeletedWikiPages', role: 'user' })
   .inputSchema(scUUID)
@@ -179,21 +181,24 @@ export const getWikiDesignDocIndex = safeAuthAction
   .inputSchema(scUUID)
   .action(async ({ ctx: { user }, parsedInput: { id } }) => getWikiDesignDocIndexCore(user, id))
 
-/** 版の内容へ戻す。存在するページは本文系だけ、削除済みのページは作り直す。`id` は版 ID */
+/** 版の内容へ戻す(タイトル・本文・種類・タグ)。削除済みのページは restoreDeletedWikiPage で戻す。`id` は版 ID */
 export const restoreWikiPageRevision = safeAuthAction
   .metadata({ actionName: 'restoreWikiPageRevision', role: 'user' })
   .inputSchema(scUUID)
   .action(async ({ ctx: { user }, parsedInput: { id } }) => restoreWikiPageRevisionCore(user, WEB, id))
 
 /**
- * 削除済みのページの一覧からの復元。`id` は最後の削除の版 ID。
- * 一覧を開いた後に別の人が戻したページは上書きせず unchanged を返す
+ * 削除済みのページの一覧からの復元。`id` はページ ID。確認で見せた削除済みの配下(`descendantIds`)があれば、同じトランザクションで戻す。
+ * 今の削除済みの配下と違えば WIKI_TREE_CHANGED で弾く。一覧を開いた後に別の人が戻したページは上書きせず、戻すものが無ければ unchanged を返す
  */
 export const restoreDeletedWikiPage = safeAuthAction
   .metadata({ actionName: 'restoreDeletedWikiPage', role: 'user' })
-  .inputSchema(scUUID)
-  .action(async ({ ctx: { user }, parsedInput: { id } }) =>
-    restoreWikiPageRevisionCore(user, WEB, id, { deletedOnly: true }),
+  .inputSchema(scRestoreDeletedWikiPage)
+  .action(async ({ ctx: { user }, parsedInput: { id, descendantIds } }) =>
+    restoreDeletedWikiPageCore(user, WEB, id, {
+      withDescendants: descendantIds.length > 0,
+      expectedDescendantIds: descendantIds,
+    }),
   )
 
 /** アナウンス用スペースの一覧(作成日時の新しい順、1 ページ分と総件数)。年・月・タグで絞り込む */

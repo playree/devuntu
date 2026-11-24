@@ -213,7 +213,7 @@ export const removeImageAttachment = async (url: string): Promise<void> => {
 }
 
 /**
- * 本人がアップロードした、ボードにも Wiki スペースにも属さない画像だけを削除する。
+ * 本人がアップロードした、ボードにも Wiki スペースにも属さない画像だけを削除する(削除待ちは掃除に任せる)。
  *
  * `user.image` のように参照先を利用者が指せる値から消すときに使い、他人の添付や本文で使う添付を巻き込まない。
  */
@@ -224,7 +224,7 @@ export const removeOwnedImageAttachment = async (url: string, userId: string): P
   const key = toUploadKey(url)
   // 削除はベストエフォート(removeAttachmentByKey と同じ)。確認に失敗したら消さずに戻る
   const owned = await prisma.attachment
-    .count({ where: { key, createdById: userId, boardId: null, wikiSpaceId: null } })
+    .count({ where: { key, createdById: userId, boardId: null, wikiSpaceId: null, detachedAt: null } })
     .catch((err) => {
       logger.error({ err, key, userId }, 'failed to check attachment owner')
       return 0

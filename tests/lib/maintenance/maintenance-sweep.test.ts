@@ -19,6 +19,7 @@ import {
   sweepAgentRuns,
   sweepBoardNoteRevisions,
   sweepCommandRuns,
+  sweepDeletedWikiPages,
   sweepDueReminders,
   sweepGitCheckSuites,
   sweepOauthAccessTokens,
@@ -339,11 +340,12 @@ describe('sweepWikiPageRevisions', () => {
     expect(deleteSql().values[0]).toEqual(msBefore(now, 30 * DAY_MS))
   })
 
-  it('削除済みのページの版はすべて、存在するページは期限より古い版の新しい順に max(1, 1 + keepRecent - 期限内の版の数) を残して消す', async () => {
+  it('ページ(削除済みを含む)ごとに、期限より古い版の新しい順に max(1, 1 + keepRecent - 期限内の版の数) を残して消す', async () => {
     await sweepWikiPageRevisions(now)
     const { sql, values } = deleteSql()
     expect(sql).toContain('ROW_NUMBER() OVER (PARTITION BY r."pageId" ORDER BY r."updatedAt" DESC, r."id" DESC)')
-    expect(sql).toContain('WHERE p."id" IS NULL OR e."rank" > GREATEST(1, 1 + ?::int - COALESCE(c."count", 0))')
+    expect(sql).toContain('WHERE e."rank" > GREATEST(1, 1 + ?::int - COALESCE(c."count", 0))')
+    expect(sql, '削除済みのページの版も一律には消さない(ページの物理削除で消える)').not.toContain('"wiki_page" AS p')
     expect(values[2]).toBe(2)
   })
 
@@ -356,8 +358,33 @@ describe('sweepWikiPageRevisions', () => {
   it('1回に消すのは、残す版を除いたうえで古い順にバッチの上限まで(残す版で上限が埋まらない)', async () => {
     await sweepWikiPageRevisions(now)
     const { sql, values } = deleteSql()
-    expect(sql).toMatch(/WHERE p\."id" IS NULL OR .* ORDER BY e\."updatedAt", e\."id" LIMIT \?/)
+    expect(sql).toMatch(/WHERE e\."rank" > .* ORDER BY e\."updatedAt", e\."id" LIMIT \?/)
     expect(values[3]).toBe(MAINTENANCE_DELETE_BATCH)
+  })
+})
+
+describe('sweepDeletedWikiPages', () => {
+  const deleteSql = () => {
+    const [strings, ...values] = vi.mocked(prisma.$executeRaw).mock.calls[0] as unknown as [
+      TemplateStringsArray,
+      ...unknown[],
+    ]
+    return { sql: strings.join('?').replace(/\s+/g, ' '), values }
+  }
+
+  it('削除から保持期間(既定7日)を過ぎたページを、古い順にバッチの上限まで1文で物理削除する', async () => {
+    vi.mocked(prisma.$executeRaw).mockResolvedValue(2 as never)
+    expect(await sweepDeletedWikiPages(now)).toBe(2)
+    const { sql, values } = deleteSql()
+    expect(sql).toMatch(/DELETE FROM "wiki_page" WHERE "id" IN \( SELECT "id" FROM "wiki_page" WHERE "deletedAt" < \?/)
+    expect(sql).toContain('ORDER BY "deletedAt", "id" LIMIT ?')
+    expect(values).toEqual([msBefore(now, 7 * DAY_MS), MAINTENANCE_DELETE_BATCH])
+  })
+
+  it('WIKI_REVISION_RETENTION_DAYS で保持期間を変えられる', async () => {
+    wiki.retentionDays = 30
+    await sweepDeletedWikiPages(now)
+    expect(deleteSql().values[0]).toEqual(msBefore(now, 30 * DAY_MS))
   })
 })
 
@@ -383,9 +410,12 @@ describe('runMaintenanceSweep', () => {
     expect(counts.dueReminder).toBe(0)
   })
 
-  it('Wiki の版の掃除を手順に含める', async () => {
-    vi.mocked(prisma.$executeRaw).mockResolvedValue(4 as never)
+  it('Wiki の削除済みページの掃除を、版の掃除より先に手順に含める', async () => {
+    vi.mocked(prisma.$executeRaw)
+      .mockResolvedValueOnce(1 as never)
+      .mockResolvedValueOnce(4 as never)
     const counts = await runMaintenanceSweep(now)
+    expect(counts.wikiPage).toBe(1)
     expect(counts.wikiPageRevision).toBe(4)
   })
 })

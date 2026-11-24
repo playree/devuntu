@@ -394,7 +394,6 @@ export type WikiAnnouncementNotifyStatus = (typeof WikiAnnouncementNotifyStatus)
 
 export const WikiAnnouncementNotifySkipReason = {
   archived: 'archived',
-  not_announcement: 'not_announcement',
   channel_unset: 'channel_unset',
   slack_disabled: 'slack_disabled',
   no_permission: 'no_permission',

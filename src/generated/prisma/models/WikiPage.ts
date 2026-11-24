@@ -48,6 +48,8 @@ export type WikiPageMinAggregateOutputType = {
   createdById: string | null
   updatedById: string | null
   updatedVia: $Enums.WikiVia | null
+  deletedAt: Date | null
+  deletedById: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -64,6 +66,8 @@ export type WikiPageMaxAggregateOutputType = {
   createdById: string | null
   updatedById: string | null
   updatedVia: $Enums.WikiVia | null
+  deletedAt: Date | null
+  deletedById: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -80,6 +84,8 @@ export type WikiPageCountAggregateOutputType = {
   createdById: number
   updatedById: number
   updatedVia: number
+  deletedAt: number
+  deletedById: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -108,6 +114,8 @@ export type WikiPageMinAggregateInputType = {
   createdById?: true
   updatedById?: true
   updatedVia?: true
+  deletedAt?: true
+  deletedById?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -124,6 +132,8 @@ export type WikiPageMaxAggregateInputType = {
   createdById?: true
   updatedById?: true
   updatedVia?: true
+  deletedAt?: true
+  deletedById?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -140,6 +150,8 @@ export type WikiPageCountAggregateInputType = {
   createdById?: true
   updatedById?: true
   updatedVia?: true
+  deletedAt?: true
+  deletedById?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -243,6 +255,8 @@ export type WikiPageGroupByOutputType = {
   createdById: string | null
   updatedById: string | null
   updatedVia: $Enums.WikiVia
+  deletedAt: Date | null
+  deletedById: string | null
   createdAt: Date
   updatedAt: Date
   _count: WikiPageCountAggregateOutputType | null
@@ -282,6 +296,8 @@ export type WikiPageWhereInput = {
   createdById?: Prisma.StringNullableFilter<"WikiPage"> | string | null
   updatedById?: Prisma.StringNullableFilter<"WikiPage"> | string | null
   updatedVia?: Prisma.EnumWikiViaFilter<"WikiPage"> | $Enums.WikiVia
+  deletedAt?: Prisma.DateTimeNullableFilter<"WikiPage"> | Date | string | null
+  deletedById?: Prisma.StringNullableFilter<"WikiPage"> | string | null
   createdAt?: Prisma.DateTimeFilter<"WikiPage"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"WikiPage"> | Date | string
   space?: Prisma.XOR<Prisma.WikiSpaceScalarRelationFilter, Prisma.WikiSpaceWhereInput>
@@ -289,7 +305,10 @@ export type WikiPageWhereInput = {
   children?: Prisma.WikiPageListRelationFilter
   createdBy?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   updatedBy?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
+  deletedBy?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   tags?: Prisma.WikiPageTagListRelationFilter
+  revisions?: Prisma.WikiPageRevisionListRelationFilter
+  notifies?: Prisma.WikiAnnouncementNotifyListRelationFilter
 }
 
 export type WikiPageOrderByWithRelationInput = {
@@ -304,6 +323,8 @@ export type WikiPageOrderByWithRelationInput = {
   createdById?: Prisma.SortOrderInput | Prisma.SortOrder
   updatedById?: Prisma.SortOrderInput | Prisma.SortOrder
   updatedVia?: Prisma.SortOrder
+  deletedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  deletedById?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   space?: Prisma.WikiSpaceOrderByWithRelationInput
@@ -311,7 +332,10 @@ export type WikiPageOrderByWithRelationInput = {
   children?: Prisma.WikiPageOrderByRelationAggregateInput
   createdBy?: Prisma.UserOrderByWithRelationInput
   updatedBy?: Prisma.UserOrderByWithRelationInput
+  deletedBy?: Prisma.UserOrderByWithRelationInput
   tags?: Prisma.WikiPageTagOrderByRelationAggregateInput
+  revisions?: Prisma.WikiPageRevisionOrderByRelationAggregateInput
+  notifies?: Prisma.WikiAnnouncementNotifyOrderByRelationAggregateInput
 }
 
 export type WikiPageWhereUniqueInput = Prisma.AtLeast<{
@@ -330,6 +354,8 @@ export type WikiPageWhereUniqueInput = Prisma.AtLeast<{
   createdById?: Prisma.StringNullableFilter<"WikiPage"> | string | null
   updatedById?: Prisma.StringNullableFilter<"WikiPage"> | string | null
   updatedVia?: Prisma.EnumWikiViaFilter<"WikiPage"> | $Enums.WikiVia
+  deletedAt?: Prisma.DateTimeNullableFilter<"WikiPage"> | Date | string | null
+  deletedById?: Prisma.StringNullableFilter<"WikiPage"> | string | null
   createdAt?: Prisma.DateTimeFilter<"WikiPage"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"WikiPage"> | Date | string
   space?: Prisma.XOR<Prisma.WikiSpaceScalarRelationFilter, Prisma.WikiSpaceWhereInput>
@@ -337,7 +363,10 @@ export type WikiPageWhereUniqueInput = Prisma.AtLeast<{
   children?: Prisma.WikiPageListRelationFilter
   createdBy?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   updatedBy?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
+  deletedBy?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   tags?: Prisma.WikiPageTagListRelationFilter
+  revisions?: Prisma.WikiPageRevisionListRelationFilter
+  notifies?: Prisma.WikiAnnouncementNotifyListRelationFilter
 }, "id" | "spaceId_number">
 
 export type WikiPageOrderByWithAggregationInput = {
@@ -352,6 +381,8 @@ export type WikiPageOrderByWithAggregationInput = {
   createdById?: Prisma.SortOrderInput | Prisma.SortOrder
   updatedById?: Prisma.SortOrderInput | Prisma.SortOrder
   updatedVia?: Prisma.SortOrder
+  deletedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  deletedById?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.WikiPageCountOrderByAggregateInput
@@ -376,6 +407,8 @@ export type WikiPageScalarWhereWithAggregatesInput = {
   createdById?: Prisma.StringNullableWithAggregatesFilter<"WikiPage"> | string | null
   updatedById?: Prisma.StringNullableWithAggregatesFilter<"WikiPage"> | string | null
   updatedVia?: Prisma.EnumWikiViaWithAggregatesFilter<"WikiPage"> | $Enums.WikiVia
+  deletedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"WikiPage"> | Date | string | null
+  deletedById?: Prisma.StringNullableWithAggregatesFilter<"WikiPage"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"WikiPage"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"WikiPage"> | Date | string
 }
@@ -388,6 +421,7 @@ export type WikiPageCreateInput = {
   type?: $Enums.WikiPageType
   order?: number
   updatedVia?: $Enums.WikiVia
+  deletedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   space: Prisma.WikiSpaceCreateNestedOneWithoutPagesInput
@@ -395,7 +429,10 @@ export type WikiPageCreateInput = {
   children?: Prisma.WikiPageCreateNestedManyWithoutParentInput
   createdBy?: Prisma.UserCreateNestedOneWithoutCreatedWikiPagesInput
   updatedBy?: Prisma.UserCreateNestedOneWithoutUpdatedWikiPagesInput
+  deletedBy?: Prisma.UserCreateNestedOneWithoutDeletedWikiPagesInput
   tags?: Prisma.WikiPageTagCreateNestedManyWithoutPageInput
+  revisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutPageInput
+  notifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutPageInput
 }
 
 export type WikiPageUncheckedCreateInput = {
@@ -410,10 +447,14 @@ export type WikiPageUncheckedCreateInput = {
   createdById?: string | null
   updatedById?: string | null
   updatedVia?: $Enums.WikiVia
+  deletedAt?: Date | string | null
+  deletedById?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   children?: Prisma.WikiPageUncheckedCreateNestedManyWithoutParentInput
   tags?: Prisma.WikiPageTagUncheckedCreateNestedManyWithoutPageInput
+  revisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutPageInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutPageInput
 }
 
 export type WikiPageUpdateInput = {
@@ -424,6 +465,7 @@ export type WikiPageUpdateInput = {
   type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
   order?: Prisma.IntFieldUpdateOperationsInput | number
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   space?: Prisma.WikiSpaceUpdateOneRequiredWithoutPagesNestedInput
@@ -431,7 +473,10 @@ export type WikiPageUpdateInput = {
   children?: Prisma.WikiPageUpdateManyWithoutParentNestedInput
   createdBy?: Prisma.UserUpdateOneWithoutCreatedWikiPagesNestedInput
   updatedBy?: Prisma.UserUpdateOneWithoutUpdatedWikiPagesNestedInput
+  deletedBy?: Prisma.UserUpdateOneWithoutDeletedWikiPagesNestedInput
   tags?: Prisma.WikiPageTagUpdateManyWithoutPageNestedInput
+  revisions?: Prisma.WikiPageRevisionUpdateManyWithoutPageNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutPageNestedInput
 }
 
 export type WikiPageUncheckedUpdateInput = {
@@ -446,10 +491,14 @@ export type WikiPageUncheckedUpdateInput = {
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   children?: Prisma.WikiPageUncheckedUpdateManyWithoutParentNestedInput
   tags?: Prisma.WikiPageTagUncheckedUpdateManyWithoutPageNestedInput
+  revisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutPageNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutPageNestedInput
 }
 
 export type WikiPageCreateManyInput = {
@@ -464,6 +513,8 @@ export type WikiPageCreateManyInput = {
   createdById?: string | null
   updatedById?: string | null
   updatedVia?: $Enums.WikiVia
+  deletedAt?: Date | string | null
+  deletedById?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -476,6 +527,7 @@ export type WikiPageUpdateManyMutationInput = {
   type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
   order?: Prisma.IntFieldUpdateOperationsInput | number
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -492,6 +544,8 @@ export type WikiPageUncheckedUpdateManyInput = {
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -528,6 +582,8 @@ export type WikiPageCountOrderByAggregateInput = {
   createdById?: Prisma.SortOrder
   updatedById?: Prisma.SortOrder
   updatedVia?: Prisma.SortOrder
+  deletedAt?: Prisma.SortOrder
+  deletedById?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -549,6 +605,8 @@ export type WikiPageMaxOrderByAggregateInput = {
   createdById?: Prisma.SortOrder
   updatedById?: Prisma.SortOrder
   updatedVia?: Prisma.SortOrder
+  deletedAt?: Prisma.SortOrder
+  deletedById?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -565,6 +623,8 @@ export type WikiPageMinOrderByAggregateInput = {
   createdById?: Prisma.SortOrder
   updatedById?: Prisma.SortOrder
   updatedVia?: Prisma.SortOrder
+  deletedAt?: Prisma.SortOrder
+  deletedById?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -593,6 +653,13 @@ export type WikiPageCreateNestedManyWithoutUpdatedByInput = {
   connect?: Prisma.WikiPageWhereUniqueInput | Prisma.WikiPageWhereUniqueInput[]
 }
 
+export type WikiPageCreateNestedManyWithoutDeletedByInput = {
+  create?: Prisma.XOR<Prisma.WikiPageCreateWithoutDeletedByInput, Prisma.WikiPageUncheckedCreateWithoutDeletedByInput> | Prisma.WikiPageCreateWithoutDeletedByInput[] | Prisma.WikiPageUncheckedCreateWithoutDeletedByInput[]
+  connectOrCreate?: Prisma.WikiPageCreateOrConnectWithoutDeletedByInput | Prisma.WikiPageCreateOrConnectWithoutDeletedByInput[]
+  createMany?: Prisma.WikiPageCreateManyDeletedByInputEnvelope
+  connect?: Prisma.WikiPageWhereUniqueInput | Prisma.WikiPageWhereUniqueInput[]
+}
+
 export type WikiPageUncheckedCreateNestedManyWithoutCreatedByInput = {
   create?: Prisma.XOR<Prisma.WikiPageCreateWithoutCreatedByInput, Prisma.WikiPageUncheckedCreateWithoutCreatedByInput> | Prisma.WikiPageCreateWithoutCreatedByInput[] | Prisma.WikiPageUncheckedCreateWithoutCreatedByInput[]
   connectOrCreate?: Prisma.WikiPageCreateOrConnectWithoutCreatedByInput | Prisma.WikiPageCreateOrConnectWithoutCreatedByInput[]
@@ -604,6 +671,13 @@ export type WikiPageUncheckedCreateNestedManyWithoutUpdatedByInput = {
   create?: Prisma.XOR<Prisma.WikiPageCreateWithoutUpdatedByInput, Prisma.WikiPageUncheckedCreateWithoutUpdatedByInput> | Prisma.WikiPageCreateWithoutUpdatedByInput[] | Prisma.WikiPageUncheckedCreateWithoutUpdatedByInput[]
   connectOrCreate?: Prisma.WikiPageCreateOrConnectWithoutUpdatedByInput | Prisma.WikiPageCreateOrConnectWithoutUpdatedByInput[]
   createMany?: Prisma.WikiPageCreateManyUpdatedByInputEnvelope
+  connect?: Prisma.WikiPageWhereUniqueInput | Prisma.WikiPageWhereUniqueInput[]
+}
+
+export type WikiPageUncheckedCreateNestedManyWithoutDeletedByInput = {
+  create?: Prisma.XOR<Prisma.WikiPageCreateWithoutDeletedByInput, Prisma.WikiPageUncheckedCreateWithoutDeletedByInput> | Prisma.WikiPageCreateWithoutDeletedByInput[] | Prisma.WikiPageUncheckedCreateWithoutDeletedByInput[]
+  connectOrCreate?: Prisma.WikiPageCreateOrConnectWithoutDeletedByInput | Prisma.WikiPageCreateOrConnectWithoutDeletedByInput[]
+  createMany?: Prisma.WikiPageCreateManyDeletedByInputEnvelope
   connect?: Prisma.WikiPageWhereUniqueInput | Prisma.WikiPageWhereUniqueInput[]
 }
 
@@ -635,6 +709,20 @@ export type WikiPageUpdateManyWithoutUpdatedByNestedInput = {
   deleteMany?: Prisma.WikiPageScalarWhereInput | Prisma.WikiPageScalarWhereInput[]
 }
 
+export type WikiPageUpdateManyWithoutDeletedByNestedInput = {
+  create?: Prisma.XOR<Prisma.WikiPageCreateWithoutDeletedByInput, Prisma.WikiPageUncheckedCreateWithoutDeletedByInput> | Prisma.WikiPageCreateWithoutDeletedByInput[] | Prisma.WikiPageUncheckedCreateWithoutDeletedByInput[]
+  connectOrCreate?: Prisma.WikiPageCreateOrConnectWithoutDeletedByInput | Prisma.WikiPageCreateOrConnectWithoutDeletedByInput[]
+  upsert?: Prisma.WikiPageUpsertWithWhereUniqueWithoutDeletedByInput | Prisma.WikiPageUpsertWithWhereUniqueWithoutDeletedByInput[]
+  createMany?: Prisma.WikiPageCreateManyDeletedByInputEnvelope
+  set?: Prisma.WikiPageWhereUniqueInput | Prisma.WikiPageWhereUniqueInput[]
+  disconnect?: Prisma.WikiPageWhereUniqueInput | Prisma.WikiPageWhereUniqueInput[]
+  delete?: Prisma.WikiPageWhereUniqueInput | Prisma.WikiPageWhereUniqueInput[]
+  connect?: Prisma.WikiPageWhereUniqueInput | Prisma.WikiPageWhereUniqueInput[]
+  update?: Prisma.WikiPageUpdateWithWhereUniqueWithoutDeletedByInput | Prisma.WikiPageUpdateWithWhereUniqueWithoutDeletedByInput[]
+  updateMany?: Prisma.WikiPageUpdateManyWithWhereWithoutDeletedByInput | Prisma.WikiPageUpdateManyWithWhereWithoutDeletedByInput[]
+  deleteMany?: Prisma.WikiPageScalarWhereInput | Prisma.WikiPageScalarWhereInput[]
+}
+
 export type WikiPageUncheckedUpdateManyWithoutCreatedByNestedInput = {
   create?: Prisma.XOR<Prisma.WikiPageCreateWithoutCreatedByInput, Prisma.WikiPageUncheckedCreateWithoutCreatedByInput> | Prisma.WikiPageCreateWithoutCreatedByInput[] | Prisma.WikiPageUncheckedCreateWithoutCreatedByInput[]
   connectOrCreate?: Prisma.WikiPageCreateOrConnectWithoutCreatedByInput | Prisma.WikiPageCreateOrConnectWithoutCreatedByInput[]
@@ -660,6 +748,20 @@ export type WikiPageUncheckedUpdateManyWithoutUpdatedByNestedInput = {
   connect?: Prisma.WikiPageWhereUniqueInput | Prisma.WikiPageWhereUniqueInput[]
   update?: Prisma.WikiPageUpdateWithWhereUniqueWithoutUpdatedByInput | Prisma.WikiPageUpdateWithWhereUniqueWithoutUpdatedByInput[]
   updateMany?: Prisma.WikiPageUpdateManyWithWhereWithoutUpdatedByInput | Prisma.WikiPageUpdateManyWithWhereWithoutUpdatedByInput[]
+  deleteMany?: Prisma.WikiPageScalarWhereInput | Prisma.WikiPageScalarWhereInput[]
+}
+
+export type WikiPageUncheckedUpdateManyWithoutDeletedByNestedInput = {
+  create?: Prisma.XOR<Prisma.WikiPageCreateWithoutDeletedByInput, Prisma.WikiPageUncheckedCreateWithoutDeletedByInput> | Prisma.WikiPageCreateWithoutDeletedByInput[] | Prisma.WikiPageUncheckedCreateWithoutDeletedByInput[]
+  connectOrCreate?: Prisma.WikiPageCreateOrConnectWithoutDeletedByInput | Prisma.WikiPageCreateOrConnectWithoutDeletedByInput[]
+  upsert?: Prisma.WikiPageUpsertWithWhereUniqueWithoutDeletedByInput | Prisma.WikiPageUpsertWithWhereUniqueWithoutDeletedByInput[]
+  createMany?: Prisma.WikiPageCreateManyDeletedByInputEnvelope
+  set?: Prisma.WikiPageWhereUniqueInput | Prisma.WikiPageWhereUniqueInput[]
+  disconnect?: Prisma.WikiPageWhereUniqueInput | Prisma.WikiPageWhereUniqueInput[]
+  delete?: Prisma.WikiPageWhereUniqueInput | Prisma.WikiPageWhereUniqueInput[]
+  connect?: Prisma.WikiPageWhereUniqueInput | Prisma.WikiPageWhereUniqueInput[]
+  update?: Prisma.WikiPageUpdateWithWhereUniqueWithoutDeletedByInput | Prisma.WikiPageUpdateWithWhereUniqueWithoutDeletedByInput[]
+  updateMany?: Prisma.WikiPageUpdateManyWithWhereWithoutDeletedByInput | Prisma.WikiPageUpdateManyWithWhereWithoutDeletedByInput[]
   deleteMany?: Prisma.WikiPageScalarWhereInput | Prisma.WikiPageScalarWhereInput[]
 }
 
@@ -785,6 +887,34 @@ export type WikiPageUpdateOneRequiredWithoutTagsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.WikiPageUpdateToOneWithWhereWithoutTagsInput, Prisma.WikiPageUpdateWithoutTagsInput>, Prisma.WikiPageUncheckedUpdateWithoutTagsInput>
 }
 
+export type WikiPageCreateNestedOneWithoutRevisionsInput = {
+  create?: Prisma.XOR<Prisma.WikiPageCreateWithoutRevisionsInput, Prisma.WikiPageUncheckedCreateWithoutRevisionsInput>
+  connectOrCreate?: Prisma.WikiPageCreateOrConnectWithoutRevisionsInput
+  connect?: Prisma.WikiPageWhereUniqueInput
+}
+
+export type WikiPageUpdateOneRequiredWithoutRevisionsNestedInput = {
+  create?: Prisma.XOR<Prisma.WikiPageCreateWithoutRevisionsInput, Prisma.WikiPageUncheckedCreateWithoutRevisionsInput>
+  connectOrCreate?: Prisma.WikiPageCreateOrConnectWithoutRevisionsInput
+  upsert?: Prisma.WikiPageUpsertWithoutRevisionsInput
+  connect?: Prisma.WikiPageWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.WikiPageUpdateToOneWithWhereWithoutRevisionsInput, Prisma.WikiPageUpdateWithoutRevisionsInput>, Prisma.WikiPageUncheckedUpdateWithoutRevisionsInput>
+}
+
+export type WikiPageCreateNestedOneWithoutNotifiesInput = {
+  create?: Prisma.XOR<Prisma.WikiPageCreateWithoutNotifiesInput, Prisma.WikiPageUncheckedCreateWithoutNotifiesInput>
+  connectOrCreate?: Prisma.WikiPageCreateOrConnectWithoutNotifiesInput
+  connect?: Prisma.WikiPageWhereUniqueInput
+}
+
+export type WikiPageUpdateOneRequiredWithoutNotifiesNestedInput = {
+  create?: Prisma.XOR<Prisma.WikiPageCreateWithoutNotifiesInput, Prisma.WikiPageUncheckedCreateWithoutNotifiesInput>
+  connectOrCreate?: Prisma.WikiPageCreateOrConnectWithoutNotifiesInput
+  upsert?: Prisma.WikiPageUpsertWithoutNotifiesInput
+  connect?: Prisma.WikiPageWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.WikiPageUpdateToOneWithWhereWithoutNotifiesInput, Prisma.WikiPageUpdateWithoutNotifiesInput>, Prisma.WikiPageUncheckedUpdateWithoutNotifiesInput>
+}
+
 export type WikiPageCreateWithoutCreatedByInput = {
   id?: string
   number: number
@@ -793,13 +923,17 @@ export type WikiPageCreateWithoutCreatedByInput = {
   type?: $Enums.WikiPageType
   order?: number
   updatedVia?: $Enums.WikiVia
+  deletedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   space: Prisma.WikiSpaceCreateNestedOneWithoutPagesInput
   parent?: Prisma.WikiPageCreateNestedOneWithoutChildrenInput
   children?: Prisma.WikiPageCreateNestedManyWithoutParentInput
   updatedBy?: Prisma.UserCreateNestedOneWithoutUpdatedWikiPagesInput
+  deletedBy?: Prisma.UserCreateNestedOneWithoutDeletedWikiPagesInput
   tags?: Prisma.WikiPageTagCreateNestedManyWithoutPageInput
+  revisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutPageInput
+  notifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutPageInput
 }
 
 export type WikiPageUncheckedCreateWithoutCreatedByInput = {
@@ -813,10 +947,14 @@ export type WikiPageUncheckedCreateWithoutCreatedByInput = {
   order?: number
   updatedById?: string | null
   updatedVia?: $Enums.WikiVia
+  deletedAt?: Date | string | null
+  deletedById?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   children?: Prisma.WikiPageUncheckedCreateNestedManyWithoutParentInput
   tags?: Prisma.WikiPageTagUncheckedCreateNestedManyWithoutPageInput
+  revisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutPageInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutPageInput
 }
 
 export type WikiPageCreateOrConnectWithoutCreatedByInput = {
@@ -837,13 +975,17 @@ export type WikiPageCreateWithoutUpdatedByInput = {
   type?: $Enums.WikiPageType
   order?: number
   updatedVia?: $Enums.WikiVia
+  deletedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   space: Prisma.WikiSpaceCreateNestedOneWithoutPagesInput
   parent?: Prisma.WikiPageCreateNestedOneWithoutChildrenInput
   children?: Prisma.WikiPageCreateNestedManyWithoutParentInput
   createdBy?: Prisma.UserCreateNestedOneWithoutCreatedWikiPagesInput
+  deletedBy?: Prisma.UserCreateNestedOneWithoutDeletedWikiPagesInput
   tags?: Prisma.WikiPageTagCreateNestedManyWithoutPageInput
+  revisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutPageInput
+  notifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutPageInput
 }
 
 export type WikiPageUncheckedCreateWithoutUpdatedByInput = {
@@ -857,10 +999,14 @@ export type WikiPageUncheckedCreateWithoutUpdatedByInput = {
   order?: number
   createdById?: string | null
   updatedVia?: $Enums.WikiVia
+  deletedAt?: Date | string | null
+  deletedById?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   children?: Prisma.WikiPageUncheckedCreateNestedManyWithoutParentInput
   tags?: Prisma.WikiPageTagUncheckedCreateNestedManyWithoutPageInput
+  revisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutPageInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutPageInput
 }
 
 export type WikiPageCreateOrConnectWithoutUpdatedByInput = {
@@ -870,6 +1016,58 @@ export type WikiPageCreateOrConnectWithoutUpdatedByInput = {
 
 export type WikiPageCreateManyUpdatedByInputEnvelope = {
   data: Prisma.WikiPageCreateManyUpdatedByInput | Prisma.WikiPageCreateManyUpdatedByInput[]
+  skipDuplicates?: boolean
+}
+
+export type WikiPageCreateWithoutDeletedByInput = {
+  id?: string
+  number: number
+  title: string
+  content?: string
+  type?: $Enums.WikiPageType
+  order?: number
+  updatedVia?: $Enums.WikiVia
+  deletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  space: Prisma.WikiSpaceCreateNestedOneWithoutPagesInput
+  parent?: Prisma.WikiPageCreateNestedOneWithoutChildrenInput
+  children?: Prisma.WikiPageCreateNestedManyWithoutParentInput
+  createdBy?: Prisma.UserCreateNestedOneWithoutCreatedWikiPagesInput
+  updatedBy?: Prisma.UserCreateNestedOneWithoutUpdatedWikiPagesInput
+  tags?: Prisma.WikiPageTagCreateNestedManyWithoutPageInput
+  revisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutPageInput
+  notifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutPageInput
+}
+
+export type WikiPageUncheckedCreateWithoutDeletedByInput = {
+  id?: string
+  spaceId: string
+  parentId?: string | null
+  number: number
+  title: string
+  content?: string
+  type?: $Enums.WikiPageType
+  order?: number
+  createdById?: string | null
+  updatedById?: string | null
+  updatedVia?: $Enums.WikiVia
+  deletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  children?: Prisma.WikiPageUncheckedCreateNestedManyWithoutParentInput
+  tags?: Prisma.WikiPageTagUncheckedCreateNestedManyWithoutPageInput
+  revisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutPageInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutPageInput
+}
+
+export type WikiPageCreateOrConnectWithoutDeletedByInput = {
+  where: Prisma.WikiPageWhereUniqueInput
+  create: Prisma.XOR<Prisma.WikiPageCreateWithoutDeletedByInput, Prisma.WikiPageUncheckedCreateWithoutDeletedByInput>
+}
+
+export type WikiPageCreateManyDeletedByInputEnvelope = {
+  data: Prisma.WikiPageCreateManyDeletedByInput | Prisma.WikiPageCreateManyDeletedByInput[]
   skipDuplicates?: boolean
 }
 
@@ -904,6 +1102,8 @@ export type WikiPageScalarWhereInput = {
   createdById?: Prisma.StringNullableFilter<"WikiPage"> | string | null
   updatedById?: Prisma.StringNullableFilter<"WikiPage"> | string | null
   updatedVia?: Prisma.EnumWikiViaFilter<"WikiPage"> | $Enums.WikiVia
+  deletedAt?: Prisma.DateTimeNullableFilter<"WikiPage"> | Date | string | null
+  deletedById?: Prisma.StringNullableFilter<"WikiPage"> | string | null
   createdAt?: Prisma.DateTimeFilter<"WikiPage"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"WikiPage"> | Date | string
 }
@@ -924,6 +1124,22 @@ export type WikiPageUpdateManyWithWhereWithoutUpdatedByInput = {
   data: Prisma.XOR<Prisma.WikiPageUpdateManyMutationInput, Prisma.WikiPageUncheckedUpdateManyWithoutUpdatedByInput>
 }
 
+export type WikiPageUpsertWithWhereUniqueWithoutDeletedByInput = {
+  where: Prisma.WikiPageWhereUniqueInput
+  update: Prisma.XOR<Prisma.WikiPageUpdateWithoutDeletedByInput, Prisma.WikiPageUncheckedUpdateWithoutDeletedByInput>
+  create: Prisma.XOR<Prisma.WikiPageCreateWithoutDeletedByInput, Prisma.WikiPageUncheckedCreateWithoutDeletedByInput>
+}
+
+export type WikiPageUpdateWithWhereUniqueWithoutDeletedByInput = {
+  where: Prisma.WikiPageWhereUniqueInput
+  data: Prisma.XOR<Prisma.WikiPageUpdateWithoutDeletedByInput, Prisma.WikiPageUncheckedUpdateWithoutDeletedByInput>
+}
+
+export type WikiPageUpdateManyWithWhereWithoutDeletedByInput = {
+  where: Prisma.WikiPageScalarWhereInput
+  data: Prisma.XOR<Prisma.WikiPageUpdateManyMutationInput, Prisma.WikiPageUncheckedUpdateManyWithoutDeletedByInput>
+}
+
 export type WikiPageCreateWithoutSpaceInput = {
   id?: string
   number: number
@@ -932,13 +1148,17 @@ export type WikiPageCreateWithoutSpaceInput = {
   type?: $Enums.WikiPageType
   order?: number
   updatedVia?: $Enums.WikiVia
+  deletedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   parent?: Prisma.WikiPageCreateNestedOneWithoutChildrenInput
   children?: Prisma.WikiPageCreateNestedManyWithoutParentInput
   createdBy?: Prisma.UserCreateNestedOneWithoutCreatedWikiPagesInput
   updatedBy?: Prisma.UserCreateNestedOneWithoutUpdatedWikiPagesInput
+  deletedBy?: Prisma.UserCreateNestedOneWithoutDeletedWikiPagesInput
   tags?: Prisma.WikiPageTagCreateNestedManyWithoutPageInput
+  revisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutPageInput
+  notifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutPageInput
 }
 
 export type WikiPageUncheckedCreateWithoutSpaceInput = {
@@ -952,10 +1172,14 @@ export type WikiPageUncheckedCreateWithoutSpaceInput = {
   createdById?: string | null
   updatedById?: string | null
   updatedVia?: $Enums.WikiVia
+  deletedAt?: Date | string | null
+  deletedById?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   children?: Prisma.WikiPageUncheckedCreateNestedManyWithoutParentInput
   tags?: Prisma.WikiPageTagUncheckedCreateNestedManyWithoutPageInput
+  revisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutPageInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutPageInput
 }
 
 export type WikiPageCreateOrConnectWithoutSpaceInput = {
@@ -992,13 +1216,17 @@ export type WikiPageCreateWithoutChildrenInput = {
   type?: $Enums.WikiPageType
   order?: number
   updatedVia?: $Enums.WikiVia
+  deletedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   space: Prisma.WikiSpaceCreateNestedOneWithoutPagesInput
   parent?: Prisma.WikiPageCreateNestedOneWithoutChildrenInput
   createdBy?: Prisma.UserCreateNestedOneWithoutCreatedWikiPagesInput
   updatedBy?: Prisma.UserCreateNestedOneWithoutUpdatedWikiPagesInput
+  deletedBy?: Prisma.UserCreateNestedOneWithoutDeletedWikiPagesInput
   tags?: Prisma.WikiPageTagCreateNestedManyWithoutPageInput
+  revisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutPageInput
+  notifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutPageInput
 }
 
 export type WikiPageUncheckedCreateWithoutChildrenInput = {
@@ -1013,9 +1241,13 @@ export type WikiPageUncheckedCreateWithoutChildrenInput = {
   createdById?: string | null
   updatedById?: string | null
   updatedVia?: $Enums.WikiVia
+  deletedAt?: Date | string | null
+  deletedById?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   tags?: Prisma.WikiPageTagUncheckedCreateNestedManyWithoutPageInput
+  revisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutPageInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutPageInput
 }
 
 export type WikiPageCreateOrConnectWithoutChildrenInput = {
@@ -1031,13 +1263,17 @@ export type WikiPageCreateWithoutParentInput = {
   type?: $Enums.WikiPageType
   order?: number
   updatedVia?: $Enums.WikiVia
+  deletedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   space: Prisma.WikiSpaceCreateNestedOneWithoutPagesInput
   children?: Prisma.WikiPageCreateNestedManyWithoutParentInput
   createdBy?: Prisma.UserCreateNestedOneWithoutCreatedWikiPagesInput
   updatedBy?: Prisma.UserCreateNestedOneWithoutUpdatedWikiPagesInput
+  deletedBy?: Prisma.UserCreateNestedOneWithoutDeletedWikiPagesInput
   tags?: Prisma.WikiPageTagCreateNestedManyWithoutPageInput
+  revisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutPageInput
+  notifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutPageInput
 }
 
 export type WikiPageUncheckedCreateWithoutParentInput = {
@@ -1051,10 +1287,14 @@ export type WikiPageUncheckedCreateWithoutParentInput = {
   createdById?: string | null
   updatedById?: string | null
   updatedVia?: $Enums.WikiVia
+  deletedAt?: Date | string | null
+  deletedById?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   children?: Prisma.WikiPageUncheckedCreateNestedManyWithoutParentInput
   tags?: Prisma.WikiPageTagUncheckedCreateNestedManyWithoutPageInput
+  revisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutPageInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutPageInput
 }
 
 export type WikiPageCreateOrConnectWithoutParentInput = {
@@ -1086,13 +1326,17 @@ export type WikiPageUpdateWithoutChildrenInput = {
   type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
   order?: Prisma.IntFieldUpdateOperationsInput | number
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   space?: Prisma.WikiSpaceUpdateOneRequiredWithoutPagesNestedInput
   parent?: Prisma.WikiPageUpdateOneWithoutChildrenNestedInput
   createdBy?: Prisma.UserUpdateOneWithoutCreatedWikiPagesNestedInput
   updatedBy?: Prisma.UserUpdateOneWithoutUpdatedWikiPagesNestedInput
+  deletedBy?: Prisma.UserUpdateOneWithoutDeletedWikiPagesNestedInput
   tags?: Prisma.WikiPageTagUpdateManyWithoutPageNestedInput
+  revisions?: Prisma.WikiPageRevisionUpdateManyWithoutPageNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutPageNestedInput
 }
 
 export type WikiPageUncheckedUpdateWithoutChildrenInput = {
@@ -1107,9 +1351,13 @@ export type WikiPageUncheckedUpdateWithoutChildrenInput = {
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   tags?: Prisma.WikiPageTagUncheckedUpdateManyWithoutPageNestedInput
+  revisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutPageNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutPageNestedInput
 }
 
 export type WikiPageUpsertWithWhereUniqueWithoutParentInput = {
@@ -1136,6 +1384,7 @@ export type WikiPageCreateWithoutTagsInput = {
   type?: $Enums.WikiPageType
   order?: number
   updatedVia?: $Enums.WikiVia
+  deletedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   space: Prisma.WikiSpaceCreateNestedOneWithoutPagesInput
@@ -1143,6 +1392,9 @@ export type WikiPageCreateWithoutTagsInput = {
   children?: Prisma.WikiPageCreateNestedManyWithoutParentInput
   createdBy?: Prisma.UserCreateNestedOneWithoutCreatedWikiPagesInput
   updatedBy?: Prisma.UserCreateNestedOneWithoutUpdatedWikiPagesInput
+  deletedBy?: Prisma.UserCreateNestedOneWithoutDeletedWikiPagesInput
+  revisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutPageInput
+  notifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutPageInput
 }
 
 export type WikiPageUncheckedCreateWithoutTagsInput = {
@@ -1157,9 +1409,13 @@ export type WikiPageUncheckedCreateWithoutTagsInput = {
   createdById?: string | null
   updatedById?: string | null
   updatedVia?: $Enums.WikiVia
+  deletedAt?: Date | string | null
+  deletedById?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   children?: Prisma.WikiPageUncheckedCreateNestedManyWithoutParentInput
+  revisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutPageInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutPageInput
 }
 
 export type WikiPageCreateOrConnectWithoutTagsInput = {
@@ -1186,6 +1442,7 @@ export type WikiPageUpdateWithoutTagsInput = {
   type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
   order?: Prisma.IntFieldUpdateOperationsInput | number
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   space?: Prisma.WikiSpaceUpdateOneRequiredWithoutPagesNestedInput
@@ -1193,6 +1450,9 @@ export type WikiPageUpdateWithoutTagsInput = {
   children?: Prisma.WikiPageUpdateManyWithoutParentNestedInput
   createdBy?: Prisma.UserUpdateOneWithoutCreatedWikiPagesNestedInput
   updatedBy?: Prisma.UserUpdateOneWithoutUpdatedWikiPagesNestedInput
+  deletedBy?: Prisma.UserUpdateOneWithoutDeletedWikiPagesNestedInput
+  revisions?: Prisma.WikiPageRevisionUpdateManyWithoutPageNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutPageNestedInput
 }
 
 export type WikiPageUncheckedUpdateWithoutTagsInput = {
@@ -1207,9 +1467,213 @@ export type WikiPageUncheckedUpdateWithoutTagsInput = {
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   children?: Prisma.WikiPageUncheckedUpdateManyWithoutParentNestedInput
+  revisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutPageNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutPageNestedInput
+}
+
+export type WikiPageCreateWithoutRevisionsInput = {
+  id?: string
+  number: number
+  title: string
+  content?: string
+  type?: $Enums.WikiPageType
+  order?: number
+  updatedVia?: $Enums.WikiVia
+  deletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  space: Prisma.WikiSpaceCreateNestedOneWithoutPagesInput
+  parent?: Prisma.WikiPageCreateNestedOneWithoutChildrenInput
+  children?: Prisma.WikiPageCreateNestedManyWithoutParentInput
+  createdBy?: Prisma.UserCreateNestedOneWithoutCreatedWikiPagesInput
+  updatedBy?: Prisma.UserCreateNestedOneWithoutUpdatedWikiPagesInput
+  deletedBy?: Prisma.UserCreateNestedOneWithoutDeletedWikiPagesInput
+  tags?: Prisma.WikiPageTagCreateNestedManyWithoutPageInput
+  notifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutPageInput
+}
+
+export type WikiPageUncheckedCreateWithoutRevisionsInput = {
+  id?: string
+  spaceId: string
+  parentId?: string | null
+  number: number
+  title: string
+  content?: string
+  type?: $Enums.WikiPageType
+  order?: number
+  createdById?: string | null
+  updatedById?: string | null
+  updatedVia?: $Enums.WikiVia
+  deletedAt?: Date | string | null
+  deletedById?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  children?: Prisma.WikiPageUncheckedCreateNestedManyWithoutParentInput
+  tags?: Prisma.WikiPageTagUncheckedCreateNestedManyWithoutPageInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutPageInput
+}
+
+export type WikiPageCreateOrConnectWithoutRevisionsInput = {
+  where: Prisma.WikiPageWhereUniqueInput
+  create: Prisma.XOR<Prisma.WikiPageCreateWithoutRevisionsInput, Prisma.WikiPageUncheckedCreateWithoutRevisionsInput>
+}
+
+export type WikiPageUpsertWithoutRevisionsInput = {
+  update: Prisma.XOR<Prisma.WikiPageUpdateWithoutRevisionsInput, Prisma.WikiPageUncheckedUpdateWithoutRevisionsInput>
+  create: Prisma.XOR<Prisma.WikiPageCreateWithoutRevisionsInput, Prisma.WikiPageUncheckedCreateWithoutRevisionsInput>
+  where?: Prisma.WikiPageWhereInput
+}
+
+export type WikiPageUpdateToOneWithWhereWithoutRevisionsInput = {
+  where?: Prisma.WikiPageWhereInput
+  data: Prisma.XOR<Prisma.WikiPageUpdateWithoutRevisionsInput, Prisma.WikiPageUncheckedUpdateWithoutRevisionsInput>
+}
+
+export type WikiPageUpdateWithoutRevisionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  number?: Prisma.IntFieldUpdateOperationsInput | number
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  content?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
+  order?: Prisma.IntFieldUpdateOperationsInput | number
+  updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  space?: Prisma.WikiSpaceUpdateOneRequiredWithoutPagesNestedInput
+  parent?: Prisma.WikiPageUpdateOneWithoutChildrenNestedInput
+  children?: Prisma.WikiPageUpdateManyWithoutParentNestedInput
+  createdBy?: Prisma.UserUpdateOneWithoutCreatedWikiPagesNestedInput
+  updatedBy?: Prisma.UserUpdateOneWithoutUpdatedWikiPagesNestedInput
+  deletedBy?: Prisma.UserUpdateOneWithoutDeletedWikiPagesNestedInput
+  tags?: Prisma.WikiPageTagUpdateManyWithoutPageNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutPageNestedInput
+}
+
+export type WikiPageUncheckedUpdateWithoutRevisionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  spaceId?: Prisma.StringFieldUpdateOperationsInput | string
+  parentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  number?: Prisma.IntFieldUpdateOperationsInput | number
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  content?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
+  order?: Prisma.IntFieldUpdateOperationsInput | number
+  createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  children?: Prisma.WikiPageUncheckedUpdateManyWithoutParentNestedInput
+  tags?: Prisma.WikiPageTagUncheckedUpdateManyWithoutPageNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutPageNestedInput
+}
+
+export type WikiPageCreateWithoutNotifiesInput = {
+  id?: string
+  number: number
+  title: string
+  content?: string
+  type?: $Enums.WikiPageType
+  order?: number
+  updatedVia?: $Enums.WikiVia
+  deletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  space: Prisma.WikiSpaceCreateNestedOneWithoutPagesInput
+  parent?: Prisma.WikiPageCreateNestedOneWithoutChildrenInput
+  children?: Prisma.WikiPageCreateNestedManyWithoutParentInput
+  createdBy?: Prisma.UserCreateNestedOneWithoutCreatedWikiPagesInput
+  updatedBy?: Prisma.UserCreateNestedOneWithoutUpdatedWikiPagesInput
+  deletedBy?: Prisma.UserCreateNestedOneWithoutDeletedWikiPagesInput
+  tags?: Prisma.WikiPageTagCreateNestedManyWithoutPageInput
+  revisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutPageInput
+}
+
+export type WikiPageUncheckedCreateWithoutNotifiesInput = {
+  id?: string
+  spaceId: string
+  parentId?: string | null
+  number: number
+  title: string
+  content?: string
+  type?: $Enums.WikiPageType
+  order?: number
+  createdById?: string | null
+  updatedById?: string | null
+  updatedVia?: $Enums.WikiVia
+  deletedAt?: Date | string | null
+  deletedById?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  children?: Prisma.WikiPageUncheckedCreateNestedManyWithoutParentInput
+  tags?: Prisma.WikiPageTagUncheckedCreateNestedManyWithoutPageInput
+  revisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutPageInput
+}
+
+export type WikiPageCreateOrConnectWithoutNotifiesInput = {
+  where: Prisma.WikiPageWhereUniqueInput
+  create: Prisma.XOR<Prisma.WikiPageCreateWithoutNotifiesInput, Prisma.WikiPageUncheckedCreateWithoutNotifiesInput>
+}
+
+export type WikiPageUpsertWithoutNotifiesInput = {
+  update: Prisma.XOR<Prisma.WikiPageUpdateWithoutNotifiesInput, Prisma.WikiPageUncheckedUpdateWithoutNotifiesInput>
+  create: Prisma.XOR<Prisma.WikiPageCreateWithoutNotifiesInput, Prisma.WikiPageUncheckedCreateWithoutNotifiesInput>
+  where?: Prisma.WikiPageWhereInput
+}
+
+export type WikiPageUpdateToOneWithWhereWithoutNotifiesInput = {
+  where?: Prisma.WikiPageWhereInput
+  data: Prisma.XOR<Prisma.WikiPageUpdateWithoutNotifiesInput, Prisma.WikiPageUncheckedUpdateWithoutNotifiesInput>
+}
+
+export type WikiPageUpdateWithoutNotifiesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  number?: Prisma.IntFieldUpdateOperationsInput | number
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  content?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
+  order?: Prisma.IntFieldUpdateOperationsInput | number
+  updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  space?: Prisma.WikiSpaceUpdateOneRequiredWithoutPagesNestedInput
+  parent?: Prisma.WikiPageUpdateOneWithoutChildrenNestedInput
+  children?: Prisma.WikiPageUpdateManyWithoutParentNestedInput
+  createdBy?: Prisma.UserUpdateOneWithoutCreatedWikiPagesNestedInput
+  updatedBy?: Prisma.UserUpdateOneWithoutUpdatedWikiPagesNestedInput
+  deletedBy?: Prisma.UserUpdateOneWithoutDeletedWikiPagesNestedInput
+  tags?: Prisma.WikiPageTagUpdateManyWithoutPageNestedInput
+  revisions?: Prisma.WikiPageRevisionUpdateManyWithoutPageNestedInput
+}
+
+export type WikiPageUncheckedUpdateWithoutNotifiesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  spaceId?: Prisma.StringFieldUpdateOperationsInput | string
+  parentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  number?: Prisma.IntFieldUpdateOperationsInput | number
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  content?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
+  order?: Prisma.IntFieldUpdateOperationsInput | number
+  createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  children?: Prisma.WikiPageUncheckedUpdateManyWithoutParentNestedInput
+  tags?: Prisma.WikiPageTagUncheckedUpdateManyWithoutPageNestedInput
+  revisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutPageNestedInput
 }
 
 export type WikiPageCreateManyCreatedByInput = {
@@ -1223,6 +1687,8 @@ export type WikiPageCreateManyCreatedByInput = {
   order?: number
   updatedById?: string | null
   updatedVia?: $Enums.WikiVia
+  deletedAt?: Date | string | null
+  deletedById?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1238,6 +1704,25 @@ export type WikiPageCreateManyUpdatedByInput = {
   order?: number
   createdById?: string | null
   updatedVia?: $Enums.WikiVia
+  deletedAt?: Date | string | null
+  deletedById?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type WikiPageCreateManyDeletedByInput = {
+  id?: string
+  spaceId: string
+  parentId?: string | null
+  number: number
+  title: string
+  content?: string
+  type?: $Enums.WikiPageType
+  order?: number
+  createdById?: string | null
+  updatedById?: string | null
+  updatedVia?: $Enums.WikiVia
+  deletedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1250,13 +1735,17 @@ export type WikiPageUpdateWithoutCreatedByInput = {
   type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
   order?: Prisma.IntFieldUpdateOperationsInput | number
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   space?: Prisma.WikiSpaceUpdateOneRequiredWithoutPagesNestedInput
   parent?: Prisma.WikiPageUpdateOneWithoutChildrenNestedInput
   children?: Prisma.WikiPageUpdateManyWithoutParentNestedInput
   updatedBy?: Prisma.UserUpdateOneWithoutUpdatedWikiPagesNestedInput
+  deletedBy?: Prisma.UserUpdateOneWithoutDeletedWikiPagesNestedInput
   tags?: Prisma.WikiPageTagUpdateManyWithoutPageNestedInput
+  revisions?: Prisma.WikiPageRevisionUpdateManyWithoutPageNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutPageNestedInput
 }
 
 export type WikiPageUncheckedUpdateWithoutCreatedByInput = {
@@ -1270,10 +1759,14 @@ export type WikiPageUncheckedUpdateWithoutCreatedByInput = {
   order?: Prisma.IntFieldUpdateOperationsInput | number
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   children?: Prisma.WikiPageUncheckedUpdateManyWithoutParentNestedInput
   tags?: Prisma.WikiPageTagUncheckedUpdateManyWithoutPageNestedInput
+  revisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutPageNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutPageNestedInput
 }
 
 export type WikiPageUncheckedUpdateManyWithoutCreatedByInput = {
@@ -1287,6 +1780,8 @@ export type WikiPageUncheckedUpdateManyWithoutCreatedByInput = {
   order?: Prisma.IntFieldUpdateOperationsInput | number
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1299,13 +1794,17 @@ export type WikiPageUpdateWithoutUpdatedByInput = {
   type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
   order?: Prisma.IntFieldUpdateOperationsInput | number
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   space?: Prisma.WikiSpaceUpdateOneRequiredWithoutPagesNestedInput
   parent?: Prisma.WikiPageUpdateOneWithoutChildrenNestedInput
   children?: Prisma.WikiPageUpdateManyWithoutParentNestedInput
   createdBy?: Prisma.UserUpdateOneWithoutCreatedWikiPagesNestedInput
+  deletedBy?: Prisma.UserUpdateOneWithoutDeletedWikiPagesNestedInput
   tags?: Prisma.WikiPageTagUpdateManyWithoutPageNestedInput
+  revisions?: Prisma.WikiPageRevisionUpdateManyWithoutPageNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutPageNestedInput
 }
 
 export type WikiPageUncheckedUpdateWithoutUpdatedByInput = {
@@ -1319,10 +1818,14 @@ export type WikiPageUncheckedUpdateWithoutUpdatedByInput = {
   order?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   children?: Prisma.WikiPageUncheckedUpdateManyWithoutParentNestedInput
   tags?: Prisma.WikiPageTagUncheckedUpdateManyWithoutPageNestedInput
+  revisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutPageNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutPageNestedInput
 }
 
 export type WikiPageUncheckedUpdateManyWithoutUpdatedByInput = {
@@ -1336,6 +1839,67 @@ export type WikiPageUncheckedUpdateManyWithoutUpdatedByInput = {
   order?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type WikiPageUpdateWithoutDeletedByInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  number?: Prisma.IntFieldUpdateOperationsInput | number
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  content?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
+  order?: Prisma.IntFieldUpdateOperationsInput | number
+  updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  space?: Prisma.WikiSpaceUpdateOneRequiredWithoutPagesNestedInput
+  parent?: Prisma.WikiPageUpdateOneWithoutChildrenNestedInput
+  children?: Prisma.WikiPageUpdateManyWithoutParentNestedInput
+  createdBy?: Prisma.UserUpdateOneWithoutCreatedWikiPagesNestedInput
+  updatedBy?: Prisma.UserUpdateOneWithoutUpdatedWikiPagesNestedInput
+  tags?: Prisma.WikiPageTagUpdateManyWithoutPageNestedInput
+  revisions?: Prisma.WikiPageRevisionUpdateManyWithoutPageNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutPageNestedInput
+}
+
+export type WikiPageUncheckedUpdateWithoutDeletedByInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  spaceId?: Prisma.StringFieldUpdateOperationsInput | string
+  parentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  number?: Prisma.IntFieldUpdateOperationsInput | number
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  content?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
+  order?: Prisma.IntFieldUpdateOperationsInput | number
+  createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  children?: Prisma.WikiPageUncheckedUpdateManyWithoutParentNestedInput
+  tags?: Prisma.WikiPageTagUncheckedUpdateManyWithoutPageNestedInput
+  revisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutPageNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutPageNestedInput
+}
+
+export type WikiPageUncheckedUpdateManyWithoutDeletedByInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  spaceId?: Prisma.StringFieldUpdateOperationsInput | string
+  parentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  number?: Prisma.IntFieldUpdateOperationsInput | number
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  content?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
+  order?: Prisma.IntFieldUpdateOperationsInput | number
+  createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1351,6 +1915,8 @@ export type WikiPageCreateManySpaceInput = {
   createdById?: string | null
   updatedById?: string | null
   updatedVia?: $Enums.WikiVia
+  deletedAt?: Date | string | null
+  deletedById?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1363,13 +1929,17 @@ export type WikiPageUpdateWithoutSpaceInput = {
   type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
   order?: Prisma.IntFieldUpdateOperationsInput | number
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   parent?: Prisma.WikiPageUpdateOneWithoutChildrenNestedInput
   children?: Prisma.WikiPageUpdateManyWithoutParentNestedInput
   createdBy?: Prisma.UserUpdateOneWithoutCreatedWikiPagesNestedInput
   updatedBy?: Prisma.UserUpdateOneWithoutUpdatedWikiPagesNestedInput
+  deletedBy?: Prisma.UserUpdateOneWithoutDeletedWikiPagesNestedInput
   tags?: Prisma.WikiPageTagUpdateManyWithoutPageNestedInput
+  revisions?: Prisma.WikiPageRevisionUpdateManyWithoutPageNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutPageNestedInput
 }
 
 export type WikiPageUncheckedUpdateWithoutSpaceInput = {
@@ -1383,10 +1953,14 @@ export type WikiPageUncheckedUpdateWithoutSpaceInput = {
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   children?: Prisma.WikiPageUncheckedUpdateManyWithoutParentNestedInput
   tags?: Prisma.WikiPageTagUncheckedUpdateManyWithoutPageNestedInput
+  revisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutPageNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutPageNestedInput
 }
 
 export type WikiPageUncheckedUpdateManyWithoutSpaceInput = {
@@ -1400,6 +1974,8 @@ export type WikiPageUncheckedUpdateManyWithoutSpaceInput = {
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1415,6 +1991,8 @@ export type WikiPageCreateManyParentInput = {
   createdById?: string | null
   updatedById?: string | null
   updatedVia?: $Enums.WikiVia
+  deletedAt?: Date | string | null
+  deletedById?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1427,13 +2005,17 @@ export type WikiPageUpdateWithoutParentInput = {
   type?: Prisma.EnumWikiPageTypeFieldUpdateOperationsInput | $Enums.WikiPageType
   order?: Prisma.IntFieldUpdateOperationsInput | number
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   space?: Prisma.WikiSpaceUpdateOneRequiredWithoutPagesNestedInput
   children?: Prisma.WikiPageUpdateManyWithoutParentNestedInput
   createdBy?: Prisma.UserUpdateOneWithoutCreatedWikiPagesNestedInput
   updatedBy?: Prisma.UserUpdateOneWithoutUpdatedWikiPagesNestedInput
+  deletedBy?: Prisma.UserUpdateOneWithoutDeletedWikiPagesNestedInput
   tags?: Prisma.WikiPageTagUpdateManyWithoutPageNestedInput
+  revisions?: Prisma.WikiPageRevisionUpdateManyWithoutPageNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutPageNestedInput
 }
 
 export type WikiPageUncheckedUpdateWithoutParentInput = {
@@ -1447,10 +2029,14 @@ export type WikiPageUncheckedUpdateWithoutParentInput = {
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   children?: Prisma.WikiPageUncheckedUpdateManyWithoutParentNestedInput
   tags?: Prisma.WikiPageTagUncheckedUpdateManyWithoutPageNestedInput
+  revisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutPageNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutPageNestedInput
 }
 
 export type WikiPageUncheckedUpdateManyWithoutParentInput = {
@@ -1464,6 +2050,8 @@ export type WikiPageUncheckedUpdateManyWithoutParentInput = {
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedVia?: Prisma.EnumWikiViaFieldUpdateOperationsInput | $Enums.WikiVia
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1476,11 +2064,15 @@ export type WikiPageUncheckedUpdateManyWithoutParentInput = {
 export type WikiPageCountOutputType = {
   children: number
   tags: number
+  revisions: number
+  notifies: number
 }
 
 export type WikiPageCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   children?: boolean | WikiPageCountOutputTypeCountChildrenArgs
   tags?: boolean | WikiPageCountOutputTypeCountTagsArgs
+  revisions?: boolean | WikiPageCountOutputTypeCountRevisionsArgs
+  notifies?: boolean | WikiPageCountOutputTypeCountNotifiesArgs
 }
 
 /**
@@ -1507,6 +2099,20 @@ export type WikiPageCountOutputTypeCountTagsArgs<ExtArgs extends runtime.Types.E
   where?: Prisma.WikiPageTagWhereInput
 }
 
+/**
+ * WikiPageCountOutputType without action
+ */
+export type WikiPageCountOutputTypeCountRevisionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.WikiPageRevisionWhereInput
+}
+
+/**
+ * WikiPageCountOutputType without action
+ */
+export type WikiPageCountOutputTypeCountNotifiesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.WikiAnnouncementNotifyWhereInput
+}
+
 
 export type WikiPageSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1520,6 +2126,8 @@ export type WikiPageSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   createdById?: boolean
   updatedById?: boolean
   updatedVia?: boolean
+  deletedAt?: boolean
+  deletedById?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   space?: boolean | Prisma.WikiSpaceDefaultArgs<ExtArgs>
@@ -1527,7 +2135,10 @@ export type WikiPageSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   children?: boolean | Prisma.WikiPage$childrenArgs<ExtArgs>
   createdBy?: boolean | Prisma.WikiPage$createdByArgs<ExtArgs>
   updatedBy?: boolean | Prisma.WikiPage$updatedByArgs<ExtArgs>
+  deletedBy?: boolean | Prisma.WikiPage$deletedByArgs<ExtArgs>
   tags?: boolean | Prisma.WikiPage$tagsArgs<ExtArgs>
+  revisions?: boolean | Prisma.WikiPage$revisionsArgs<ExtArgs>
+  notifies?: boolean | Prisma.WikiPage$notifiesArgs<ExtArgs>
   _count?: boolean | Prisma.WikiPageCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["wikiPage"]>
 
@@ -1543,12 +2154,15 @@ export type WikiPageSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   createdById?: boolean
   updatedById?: boolean
   updatedVia?: boolean
+  deletedAt?: boolean
+  deletedById?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   space?: boolean | Prisma.WikiSpaceDefaultArgs<ExtArgs>
   parent?: boolean | Prisma.WikiPage$parentArgs<ExtArgs>
   createdBy?: boolean | Prisma.WikiPage$createdByArgs<ExtArgs>
   updatedBy?: boolean | Prisma.WikiPage$updatedByArgs<ExtArgs>
+  deletedBy?: boolean | Prisma.WikiPage$deletedByArgs<ExtArgs>
 }, ExtArgs["result"]["wikiPage"]>
 
 export type WikiPageSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1563,12 +2177,15 @@ export type WikiPageSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   createdById?: boolean
   updatedById?: boolean
   updatedVia?: boolean
+  deletedAt?: boolean
+  deletedById?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   space?: boolean | Prisma.WikiSpaceDefaultArgs<ExtArgs>
   parent?: boolean | Prisma.WikiPage$parentArgs<ExtArgs>
   createdBy?: boolean | Prisma.WikiPage$createdByArgs<ExtArgs>
   updatedBy?: boolean | Prisma.WikiPage$updatedByArgs<ExtArgs>
+  deletedBy?: boolean | Prisma.WikiPage$deletedByArgs<ExtArgs>
 }, ExtArgs["result"]["wikiPage"]>
 
 export type WikiPageSelectScalar = {
@@ -1583,18 +2200,23 @@ export type WikiPageSelectScalar = {
   createdById?: boolean
   updatedById?: boolean
   updatedVia?: boolean
+  deletedAt?: boolean
+  deletedById?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type WikiPageOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "spaceId" | "parentId" | "number" | "title" | "content" | "type" | "order" | "createdById" | "updatedById" | "updatedVia" | "createdAt" | "updatedAt", ExtArgs["result"]["wikiPage"]>
+export type WikiPageOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "spaceId" | "parentId" | "number" | "title" | "content" | "type" | "order" | "createdById" | "updatedById" | "updatedVia" | "deletedAt" | "deletedById" | "createdAt" | "updatedAt", ExtArgs["result"]["wikiPage"]>
 export type WikiPageInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   space?: boolean | Prisma.WikiSpaceDefaultArgs<ExtArgs>
   parent?: boolean | Prisma.WikiPage$parentArgs<ExtArgs>
   children?: boolean | Prisma.WikiPage$childrenArgs<ExtArgs>
   createdBy?: boolean | Prisma.WikiPage$createdByArgs<ExtArgs>
   updatedBy?: boolean | Prisma.WikiPage$updatedByArgs<ExtArgs>
+  deletedBy?: boolean | Prisma.WikiPage$deletedByArgs<ExtArgs>
   tags?: boolean | Prisma.WikiPage$tagsArgs<ExtArgs>
+  revisions?: boolean | Prisma.WikiPage$revisionsArgs<ExtArgs>
+  notifies?: boolean | Prisma.WikiPage$notifiesArgs<ExtArgs>
   _count?: boolean | Prisma.WikiPageCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type WikiPageIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1602,12 +2224,14 @@ export type WikiPageIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Ext
   parent?: boolean | Prisma.WikiPage$parentArgs<ExtArgs>
   createdBy?: boolean | Prisma.WikiPage$createdByArgs<ExtArgs>
   updatedBy?: boolean | Prisma.WikiPage$updatedByArgs<ExtArgs>
+  deletedBy?: boolean | Prisma.WikiPage$deletedByArgs<ExtArgs>
 }
 export type WikiPageIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   space?: boolean | Prisma.WikiSpaceDefaultArgs<ExtArgs>
   parent?: boolean | Prisma.WikiPage$parentArgs<ExtArgs>
   createdBy?: boolean | Prisma.WikiPage$createdByArgs<ExtArgs>
   updatedBy?: boolean | Prisma.WikiPage$updatedByArgs<ExtArgs>
+  deletedBy?: boolean | Prisma.WikiPage$deletedByArgs<ExtArgs>
 }
 
 export type $WikiPagePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1618,14 +2242,17 @@ export type $WikiPagePayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     children: Prisma.$WikiPagePayload<ExtArgs>[]
     createdBy: Prisma.$UserPayload<ExtArgs> | null
     updatedBy: Prisma.$UserPayload<ExtArgs> | null
+    deletedBy: Prisma.$UserPayload<ExtArgs> | null
     tags: Prisma.$WikiPageTagPayload<ExtArgs>[]
+    revisions: Prisma.$WikiPageRevisionPayload<ExtArgs>[]
+    notifies: Prisma.$WikiAnnouncementNotifyPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     spaceId: string
     /**
-     * 親ページ。null はスペース直下。
-     * 配下ごとの削除はアプリ側で版を残してから行うが、取りこぼしても孤児を作らないよう Cascade にする
+     * 親ページ。null はスペース直下。生きているページの親は常に生きている(削除は配下ごと、復元は親が削除済みならスペース直下へ)。
+     * 削除済みのページを保持期間の後に物理削除するとき、配下の削除済みのページも一緒に消えるよう Cascade にする
      */
     parentId: string | null
     /**
@@ -1654,6 +2281,12 @@ export type $WikiPagePayload<ExtArgs extends runtime.Types.Extensions.InternalAr
      * 最後に書いた経路
      */
     updatedVia: $Enums.WikiVia
+    /**
+     * 削除(ゴミ箱へ移した)日時。値があるページは一覧・検索・参照に出さず、保持期間を過ぎると自動メンテナンスで物理削除する。
+     * 配下ごとの削除は同じ値を立てる
+     */
+    deletedAt: Date | null
+    deletedById: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["wikiPage"]>
@@ -2055,7 +2688,10 @@ export interface Prisma__WikiPageClient<T, Null = never, ExtArgs extends runtime
   children<T extends Prisma.WikiPage$childrenArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WikiPage$childrenArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WikiPagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   createdBy<T extends Prisma.WikiPage$createdByArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WikiPage$createdByArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   updatedBy<T extends Prisma.WikiPage$updatedByArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WikiPage$updatedByArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  deletedBy<T extends Prisma.WikiPage$deletedByArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WikiPage$deletedByArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   tags<T extends Prisma.WikiPage$tagsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WikiPage$tagsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WikiPageTagPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  revisions<T extends Prisma.WikiPage$revisionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WikiPage$revisionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WikiPageRevisionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  notifies<T extends Prisma.WikiPage$notifiesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WikiPage$notifiesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WikiAnnouncementNotifyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2096,6 +2732,8 @@ export interface WikiPageFieldRefs {
   readonly createdById: Prisma.FieldRef<"WikiPage", 'String'>
   readonly updatedById: Prisma.FieldRef<"WikiPage", 'String'>
   readonly updatedVia: Prisma.FieldRef<"WikiPage", 'WikiVia'>
+  readonly deletedAt: Prisma.FieldRef<"WikiPage", 'DateTime'>
+  readonly deletedById: Prisma.FieldRef<"WikiPage", 'String'>
   readonly createdAt: Prisma.FieldRef<"WikiPage", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"WikiPage", 'DateTime'>
 }
@@ -2580,6 +3218,25 @@ export type WikiPage$updatedByArgs<ExtArgs extends runtime.Types.Extensions.Inte
 }
 
 /**
+ * WikiPage.deletedBy
+ */
+export type WikiPage$deletedByArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the User
+   */
+  select?: Prisma.UserSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the User
+   */
+  omit?: Prisma.UserOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserInclude<ExtArgs> | null
+  where?: Prisma.UserWhereInput
+}
+
+/**
  * WikiPage.tags
  */
 export type WikiPage$tagsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2601,6 +3258,54 @@ export type WikiPage$tagsArgs<ExtArgs extends runtime.Types.Extensions.InternalA
   take?: number
   skip?: number
   distinct?: Prisma.WikiPageTagScalarFieldEnum | Prisma.WikiPageTagScalarFieldEnum[]
+}
+
+/**
+ * WikiPage.revisions
+ */
+export type WikiPage$revisionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the WikiPageRevision
+   */
+  select?: Prisma.WikiPageRevisionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the WikiPageRevision
+   */
+  omit?: Prisma.WikiPageRevisionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.WikiPageRevisionInclude<ExtArgs> | null
+  where?: Prisma.WikiPageRevisionWhereInput
+  orderBy?: Prisma.WikiPageRevisionOrderByWithRelationInput | Prisma.WikiPageRevisionOrderByWithRelationInput[]
+  cursor?: Prisma.WikiPageRevisionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.WikiPageRevisionScalarFieldEnum | Prisma.WikiPageRevisionScalarFieldEnum[]
+}
+
+/**
+ * WikiPage.notifies
+ */
+export type WikiPage$notifiesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the WikiAnnouncementNotify
+   */
+  select?: Prisma.WikiAnnouncementNotifySelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the WikiAnnouncementNotify
+   */
+  omit?: Prisma.WikiAnnouncementNotifyOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.WikiAnnouncementNotifyInclude<ExtArgs> | null
+  where?: Prisma.WikiAnnouncementNotifyWhereInput
+  orderBy?: Prisma.WikiAnnouncementNotifyOrderByWithRelationInput | Prisma.WikiAnnouncementNotifyOrderByWithRelationInput[]
+  cursor?: Prisma.WikiAnnouncementNotifyWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.WikiAnnouncementNotifyScalarFieldEnum | Prisma.WikiAnnouncementNotifyScalarFieldEnum[]
 }
 
 /**

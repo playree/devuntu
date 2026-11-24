@@ -118,7 +118,6 @@ export const WikiAnnounceStateIcon: FC<{ value: WikiAnnounceState }> = ({ value 
 
 const SKIP_REASON_ITEM = {
   archived: 'wiki_announce_skip_archived',
-  not_announcement: 'wiki_announce_skip_not_announcement',
   channel_unset: 'wiki_announce_skip_channel_unset',
   slack_disabled: 'wiki_announce_skip_slack_disabled',
   no_permission: 'wiki_announce_skip_no_permission',

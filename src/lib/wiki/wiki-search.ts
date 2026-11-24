@@ -72,6 +72,8 @@ const firstHitPosition = (words: readonly string[]) =>
 export const buildWikiSearchSql = ({ words, tagNames, spaceIds, limit }: WikiSearchQuery): Prisma.Sql => {
   const conditions = [
     Prisma.sql`p."spaceId" IN (${Prisma.join(spaceIds)})`,
+    // 削除済みのページは出さない(語の部分一致の副問い合わせはこの条件と AND で絞られる)
+    Prisma.sql`p."deletedAt" IS NULL`,
     ...words.map(wordCondition),
     ...(tagNames.length > 0
       ? [

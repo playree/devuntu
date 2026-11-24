@@ -85,9 +85,10 @@ Proxy は通るリクエストのボディを既定 10MB まで複製して溜�
 - スペース内の画面は `wiki/[key]/layout.tsx` でスペース・ツリー(本文なし。タグの ID 付き)・タグを 1 度だけ取得し、`SideNavPortal` でサイドメニューへツリーを差し込む。スペース一覧(`/wiki`)と、取得中・閲覧できないスペースでもスペース一覧などを差し込み、Wiki の中を移る間はサイドメニューのタブを出したままにする
 - スペースの削除(`deleteWikiSpace`。`src/lib/wiki/wiki-space.ts`)は `manage` を要求し、スペース行のロックを取ってから消す。ページ・版・タグ・割り当ては Cascade で消し、添付はボード削除と同じく紐付けを外して削除待ち(`detachedAt`)にしてから、コミット後に実体を消す(`listAttachmentKeysOf` / `detachAttachmentsOf`)。実体の削除に失敗して残った添付は、掃除が回収するまで誰にも配信しない(`canViewAttachment`)。
   キーは作成時に `WikiSpaceKeyHistory` へ登録し、スペースを消しても残す(共有済みの `KEY/番号` が別のスペースのページを指さないため)。履歴にあるキーでの作成は `DUPLICATED_WIKI_SPACE_KEY`
+- スペースの区分(`WikiSpaceType`)は作成時にだけ決め、後から変えない(`updateWikiSpace` / `scUpdateWikiSpace` は区分を受けない。設定画面は表示だけ)。作れるページの種類・ページの置き方が区分で決まるため、変更に伴う既存ページ・テンプレート・予約通知の整合を持たない
 - タグ(`src/lib/wiki/wiki-tag.ts`)はスペースごと。作成は `editor` 以上、更新・削除は `manage`。ページへの付与は `assertWikiTagIdsInSpace` で同じスペースのタグに限る
 - ページテンプレート(`WikiTemplate`。`src/lib/wiki/wiki-template.ts`)はスペースごと(20件まで、`MAX_WIKI_TEMPLATES_PER_SPACE`)。設定画面の一覧(本文込み)・追加・編集・削除・並べ替えは `manage` かつ未アーカイブ(`wiki/[key]/settings/space-templates.tsx`)。
-  種類は `isWikiPageTypeAllowed` で区分に合うものに限り、追加・編集はスペース行のロックの後で区分を読む。並べ替え(`moveWikiTemplate`)はロックの下で今の並びの隣と入れ替えて `order` を 0 から振り直す。
+  種類は `isWikiPageTypeAllowed` で区分に合うものに限る。並べ替え(`moveWikiTemplate`)はロックの下で今の並びの隣と入れ替えて `order` を 0 から振り直す。
   ページ作成のモーダル(`CreatePageModal`)は、開いたときに `getWikiTemplateOptions`(`write`。本文なし)で選択肢を引き、選ぶとタイトルと種類を埋めて `createWikiPage` に `templateId` を渡す。
   サーバーは `renderWikiTemplate` で、`write` を確かめてから同じスペースのテンプレートを引き、作成者の表示名・タイムゾーン(未設定は `DEFAULT_TIMEZONE`)で `{{date}}` / `{{month}}` / `{{user}}` を置き換えた本文と種類で作る(`applyWikiTemplatePlaceholders`。1回の走査で置き換え、置き換えた値は置き換え直さない)。
   タイトルは画面がテンプレートから置き換えて入れたものをそのまま使い、サーバーでは置き換え直さない(表示名の中の `{{date}}` などを置き換えないため)。
@@ -102,13 +103,21 @@ Proxy は通るリクエストのボディを既定 10MB まで複製して溜�
   過去の版の表示中は「差分」で、その版から最新への差分に切り替えられる(状態は `useWikiPageRevisions` が持ち、選択を外すと戻す)。表示の形は最新の種類で決め、
   設計書は `DesignDocView` に最新の本文と `compareWith`(選んだ版の本文)を渡して embed の差分表示を使い(差分バーの × は `onCloseDiff` で切り替えを戻す)、通常のページは `TextDiffView` で行単位に出す(タイトル・種類・タグの変化は `WikiRevisionFieldChanges` で本文の上に出す)。出力メニューは差分中も選んだ版の内容が対象。
   保存時のコミットメッセージ(`WikiPageRevision.message`)が付いた版は、連続保存のまとめ(`shouldMergeWikiRevision`)の対象にしない。
-  復元(`restoreWikiPageRevision`)は、存在するページならタイトル・本文・種類・タグだけを戻して位置を変えず、削除済みなら同じ id・番号で作り直す(親が無い・深さの上限を超えるならスペース直下)。作り直したページの作成者・作成日時は、最後の削除の版に残した削除時の値(`pageCreatedAt` / `pageCreatedById`。作成の版が保持期間や件数の上限で消えていても元の作成日時に戻すため。作成者が退会していれば空)にし、それが無い版(列を足す前の削除)なら残っている最も古い版(版番号の昇順の先頭)の `actorId` / `createdAt` にする。
-  版のタグは ID と書いたときの名前を同じ並びで持ち(`tagIds` / `tagNames`)、表示・出力・復元では ID で今のタグに引き当てる(`resolveWikiRevisionTags` / `findWikiTagsByIds`)。改名しても外れず、削除したタグは同名で作り直しても引き当てない。名前は差分で削除済みのタグを出すためだけに使う(`wikiRevisionTagLabels`)。
-  スペースのトップの「削除済みのページ」は、ページごとに最後の `deleted` の版を引き、いま存在するページを除いて出す。
-  版の `parentId` / `order` で元の親 → 子の前順に並べ(`arrangeDeletedWikiPages`)、元の親の状態(スペース直下 / 存在する親のパンくず / 削除済み / 残っていない)を添える。
-  上から順に復元すれば親が先に作り直され、子も元の親の下に戻る(ただし元の親の下で深さの上限を超えるならスペース直下。親を先に戻しても変わらない)。
-  一覧からの復元は `restoreDeletedWikiPage`(`deletedOnly`)で、ロックの後にページが存在すれば上書きせず unchanged を返す(一覧を開いた後に別の人が戻して編集したページを、削除の版で戻さないため)。
-  「配下ごと」は画面から一覧の順に1ページずつ呼ぶ(まとめたトランザクションにはしない)。設計書スペースでは戻せない通常のページを、その配下ごと飛ばす
+  版の内容への復元(`restoreWikiPageRevision`)は削除されていないページだけが対象で、タイトル・本文・種類・タグだけを戻して位置を変えない。
+  版のタグは ID と書いたときの名前を JSON(`tags: [{ id, name }]`)で持ち、表示・出力・復元では ID で今のタグに引き当てる(`resolveWikiRevisionTags` / `findWikiTagsByIds`)。改名しても外れず、削除したタグは同名で作り直しても引き当てない。名前は差分で削除済みのタグを出すためだけに使う(`wikiRevisionTagLabels`)。
+- ページの削除は論理削除(`WikiPage.deletedAt` / `deletedById`)。`deleteWikiPage` は対象と配下に同じ削除日時を立て、ページごとに `deleted` の版を残す(本文は変えないので `updatedAt` は進めない)。
+  ページを読むクエリはすべて `WIKI_PAGE_ALIVE`(`deletedAt: null`。生 SQL は `"deletedAt" IS NULL`)で削除済みを除く。
+  添付の参照判定(`attachment-ref.ts` / `ticket-write.ts` の `isAttachmentInUse`)だけは、復元したときに添付が消えていないよう削除済みのページも数える。
+  生きているページの親は常に生きている(削除は配下ごと、復元は親が削除済みならスペース直下へ戻す)。
+  削除から保持期間(`WIKI_REVISION_RETENTION_DAYS`)を過ぎたページは自動メンテナンス(`sweepDeletedWikiPages`)で物理削除し、版・タグの紐づけ・アナウンスの通知は Cascade で消える。
+  スペースのトップの「削除済みのページ」(`listDeletedWikiPages`)は `deletedAt` のあるページを引き、
+  `parentId` / `order` で元の親 → 子の前順に並べ(`arrangeDeletedWikiPages`)、元の親の状態(スペース直下 / 存在する親のパンくず / 削除済み)と削除した人・日時、削除の版の経路を添える。
+  一覧からの復元は `restoreDeletedWikiPage` で、`deletedAt` を外すだけなので作成者・作成日時・更新者・更新日時・タグ・本文は削除したときのまま。
+  元の親が生きていて深さの上限に収まればその下の元の位置へ、そうでなければスペース直下の末尾へ戻す。
+  「配下ごと」(`withDescendants`)は、親をたどって着く削除済みの配下を同じトランザクションで戻す(配下は親子関係を保つ。上限の判定は戻す部分木の高さで行う)。
+  画面は確認で見せた配下を `expectedDescendantIds` で渡し、今の削除済みの配下と違えば `WIKI_TREE_CHANGED` で弾く(削除と同じ)。
+  ページ自体が既に戻されていて配下だけを戻すときも、今の位置で深さの上限を超えるなら `WIKI_PAGE_TOO_DEEP` で弾く。
+  一覧を開いた後に別の人が戻したページは上書きせず、戻すものが無ければ unchanged を返す
 - ページの種類(`WikiPageType`)が `design_doc` のページは、`markdown-design-doc-viewer-embed` のビューアで表示し(`src/components/markdown/design-doc-view.tsx`)、
   CodeMirror のソースとプレビューで編集する(`design-doc-editor.tsx`)。ビューアの本体と `viewer.css` は `design-doc-viewer-core.tsx` を `next/dynamic` で読むので、
   通常のページではチャンクも CSS も読み込まない。ワイヤーフレームの別ファイルは扱わない(`readFile` は常に undefined を返し、`baseUrl` は渡さない)。
@@ -119,21 +128,19 @@ Proxy は通るリクエストのボディを既定 10MB まで複製して溜�
   設計書の印刷は `design-doc-print-view.tsx` が `createViewer` で目次なしに描き、`ready` まで `data-markdown-loading` を置いて描画の完了を待たせる。
   ビューアの内部スクロールは `globals.css` の `.design-doc-print` で外す。描画の完了待ち(`useWhenRendered`)は、ワイヤーフレームの shadow root の中の画像も待つ
 - スペースの区分(`WikiSpaceType`)が `announcement` のスペース(アナウンス用スペース)には、通常のページだけを平らに置く(`isFlatWikiSpace`)
-  - `createWikiPage` は親・位置の指定を、`moveWikiPage` は常に `WIKI_ANNOUNCEMENT_FLAT` で弾く(どちらもスペース行のロックの後に読んだ区分で判定する)。作成・削除・削除済みページの作り直し・ページ詳細(`getWikiPage`)は、全件の木を読まない(作成と作り直しはスペース直下・`order` 0 に置く)
+  - `createWikiPage` は親・位置の指定を、`moveWikiPage` は常に `WIKI_ANNOUNCEMENT_FLAT` で弾く。作成・削除・削除済みページの復元・ページ詳細(`getWikiPage`)は、全件の木を読まない(作成と復元はスペース直下・`order` 0 に置く)
   - 並びは作成日時の新しい順(同時刻は番号の大きい順)。索引 `wiki_page(spaceId, createdAt)` を使う
   - `getWikiSpace` はツリーを返さない(`tree: []`)。トップの一覧(`announcement-index.tsx`)とサイドメニュー(`side-announcements.tsx`、最新 `WIKI_ANNOUNCEMENT_SIDEBAR_LIMIT` 件)は `getWikiAnnouncements`(`src/lib/wiki/wiki-announcement.ts` の `listWikiAnnouncements`。`useServerPagingList` でページごとに引く)で、
     バックナンバーは `getWikiAnnouncementArchive`(年月ごとの件数の `GROUP BY`。タグで絞り込んでいる間はそのタグのものだけを数える)で取得する。どちらもスペースを取り直したとき(`tree` の参照が変わる)に取り直す
   - 年・月の範囲と集計は、閲覧者のタイムゾーン(未設定なら `DEFAULT_TIMEZONE`)で区切る(`wikiAnnouncementPeriodRange` / `to_char(... AT TIME ZONE tz)`)
   - Slack への通知(`src/lib/wiki/wiki-announcement-notify.ts`。仕組みは [notifications-internals.md](notifications-internals.md#wiki-アナウンス))
-    - 通知先は `WikiSpace.announceSlackChannelId`。設定画面のセクション(`settings/space-slack-notify.tsx`)は区分が `announcement` のときだけ出し、`getWikiSlackChannels` / `getWikiAnnounceChannel` / `setWikiAnnounceChannel`(`assertWikiAnnounceChannelManageable` = `manage` + 区分)で扱う。
+    - 通知先は `WikiSpace.announceSlackChannelId`。設定画面のセクション(`settings/space-slack-notify.tsx`)は区分が `announcement` のときだけ出し、`getWikiSlackChannels` / `getWikiAnnounceChannel` / `setWikiAnnounceChannel`(`assertWikiAnnounceChannelManageable` = `manage` + 区分)で扱う。区分は作成後に変わらないので、値を持つのはアナウンス用スペースだけ。
       保存の前に `listSlackChannels()` と突き合わせる。チャンネルの選択・一覧の再取得・取れないときの案内は、ボードのチャネル通知と共通の `src/components/slack-channel.tsx`
     - ページ詳細の「通知」ボタンとモーダル(`[number]/page-announce-modal.tsx`)、下部の履歴(`[number]/page-announce-history.tsx`)。履歴と送れる状態は `getWikiAnnouncementNotifies` で取り、`editor` 以上でなければ引かない。
       予約の日時は利用者のタイムゾーンの日付と時刻(15 分刻み)を `zonedMinutes` で絶対時刻にして送る
     - 一覧・サイドメニューのバッジは `listWikiAnnouncements` の `notifyState`(`editor` 以上にだけ付く)。予約中があれば予約中、送信済みがあれば通知済み、無ければ未通知
-  - `announcement` への切り替え(`updateWikiSpace`)は、スペース行のロックを取ってから、子を持つページ・設計書ページ・設計書のテンプレートを数え、1件でもあれば拒む(`WIKI_SPACE_CANNOT_BE_ANNOUNCEMENT`)
 - スペースの区分(`WikiSpaceType`)が `design_doc` のスペース(設計書スペース)には設計書だけを置く
-  - 判定は `isWikiPageTypeAllowed`(`src/lib/wiki/wiki-rule.ts`)。ページの作成・種類の変更・版の復元で、スペース行のロックを取った後に読んだ区分(`WikiSpaceAccess.type`)で弾く(`WIKI_PAGE_TYPE_NOT_ALLOWED`)。種類を省いた作成は区分の既定(`defaultWikiPageType`)にする
-  - `design_doc` への切り替え(`updateWikiSpace`)は、同じスペース行のロック(`FOR NO KEY UPDATE`)を取ってから通常ページを数え、1件でもあれば拒む(`WIKI_SPACE_HAS_NORMAL_PAGES`)。続けて種類 `page` のテンプレートを数え、1件でもあれば拒む(`WIKI_SPACE_HAS_NORMAL_TEMPLATES`)。ページとテンプレートの書き込みもロックの後で区分を読むので、切り替えと同時に通常ページや通常のテンプレートが作られることはない
+  - 判定は `isWikiPageTypeAllowed`(`src/lib/wiki/wiki-rule.ts`)。ページの作成・種類の変更・版の復元で弾く(`WIKI_PAGE_TYPE_NOT_ALLOWED`)。種類を省いた作成は区分の既定(`defaultWikiPageType`)にする
   - スペースのトップの設計書一覧(`wiki/[key]/design-doc-index.tsx`)は、`getWikiDesignDocIndex`(`src/lib/wiki/wiki-design-doc-index.ts`)が返す設計書の front matter(本文は返さない。DB からも本文は先頭だけを読み、判定は `frontMatterBlock` で行う。先頭に収まらない長い front matter の行だけ本文全体を読み直す)を、embed の `DesignDocList`(`markdown-design-doc-viewer-embed/react`)に渡して描く。
     列(版数など)は embed が mddv と同じ解釈で front matter から取り出す。フォルダには親ページのタイトルのパス、ファイル名にはページ番号を渡し(組み立ては `src/lib/wiki/wiki-design-doc-list.ts`)、リンクは `onOpenLink` で `router.push` する
 - 検索(`src/lib/wiki/wiki-search.ts`)は `$queryRaw` で組む

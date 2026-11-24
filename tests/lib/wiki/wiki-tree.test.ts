@@ -127,14 +127,9 @@ describe('nestWikiTree', () => {
 })
 
 describe('arrangeDeletedWikiPages', () => {
-  const node = (pageId: string, parentId: string | null, order = 0, pageNumber = 0) => ({
-    pageId,
-    parentId,
-    order,
-    pageNumber,
-  })
+  const node = (id: string, parentId: string | null, order = 0, number = 0) => ({ id, parentId, order, number })
   const arranged = (rows: ReturnType<typeof node>[]) =>
-    arrangeDeletedWikiPages(rows).map(({ pageId, depth }) => [pageId, depth])
+    arrangeDeletedWikiPages(rows).map(({ id, depth }) => [id, depth])
 
   it('親の下に子・孫を前順で並べ、段数を付ける', () => {
     expect(arranged([node('c', 'b'), node('a', null), node('b', 'a')])).toEqual([

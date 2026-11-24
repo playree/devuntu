@@ -15,7 +15,8 @@ import type * as Prisma from "../internal/prismaNamespace"
 /**
  * Model WikiAnnouncementNotify
  * アナウンスのページの Slack 通知。予約と履歴を兼ねる。
- * ページを削除しても履歴を残し、復元(同じ id で作り直す)で戻すため pageId に外部キーを張らない
+ * ページを削除(ゴミ箱へ移す)しても履歴は残り、物理削除で一緒に消える。
+ * status と sentAt / skipReason の整合は CHECK 制約(マイグレーション)で保つ
  */
 export type WikiAnnouncementNotifyModel = runtime.Types.Result.DefaultSelection<Prisma.$WikiAnnouncementNotifyPayload>
 
@@ -35,7 +36,7 @@ export type WikiAnnouncementNotifyMinAggregateOutputType = {
   status: $Enums.WikiAnnouncementNotifyStatus | null
   sentAt: Date | null
   skipReason: $Enums.WikiAnnouncementNotifySkipReason | null
-  createdById: string | null
+  senderId: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -50,7 +51,7 @@ export type WikiAnnouncementNotifyMaxAggregateOutputType = {
   status: $Enums.WikiAnnouncementNotifyStatus | null
   sentAt: Date | null
   skipReason: $Enums.WikiAnnouncementNotifySkipReason | null
-  createdById: string | null
+  senderId: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -65,7 +66,7 @@ export type WikiAnnouncementNotifyCountAggregateOutputType = {
   status: number
   sentAt: number
   skipReason: number
-  createdById: number
+  senderId: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -82,7 +83,7 @@ export type WikiAnnouncementNotifyMinAggregateInputType = {
   status?: true
   sentAt?: true
   skipReason?: true
-  createdById?: true
+  senderId?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -97,7 +98,7 @@ export type WikiAnnouncementNotifyMaxAggregateInputType = {
   status?: true
   sentAt?: true
   skipReason?: true
-  createdById?: true
+  senderId?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -112,7 +113,7 @@ export type WikiAnnouncementNotifyCountAggregateInputType = {
   status?: true
   sentAt?: true
   skipReason?: true
-  createdById?: true
+  senderId?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -200,7 +201,7 @@ export type WikiAnnouncementNotifyGroupByOutputType = {
   status: $Enums.WikiAnnouncementNotifyStatus
   sentAt: Date | null
   skipReason: $Enums.WikiAnnouncementNotifySkipReason | null
-  createdById: string | null
+  senderId: string | null
   createdAt: Date
   updatedAt: Date
   _count: WikiAnnouncementNotifyCountAggregateOutputType | null
@@ -236,11 +237,12 @@ export type WikiAnnouncementNotifyWhereInput = {
   status?: Prisma.EnumWikiAnnouncementNotifyStatusFilter<"WikiAnnouncementNotify"> | $Enums.WikiAnnouncementNotifyStatus
   sentAt?: Prisma.DateTimeNullableFilter<"WikiAnnouncementNotify"> | Date | string | null
   skipReason?: Prisma.EnumWikiAnnouncementNotifySkipReasonNullableFilter<"WikiAnnouncementNotify"> | $Enums.WikiAnnouncementNotifySkipReason | null
-  createdById?: Prisma.StringNullableFilter<"WikiAnnouncementNotify"> | string | null
+  senderId?: Prisma.StringNullableFilter<"WikiAnnouncementNotify"> | string | null
   createdAt?: Prisma.DateTimeFilter<"WikiAnnouncementNotify"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"WikiAnnouncementNotify"> | Date | string
   space?: Prisma.XOR<Prisma.WikiSpaceScalarRelationFilter, Prisma.WikiSpaceWhereInput>
-  createdBy?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
+  page?: Prisma.XOR<Prisma.WikiPageScalarRelationFilter, Prisma.WikiPageWhereInput>
+  sender?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
 }
 
 export type WikiAnnouncementNotifyOrderByWithRelationInput = {
@@ -253,11 +255,12 @@ export type WikiAnnouncementNotifyOrderByWithRelationInput = {
   status?: Prisma.SortOrder
   sentAt?: Prisma.SortOrderInput | Prisma.SortOrder
   skipReason?: Prisma.SortOrderInput | Prisma.SortOrder
-  createdById?: Prisma.SortOrderInput | Prisma.SortOrder
+  senderId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   space?: Prisma.WikiSpaceOrderByWithRelationInput
-  createdBy?: Prisma.UserOrderByWithRelationInput
+  page?: Prisma.WikiPageOrderByWithRelationInput
+  sender?: Prisma.UserOrderByWithRelationInput
 }
 
 export type WikiAnnouncementNotifyWhereUniqueInput = Prisma.AtLeast<{
@@ -273,11 +276,12 @@ export type WikiAnnouncementNotifyWhereUniqueInput = Prisma.AtLeast<{
   status?: Prisma.EnumWikiAnnouncementNotifyStatusFilter<"WikiAnnouncementNotify"> | $Enums.WikiAnnouncementNotifyStatus
   sentAt?: Prisma.DateTimeNullableFilter<"WikiAnnouncementNotify"> | Date | string | null
   skipReason?: Prisma.EnumWikiAnnouncementNotifySkipReasonNullableFilter<"WikiAnnouncementNotify"> | $Enums.WikiAnnouncementNotifySkipReason | null
-  createdById?: Prisma.StringNullableFilter<"WikiAnnouncementNotify"> | string | null
+  senderId?: Prisma.StringNullableFilter<"WikiAnnouncementNotify"> | string | null
   createdAt?: Prisma.DateTimeFilter<"WikiAnnouncementNotify"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"WikiAnnouncementNotify"> | Date | string
   space?: Prisma.XOR<Prisma.WikiSpaceScalarRelationFilter, Prisma.WikiSpaceWhereInput>
-  createdBy?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
+  page?: Prisma.XOR<Prisma.WikiPageScalarRelationFilter, Prisma.WikiPageWhereInput>
+  sender?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
 }, "id">
 
 export type WikiAnnouncementNotifyOrderByWithAggregationInput = {
@@ -290,7 +294,7 @@ export type WikiAnnouncementNotifyOrderByWithAggregationInput = {
   status?: Prisma.SortOrder
   sentAt?: Prisma.SortOrderInput | Prisma.SortOrder
   skipReason?: Prisma.SortOrderInput | Prisma.SortOrder
-  createdById?: Prisma.SortOrderInput | Prisma.SortOrder
+  senderId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.WikiAnnouncementNotifyCountOrderByAggregateInput
@@ -311,14 +315,13 @@ export type WikiAnnouncementNotifyScalarWhereWithAggregatesInput = {
   status?: Prisma.EnumWikiAnnouncementNotifyStatusWithAggregatesFilter<"WikiAnnouncementNotify"> | $Enums.WikiAnnouncementNotifyStatus
   sentAt?: Prisma.DateTimeNullableWithAggregatesFilter<"WikiAnnouncementNotify"> | Date | string | null
   skipReason?: Prisma.EnumWikiAnnouncementNotifySkipReasonNullableWithAggregatesFilter<"WikiAnnouncementNotify"> | $Enums.WikiAnnouncementNotifySkipReason | null
-  createdById?: Prisma.StringNullableWithAggregatesFilter<"WikiAnnouncementNotify"> | string | null
+  senderId?: Prisma.StringNullableWithAggregatesFilter<"WikiAnnouncementNotify"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"WikiAnnouncementNotify"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"WikiAnnouncementNotify"> | Date | string
 }
 
 export type WikiAnnouncementNotifyCreateInput = {
   id?: string
-  pageId: string
   kind: $Enums.WikiAnnouncementNotifyKind
   message?: string | null
   scheduledAt: Date | string
@@ -328,7 +331,8 @@ export type WikiAnnouncementNotifyCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   space: Prisma.WikiSpaceCreateNestedOneWithoutNotifiesInput
-  createdBy?: Prisma.UserCreateNestedOneWithoutWikiAnnouncementNotifiesInput
+  page: Prisma.WikiPageCreateNestedOneWithoutNotifiesInput
+  sender?: Prisma.UserCreateNestedOneWithoutWikiAnnouncementNotifiesInput
 }
 
 export type WikiAnnouncementNotifyUncheckedCreateInput = {
@@ -341,14 +345,13 @@ export type WikiAnnouncementNotifyUncheckedCreateInput = {
   status: $Enums.WikiAnnouncementNotifyStatus
   sentAt?: Date | string | null
   skipReason?: $Enums.WikiAnnouncementNotifySkipReason | null
-  createdById?: string | null
+  senderId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
 
 export type WikiAnnouncementNotifyUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  pageId?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.EnumWikiAnnouncementNotifyKindFieldUpdateOperationsInput | $Enums.WikiAnnouncementNotifyKind
   message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -358,7 +361,8 @@ export type WikiAnnouncementNotifyUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   space?: Prisma.WikiSpaceUpdateOneRequiredWithoutNotifiesNestedInput
-  createdBy?: Prisma.UserUpdateOneWithoutWikiAnnouncementNotifiesNestedInput
+  page?: Prisma.WikiPageUpdateOneRequiredWithoutNotifiesNestedInput
+  sender?: Prisma.UserUpdateOneWithoutWikiAnnouncementNotifiesNestedInput
 }
 
 export type WikiAnnouncementNotifyUncheckedUpdateInput = {
@@ -371,7 +375,7 @@ export type WikiAnnouncementNotifyUncheckedUpdateInput = {
   status?: Prisma.EnumWikiAnnouncementNotifyStatusFieldUpdateOperationsInput | $Enums.WikiAnnouncementNotifyStatus
   sentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   skipReason?: Prisma.NullableEnumWikiAnnouncementNotifySkipReasonFieldUpdateOperationsInput | $Enums.WikiAnnouncementNotifySkipReason | null
-  createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  senderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -386,14 +390,13 @@ export type WikiAnnouncementNotifyCreateManyInput = {
   status: $Enums.WikiAnnouncementNotifyStatus
   sentAt?: Date | string | null
   skipReason?: $Enums.WikiAnnouncementNotifySkipReason | null
-  createdById?: string | null
+  senderId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
 
 export type WikiAnnouncementNotifyUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  pageId?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.EnumWikiAnnouncementNotifyKindFieldUpdateOperationsInput | $Enums.WikiAnnouncementNotifyKind
   message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -414,7 +417,7 @@ export type WikiAnnouncementNotifyUncheckedUpdateManyInput = {
   status?: Prisma.EnumWikiAnnouncementNotifyStatusFieldUpdateOperationsInput | $Enums.WikiAnnouncementNotifyStatus
   sentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   skipReason?: Prisma.NullableEnumWikiAnnouncementNotifySkipReasonFieldUpdateOperationsInput | $Enums.WikiAnnouncementNotifySkipReason | null
-  createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  senderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -439,7 +442,7 @@ export type WikiAnnouncementNotifyCountOrderByAggregateInput = {
   status?: Prisma.SortOrder
   sentAt?: Prisma.SortOrder
   skipReason?: Prisma.SortOrder
-  createdById?: Prisma.SortOrder
+  senderId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -454,7 +457,7 @@ export type WikiAnnouncementNotifyMaxOrderByAggregateInput = {
   status?: Prisma.SortOrder
   sentAt?: Prisma.SortOrder
   skipReason?: Prisma.SortOrder
-  createdById?: Prisma.SortOrder
+  senderId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -469,50 +472,50 @@ export type WikiAnnouncementNotifyMinOrderByAggregateInput = {
   status?: Prisma.SortOrder
   sentAt?: Prisma.SortOrder
   skipReason?: Prisma.SortOrder
-  createdById?: Prisma.SortOrder
+  senderId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
-export type WikiAnnouncementNotifyCreateNestedManyWithoutCreatedByInput = {
-  create?: Prisma.XOR<Prisma.WikiAnnouncementNotifyCreateWithoutCreatedByInput, Prisma.WikiAnnouncementNotifyUncheckedCreateWithoutCreatedByInput> | Prisma.WikiAnnouncementNotifyCreateWithoutCreatedByInput[] | Prisma.WikiAnnouncementNotifyUncheckedCreateWithoutCreatedByInput[]
-  connectOrCreate?: Prisma.WikiAnnouncementNotifyCreateOrConnectWithoutCreatedByInput | Prisma.WikiAnnouncementNotifyCreateOrConnectWithoutCreatedByInput[]
-  createMany?: Prisma.WikiAnnouncementNotifyCreateManyCreatedByInputEnvelope
+export type WikiAnnouncementNotifyCreateNestedManyWithoutSenderInput = {
+  create?: Prisma.XOR<Prisma.WikiAnnouncementNotifyCreateWithoutSenderInput, Prisma.WikiAnnouncementNotifyUncheckedCreateWithoutSenderInput> | Prisma.WikiAnnouncementNotifyCreateWithoutSenderInput[] | Prisma.WikiAnnouncementNotifyUncheckedCreateWithoutSenderInput[]
+  connectOrCreate?: Prisma.WikiAnnouncementNotifyCreateOrConnectWithoutSenderInput | Prisma.WikiAnnouncementNotifyCreateOrConnectWithoutSenderInput[]
+  createMany?: Prisma.WikiAnnouncementNotifyCreateManySenderInputEnvelope
   connect?: Prisma.WikiAnnouncementNotifyWhereUniqueInput | Prisma.WikiAnnouncementNotifyWhereUniqueInput[]
 }
 
-export type WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutCreatedByInput = {
-  create?: Prisma.XOR<Prisma.WikiAnnouncementNotifyCreateWithoutCreatedByInput, Prisma.WikiAnnouncementNotifyUncheckedCreateWithoutCreatedByInput> | Prisma.WikiAnnouncementNotifyCreateWithoutCreatedByInput[] | Prisma.WikiAnnouncementNotifyUncheckedCreateWithoutCreatedByInput[]
-  connectOrCreate?: Prisma.WikiAnnouncementNotifyCreateOrConnectWithoutCreatedByInput | Prisma.WikiAnnouncementNotifyCreateOrConnectWithoutCreatedByInput[]
-  createMany?: Prisma.WikiAnnouncementNotifyCreateManyCreatedByInputEnvelope
+export type WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutSenderInput = {
+  create?: Prisma.XOR<Prisma.WikiAnnouncementNotifyCreateWithoutSenderInput, Prisma.WikiAnnouncementNotifyUncheckedCreateWithoutSenderInput> | Prisma.WikiAnnouncementNotifyCreateWithoutSenderInput[] | Prisma.WikiAnnouncementNotifyUncheckedCreateWithoutSenderInput[]
+  connectOrCreate?: Prisma.WikiAnnouncementNotifyCreateOrConnectWithoutSenderInput | Prisma.WikiAnnouncementNotifyCreateOrConnectWithoutSenderInput[]
+  createMany?: Prisma.WikiAnnouncementNotifyCreateManySenderInputEnvelope
   connect?: Prisma.WikiAnnouncementNotifyWhereUniqueInput | Prisma.WikiAnnouncementNotifyWhereUniqueInput[]
 }
 
-export type WikiAnnouncementNotifyUpdateManyWithoutCreatedByNestedInput = {
-  create?: Prisma.XOR<Prisma.WikiAnnouncementNotifyCreateWithoutCreatedByInput, Prisma.WikiAnnouncementNotifyUncheckedCreateWithoutCreatedByInput> | Prisma.WikiAnnouncementNotifyCreateWithoutCreatedByInput[] | Prisma.WikiAnnouncementNotifyUncheckedCreateWithoutCreatedByInput[]
-  connectOrCreate?: Prisma.WikiAnnouncementNotifyCreateOrConnectWithoutCreatedByInput | Prisma.WikiAnnouncementNotifyCreateOrConnectWithoutCreatedByInput[]
-  upsert?: Prisma.WikiAnnouncementNotifyUpsertWithWhereUniqueWithoutCreatedByInput | Prisma.WikiAnnouncementNotifyUpsertWithWhereUniqueWithoutCreatedByInput[]
-  createMany?: Prisma.WikiAnnouncementNotifyCreateManyCreatedByInputEnvelope
+export type WikiAnnouncementNotifyUpdateManyWithoutSenderNestedInput = {
+  create?: Prisma.XOR<Prisma.WikiAnnouncementNotifyCreateWithoutSenderInput, Prisma.WikiAnnouncementNotifyUncheckedCreateWithoutSenderInput> | Prisma.WikiAnnouncementNotifyCreateWithoutSenderInput[] | Prisma.WikiAnnouncementNotifyUncheckedCreateWithoutSenderInput[]
+  connectOrCreate?: Prisma.WikiAnnouncementNotifyCreateOrConnectWithoutSenderInput | Prisma.WikiAnnouncementNotifyCreateOrConnectWithoutSenderInput[]
+  upsert?: Prisma.WikiAnnouncementNotifyUpsertWithWhereUniqueWithoutSenderInput | Prisma.WikiAnnouncementNotifyUpsertWithWhereUniqueWithoutSenderInput[]
+  createMany?: Prisma.WikiAnnouncementNotifyCreateManySenderInputEnvelope
   set?: Prisma.WikiAnnouncementNotifyWhereUniqueInput | Prisma.WikiAnnouncementNotifyWhereUniqueInput[]
   disconnect?: Prisma.WikiAnnouncementNotifyWhereUniqueInput | Prisma.WikiAnnouncementNotifyWhereUniqueInput[]
   delete?: Prisma.WikiAnnouncementNotifyWhereUniqueInput | Prisma.WikiAnnouncementNotifyWhereUniqueInput[]
   connect?: Prisma.WikiAnnouncementNotifyWhereUniqueInput | Prisma.WikiAnnouncementNotifyWhereUniqueInput[]
-  update?: Prisma.WikiAnnouncementNotifyUpdateWithWhereUniqueWithoutCreatedByInput | Prisma.WikiAnnouncementNotifyUpdateWithWhereUniqueWithoutCreatedByInput[]
-  updateMany?: Prisma.WikiAnnouncementNotifyUpdateManyWithWhereWithoutCreatedByInput | Prisma.WikiAnnouncementNotifyUpdateManyWithWhereWithoutCreatedByInput[]
+  update?: Prisma.WikiAnnouncementNotifyUpdateWithWhereUniqueWithoutSenderInput | Prisma.WikiAnnouncementNotifyUpdateWithWhereUniqueWithoutSenderInput[]
+  updateMany?: Prisma.WikiAnnouncementNotifyUpdateManyWithWhereWithoutSenderInput | Prisma.WikiAnnouncementNotifyUpdateManyWithWhereWithoutSenderInput[]
   deleteMany?: Prisma.WikiAnnouncementNotifyScalarWhereInput | Prisma.WikiAnnouncementNotifyScalarWhereInput[]
 }
 
-export type WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByNestedInput = {
-  create?: Prisma.XOR<Prisma.WikiAnnouncementNotifyCreateWithoutCreatedByInput, Prisma.WikiAnnouncementNotifyUncheckedCreateWithoutCreatedByInput> | Prisma.WikiAnnouncementNotifyCreateWithoutCreatedByInput[] | Prisma.WikiAnnouncementNotifyUncheckedCreateWithoutCreatedByInput[]
-  connectOrCreate?: Prisma.WikiAnnouncementNotifyCreateOrConnectWithoutCreatedByInput | Prisma.WikiAnnouncementNotifyCreateOrConnectWithoutCreatedByInput[]
-  upsert?: Prisma.WikiAnnouncementNotifyUpsertWithWhereUniqueWithoutCreatedByInput | Prisma.WikiAnnouncementNotifyUpsertWithWhereUniqueWithoutCreatedByInput[]
-  createMany?: Prisma.WikiAnnouncementNotifyCreateManyCreatedByInputEnvelope
+export type WikiAnnouncementNotifyUncheckedUpdateManyWithoutSenderNestedInput = {
+  create?: Prisma.XOR<Prisma.WikiAnnouncementNotifyCreateWithoutSenderInput, Prisma.WikiAnnouncementNotifyUncheckedCreateWithoutSenderInput> | Prisma.WikiAnnouncementNotifyCreateWithoutSenderInput[] | Prisma.WikiAnnouncementNotifyUncheckedCreateWithoutSenderInput[]
+  connectOrCreate?: Prisma.WikiAnnouncementNotifyCreateOrConnectWithoutSenderInput | Prisma.WikiAnnouncementNotifyCreateOrConnectWithoutSenderInput[]
+  upsert?: Prisma.WikiAnnouncementNotifyUpsertWithWhereUniqueWithoutSenderInput | Prisma.WikiAnnouncementNotifyUpsertWithWhereUniqueWithoutSenderInput[]
+  createMany?: Prisma.WikiAnnouncementNotifyCreateManySenderInputEnvelope
   set?: Prisma.WikiAnnouncementNotifyWhereUniqueInput | Prisma.WikiAnnouncementNotifyWhereUniqueInput[]
   disconnect?: Prisma.WikiAnnouncementNotifyWhereUniqueInput | Prisma.WikiAnnouncementNotifyWhereUniqueInput[]
   delete?: Prisma.WikiAnnouncementNotifyWhereUniqueInput | Prisma.WikiAnnouncementNotifyWhereUniqueInput[]
   connect?: Prisma.WikiAnnouncementNotifyWhereUniqueInput | Prisma.WikiAnnouncementNotifyWhereUniqueInput[]
-  update?: Prisma.WikiAnnouncementNotifyUpdateWithWhereUniqueWithoutCreatedByInput | Prisma.WikiAnnouncementNotifyUpdateWithWhereUniqueWithoutCreatedByInput[]
-  updateMany?: Prisma.WikiAnnouncementNotifyUpdateManyWithWhereWithoutCreatedByInput | Prisma.WikiAnnouncementNotifyUpdateManyWithWhereWithoutCreatedByInput[]
+  update?: Prisma.WikiAnnouncementNotifyUpdateWithWhereUniqueWithoutSenderInput | Prisma.WikiAnnouncementNotifyUpdateWithWhereUniqueWithoutSenderInput[]
+  updateMany?: Prisma.WikiAnnouncementNotifyUpdateManyWithWhereWithoutSenderInput | Prisma.WikiAnnouncementNotifyUpdateManyWithWhereWithoutSenderInput[]
   deleteMany?: Prisma.WikiAnnouncementNotifyScalarWhereInput | Prisma.WikiAnnouncementNotifyScalarWhereInput[]
 }
 
@@ -558,6 +561,48 @@ export type WikiAnnouncementNotifyUncheckedUpdateManyWithoutSpaceNestedInput = {
   deleteMany?: Prisma.WikiAnnouncementNotifyScalarWhereInput | Prisma.WikiAnnouncementNotifyScalarWhereInput[]
 }
 
+export type WikiAnnouncementNotifyCreateNestedManyWithoutPageInput = {
+  create?: Prisma.XOR<Prisma.WikiAnnouncementNotifyCreateWithoutPageInput, Prisma.WikiAnnouncementNotifyUncheckedCreateWithoutPageInput> | Prisma.WikiAnnouncementNotifyCreateWithoutPageInput[] | Prisma.WikiAnnouncementNotifyUncheckedCreateWithoutPageInput[]
+  connectOrCreate?: Prisma.WikiAnnouncementNotifyCreateOrConnectWithoutPageInput | Prisma.WikiAnnouncementNotifyCreateOrConnectWithoutPageInput[]
+  createMany?: Prisma.WikiAnnouncementNotifyCreateManyPageInputEnvelope
+  connect?: Prisma.WikiAnnouncementNotifyWhereUniqueInput | Prisma.WikiAnnouncementNotifyWhereUniqueInput[]
+}
+
+export type WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutPageInput = {
+  create?: Prisma.XOR<Prisma.WikiAnnouncementNotifyCreateWithoutPageInput, Prisma.WikiAnnouncementNotifyUncheckedCreateWithoutPageInput> | Prisma.WikiAnnouncementNotifyCreateWithoutPageInput[] | Prisma.WikiAnnouncementNotifyUncheckedCreateWithoutPageInput[]
+  connectOrCreate?: Prisma.WikiAnnouncementNotifyCreateOrConnectWithoutPageInput | Prisma.WikiAnnouncementNotifyCreateOrConnectWithoutPageInput[]
+  createMany?: Prisma.WikiAnnouncementNotifyCreateManyPageInputEnvelope
+  connect?: Prisma.WikiAnnouncementNotifyWhereUniqueInput | Prisma.WikiAnnouncementNotifyWhereUniqueInput[]
+}
+
+export type WikiAnnouncementNotifyUpdateManyWithoutPageNestedInput = {
+  create?: Prisma.XOR<Prisma.WikiAnnouncementNotifyCreateWithoutPageInput, Prisma.WikiAnnouncementNotifyUncheckedCreateWithoutPageInput> | Prisma.WikiAnnouncementNotifyCreateWithoutPageInput[] | Prisma.WikiAnnouncementNotifyUncheckedCreateWithoutPageInput[]
+  connectOrCreate?: Prisma.WikiAnnouncementNotifyCreateOrConnectWithoutPageInput | Prisma.WikiAnnouncementNotifyCreateOrConnectWithoutPageInput[]
+  upsert?: Prisma.WikiAnnouncementNotifyUpsertWithWhereUniqueWithoutPageInput | Prisma.WikiAnnouncementNotifyUpsertWithWhereUniqueWithoutPageInput[]
+  createMany?: Prisma.WikiAnnouncementNotifyCreateManyPageInputEnvelope
+  set?: Prisma.WikiAnnouncementNotifyWhereUniqueInput | Prisma.WikiAnnouncementNotifyWhereUniqueInput[]
+  disconnect?: Prisma.WikiAnnouncementNotifyWhereUniqueInput | Prisma.WikiAnnouncementNotifyWhereUniqueInput[]
+  delete?: Prisma.WikiAnnouncementNotifyWhereUniqueInput | Prisma.WikiAnnouncementNotifyWhereUniqueInput[]
+  connect?: Prisma.WikiAnnouncementNotifyWhereUniqueInput | Prisma.WikiAnnouncementNotifyWhereUniqueInput[]
+  update?: Prisma.WikiAnnouncementNotifyUpdateWithWhereUniqueWithoutPageInput | Prisma.WikiAnnouncementNotifyUpdateWithWhereUniqueWithoutPageInput[]
+  updateMany?: Prisma.WikiAnnouncementNotifyUpdateManyWithWhereWithoutPageInput | Prisma.WikiAnnouncementNotifyUpdateManyWithWhereWithoutPageInput[]
+  deleteMany?: Prisma.WikiAnnouncementNotifyScalarWhereInput | Prisma.WikiAnnouncementNotifyScalarWhereInput[]
+}
+
+export type WikiAnnouncementNotifyUncheckedUpdateManyWithoutPageNestedInput = {
+  create?: Prisma.XOR<Prisma.WikiAnnouncementNotifyCreateWithoutPageInput, Prisma.WikiAnnouncementNotifyUncheckedCreateWithoutPageInput> | Prisma.WikiAnnouncementNotifyCreateWithoutPageInput[] | Prisma.WikiAnnouncementNotifyUncheckedCreateWithoutPageInput[]
+  connectOrCreate?: Prisma.WikiAnnouncementNotifyCreateOrConnectWithoutPageInput | Prisma.WikiAnnouncementNotifyCreateOrConnectWithoutPageInput[]
+  upsert?: Prisma.WikiAnnouncementNotifyUpsertWithWhereUniqueWithoutPageInput | Prisma.WikiAnnouncementNotifyUpsertWithWhereUniqueWithoutPageInput[]
+  createMany?: Prisma.WikiAnnouncementNotifyCreateManyPageInputEnvelope
+  set?: Prisma.WikiAnnouncementNotifyWhereUniqueInput | Prisma.WikiAnnouncementNotifyWhereUniqueInput[]
+  disconnect?: Prisma.WikiAnnouncementNotifyWhereUniqueInput | Prisma.WikiAnnouncementNotifyWhereUniqueInput[]
+  delete?: Prisma.WikiAnnouncementNotifyWhereUniqueInput | Prisma.WikiAnnouncementNotifyWhereUniqueInput[]
+  connect?: Prisma.WikiAnnouncementNotifyWhereUniqueInput | Prisma.WikiAnnouncementNotifyWhereUniqueInput[]
+  update?: Prisma.WikiAnnouncementNotifyUpdateWithWhereUniqueWithoutPageInput | Prisma.WikiAnnouncementNotifyUpdateWithWhereUniqueWithoutPageInput[]
+  updateMany?: Prisma.WikiAnnouncementNotifyUpdateManyWithWhereWithoutPageInput | Prisma.WikiAnnouncementNotifyUpdateManyWithWhereWithoutPageInput[]
+  deleteMany?: Prisma.WikiAnnouncementNotifyScalarWhereInput | Prisma.WikiAnnouncementNotifyScalarWhereInput[]
+}
+
 export type EnumWikiAnnouncementNotifyKindFieldUpdateOperationsInput = {
   set?: $Enums.WikiAnnouncementNotifyKind
 }
@@ -570,9 +615,8 @@ export type NullableEnumWikiAnnouncementNotifySkipReasonFieldUpdateOperationsInp
   set?: $Enums.WikiAnnouncementNotifySkipReason | null
 }
 
-export type WikiAnnouncementNotifyCreateWithoutCreatedByInput = {
+export type WikiAnnouncementNotifyCreateWithoutSenderInput = {
   id?: string
-  pageId: string
   kind: $Enums.WikiAnnouncementNotifyKind
   message?: string | null
   scheduledAt: Date | string
@@ -582,9 +626,10 @@ export type WikiAnnouncementNotifyCreateWithoutCreatedByInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   space: Prisma.WikiSpaceCreateNestedOneWithoutNotifiesInput
+  page: Prisma.WikiPageCreateNestedOneWithoutNotifiesInput
 }
 
-export type WikiAnnouncementNotifyUncheckedCreateWithoutCreatedByInput = {
+export type WikiAnnouncementNotifyUncheckedCreateWithoutSenderInput = {
   id?: string
   spaceId: string
   pageId: string
@@ -598,30 +643,30 @@ export type WikiAnnouncementNotifyUncheckedCreateWithoutCreatedByInput = {
   updatedAt?: Date | string
 }
 
-export type WikiAnnouncementNotifyCreateOrConnectWithoutCreatedByInput = {
+export type WikiAnnouncementNotifyCreateOrConnectWithoutSenderInput = {
   where: Prisma.WikiAnnouncementNotifyWhereUniqueInput
-  create: Prisma.XOR<Prisma.WikiAnnouncementNotifyCreateWithoutCreatedByInput, Prisma.WikiAnnouncementNotifyUncheckedCreateWithoutCreatedByInput>
+  create: Prisma.XOR<Prisma.WikiAnnouncementNotifyCreateWithoutSenderInput, Prisma.WikiAnnouncementNotifyUncheckedCreateWithoutSenderInput>
 }
 
-export type WikiAnnouncementNotifyCreateManyCreatedByInputEnvelope = {
-  data: Prisma.WikiAnnouncementNotifyCreateManyCreatedByInput | Prisma.WikiAnnouncementNotifyCreateManyCreatedByInput[]
+export type WikiAnnouncementNotifyCreateManySenderInputEnvelope = {
+  data: Prisma.WikiAnnouncementNotifyCreateManySenderInput | Prisma.WikiAnnouncementNotifyCreateManySenderInput[]
   skipDuplicates?: boolean
 }
 
-export type WikiAnnouncementNotifyUpsertWithWhereUniqueWithoutCreatedByInput = {
+export type WikiAnnouncementNotifyUpsertWithWhereUniqueWithoutSenderInput = {
   where: Prisma.WikiAnnouncementNotifyWhereUniqueInput
-  update: Prisma.XOR<Prisma.WikiAnnouncementNotifyUpdateWithoutCreatedByInput, Prisma.WikiAnnouncementNotifyUncheckedUpdateWithoutCreatedByInput>
-  create: Prisma.XOR<Prisma.WikiAnnouncementNotifyCreateWithoutCreatedByInput, Prisma.WikiAnnouncementNotifyUncheckedCreateWithoutCreatedByInput>
+  update: Prisma.XOR<Prisma.WikiAnnouncementNotifyUpdateWithoutSenderInput, Prisma.WikiAnnouncementNotifyUncheckedUpdateWithoutSenderInput>
+  create: Prisma.XOR<Prisma.WikiAnnouncementNotifyCreateWithoutSenderInput, Prisma.WikiAnnouncementNotifyUncheckedCreateWithoutSenderInput>
 }
 
-export type WikiAnnouncementNotifyUpdateWithWhereUniqueWithoutCreatedByInput = {
+export type WikiAnnouncementNotifyUpdateWithWhereUniqueWithoutSenderInput = {
   where: Prisma.WikiAnnouncementNotifyWhereUniqueInput
-  data: Prisma.XOR<Prisma.WikiAnnouncementNotifyUpdateWithoutCreatedByInput, Prisma.WikiAnnouncementNotifyUncheckedUpdateWithoutCreatedByInput>
+  data: Prisma.XOR<Prisma.WikiAnnouncementNotifyUpdateWithoutSenderInput, Prisma.WikiAnnouncementNotifyUncheckedUpdateWithoutSenderInput>
 }
 
-export type WikiAnnouncementNotifyUpdateManyWithWhereWithoutCreatedByInput = {
+export type WikiAnnouncementNotifyUpdateManyWithWhereWithoutSenderInput = {
   where: Prisma.WikiAnnouncementNotifyScalarWhereInput
-  data: Prisma.XOR<Prisma.WikiAnnouncementNotifyUpdateManyMutationInput, Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByInput>
+  data: Prisma.XOR<Prisma.WikiAnnouncementNotifyUpdateManyMutationInput, Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutSenderInput>
 }
 
 export type WikiAnnouncementNotifyScalarWhereInput = {
@@ -637,14 +682,13 @@ export type WikiAnnouncementNotifyScalarWhereInput = {
   status?: Prisma.EnumWikiAnnouncementNotifyStatusFilter<"WikiAnnouncementNotify"> | $Enums.WikiAnnouncementNotifyStatus
   sentAt?: Prisma.DateTimeNullableFilter<"WikiAnnouncementNotify"> | Date | string | null
   skipReason?: Prisma.EnumWikiAnnouncementNotifySkipReasonNullableFilter<"WikiAnnouncementNotify"> | $Enums.WikiAnnouncementNotifySkipReason | null
-  createdById?: Prisma.StringNullableFilter<"WikiAnnouncementNotify"> | string | null
+  senderId?: Prisma.StringNullableFilter<"WikiAnnouncementNotify"> | string | null
   createdAt?: Prisma.DateTimeFilter<"WikiAnnouncementNotify"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"WikiAnnouncementNotify"> | Date | string
 }
 
 export type WikiAnnouncementNotifyCreateWithoutSpaceInput = {
   id?: string
-  pageId: string
   kind: $Enums.WikiAnnouncementNotifyKind
   message?: string | null
   scheduledAt: Date | string
@@ -653,7 +697,8 @@ export type WikiAnnouncementNotifyCreateWithoutSpaceInput = {
   skipReason?: $Enums.WikiAnnouncementNotifySkipReason | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  createdBy?: Prisma.UserCreateNestedOneWithoutWikiAnnouncementNotifiesInput
+  page: Prisma.WikiPageCreateNestedOneWithoutNotifiesInput
+  sender?: Prisma.UserCreateNestedOneWithoutWikiAnnouncementNotifiesInput
 }
 
 export type WikiAnnouncementNotifyUncheckedCreateWithoutSpaceInput = {
@@ -665,7 +710,7 @@ export type WikiAnnouncementNotifyUncheckedCreateWithoutSpaceInput = {
   status: $Enums.WikiAnnouncementNotifyStatus
   sentAt?: Date | string | null
   skipReason?: $Enums.WikiAnnouncementNotifySkipReason | null
-  createdById?: string | null
+  senderId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -696,7 +741,61 @@ export type WikiAnnouncementNotifyUpdateManyWithWhereWithoutSpaceInput = {
   data: Prisma.XOR<Prisma.WikiAnnouncementNotifyUpdateManyMutationInput, Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutSpaceInput>
 }
 
-export type WikiAnnouncementNotifyCreateManyCreatedByInput = {
+export type WikiAnnouncementNotifyCreateWithoutPageInput = {
+  id?: string
+  kind: $Enums.WikiAnnouncementNotifyKind
+  message?: string | null
+  scheduledAt: Date | string
+  status: $Enums.WikiAnnouncementNotifyStatus
+  sentAt?: Date | string | null
+  skipReason?: $Enums.WikiAnnouncementNotifySkipReason | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  space: Prisma.WikiSpaceCreateNestedOneWithoutNotifiesInput
+  sender?: Prisma.UserCreateNestedOneWithoutWikiAnnouncementNotifiesInput
+}
+
+export type WikiAnnouncementNotifyUncheckedCreateWithoutPageInput = {
+  id?: string
+  spaceId: string
+  kind: $Enums.WikiAnnouncementNotifyKind
+  message?: string | null
+  scheduledAt: Date | string
+  status: $Enums.WikiAnnouncementNotifyStatus
+  sentAt?: Date | string | null
+  skipReason?: $Enums.WikiAnnouncementNotifySkipReason | null
+  senderId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type WikiAnnouncementNotifyCreateOrConnectWithoutPageInput = {
+  where: Prisma.WikiAnnouncementNotifyWhereUniqueInput
+  create: Prisma.XOR<Prisma.WikiAnnouncementNotifyCreateWithoutPageInput, Prisma.WikiAnnouncementNotifyUncheckedCreateWithoutPageInput>
+}
+
+export type WikiAnnouncementNotifyCreateManyPageInputEnvelope = {
+  data: Prisma.WikiAnnouncementNotifyCreateManyPageInput | Prisma.WikiAnnouncementNotifyCreateManyPageInput[]
+  skipDuplicates?: boolean
+}
+
+export type WikiAnnouncementNotifyUpsertWithWhereUniqueWithoutPageInput = {
+  where: Prisma.WikiAnnouncementNotifyWhereUniqueInput
+  update: Prisma.XOR<Prisma.WikiAnnouncementNotifyUpdateWithoutPageInput, Prisma.WikiAnnouncementNotifyUncheckedUpdateWithoutPageInput>
+  create: Prisma.XOR<Prisma.WikiAnnouncementNotifyCreateWithoutPageInput, Prisma.WikiAnnouncementNotifyUncheckedCreateWithoutPageInput>
+}
+
+export type WikiAnnouncementNotifyUpdateWithWhereUniqueWithoutPageInput = {
+  where: Prisma.WikiAnnouncementNotifyWhereUniqueInput
+  data: Prisma.XOR<Prisma.WikiAnnouncementNotifyUpdateWithoutPageInput, Prisma.WikiAnnouncementNotifyUncheckedUpdateWithoutPageInput>
+}
+
+export type WikiAnnouncementNotifyUpdateManyWithWhereWithoutPageInput = {
+  where: Prisma.WikiAnnouncementNotifyScalarWhereInput
+  data: Prisma.XOR<Prisma.WikiAnnouncementNotifyUpdateManyMutationInput, Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutPageInput>
+}
+
+export type WikiAnnouncementNotifyCreateManySenderInput = {
   id?: string
   spaceId: string
   pageId: string
@@ -710,9 +809,8 @@ export type WikiAnnouncementNotifyCreateManyCreatedByInput = {
   updatedAt?: Date | string
 }
 
-export type WikiAnnouncementNotifyUpdateWithoutCreatedByInput = {
+export type WikiAnnouncementNotifyUpdateWithoutSenderInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  pageId?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.EnumWikiAnnouncementNotifyKindFieldUpdateOperationsInput | $Enums.WikiAnnouncementNotifyKind
   message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -722,9 +820,10 @@ export type WikiAnnouncementNotifyUpdateWithoutCreatedByInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   space?: Prisma.WikiSpaceUpdateOneRequiredWithoutNotifiesNestedInput
+  page?: Prisma.WikiPageUpdateOneRequiredWithoutNotifiesNestedInput
 }
 
-export type WikiAnnouncementNotifyUncheckedUpdateWithoutCreatedByInput = {
+export type WikiAnnouncementNotifyUncheckedUpdateWithoutSenderInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   spaceId?: Prisma.StringFieldUpdateOperationsInput | string
   pageId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -738,7 +837,7 @@ export type WikiAnnouncementNotifyUncheckedUpdateWithoutCreatedByInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type WikiAnnouncementNotifyUncheckedUpdateManyWithoutCreatedByInput = {
+export type WikiAnnouncementNotifyUncheckedUpdateManyWithoutSenderInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   spaceId?: Prisma.StringFieldUpdateOperationsInput | string
   pageId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -761,14 +860,13 @@ export type WikiAnnouncementNotifyCreateManySpaceInput = {
   status: $Enums.WikiAnnouncementNotifyStatus
   sentAt?: Date | string | null
   skipReason?: $Enums.WikiAnnouncementNotifySkipReason | null
-  createdById?: string | null
+  senderId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
 
 export type WikiAnnouncementNotifyUpdateWithoutSpaceInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  pageId?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.EnumWikiAnnouncementNotifyKindFieldUpdateOperationsInput | $Enums.WikiAnnouncementNotifyKind
   message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -777,7 +875,8 @@ export type WikiAnnouncementNotifyUpdateWithoutSpaceInput = {
   skipReason?: Prisma.NullableEnumWikiAnnouncementNotifySkipReasonFieldUpdateOperationsInput | $Enums.WikiAnnouncementNotifySkipReason | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  createdBy?: Prisma.UserUpdateOneWithoutWikiAnnouncementNotifiesNestedInput
+  page?: Prisma.WikiPageUpdateOneRequiredWithoutNotifiesNestedInput
+  sender?: Prisma.UserUpdateOneWithoutWikiAnnouncementNotifiesNestedInput
 }
 
 export type WikiAnnouncementNotifyUncheckedUpdateWithoutSpaceInput = {
@@ -789,7 +888,7 @@ export type WikiAnnouncementNotifyUncheckedUpdateWithoutSpaceInput = {
   status?: Prisma.EnumWikiAnnouncementNotifyStatusFieldUpdateOperationsInput | $Enums.WikiAnnouncementNotifyStatus
   sentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   skipReason?: Prisma.NullableEnumWikiAnnouncementNotifySkipReasonFieldUpdateOperationsInput | $Enums.WikiAnnouncementNotifySkipReason | null
-  createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  senderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -803,7 +902,63 @@ export type WikiAnnouncementNotifyUncheckedUpdateManyWithoutSpaceInput = {
   status?: Prisma.EnumWikiAnnouncementNotifyStatusFieldUpdateOperationsInput | $Enums.WikiAnnouncementNotifyStatus
   sentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   skipReason?: Prisma.NullableEnumWikiAnnouncementNotifySkipReasonFieldUpdateOperationsInput | $Enums.WikiAnnouncementNotifySkipReason | null
-  createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  senderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type WikiAnnouncementNotifyCreateManyPageInput = {
+  id?: string
+  spaceId: string
+  kind: $Enums.WikiAnnouncementNotifyKind
+  message?: string | null
+  scheduledAt: Date | string
+  status: $Enums.WikiAnnouncementNotifyStatus
+  sentAt?: Date | string | null
+  skipReason?: $Enums.WikiAnnouncementNotifySkipReason | null
+  senderId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type WikiAnnouncementNotifyUpdateWithoutPageInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumWikiAnnouncementNotifyKindFieldUpdateOperationsInput | $Enums.WikiAnnouncementNotifyKind
+  message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  scheduledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  status?: Prisma.EnumWikiAnnouncementNotifyStatusFieldUpdateOperationsInput | $Enums.WikiAnnouncementNotifyStatus
+  sentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  skipReason?: Prisma.NullableEnumWikiAnnouncementNotifySkipReasonFieldUpdateOperationsInput | $Enums.WikiAnnouncementNotifySkipReason | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  space?: Prisma.WikiSpaceUpdateOneRequiredWithoutNotifiesNestedInput
+  sender?: Prisma.UserUpdateOneWithoutWikiAnnouncementNotifiesNestedInput
+}
+
+export type WikiAnnouncementNotifyUncheckedUpdateWithoutPageInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  spaceId?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumWikiAnnouncementNotifyKindFieldUpdateOperationsInput | $Enums.WikiAnnouncementNotifyKind
+  message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  scheduledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  status?: Prisma.EnumWikiAnnouncementNotifyStatusFieldUpdateOperationsInput | $Enums.WikiAnnouncementNotifyStatus
+  sentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  skipReason?: Prisma.NullableEnumWikiAnnouncementNotifySkipReasonFieldUpdateOperationsInput | $Enums.WikiAnnouncementNotifySkipReason | null
+  senderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type WikiAnnouncementNotifyUncheckedUpdateManyWithoutPageInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  spaceId?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.EnumWikiAnnouncementNotifyKindFieldUpdateOperationsInput | $Enums.WikiAnnouncementNotifyKind
+  message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  scheduledAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  status?: Prisma.EnumWikiAnnouncementNotifyStatusFieldUpdateOperationsInput | $Enums.WikiAnnouncementNotifyStatus
+  sentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  skipReason?: Prisma.NullableEnumWikiAnnouncementNotifySkipReasonFieldUpdateOperationsInput | $Enums.WikiAnnouncementNotifySkipReason | null
+  senderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -820,11 +975,12 @@ export type WikiAnnouncementNotifySelect<ExtArgs extends runtime.Types.Extension
   status?: boolean
   sentAt?: boolean
   skipReason?: boolean
-  createdById?: boolean
+  senderId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   space?: boolean | Prisma.WikiSpaceDefaultArgs<ExtArgs>
-  createdBy?: boolean | Prisma.WikiAnnouncementNotify$createdByArgs<ExtArgs>
+  page?: boolean | Prisma.WikiPageDefaultArgs<ExtArgs>
+  sender?: boolean | Prisma.WikiAnnouncementNotify$senderArgs<ExtArgs>
 }, ExtArgs["result"]["wikiAnnouncementNotify"]>
 
 export type WikiAnnouncementNotifySelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -837,11 +993,12 @@ export type WikiAnnouncementNotifySelectCreateManyAndReturn<ExtArgs extends runt
   status?: boolean
   sentAt?: boolean
   skipReason?: boolean
-  createdById?: boolean
+  senderId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   space?: boolean | Prisma.WikiSpaceDefaultArgs<ExtArgs>
-  createdBy?: boolean | Prisma.WikiAnnouncementNotify$createdByArgs<ExtArgs>
+  page?: boolean | Prisma.WikiPageDefaultArgs<ExtArgs>
+  sender?: boolean | Prisma.WikiAnnouncementNotify$senderArgs<ExtArgs>
 }, ExtArgs["result"]["wikiAnnouncementNotify"]>
 
 export type WikiAnnouncementNotifySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -854,11 +1011,12 @@ export type WikiAnnouncementNotifySelectUpdateManyAndReturn<ExtArgs extends runt
   status?: boolean
   sentAt?: boolean
   skipReason?: boolean
-  createdById?: boolean
+  senderId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   space?: boolean | Prisma.WikiSpaceDefaultArgs<ExtArgs>
-  createdBy?: boolean | Prisma.WikiAnnouncementNotify$createdByArgs<ExtArgs>
+  page?: boolean | Prisma.WikiPageDefaultArgs<ExtArgs>
+  sender?: boolean | Prisma.WikiAnnouncementNotify$senderArgs<ExtArgs>
 }, ExtArgs["result"]["wikiAnnouncementNotify"]>
 
 export type WikiAnnouncementNotifySelectScalar = {
@@ -871,37 +1029,38 @@ export type WikiAnnouncementNotifySelectScalar = {
   status?: boolean
   sentAt?: boolean
   skipReason?: boolean
-  createdById?: boolean
+  senderId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type WikiAnnouncementNotifyOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "spaceId" | "pageId" | "kind" | "message" | "scheduledAt" | "status" | "sentAt" | "skipReason" | "createdById" | "createdAt" | "updatedAt", ExtArgs["result"]["wikiAnnouncementNotify"]>
+export type WikiAnnouncementNotifyOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "spaceId" | "pageId" | "kind" | "message" | "scheduledAt" | "status" | "sentAt" | "skipReason" | "senderId" | "createdAt" | "updatedAt", ExtArgs["result"]["wikiAnnouncementNotify"]>
 export type WikiAnnouncementNotifyInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   space?: boolean | Prisma.WikiSpaceDefaultArgs<ExtArgs>
-  createdBy?: boolean | Prisma.WikiAnnouncementNotify$createdByArgs<ExtArgs>
+  page?: boolean | Prisma.WikiPageDefaultArgs<ExtArgs>
+  sender?: boolean | Prisma.WikiAnnouncementNotify$senderArgs<ExtArgs>
 }
 export type WikiAnnouncementNotifyIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   space?: boolean | Prisma.WikiSpaceDefaultArgs<ExtArgs>
-  createdBy?: boolean | Prisma.WikiAnnouncementNotify$createdByArgs<ExtArgs>
+  page?: boolean | Prisma.WikiPageDefaultArgs<ExtArgs>
+  sender?: boolean | Prisma.WikiAnnouncementNotify$senderArgs<ExtArgs>
 }
 export type WikiAnnouncementNotifyIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   space?: boolean | Prisma.WikiSpaceDefaultArgs<ExtArgs>
-  createdBy?: boolean | Prisma.WikiAnnouncementNotify$createdByArgs<ExtArgs>
+  page?: boolean | Prisma.WikiPageDefaultArgs<ExtArgs>
+  sender?: boolean | Prisma.WikiAnnouncementNotify$senderArgs<ExtArgs>
 }
 
 export type $WikiAnnouncementNotifyPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "WikiAnnouncementNotify"
   objects: {
     space: Prisma.$WikiSpacePayload<ExtArgs>
-    createdBy: Prisma.$UserPayload<ExtArgs> | null
+    page: Prisma.$WikiPagePayload<ExtArgs>
+    sender: Prisma.$UserPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     spaceId: string
-    /**
-     * 対象の WikiPage.id
-     */
     pageId: string
     kind: $Enums.WikiAnnouncementNotifyKind
     /**
@@ -914,17 +1073,17 @@ export type $WikiAnnouncementNotifyPayload<ExtArgs extends runtime.Types.Extensi
     scheduledAt: Date
     status: $Enums.WikiAnnouncementNotifyStatus
     /**
-     * 送った日時
+     * 送った日時。status=sent のときだけ値を持つ
      */
     sentAt: Date | null
     /**
-     * status=skipped のときの理由
+     * 見送った理由。status=skipped のときだけ値を持つ
      */
     skipReason: $Enums.WikiAnnouncementNotifySkipReason | null
     /**
      * 送信者。予約を変更した人に置き換わる。送る時点の編集権限はこの人で確かめる
      */
-    createdById: string | null
+    senderId: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["wikiAnnouncementNotify"]>
@@ -1322,7 +1481,8 @@ readonly fields: WikiAnnouncementNotifyFieldRefs;
 export interface Prisma__WikiAnnouncementNotifyClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   space<T extends Prisma.WikiSpaceDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WikiSpaceDefaultArgs<ExtArgs>>): Prisma.Prisma__WikiSpaceClient<runtime.Types.Result.GetResult<Prisma.$WikiSpacePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-  createdBy<T extends Prisma.WikiAnnouncementNotify$createdByArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WikiAnnouncementNotify$createdByArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  page<T extends Prisma.WikiPageDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WikiPageDefaultArgs<ExtArgs>>): Prisma.Prisma__WikiPageClient<runtime.Types.Result.GetResult<Prisma.$WikiPagePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  sender<T extends Prisma.WikiAnnouncementNotify$senderArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WikiAnnouncementNotify$senderArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1361,7 +1521,7 @@ export interface WikiAnnouncementNotifyFieldRefs {
   readonly status: Prisma.FieldRef<"WikiAnnouncementNotify", 'WikiAnnouncementNotifyStatus'>
   readonly sentAt: Prisma.FieldRef<"WikiAnnouncementNotify", 'DateTime'>
   readonly skipReason: Prisma.FieldRef<"WikiAnnouncementNotify", 'WikiAnnouncementNotifySkipReason'>
-  readonly createdById: Prisma.FieldRef<"WikiAnnouncementNotify", 'String'>
+  readonly senderId: Prisma.FieldRef<"WikiAnnouncementNotify", 'String'>
   readonly createdAt: Prisma.FieldRef<"WikiAnnouncementNotify", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"WikiAnnouncementNotify", 'DateTime'>
 }
@@ -1765,9 +1925,9 @@ export type WikiAnnouncementNotifyDeleteManyArgs<ExtArgs extends runtime.Types.E
 }
 
 /**
- * WikiAnnouncementNotify.createdBy
+ * WikiAnnouncementNotify.sender
  */
-export type WikiAnnouncementNotify$createdByArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type WikiAnnouncementNotify$senderArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
    * Select specific fields to fetch from the User
    */

@@ -57,21 +57,19 @@ const snapshot: WikiPageSnapshot = {
   tags: [{ id: 't1', name: '設計' }],
 }
 
-/** snapshot を版の行に書いたときの列(タグは同じ並びの ID と名前) */
+/** snapshot を版の行に書いたときの列(タグは ID と名前の JSON) */
 const snapshotColumns = {
   parentId: null,
   order: 0,
   title: 'タイトル',
   content: '本文',
   type: 'page',
-  tagIds: ['t1'],
-  tagNames: ['設計'],
+  tags: [{ id: 't1', name: '設計' }],
 }
 
 const revision = (override: Partial<WriteWikiPageRevision> = {}): WriteWikiPageRevision => ({
   spaceId: 's1',
   pageId: 'p1',
-  pageNumber: 1,
   action: 'updated',
   snapshot,
   actorId: 'u1',
@@ -251,14 +249,12 @@ describe('writeWikiPageRevision: 件数の上限', () => {
 const summaryRow = (id: string, daysAgo: number, override: Record<string, unknown> = {}) => ({
   id,
   pageId: 'p1',
-  pageNumber: 1,
   number: 1,
   action: 'updated',
   parentId: null,
   order: 0,
   title: 'タイトル',
-  tagIds: [],
-  tagNames: [],
+  tags: [],
   via: 'web',
   restoredFromId: null,
   createdAt: new Date(NOW.getTime() - daysAgo * 86_400_000),
@@ -287,8 +283,10 @@ describe('listWikiPageRevisions', () => {
     vi.mocked(prisma.wikiPageRevision.findMany).mockResolvedValue([
       summaryRow('r2', 1, {
         ticket: { id: 't5', number: 5, board: { key: 'DEV' } },
-        tagIds: ['t1', 't9'],
-        tagNames: ['設計', '削除済み'],
+        tags: [
+          { id: 't1', name: '設計' },
+          { id: 't9', name: '削除済み' },
+        ],
       }),
       summaryRow('r1', 8, { actor: null }),
     ] as never)
@@ -351,7 +349,10 @@ describe('listWikiPageRevisions', () => {
     vi.mocked(prisma.wikiPageRevision.findMany).mockResolvedValue([] as never)
     await listWikiPageRevisions({ id: 'u1' }, 'p1', NOW)
     expect(prisma.$transaction).toHaveBeenCalledWith(expect.any(Array), { isolationLevel: 'RepeatableRead' })
-    expect(prisma.wikiPage.findUnique).toHaveBeenLastCalledWith({ where: { id: 'p1' }, select: { updatedAt: true } })
+    expect(prisma.wikiPage.findUnique).toHaveBeenLastCalledWith({
+      where: { id: 'p1', deletedAt: null },
+      select: { updatedAt: true },
+    })
   })
 
   it('保持期間は WIKI_REVISION_RETENTION_DAYS に従う', async () => {
@@ -361,15 +362,21 @@ describe('listWikiPageRevisions', () => {
     expect((await listWikiPageRevisions({ id: 'u1' }, 'p1', NOW)).revisions[0].beforeRetention).toBe(false)
   })
 
-  it('削除済みのページは版からスペースを引き、ページの更新日時は null', async () => {
-    vi.mocked(prisma.wikiPage.findUnique).mockResolvedValue(null)
-    vi.mocked(prisma.wikiPageRevision.findFirst).mockResolvedValue({ spaceId: 's2' } as never)
+  it('削除済みのページも版を引け、ページの更新日時は null', async () => {
+    vi.mocked(prisma.wikiPage.findUnique)
+      .mockResolvedValueOnce({ spaceId: 's2' } as never)
+      .mockResolvedValueOnce(null)
     vi.mocked(prisma.wikiPageRevision.findMany).mockResolvedValue([] as never)
     expect((await listWikiPageRevisions({ id: 'u1' }, 'p1', NOW)).pageUpdatedAt).toBeNull()
     expect(assertWikiSpaceAccess).toHaveBeenCalledWith({ id: 'u1' }, 's2', 'view')
+    // スペースは削除済みを含めて引く
+    expect(vi.mocked(prisma.wikiPage.findUnique).mock.calls[0][0]).toEqual({
+      where: { id: 'p1' },
+      select: { spaceId: true },
+    })
   })
 
-  it('ページも版も無ければエラー', async () => {
+  it('ページが無ければエラー', async () => {
     vi.mocked(prisma.wikiPage.findUnique).mockResolvedValue(null)
     await expect(listWikiPageRevisions({ id: 'u1' }, 'p1', NOW)).rejects.toMatchObject({
       errorType: 'INVALID_OPERATION',
@@ -396,7 +403,14 @@ describe('getWikiPageRevisionSnapshot', () => {
   it('閲覧権限を確かめて、版の内容と本文を返す。タグはいまスペースに残っているものを ID で引き、改名後の名前で返す', async () => {
     vi.mocked(prisma.wikiPageRevision.findUnique).mockResolvedValue({
       // t1 は版の後で「旧設計」から「設計」に改名、t9 は削除済み
-      ...summaryRow('r2', 1, { number: 3, type: 'design_doc', tagIds: ['t1', 't9'], tagNames: ['旧設計', '削除済み'] }),
+      ...summaryRow('r2', 1, {
+        number: 3,
+        type: 'design_doc',
+        tags: [
+          { id: 't1', name: '旧設計' },
+          { id: 't9', name: '削除済み' },
+        ],
+      }),
       spaceId: 's1',
       content: '本文',
     } as never)
@@ -531,73 +545,89 @@ describe('deleteWikiPageRevision', () => {
 })
 
 describe('listDeletedWikiPages', () => {
-  it('ページごとに最後の削除の版を引き、いま存在するページを除く', async () => {
-    vi.mocked(prisma.wikiPageRevision.findMany).mockResolvedValue([
-      summaryRow('r-gone', 1, { pageId: 'gone', pageNumber: 3, action: 'deleted' }),
-      summaryRow('r-back', 2, { pageId: 'back', pageNumber: 4, action: 'deleted' }),
-    ] as never)
-    vi.mocked(prisma.wikiPage.findMany).mockResolvedValue([{ id: 'back' }] as never)
+  /** 削除済みのページの行。`daysAgo` は削除した日時 */
+  const deletedRow = (id: string, number: number, daysAgo: number, override: Record<string, unknown> = {}) => ({
+    id,
+    parentId: null,
+    number,
+    order: 0,
+    title: id,
+    type: 'page',
+    deletedAt: new Date(NOW.getTime() - daysAgo * 86_400_000),
+    deletedBy: { name: '削除した人', isAgent: false },
+    ...override,
+  })
+  /** 1回目に削除済みのページ、2回目に生きているページを返す */
+  const mockPages = (deleted: object[], alive: object[]) =>
+    vi
+      .mocked(prisma.wikiPage.findMany)
+      .mockResolvedValueOnce(deleted as never)
+      .mockResolvedValueOnce(alive as never)
 
-    const list = await listDeletedWikiPages({ id: 'u1' }, 's1', NOW)
+  it('削除済みのページを引き、削除した人・日時と、削除の版の経路を返す', async () => {
+    mockPages([deletedRow('gone', 3, 1)], [])
+    vi.mocked(prisma.wikiPageRevision.findMany).mockResolvedValue([{ pageId: 'gone', via: 'mcp' }] as never)
 
-    expect(vi.mocked(prisma.wikiPage.findMany).mock.calls[0][0]).toMatchObject({ where: { spaceId: 's1' } })
+    const list = await listDeletedWikiPages({ id: 'u1' }, 's1')
+
     expect(assertWikiSpaceAccess).toHaveBeenCalledWith({ id: 'u1' }, 's1', 'view')
+    const [deletedArgs, aliveArgs] = vi.mocked(prisma.wikiPage.findMany).mock.calls.map(([args]) => args)
+    expect(deletedArgs).toMatchObject({ where: { spaceId: 's1', deletedAt: { not: null } } })
+    expect(aliveArgs).toMatchObject({ where: { spaceId: 's1', deletedAt: null } })
     expect(vi.mocked(prisma.wikiPageRevision.findMany).mock.calls[0][0]).toMatchObject({
-      where: { spaceId: 's1', action: 'deleted' },
+      where: { pageId: { in: ['gone'] } },
       distinct: ['pageId'],
     })
-    expect(list.map(({ id, ref }) => [id, ref])).toEqual([['r-gone', 'DOCS/3']])
-  })
-
-  it('閲覧者が見られないチケットの表示ID は返さない。いま存在するページのチケットは判定しない', async () => {
-    vi.mocked(prisma.wikiPageRevision.findMany).mockResolvedValue([
-      summaryRow('r-open', 1, { pageId: 'a', pageNumber: 1, action: 'deleted', ...ticketOf('t-open', 1) }),
-      summaryRow('r-hidden', 2, { pageId: 'b', pageNumber: 2, action: 'deleted', ...ticketOf('t-hidden', 2) }),
-      summaryRow('r-back', 3, { pageId: 'back', pageNumber: 3, action: 'deleted', ...ticketOf('t-back', 3) }),
-    ] as never)
-    vi.mocked(prisma.wikiPage.findMany).mockResolvedValue([{ id: 'back' }] as never)
-    viewableTickets('t-open', 't-back')
-
-    const list = await listDeletedWikiPages({ id: 'u1' }, 's1', NOW)
-
-    expect(list.map(({ id, ticketDisplayId }) => [id, ticketDisplayId])).toEqual([
-      ['r-open', 'PRIV-1'],
-      ['r-hidden', null],
+    expect(list).toEqual([
+      {
+        id: 'gone',
+        number: 3,
+        ref: 'DOCS/3',
+        title: 'gone',
+        type: 'page',
+        deletedAt: new Date(NOW.getTime() - 86_400_000),
+        deletedByName: '削除した人',
+        deletedByIsAgent: false,
+        via: 'mcp',
+        depth: 0,
+        parent: { state: 'root' },
+      },
     ])
-    expect(askedTicketIds()).toEqual([['t-open', 't-hidden']])
   })
 
   it('元の親を子より先に並べ、段数と元の親の状態を付ける', async () => {
-    // 削除した日時の新しい順: 子 c1 / 親 p / 孫 g / 親の残る x / 親の消えた m / 直下の r / 子 c2
-    vi.mocked(prisma.wikiPageRevision.findMany).mockResolvedValue([
-      summaryRow('r-c1', 1, { pageId: 'c1', pageNumber: 2, action: 'deleted', parentId: 'p', order: 1, title: '子1' }),
-      summaryRow('r-p', 1, { pageId: 'p', pageNumber: 1, action: 'deleted', parentId: 'top', title: '親' }),
-      summaryRow('r-g', 1, { pageId: 'g', pageNumber: 4, action: 'deleted', parentId: 'c1', title: '孫' }),
-      summaryRow('r-x', 2, { pageId: 'x', pageNumber: 5, action: 'deleted', parentId: 'mid', title: 'X' }),
-      summaryRow('r-m', 3, { pageId: 'm', pageNumber: 6, action: 'deleted', parentId: 'gone', title: 'M' }),
-      summaryRow('r-r', 4, { pageId: 'r', pageNumber: 7, action: 'deleted', parentId: null, title: 'R' }),
-      summaryRow('r-c2', 5, { pageId: 'c2', pageNumber: 3, action: 'deleted', parentId: 'p', order: 0, title: '子2' }),
-    ] as never)
-    vi.mocked(prisma.wikiPage.findMany).mockResolvedValue([
-      { id: 'top', parentId: null, title: 'トップ' },
-      { id: 'mid', parentId: 'top', title: '中間' },
-    ] as never)
+    // 削除した日時の新しい順: 子 c1 / 親 p / 孫 g / 親の残る x / 直下の r / 子 c2
+    mockPages(
+      [
+        deletedRow('c1', 2, 1, { parentId: 'p', order: 1, title: '子1' }),
+        deletedRow('p', 1, 1, { parentId: 'top', title: '親' }),
+        deletedRow('g', 4, 1, { parentId: 'c1', title: '孫' }),
+        deletedRow('x', 5, 2, { parentId: 'mid', title: 'X' }),
+        deletedRow('r', 7, 4, { title: 'R' }),
+        deletedRow('c2', 3, 5, { parentId: 'p', order: 0, title: '子2' }),
+      ],
+      [
+        { id: 'top', parentId: null, title: 'トップ' },
+        { id: 'mid', parentId: 'top', title: '中間' },
+      ],
+    )
 
-    const list = await listDeletedWikiPages({ id: 'u1' }, 's1', NOW)
+    const list = await listDeletedWikiPages({ id: 'u1' }, 's1')
 
     expect(list.map(({ id, depth, parent }) => [id, depth, parent])).toEqual([
-      ['r-p', 0, { state: 'alive', path: ['トップ'] }],
-      ['r-c2', 1, { state: 'deleted', pageId: 'p', title: '親' }],
-      ['r-c1', 1, { state: 'deleted', pageId: 'p', title: '親' }],
-      ['r-g', 2, { state: 'deleted', pageId: 'c1', title: '子1' }],
-      ['r-x', 0, { state: 'alive', path: ['トップ', '中間'] }],
-      ['r-m', 0, { state: 'missing' }],
-      ['r-r', 0, { state: 'root' }],
+      ['p', 0, { state: 'alive', path: ['トップ'] }],
+      ['c2', 1, { state: 'deleted', pageId: 'p', title: '親' }],
+      ['c1', 1, { state: 'deleted', pageId: 'p', title: '親' }],
+      ['g', 2, { state: 'deleted', pageId: 'c1', title: '子1' }],
+      ['x', 0, { state: 'alive', path: ['トップ', '中間'] }],
+      ['r', 0, { state: 'root' }],
     ])
   })
 
-  it('削除の版が無ければページを引かない', async () => {
-    expect(await listDeletedWikiPages({ id: 'u1' }, 's1', NOW)).toEqual([])
-    expect(prisma.wikiPage.findMany).not.toHaveBeenCalled()
+  it('削除済みのページが無ければ、生きているページと版を引かない', async () => {
+    vi.mocked(prisma.wikiPage.findMany).mockResolvedValue([])
+    expect(await listDeletedWikiPages({ id: 'u1' }, 's1')).toEqual([])
+    expect(prisma.wikiPage.findMany).toHaveBeenCalledTimes(1)
+    expect(prisma.wikiPageRevision.findMany).not.toHaveBeenCalled()
   })
 })

@@ -10,9 +10,8 @@ import { errInvalidOperation } from '@/lib/error'
 import { registerImageTools } from '@/lib/mcp/mcp-image'
 import { resolveTicketId } from '@/lib/mcp/mcp-ticket'
 import { resolveWikiPageRef } from '@/lib/mcp/mcp-wiki'
-import { prisma } from '@/lib/prisma'
 import { saveContentImage } from '@/lib/storage/attachment'
-import { canViewAttachment } from '@/lib/storage/attachment-access'
+import { findViewableAttachment } from '@/lib/storage/attachment-access'
 import { resizeWebp } from '@/lib/storage/image'
 import { getObject } from '@/lib/storage/storage'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
@@ -20,9 +19,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { connectMcpServer, jsonOf } from '../../helpers/mcp-client'
 import { oauthAuth } from '../../helpers/resource-auth'
 
-vi.mock('@/lib/prisma', async () =>
-  (await import('../../helpers/prisma')).mockPrisma({ attachment: ['findUnique'] }, { stubOthers: true }),
-)
+vi.mock('@/lib/prisma', async () => (await import('../../helpers/prisma')).mockPrisma({}, { stubOthers: true }))
 
 vi.mock('@/lib/board/board-access', () => ({
   assertBoardAccess: vi.fn(),
@@ -35,7 +32,7 @@ vi.mock('@/lib/mcp/mcp-wiki', async (importOriginal) => ({
   resolveWikiPageRef: vi.fn(),
 }))
 vi.mock('@/lib/storage/attachment', () => ({ saveContentImage: vi.fn() }))
-vi.mock('@/lib/storage/attachment-access', () => ({ canViewAttachment: vi.fn() }))
+vi.mock('@/lib/storage/attachment-access', () => ({ findViewableAttachment: vi.fn() }))
 vi.mock('@/lib/storage/storage', () => ({ getObject: vi.fn() }))
 vi.mock('@/lib/storage/image', () => ({ resizeWebp: vi.fn(), WEBP_MIME: 'image/webp' }))
 
@@ -52,7 +49,8 @@ const connectClient = () => {
   return connectMcpServer(server)
 }
 
-const findAttachment = vi.mocked(prisma.attachment.findUnique)
+/** 配信してよい添付を引く(可否の判定は attachment-access のテストで確かめる) */
+const findAttachment = vi.mocked(findViewableAttachment)
 
 const pngBase64 = Buffer.from('dummy-png-bytes').toString('base64')
 
@@ -61,7 +59,6 @@ beforeEach(() => {
   vi.mocked(assertBoardAccess).mockResolvedValue({ boardId: BOARD_ID, archived: false } as never)
   vi.mocked(assertTicketAccess).mockResolvedValue({ boardId: TICKET_BOARD_ID } as never)
   vi.mocked(resolveTicketId).mockResolvedValue('ticket-1')
-  vi.mocked(canViewAttachment).mockResolvedValue(true)
   vi.mocked(saveContentImage).mockResolvedValue({ url: `/api/upload/${KEY}`, key: KEY, size: 100 })
   vi.mocked(resizeWebp).mockResolvedValue(Buffer.from('resized'))
   findAttachment.mockResolvedValue({
@@ -244,8 +241,8 @@ describe('get_image', () => {
     const byUrl = await client.callTool({ name: 'get_image', arguments: { image: `/api/upload/${KEY}` } })
     const byKey = await client.callTool({ name: 'get_image', arguments: { image: KEY } })
 
-    expect(findAttachment).toHaveBeenNthCalledWith(1, expect.objectContaining({ where: { key: KEY } }))
-    expect(findAttachment).toHaveBeenNthCalledWith(2, expect.objectContaining({ where: { key: KEY } }))
+    expect(findAttachment).toHaveBeenNthCalledWith(1, expect.anything(), KEY)
+    expect(findAttachment).toHaveBeenNthCalledWith(2, expect.anything(), KEY)
     expect(byUrl.content).toEqual(byKey.content)
   })
 
@@ -297,7 +294,7 @@ describe('get_image', () => {
 
   it('閲覧できない添付は未存在と同じエラーにする', async () => {
     const client = await connectClient()
-    vi.mocked(canViewAttachment).mockResolvedValue(false)
+    findAttachment.mockResolvedValue(null)
     const denied = await client.callTool({ name: 'get_image', arguments: { image: KEY } })
 
     findAttachment.mockResolvedValue(null)
@@ -307,24 +304,10 @@ describe('get_image', () => {
     expect(denied.content).toEqual(missing.content)
   })
 
-  it('閲覧の可否は配信APIと同じ判定(キーと添付先)に委ねる', async () => {
-    findAttachment.mockResolvedValue({
-      boardId: null,
-      wikiSpaceId: 'w1',
-      detachedAt: null,
-      originalName: 'icon.png',
-      size: 10,
-      mimeType: 'image/webp',
-    } as never)
-
+  it('閲覧の可否は配信APIと同じ判定(findViewableAttachment)に委ねる', async () => {
     const result = await (await connectClient()).callTool({ name: 'get_image', arguments: { image: KEY } })
 
-    expect(canViewAttachment).toHaveBeenCalledWith(expect.objectContaining({ id: expect.any(String) }), {
-      key: KEY,
-      boardId: null,
-      wikiSpaceId: 'w1',
-      detachedAt: null,
-    })
+    expect(findAttachment).toHaveBeenCalledWith(expect.objectContaining({ id: expect.any(String) }), KEY)
     expect(result.isError).toBeFalsy()
   })
 })

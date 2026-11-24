@@ -54,3 +54,22 @@ export const canViewAttachment = async (actor: Actor, attachment: AttachmentScop
   })
   return count > 0
 }
+
+/** 配信に使う添付の項目 */
+export type ViewableAttachment = { originalName: string; size: number; mimeType: string }
+
+/**
+ * キーで添付を引き、`actor` に配信してよければ返す(配信API と MCP の画像・ファイル取得で共通)。
+ * 存在しない・配信できないものは区別せず null を返し、キーの当たり判定を返さない
+ */
+export const findViewableAttachment = async (actor: Actor, key: string): Promise<ViewableAttachment | null> => {
+  const attachment = await prisma.attachment.findUnique({
+    where: { key },
+    select: { boardId: true, wikiSpaceId: true, detachedAt: true, originalName: true, size: true, mimeType: true },
+  })
+  if (!attachment) {
+    return null
+  }
+  const { boardId, wikiSpaceId, detachedAt, ...meta } = attachment
+  return (await canViewAttachment(actor, { key, boardId, wikiSpaceId, detachedAt })) ? meta : null
+}

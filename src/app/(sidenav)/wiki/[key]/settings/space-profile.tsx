@@ -6,7 +6,7 @@ import { InputCtrl } from '@/components/general/input'
 import { RadioCtrl } from '@/components/general/radio'
 import { CheckIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
-import { useWikiSpaceTypeOptions, useWikiVisibilityOptions } from '@/components/wiki-chip'
+import { useWikiVisibilityOptions, WikiSpaceTypeChip } from '@/components/wiki-chip'
 import { parseAction } from '@/lib/action/action-client'
 import { ClientError } from '@/lib/error'
 import { scUpdateWikiSpace, type UpdateWikiSpace } from '@/lib/schema/schema-wiki'
@@ -19,11 +19,10 @@ import { updateWikiSpace } from './server'
 
 type Space = WikiSpaceContextValue['space']
 
-/** 名前・説明・公開範囲・区分。キーは変えられないので表示だけにする */
+/** 名前・説明・公開範囲。キーと区分は作成後に変えられないので表示だけにする */
 export const WikiSpaceProfile: FC<{ space: Space; reload: () => Promise<void> }> = ({ space, reload }) => {
   const { t, fet } = useLocale()
   const visibilityOptions = useWikiVisibilityOptions()
-  const spaceTypeOptions = useWikiSpaceTypeOptions()
 
   const {
     control,
@@ -38,7 +37,6 @@ export const WikiSpaceProfile: FC<{ space: Space; reload: () => Promise<void> }>
       name: space.name,
       description: space.description ?? '',
       visibility: space.visibility,
-      type: space.type,
     },
   })
 
@@ -59,9 +57,13 @@ export const WikiSpaceProfile: FC<{ space: Space; reload: () => Promise<void> }>
       })}
     >
       <GridBox isSmart>
-        <div className='col-span-12'>
+        <div className='col-span-6'>
           <p className='text-muted text-xs'>{t('wiki_space_key')}</p>
           <p className='font-mono text-sm'>{space.key}</p>
+        </div>
+        <div className='col-span-6'>
+          <p className='text-muted text-xs'>{t('wiki_space_type')}</p>
+          <WikiSpaceTypeChip value={space.type} />
         </div>
         <div className='col-span-12'>
           <InputCtrl
@@ -81,22 +83,13 @@ export const WikiSpaceProfile: FC<{ space: Space; reload: () => Promise<void> }>
             errorMessage={fet(errors.description)}
           />
         </div>
-        <div className='col-span-6'>
+        <div className='col-span-12'>
           <RadioCtrl
             control={control}
             name='visibility'
             label={t('wiki_visibility')}
             help={t('msg_wiki_visibility')}
             options={Object.entries(visibilityOptions).map(([value, label]) => ({ value, label }))}
-          />
-        </div>
-        <div className='col-span-6'>
-          <RadioCtrl
-            control={control}
-            name='type'
-            label={t('wiki_space_type')}
-            help={t('msg_wiki_space_type')}
-            options={Object.entries(spaceTypeOptions).map(([value, label]) => ({ value, label }))}
           />
         </div>
         <div className='col-span-12 flex items-center gap-2'>

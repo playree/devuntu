@@ -50,7 +50,7 @@ describe('buildWikiSearchSql', () => {
       ),
     ).toHaveLength(2)
     expect(text.match(/lower\(t\."name"\) = lower\(\$\d+\)/g)).toHaveLength(2)
-    expect(text).toMatch(/WHERE p\."spaceId" IN \(\$\d+\) AND p\."id" IN .* AND p\."id" IN/)
+    expect(text).toMatch(/WHERE p\."spaceId" IN \(\$\d+\) AND p\."deletedAt" IS NULL AND p\."id" IN .* AND p\."id" IN/)
     expect(sql.values).toEqual(expect.arrayContaining(['%設計書%', '%api%', '設計書', 'api', 's1']))
   })
 

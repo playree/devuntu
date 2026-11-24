@@ -17,7 +17,7 @@ import {
   parseWikiSearchParams,
   resolveWikiRevisionTags,
   resolveWikiRole,
-  revisionTagColumns,
+  revisionTagsJson,
   revisionTagsOf,
   shouldMergeWikiRevision,
   strongestWikiRole,
@@ -199,10 +199,16 @@ describe('版のタグ', () => {
     { id: 't3', name: '消えた' },
   ]
 
-  it('DB の列(同じ並びの ID と名前)と行き来できる', () => {
-    const columns = revisionTagColumns(revisionTags)
-    expect(columns).toEqual({ tagIds: ['t2', 't9', 't1'], tagNames: ['B', '消えた', '旧A'] })
-    expect(revisionTagsOf(columns)).toEqual(revisionTags)
+  it('DB の列(JSON)と行き来でき、ID と名前だけを残す', () => {
+    const json = revisionTagsJson(revisionTags.map((tag) => ({ ...tag, color: 'red' })))
+    expect(json).toEqual(revisionTags)
+    expect(revisionTagsOf(JSON.parse(JSON.stringify(json)))).toEqual(revisionTags)
+  })
+
+  it('形の崩れた JSON はタグなしとして読む', () => {
+    expect(revisionTagsOf(null)).toEqual([])
+    expect(revisionTagsOf([{ id: 't1' }])).toEqual([])
+    expect(revisionTagsOf('t1')).toEqual([])
   })
 
   it('resolveWikiRevisionTags: ID でスペースのタグに引き当て、改名後の名前・スペースの表示順で返す。削除したタグは同じ名前があっても出さない', () => {

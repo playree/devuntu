@@ -65,7 +65,7 @@ describe('listWikiAnnouncements', () => {
     })
     expect(prisma.wikiPage.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { spaceId: SPACE_ID },
+        where: { spaceId: SPACE_ID, deletedAt: null },
         orderBy: [{ createdAt: 'desc' }, { number: 'desc' }],
         skip: 20,
         take: 10,
@@ -114,6 +114,7 @@ describe('listWikiAnnouncements', () => {
 
     const where = {
       spaceId: SPACE_ID,
+      deletedAt: null,
       createdAt: { gte: new Date('2026-10-31T15:00:00.000Z'), lt: new Date('2026-11-30T15:00:00.000Z') },
       tags: { some: { tagId: 't1' } },
     }

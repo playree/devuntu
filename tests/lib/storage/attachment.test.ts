@@ -37,7 +37,7 @@ describe('removeOwnedImageAttachment', () => {
     await removeOwnedImageAttachment(toUploadUrl(KEY), 'u1')
 
     expect(prisma.attachment.count).toHaveBeenCalledWith({
-      where: { key: KEY, createdById: 'u1', boardId: null, wikiSpaceId: null },
+      where: { key: KEY, createdById: 'u1', boardId: null, wikiSpaceId: null, detachedAt: null },
     })
     expect(deleteObject).toHaveBeenCalledWith(KEY)
   })

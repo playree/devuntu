@@ -48,12 +48,10 @@ import {
   WIKI_PAGE_INVALID_PARENT,
   WIKI_PAGE_TOO_DEEP,
   WIKI_PAGE_TYPE_NOT_ALLOWED,
-  WIKI_SPACE_CANNOT_BE_ANNOUNCEMENT,
-  WIKI_SPACE_HAS_NORMAL_PAGES,
   WIKI_SPACE_NO_OWNER,
   WIKI_TREE_CHANGED,
 } from '../wiki/wiki-rule'
-import { WIKI_SPACE_HAS_NORMAL_TEMPLATES, WIKI_TEMPLATE_TOO_LONG } from '../wiki/wiki-template-rule'
+import { WIKI_TEMPLATE_TOO_LONG } from '../wiki/wiki-template-rule'
 
 export type ActionErrorMessage = {
   item: LocaleItemBase
@@ -96,10 +94,7 @@ export const ACTION_ERROR_MESSAGES: Record<string, ActionErrorMessage> = {
   [WIKI_PAGE_INVALID_PARENT]: { item: 'msg_wiki_page_invalid_parent', level: 'warn' },
   [WIKI_SPACE_NO_OWNER]: { item: 'msg_wiki_space_no_owner', level: 'warn' },
   [WIKI_PAGE_TYPE_NOT_ALLOWED]: { item: 'msg_wiki_page_type_not_allowed', level: 'warn' },
-  [WIKI_SPACE_HAS_NORMAL_PAGES]: { item: 'msg_wiki_space_has_normal_pages', level: 'warn' },
   [WIKI_ANNOUNCEMENT_FLAT]: { item: 'msg_wiki_announcement_flat', level: 'warn' },
-  [WIKI_SPACE_CANNOT_BE_ANNOUNCEMENT]: { item: 'msg_wiki_space_cannot_be_announcement', level: 'warn' },
-  [WIKI_SPACE_HAS_NORMAL_TEMPLATES]: { item: 'msg_wiki_space_has_normal_templates', level: 'warn' },
   [WIKI_TEMPLATE_TOO_LONG]: { item: 'msg_wiki_template_too_long', level: 'warn' },
   [WIKI_ANNOUNCE_UNAVAILABLE]: { item: 'msg_wiki_announce_unavailable', level: 'warn' },
   [WIKI_ANNOUNCE_NOT_SCHEDULED]: { item: 'msg_wiki_announce_not_scheduled', level: 'warn' },

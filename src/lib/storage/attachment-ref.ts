@@ -114,7 +114,7 @@ export const collectReferencedUploadKeys = async (): Promise<Set<string>> => {
   // ボードノートは画面のエディタでは画像を貼れないが、MCP では upload_image の URL を本文に書ける
   await collectFromContent((args) => prisma.boardNote.findMany(args), keys)
   await collectFromContent((args) => prisma.boardNoteRevision.findMany(args), keys)
-  // Wiki の版は復元に使うので、保持期間の掃除で消えるまでは参照として扱う
+  // Wiki の版と削除済みのページは復元に使うので、保持期間の掃除で消えるまでは参照として扱う(削除済みも絞らない)
   await collectFromContent((args) => prisma.wikiPage.findMany(args), keys)
   await collectFromContent((args) => prisma.wikiPageRevision.findMany(args), keys)
   await collectFromContent((args) => prisma.wikiTemplate.findMany(args), keys)
@@ -175,6 +175,7 @@ export const findAttachmentReference = async (key: string): Promise<AttachmentRe
     return 'boardNote'
   }
   if (
+    // 削除済みのページも、復元すれば表示されるので参照に数える
     (await prisma.wikiPage.findFirst({ where: { content: { contains: url } }, select: { id: true } })) ||
     (await prisma.wikiPageRevision.findFirst({ where: { content: { contains: url } }, select: { id: true } }))
   ) {

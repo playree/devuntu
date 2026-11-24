@@ -410,7 +410,7 @@ export const WikiPageBody: FC<{
           </div>
         )}
       </div>
-      {!isEditing && <WikiPastRevisionNotice revisions={revisions} canWrite={canWrite} />}
+      {!isEditing && <WikiPastRevisionNotice revisions={revisions} />}
       {isDiff && pastView && (
         <WikiRevisionFieldChanges
           before={{ ...pastView, tags: pastView.revisionTags }}

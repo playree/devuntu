@@ -95,7 +95,7 @@ const isAttachmentInUse = async (
   if (revision) {
     return true
   }
-  // Wiki ページにはボードの添付の URL も貼れる。付け替えると Wiki の閲覧者から見えなくなる
+  // Wiki ページにはボードの添付の URL も貼れる。付け替えると Wiki の閲覧者から見えなくなる(削除済みのページも復元できるので数える)
   const wikiPage = await tx.wikiPage.findFirst({ where: { content: { contains: url } }, select: { id: true } })
   if (wikiPage) {
     return true
@@ -136,9 +136,9 @@ export const reassignContentAttachments = async (
     return
   }
 
-  // 保存先と同じボードの添付・他人の添付・Wiki スペースの添付は対象外。通常はここが0件で終わる
+  // 保存先と同じボードの添付・他人の添付・Wiki スペースの添付・削除待ちの添付は対象外。通常はここが0件で終わる
   const candidates = await tx.attachment.findMany({
-    where: { key: { in: keys }, createdById: actor.id, boardId: { not: boardId }, wikiSpaceId: null },
+    where: { key: { in: keys }, createdById: actor.id, boardId: { not: boardId }, wikiSpaceId: null, detachedAt: null },
     select: { key: true },
   })
   if (candidates.length === 0) {

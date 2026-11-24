@@ -262,7 +262,7 @@ everyone は全員に公開する文書として作るものなので、エー�
     更新では本文から種類を推定しない(画面で通常に戻したページを、AI の本文の書き換えで設計書へ戻さないため)
   - description で、markdown-design-doc スキルで書くよう促す。人の経路では、スキルが無ければ `get_skill_install_guide` で入れられることを利用者に提案させる
   - 設計書スペース(区分 `type` が `design_doc`)では、作成で `type` を省くと本文によらず `design_doc` にする。
-    `type: page` での作成・更新と、通常ページの版の復元は `WIKI_PAGE_TYPE_NOT_ALLOWED` のエラーにする
+    `type: page` での作成・更新は `WIKI_PAGE_TYPE_NOT_ALLOWED` のエラーにする(区分は作成後に変わらない)
   - アナウンス用スペース(区分 `type` が `announcement`)はページが平らで、並びは作成日時で決まる。
     作成での `parent`(null 以外)・`position` と、更新での `parent` / `position`(移動)は `WIKI_ANNOUNCEMENT_FLAT`、`type: design_doc` は `WIKI_PAGE_TYPE_NOT_ALLOWED` のエラーにする。
     内容と移動を一度に渡したときも、内容を書く前に弾く(内容だけが保存された状態を残さない)
@@ -273,7 +273,7 @@ everyone は全員に公開する文書として作るものなので、エー�
   版の一覧・削除済みページ・印刷用ページでは、閲覧者が見られないチケットの表示 ID は返さない(`null`)
 - `save_wiki_page` の `message` は版に残すコミットメッセージ(任意、200文字まで。前後の空白は除き、空なら付けない)。
   作成と、タイトル・本文・種類・タグの更新の版に残る(移動だけでは残らない)。付けた版は連続保存のまとめの対象にしない
-- 削除したページは、保持期間(`WIKI_REVISION_RETENTION_DAYS`)の間は画面(スペースのトップの「削除済みのページ」)から復元できる
+- 削除は論理削除で、削除したページは一覧・検索・取得から消える。保持期間(`WIKI_REVISION_RETENTION_DAYS`)の間は画面(スペースのトップの「削除済みのページ」)から復元でき、過ぎると自動メンテナンスで物理削除される
 - エージェントのトークンでは `recursive: true` を受け付けない(`WIKI_AGENT_RECURSIVE_DELETE_DENIED`。ページを引く前に弾く)。
   description の「配下を消す前に利用者に確かめる」は確かめる相手のいないエージェントには効かず、プロンプトインジェクションで配下ごと消されると
   利用者が気づいて画面から戻すまで失われたままになるため。ボードのナレッジをエージェントに変えさせないのと同じ考えで、description もエージェントには「報告で提案する」と出し分ける(子ありで `recursive` なしのときの `WIKI_PAGE_HAS_CHILDREN` の文言も同じ)。

@@ -28,7 +28,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/prisma', async () =>
   (await import('../../helpers/prisma')).mockPrisma({
-    wikiPage: ['findUnique', 'findUniqueOrThrow', 'findFirst', 'findMany', 'create', 'update', 'delete'],
+    wikiPage: ['findUnique', 'findUniqueOrThrow', 'findFirst', 'findMany', 'create', 'update'],
     wikiPageRevision: ['findFirst'],
   }),
 )
@@ -54,7 +54,6 @@ const WEB: WikiWriter = { via: 'web' }
 const MCP: WikiWriter = { via: 'mcp' }
 const SPACE_ID = 's1'
 const UPDATED_AT = new Date('2026-11-01T00:00:00.000Z')
-const CREATED_AT = new Date('2026-10-01T00:00:00.000Z')
 
 type Row = { id: string; parentId: string | null; order: number }
 
@@ -88,8 +87,6 @@ const pageRow = (id: string, override: Record<string, unknown> = {}) => {
     spaceId: SPACE_ID,
     number: 10,
     updatedAt: UPDATED_AT,
-    createdAt: CREATED_AT,
-    createdById: 'creator',
     ...override,
   }
 }
@@ -159,7 +156,6 @@ describe('createWikiPage', () => {
     expect(writeWikiPageRevision).toHaveBeenCalledWith(expect.anything(), {
       spaceId: SPACE_ID,
       pageId: 'new',
-      pageNumber: 11,
       action: 'created',
       snapshot: { parentId: 'a', order: 2, title: '新規', content: '', type: 'page', tags: [] },
       actorId: actor.id,
@@ -653,11 +649,11 @@ describe('deleteWikiPage', () => {
       errorType: WIKI_PAGE_HAS_CHILDREN,
       message: expect.stringContaining('3 descendant'),
     })
-    expect(prisma.wikiPage.delete).not.toHaveBeenCalled()
+    expect(prisma.$executeRaw).not.toHaveBeenCalled()
     expect(writeWikiPageRevision).not.toHaveBeenCalled()
   })
 
-  it('recursive なら配下ごと消し、消すページごとに deleted の版を残す', async () => {
+  it('recursive なら配下ごと、同じ削除日時と削除者を立て(行は残す)、消すページごとに deleted の版を残す', async () => {
     const result = await deleteWikiPage(actor, MCP, 'a', { recursive: true, ticketId: 't1' })
 
     expect(result).toEqual({ deleted: 4 })
@@ -666,9 +662,14 @@ describe('deleteWikiPage', () => {
     expect(
       revisions.every(({ action, via, ticketId }) => action === 'deleted' && via === 'mcp' && ticketId === 't1'),
     ).toBe(true)
-    // 子孫は parentId の Cascade で消えるので、消すのは指定したページだけ
-    expect(prisma.wikiPage.delete).toHaveBeenCalledTimes(1)
-    expect(vi.mocked(prisma.wikiPage.delete).mock.calls[0][0]).toMatchObject({ where: { id: 'a' } })
+    const softDelete = vi
+      .mocked(prisma.$executeRaw)
+      .mock.calls.find(([strings]) => (strings as TemplateStringsArray).join('').includes('"deletedAt" ='))
+    expect(softDelete, '1文でまとめて立てる').toBeDefined()
+    const [, deletedAt, deletedById, ids] = softDelete!
+    expect(deletedAt).toBeInstanceOf(Date)
+    expect(deletedById).toBe(actor.id)
+    expect([...(ids as { values: string[] }).values].sort()).toEqual(['a', 'b', 'c', 'd'])
   })
 
   it('消すページの予約中の Slack 通知を、同じトランザクションで見送りにする', async () => {
@@ -683,13 +684,14 @@ describe('deleteWikiPage', () => {
     expect([...pageIds].sort()).toEqual(['a', 'b', 'c', 'd'])
   })
 
-  it('deleted の版に、ページの作成日時と作成者を残す(復元で元の作成日時に戻すため)', async () => {
+  it('木は削除済みのページを除いて読む', async () => {
     await deleteWikiPage(actor, WEB, 'e')
-    expect(vi.mocked(writeWikiPageRevision).mock.calls[0][1]).toMatchObject({
-      action: 'deleted',
-      pageCreatedAt: CREATED_AT,
-      pageCreatedById: 'creator',
-    })
+    expect(vi.mocked(prisma.wikiPage.findMany).mock.calls[0][0]?.where).toEqual({ spaceId: SPACE_ID, deletedAt: null })
+  })
+
+  it('本文は変えないので、ページの更新日時(@updatedAt)を進める update は使わない', async () => {
+    await deleteWikiPage(actor, WEB, 'e')
+    expect(prisma.wikiPage.update).not.toHaveBeenCalled()
   })
 
   it('消すページの行をロックしてから内容を読む(並行する更新の後の内容を版に残す)', async () => {
@@ -718,13 +720,13 @@ describe('deleteWikiPage', () => {
       expect(await errorTypeOf(deleteWikiPage(actor, WEB, 'a', { recursive: true, expectedDescendantIds }))).toBe(
         WIKI_TREE_CHANGED,
       )
-      expect(prisma.wikiPage.delete).not.toHaveBeenCalled()
+      expect(prisma.$executeRaw).not.toHaveBeenCalled()
       expect(writeWikiPageRevision).not.toHaveBeenCalled()
     })
 
     it('配下は無いと確認したのに子がいれば、WIKI_PAGE_HAS_CHILDREN ではなく WIKI_TREE_CHANGED', async () => {
       expect(await errorTypeOf(deleteWikiPage(actor, WEB, 'b', { expectedDescendantIds: [] }))).toBe(WIKI_TREE_CHANGED)
-      expect(prisma.wikiPage.delete).not.toHaveBeenCalled()
+      expect(prisma.$executeRaw).not.toHaveBeenCalled()
     })
 
     it('一致すれば(並びは問わない)消す', async () => {

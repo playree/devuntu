@@ -1845,7 +1845,7 @@ export type $WikiSpacePayload<ExtArgs extends runtime.Types.Extensions.InternalA
      */
     visibility: $Enums.WikiVisibility
     /**
-     * 区分。design_doc にできるのは、削除されていない通常ページが無いときだけ
+     * 区分。作成時に決め、後から変えない
      */
     type: $Enums.WikiSpaceType
     /**

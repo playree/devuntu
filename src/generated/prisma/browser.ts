@@ -424,8 +424,8 @@ export type WikiTag = Prisma.WikiTagModel
 export type WikiPageTag = Prisma.WikiPageTagModel
 /**
  * Model WikiPageRevision
- * Wiki ページの版。変更後(deleted は削除直前)の全文を持つ。
- * 削除後も復元に使うため pageId に外部キーを張らない。
+ * Wiki ページの版。変更後(deleted は削除時点)の全文を持つ。
+ * ページの物理削除(削除済みの保持期間の後・スペースの削除)で一緒に消える。
  * 同じ人が続けて保存した分は WIKI_REVISION_MERGE_MINUTES 以内なら最新の版へまとめ(updatedAt を進める)、
  * 1ページあたり WIKI_REVISION_MAX_PER_PAGE を超えた分は書き込み時に消す
  */
@@ -439,6 +439,7 @@ export type WikiTemplate = Prisma.WikiTemplateModel
 /**
  * Model WikiAnnouncementNotify
  * アナウンスのページの Slack 通知。予約と履歴を兼ねる。
- * ページを削除しても履歴を残し、復元(同じ id で作り直す)で戻すため pageId に外部キーを張らない
+ * ページを削除(ゴミ箱へ移す)しても履歴は残り、物理削除で一緒に消える。
+ * status と sentAt / skipReason の整合は CHECK 制約(マイグレーション)で保つ
  */
 export type WikiAnnouncementNotify = Prisma.WikiAnnouncementNotifyModel

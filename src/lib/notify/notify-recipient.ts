@@ -92,16 +92,16 @@ const boardChannels = async (boardId: string | undefined, event: NotifyEvent): P
   boardId ? getBoardNotifyChannels(boardId, event) : []
 
 /**
- * Wiki スペースに設定された通知先チャンネル。
+ * Wiki スペースに設定された通知先チャンネル(アナウンス用スペースだけが持つ。区分は作成後に変わらない)。
  *
- * 配信時点の設定を引くので、投入後にチャンネルを外した・区分を変えたスペースには送らない。
+ * 配信時点の設定を引くので、投入後にチャンネルを外したスペースには送らない。
  */
 const wikiSpaceChannels = async (spaceId: string): Promise<string[]> => {
   const space = await prisma.wikiSpace.findUnique({
     where: { id: spaceId },
-    select: { type: true, announceSlackChannelId: true },
+    select: { announceSlackChannelId: true },
   })
-  return space?.type === 'announcement' && space.announceSlackChannelId ? [space.announceSlackChannelId] : []
+  return space?.announceSlackChannelId ? [space.announceSlackChannelId] : []
 }
 
 type Resolver<E extends NotifyEvent> = (

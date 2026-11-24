@@ -8,7 +8,7 @@
 import { assertBoardAccess } from '@/lib/board/board-access'
 import { decodeText, MAX_INLINE_TEXT_SIZE, registerFileTools } from '@/lib/mcp/mcp-file'
 import { prisma } from '@/lib/prisma'
-import { canViewAttachment } from '@/lib/storage/attachment-access'
+import { findViewableAttachment } from '@/lib/storage/attachment-access'
 import { getObject } from '@/lib/storage/storage'
 import { verifyDownloadToken, verifyUploadToken } from '@/lib/storage/upload-token'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
@@ -31,7 +31,7 @@ vi.mock('@/lib/board/board-access', () => ({
 
 vi.mock('@/lib/mcp/mcp-ticket', () => ({ resolveTicketId: vi.fn() }))
 vi.mock('@/lib/storage/attachment', () => ({ saveContentImage: vi.fn() }))
-vi.mock('@/lib/storage/attachment-access', () => ({ canViewAttachment: vi.fn() }))
+vi.mock('@/lib/storage/attachment-access', () => ({ findViewableAttachment: vi.fn() }))
 vi.mock('@/lib/storage/storage', () => ({ getObject: vi.fn() }))
 vi.mock('@/lib/storage/image', () => ({ resizeWebp: vi.fn(), WEBP_MIME: 'image/webp' }))
 
@@ -46,7 +46,8 @@ const connectClient = () => {
   return connectMcpServer(server)
 }
 
-const findAttachment = vi.mocked(prisma.attachment.findUnique)
+/** 配信してよい添付を引く(可否の判定は attachment-access のテストで確かめる) */
+const findAttachment = vi.mocked(findViewableAttachment)
 
 const mockObject = (bytes: Uint8Array) =>
   vi.mocked(getObject).mockImplementation(async () => ({
@@ -57,7 +58,6 @@ const mockObject = (bytes: Uint8Array) =>
 beforeEach(() => {
   vi.clearAllMocks()
   vi.mocked(assertBoardAccess).mockResolvedValue({ boardId: BOARD_ID, archived: false } as never)
-  vi.mocked(canViewAttachment).mockResolvedValue(true)
   vi.mocked(prisma.user.findUnique).mockResolvedValue({ id: 'u1', role: null, banned: false } as never)
   vi.mocked(prisma.uploadNonce.create).mockResolvedValue({ jti: 'x' } as never)
   vi.mocked(prisma.uploadNonce.deleteMany).mockResolvedValue({ count: 0 })
@@ -143,7 +143,7 @@ describe('get_file', () => {
   })
 
   it('見られない添付は未存在と同じエラーにする', async () => {
-    vi.mocked(canViewAttachment).mockResolvedValue(false)
+    findAttachment.mockResolvedValue(null)
 
     const result = await (await connectClient()).callTool({ name: 'get_file', arguments: { file: KEY } })
 
