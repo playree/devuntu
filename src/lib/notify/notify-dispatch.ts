@@ -243,7 +243,7 @@ const deliverWebPushBatch = async (now: Date, limit: number): Promise<number> =>
           userId,
           content: await contentOf(delivery, locale),
           // 同じチケットの通知を積み上げない
-          tag: ticketTagOf(delivery),
+          tag: notifyTagOf(delivery),
         })
       }
     } catch (error) {
@@ -290,10 +290,10 @@ const deliverWebPushBatch = async (now: Date, limit: number): Promise<number> =>
   return claimed.length
 }
 
-/** 通知のまとめキー。同じチケットの通知は端末上で 1 件に畳まれる */
-const ticketTagOf = (delivery: ClaimedDelivery): string | undefined => {
+/** 通知のまとめキー。同じチケット(Wiki はページ)の通知は端末上で 1 件に畳まれる */
+export const notifyTagOf = (delivery: Pick<ClaimedDelivery, 'event' | 'payload'>): string | undefined => {
   const payload = parseNotifyPayload(delivery.event, delivery.payload)
-  return payload.ticketId
+  return 'ticketId' in payload ? payload.ticketId : `wiki:${payload.pageId}`
 }
 
 /** 引数は 1 周で扱う上限、戻り値は実際に送った件数(= 消費する枠) */

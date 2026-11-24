@@ -1,12 +1,15 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action/action-server'
+import { assertRateLimit } from '@/lib/rate-limit'
 import { scUUID } from '@/lib/schema/schema'
 import {
   scCreateWikiTemplate,
+  scGetWikiSlackChannels,
   scMoveWikiTemplate,
   scRemoveWikiSpaceMember,
   scRemoveWikiSpaceTarget,
+  scSetWikiAnnounceChannel,
   scSetWikiSpaceArchived,
   scUpdateWikiSpace,
   scUpdateWikiTag,
@@ -14,6 +17,7 @@ import {
   scUpsertWikiSpaceMember,
   scUpsertWikiSpaceTarget,
 } from '@/lib/schema/schema-wiki'
+import { listSlackChannels } from '@/lib/slack/slack-server'
 import {
   getWikiSpaceAssignments as getWikiSpaceAssignmentsCore,
   getWikiSpaceAssignOptions as getWikiSpaceAssignOptionsCore,
@@ -25,7 +29,10 @@ import {
   upsertWikiSpaceMember as upsertWikiSpaceMemberCore,
 } from '@/lib/wiki/wiki-assignment'
 import {
+  assertWikiAnnounceChannelManageable,
   deleteWikiSpace as deleteWikiSpaceCore,
+  getWikiAnnounceChannel as getWikiAnnounceChannelCore,
+  setWikiAnnounceChannel as setWikiAnnounceChannelCore,
   setWikiSpaceArchived as setWikiSpaceArchivedCore,
   updateWikiSpace as updateWikiSpaceCore,
 } from '@/lib/wiki/wiki-space'
@@ -184,5 +191,40 @@ export const moveWikiTemplate = safeAuthAction
   .inputSchema(scMoveWikiTemplate)
   .action(async ({ ctx: { user }, parsedInput: { id, direction } }) => {
     await moveWikiTemplateCore(user, id, direction)
+    return { id }
+  })
+
+/** Slack のチャンネル一覧の取り直しの上限(ボード設定と同じ) */
+const CHANNELS_REFRESH_RATE_LIMIT = { limit: 10, windowMs: 60 * 1000 }
+
+/**
+ * アナウンスの通知先に選べる Slack チャンネルの一覧(owner または管理者)。取得できない場合は null。
+ * `force` はキャッシュを捨てて取り直す(Bot を招待した直後に選べるようにするため)
+ */
+export const getWikiSlackChannels = safeAuthAction
+  .metadata({ actionName: 'getWikiSlackChannels', role: 'user' })
+  .inputSchema(scGetWikiSlackChannels)
+  .action(async ({ ctx: { user }, parsedInput: { id, force } }) => {
+    await assertWikiAnnounceChannelManageable(user, id)
+    if (force) {
+      assertRateLimit(`slack-channels-refresh:${user.id}`, CHANNELS_REFRESH_RATE_LIMIT)
+    }
+    return listSlackChannels({ force })
+  })
+export type GetWikiSlackChannelsReturnType = Awaited<ReturnType<typeof getWikiSlackChannels>>['data']
+
+/** アナウンスの通知先チャンネルの現在値 */
+export const getWikiAnnounceChannel = safeAuthAction
+  .metadata({ actionName: 'getWikiAnnounceChannel', role: 'user' })
+  .inputSchema(scUUID)
+  .action(async ({ ctx: { user }, parsedInput: { id } }) => await getWikiAnnounceChannelCore(user, id))
+export type GetWikiAnnounceChannelReturnType = Awaited<ReturnType<typeof getWikiAnnounceChannel>>['data']
+
+/** アナウンスの通知先チャンネルの設定・解除(空文字で解除) */
+export const setWikiAnnounceChannel = safeAuthAction
+  .metadata({ actionName: 'setWikiAnnounceChannel', role: 'user' })
+  .inputSchema(scSetWikiAnnounceChannel)
+  .action(async ({ ctx: { user }, parsedInput: { id, slackChannelId } }) => {
+    await setWikiAnnounceChannelCore(user, id, slackChannelId || null)
     return { id }
   })

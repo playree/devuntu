@@ -5,6 +5,7 @@ import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { SingleSelectField } from '@/components/general/select'
 import { TablePaging } from '@/components/general/table-paging'
 import { TagChips } from '@/components/ticket/ticket-chip'
+import { WikiAnnounceStateChip } from '@/components/wiki-chip'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { dayformat } from '@/lib/day'
@@ -60,6 +61,7 @@ const AnnouncementRow: FC<{ item: Announcement }> = ({ item }) => {
       >
         <span className='min-w-0 flex-1 truncate text-sm font-medium'>{item.title}</span>
         <span className='text-muted flex min-w-0 flex-wrap items-center gap-2 text-xs sm:shrink-0'>
+          {item.notifyState && <WikiAnnounceStateChip value={item.notifyState} />}
           {tags.length > 0 && <TagChips tags={tags} />}
           <span>{item.createdByName || '-'}</span>
           <span className='font-mono'>{dayformat(item.createdAt, 'tz-minute', tz)}</span>

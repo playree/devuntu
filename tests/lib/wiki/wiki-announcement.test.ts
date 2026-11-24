@@ -16,6 +16,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('@/lib/prisma', async () =>
   (await import('../../helpers/prisma')).mockPrisma({
     wikiPage: ['findMany', 'count'],
+    wikiAnnouncementNotify: ['findMany'],
     user: ['findUnique'],
   }),
 )
@@ -72,6 +73,40 @@ describe('listWikiAnnouncements', () => {
     )
     // 期間の指定が無ければタイムゾーンを引かない
     expect(prisma.user.findUnique).not.toHaveBeenCalled()
+  })
+
+  it('Slack 通知の状態は editor 以上にだけ付ける(予約中を優先し、無ければ未通知)', async () => {
+    vi.mocked(prisma.wikiPage.findMany).mockResolvedValue(
+      ['p1', 'p2', 'p3'].map((id, i) => ({
+        id,
+        number: i + 1,
+        title: id,
+        createdAt: CREATED_AT,
+        createdBy: null,
+        tags: [],
+      })) as never,
+    )
+    vi.mocked(prisma.wikiAnnouncementNotify.findMany).mockResolvedValue([
+      { pageId: 'p1', status: 'sent' },
+      { pageId: 'p1', status: 'scheduled' },
+      { pageId: 'p2', status: 'sent' },
+    ] as never)
+
+    const viewer = await listWikiAnnouncements(actor, SPACE_ID, { page: 1, rowsPerPage: 10 })
+    expect(viewer.items.every((item) => !('notifyState' in item))).toBe(true)
+    expect(prisma.wikiAnnouncementNotify.findMany).not.toHaveBeenCalled()
+
+    vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ type: 'announcement', role: 'editor' } as never)
+    const editor = await listWikiAnnouncements(actor, SPACE_ID, { page: 1, rowsPerPage: 10 })
+    expect(editor.items.map(({ id, notifyState }) => [id, notifyState])).toEqual([
+      ['p1', 'scheduled'],
+      ['p2', 'sent'],
+      ['p3', 'none'],
+    ])
+    expect(vi.mocked(prisma.wikiAnnouncementNotify.findMany).mock.calls[0][0]?.where).toEqual({
+      pageId: { in: ['p1', 'p2', 'p3'] },
+      status: { in: ['scheduled', 'sent'] },
+    })
   })
 
   it('月とタグで絞り込む。月は閲覧者のタイムゾーンで区切る', async () => {

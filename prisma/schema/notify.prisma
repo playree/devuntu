@@ -25,6 +25,9 @@ enum NotifyEvent {
 
   /// アナウンス(種別 announcement のコメント)が投稿された
   announcement
+
+  /// Wiki のアナウンス用スペースのページを通知した(スペースのチャンネルだけに送る)
+  wiki_announcement
 }
 
 /// 期限のリマインドの種類

@@ -6,10 +6,11 @@ import { FlexCol } from '@/components/general/flex'
 import { useModalState } from '@/components/general/modal'
 import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
-import { BookOpenIcon, DocumentPlusIcon, FolderArrowRightIcon, TrashIcon } from '@/components/icon'
+import { BookOpenIcon, DocumentPlusIcon, FolderArrowRightIcon, MegaphoneIcon, TrashIcon } from '@/components/icon'
 import { NoAccessView } from '@/components/no-access-view'
 import { ReloadButton } from '@/components/reload-button'
 import { useActionData } from '@/lib/action/action-client'
+import { canSeeWikiAnnounce } from '@/lib/wiki/wiki-announcement-notify-rule'
 import { canDeleteWikiRevision, isFlatWikiSpace, wikiPageRef } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { Breadcrumbs, ButtonGroup } from '@heroui/react'
@@ -18,8 +19,10 @@ import { tv } from 'tailwind-variants'
 import { ChildPages } from '../child-pages'
 import { CreatePageModal, MovePageModal, useDeleteWikiPage } from '../page-modals'
 import { useWikiSpace } from '../space-context'
+import { WikiAnnounceHistory } from './page-announce-history'
+import { WikiAnnounceModal, type WikiAnnounceItem } from './page-announce-modal'
 import { WikiPageBody } from './page-body'
-import { getWikiPage, GetWikiPageReturnType } from './server'
+import { getWikiAnnouncementNotifies, getWikiPage, GetWikiPageReturnType } from './server'
 
 type PageDetail = NonNullable<GetWikiPageReturnType>
 
@@ -76,12 +79,20 @@ export const WikiPageClient: FC<{ spaceKey: string; number: number }> = ({ space
   const { reloadSpace } = useWikiSpace()
   const createModalState = useModalState()
   const moveModalState = useModalState()
+  const announceModalState = useModalState<WikiAnnounceItem>()
   const deletePage = useDeleteWikiPage()
   const isValidNumber = Number.isInteger(number) && number > 0
   const { data, refresh, isLoading } = useActionData(() => getWikiPage({ key: spaceKey, number }), {
     key: `${spaceKey}/${number}`,
     skip: !isValidNumber,
   })
+  // アナウンスの Slack 通知の履歴。送る側(editor 以上)にだけ出す
+  const pageId = data?.page.id
+  const canSeeAnnounce = !!data && data.space.type === 'announcement' && canSeeWikiAnnounce(data.access.role)
+  const { data: announce, refresh: refreshAnnounce } = useActionData(
+    () => getWikiAnnouncementNotifies({ id: pageId ?? '' }),
+    { skip: !canSeeAnnounce, key: pageId },
+  )
 
   if (isLoading) {
     return <PanelSkeleton />
@@ -96,8 +107,14 @@ export const WikiPageClient: FC<{ spaceKey: string; number: number }> = ({ space
   const parentHref = ancestors.length > 0 ? `/wiki/${space.key}/${ancestors.at(-1)?.number}` : `/wiki/${space.key}`
   // 本文の保存・移動・作成の後は、ツリー(タイトル・並び)も取り直す
   const reloadAll = async () => {
-    await Promise.all([refresh(), reloadSpace()])
+    await Promise.all([refresh(), reloadSpace(), ...(canSeeAnnounce ? [refreshAnnounce()] : [])])
   }
+  // 通知の状態はサイドバーと一覧のバッジにも出るので、スペースも取り直す
+  const reloadAnnounce = () => {
+    refreshAnnounce()
+    reloadSpace()
+  }
+  const showAnnounceButton = canSeeAnnounce && access.canWrite
 
   return (
     <FlexCol>
@@ -137,6 +154,15 @@ export const WikiPageClient: FC<{ spaceKey: string; number: number }> = ({ space
               <ButtonGroup.Separator />
             </MultiButton>
           )}
+          {showAnnounceButton && (
+            <MultiButton
+              isIconOnly
+              tooltip={t('wiki_announce')}
+              icon={<MegaphoneIcon />}
+              isDisabled={!announce}
+              onPress={() => announceModalState.open()}
+            />
+          )}
           {access.canWrite && (
             <MultiButton
               isIconOnly
@@ -144,7 +170,7 @@ export const WikiPageClient: FC<{ spaceKey: string; number: number }> = ({ space
               icon={<TrashIcon />}
               onPress={() => deletePage(page, parentHref, reloadAll)}
             >
-              {!isFlat && <ButtonGroup.Separator />}
+              {(!isFlat || showAnnounceButton) && <ButtonGroup.Separator />}
             </MultiButton>
           )}
           <ReloadButton // 編集中の下書きを消さないよう、画面を作り直さずに取り直す
@@ -166,6 +192,15 @@ export const WikiPageClient: FC<{ spaceKey: string; number: number }> = ({ space
 
       <ChildPages parentId={page.id} />
 
+      {canSeeAnnounce && announce && (
+        <WikiAnnounceHistory
+          items={announce.items}
+          canWrite={announce.canWrite}
+          onEdit={(item) => announceModalState.open(item)}
+          reload={reloadAnnounce}
+        />
+      )}
+
       <CreatePageModal
         state={createModalState}
         reload={reloadSpace}
@@ -173,6 +208,18 @@ export const WikiPageClient: FC<{ spaceKey: string; number: number }> = ({ space
         parent={{ id: page.id, title: page.title }}
       />
       <MovePageModal state={moveModalState} reload={reloadAll} key={moveModalState.key} page={page} />
+      {announce && (
+        <WikiAnnounceModal
+          state={announceModalState}
+          reload={reloadAnnounce}
+          key={announceModalState.key}
+          pageId={page.id}
+          // 初回を送った後は、修正のお知らせを既定にする
+          defaultKind={announce.items.some((item) => item.status === 'sent') ? 'updated' : 'published'}
+          available={announce.available}
+          target={announceModalState.target}
+        />
+      )}
     </FlexCol>
   )
 }

@@ -94,4 +94,20 @@ describe('deliverSlack: 送る内容', () => {
       'https://devuntu.example.com/tickets/0198c0de-0000-7000-8000-000000000001',
     )
   })
+
+  it('ボタンの文言は文面の指定(Wiki は「ページを開く」)を使い、無ければチケットの既定にする', async () => {
+    const label = () => {
+      const { blocks } = post.mock.calls.at(-1)?.[1] as { blocks: { elements?: { text?: { text: string } }[] }[] }
+      return blocks.at(-1)?.elements?.[0]?.text?.text
+    }
+    await deliverSlack({ userId: null, slackChannelId: 'C0123ABCD', content: content(), locale: 'ja' })
+    expect(label()).toBe('チケットを開く')
+    await deliverSlack({
+      userId: null,
+      slackChannelId: 'C0123ABCD',
+      content: content({ openLabel: 'ページを開く' }),
+      locale: 'ja',
+    })
+    expect(label()).toBe('ページを開く')
+  })
 })

@@ -2,6 +2,7 @@
 
 import { PanelSpinner } from '@/components/general/panel'
 import { TreeView, type TreeViewItem } from '@/components/general/tree-view'
+import { WikiAnnounceStateIcon } from '@/components/wiki-chip'
 import { WikiTagDots } from '@/components/wiki-tag'
 import { useActionData } from '@/lib/action/action-client'
 import { WIKI_ANNOUNCEMENT_SIDEBAR_LIMIT } from '@/lib/wiki/wiki-announcement-rule'
@@ -40,7 +41,12 @@ export const WikiSideAnnouncements: FC<{ onNavigate: () => void }> = ({ onNaviga
         parentId: null,
         label: item.title,
         href: `/wiki/${space.key}/${item.number}`,
-        suffix: <WikiTagDots tags={tagsOf(item.tagIds)} />,
+        suffix: (
+          <span className='flex items-center gap-1'>
+            <WikiTagDots tags={tagsOf(item.tagIds)} />
+            {item.notifyState && <WikiAnnounceStateIcon value={item.notifyState} />}
+          </span>
+        ),
       })),
     [data, space.key, tagsOf],
   )

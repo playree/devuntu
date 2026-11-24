@@ -35,6 +35,12 @@ import {
 } from '../error'
 import { DUPLICATED_MCP_TOKEN_NAME } from '../mcp/mcp'
 import {
+  WIKI_ANNOUNCE_INVALID_SCHEDULE,
+  WIKI_ANNOUNCE_NOT_SCHEDULED,
+  WIKI_ANNOUNCE_TOO_MANY_SCHEDULED,
+  WIKI_ANNOUNCE_UNAVAILABLE,
+} from '../wiki/wiki-announcement-notify-rule'
+import {
   DUPLICATED_WIKI_SPACE_KEY,
   WIKI_ANNOUNCEMENT_FLAT,
   WIKI_PAGE_CONFLICT,
@@ -95,6 +101,10 @@ export const ACTION_ERROR_MESSAGES: Record<string, ActionErrorMessage> = {
   [WIKI_SPACE_CANNOT_BE_ANNOUNCEMENT]: { item: 'msg_wiki_space_cannot_be_announcement', level: 'warn' },
   [WIKI_SPACE_HAS_NORMAL_TEMPLATES]: { item: 'msg_wiki_space_has_normal_templates', level: 'warn' },
   [WIKI_TEMPLATE_TOO_LONG]: { item: 'msg_wiki_template_too_long', level: 'warn' },
+  [WIKI_ANNOUNCE_UNAVAILABLE]: { item: 'msg_wiki_announce_unavailable', level: 'warn' },
+  [WIKI_ANNOUNCE_NOT_SCHEDULED]: { item: 'msg_wiki_announce_not_scheduled', level: 'warn' },
+  [WIKI_ANNOUNCE_INVALID_SCHEDULE]: { item: 'msg_wiki_announce_invalid_schedule', level: 'warn' },
+  [WIKI_ANNOUNCE_TOO_MANY_SCHEDULED]: { item: 'msg_wiki_announce_too_many_scheduled', level: 'warn' },
 }
 
 export const resolveActionErrorMessage = (errorType: string): ActionErrorMessage =>

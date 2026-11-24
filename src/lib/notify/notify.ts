@@ -21,6 +21,7 @@ export const NOTIFY_EVENTS = [
   'ticket_merge_held',
   'ticket_due',
   'announcement',
+  'wiki_announcement',
 ] as const satisfies readonly NotifyEvent[]
 
 /**
@@ -46,6 +47,12 @@ export const CHANNEL_NOTIFY_EVENTS = [
   'announcement',
 ] as const satisfies readonly NotifyEvent[]
 export type ChannelNotifyEvent = (typeof CHANNEL_NOTIFY_EVENTS)[number]
+
+/**
+ * Wiki スペースの設定で宛先を決めるイベント。
+ * ボード設定と個人設定のどちらにも出さない(通知先はスペースのチャンネルだけ)
+ */
+export const SPACE_NOTIFY_EVENTS = ['wiki_announcement'] as const satisfies readonly NotifyEvent[]
 
 /** 通知チャネル。UserNotifySetting の列名と一致させる */
 export const NOTIFY_CHANNELS = ['email', 'slack', 'webpush'] as const satisfies readonly PrismaNotifyChannel[]

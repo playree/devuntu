@@ -18,6 +18,7 @@ import { ClientError, errInvalidOperation, errValidation } from '../error'
 import { logger } from '../logger'
 import { prisma, type Db } from '../prisma'
 import { assertWikiSpaceAccess, type WikiSpaceAccess } from './wiki-access'
+import { skipScheduledWikiAnnouncementsOf } from './wiki-announcement-notify'
 import { WIKI_REVISION_ORDER, writeWikiPageRevision } from './wiki-revision'
 import {
   MAX_WIKI_CONTENT,
@@ -623,6 +624,7 @@ export const deleteWikiPage = async (
         pageCreatedById: target.createdById,
       })
     }
+    await skipScheduledWikiAnnouncementsOf(tx, targetIds)
     // 子孫は parentId の Cascade で一緒に消える
     await tx.wikiPage.delete({ where: { id: pageId }, select: { id: true } })
     return targets.length

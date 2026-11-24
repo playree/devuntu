@@ -18,6 +18,7 @@ import {
   NOTIFY_DELIVER_BATCH,
   NOTIFY_EVENTS,
   NOTIFY_EXCERPT_MAX,
+  SPACE_NOTIFY_EVENTS,
 } from '@/lib/notify/notify'
 import { en } from '@/locale/lang-en'
 import { ja } from '@/locale/lang-ja'
@@ -49,9 +50,16 @@ describe('DM_NOTIFY_EVENTS / CHANNEL_NOTIFY_EVENTS: 宛先ごとの内訳', () =
     })
   }
 
-  it('どちらの宛先にも出ないイベントは無い(設定できない通知を作らない)', () => {
-    const covered = new Set<string>([...DM_NOTIFY_EVENTS, ...CHANNEL_NOTIFY_EVENTS])
+  it('どの設定にも出ないイベントは無い(設定できない通知を作らない)', () => {
+    // SPACE_NOTIFY_EVENTS は Wiki スペースの設定で宛先を決める
+    const covered = new Set<string>([...DM_NOTIFY_EVENTS, ...CHANNEL_NOTIFY_EVENTS, ...SPACE_NOTIFY_EVENTS])
     expect(NOTIFY_EVENTS.filter((event) => !covered.has(event))).toEqual([])
+  })
+
+  it('SPACE_NOTIFY_EVENTS はボード設定・個人設定に出さない', () => {
+    const boardOrUser = new Set<string>([...DM_NOTIFY_EVENTS, ...CHANNEL_NOTIFY_EVENTS])
+    expect(SPACE_NOTIFY_EVENTS.filter((event) => boardOrUser.has(event))).toEqual([])
+    expect(SPACE_NOTIFY_EVENTS.every((event) => NOTIFY_EVENTS.includes(event))).toBe(true)
   })
 
   it('設定画面に出る全イベントに項目名がある', () => {

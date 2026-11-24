@@ -44,6 +44,7 @@ export type WikiSpaceMinAggregateOutputType = {
   type: $Enums.WikiSpaceType | null
   pageSeq: number | null
   archived: boolean | null
+  announceSlackChannelId: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -57,6 +58,7 @@ export type WikiSpaceMaxAggregateOutputType = {
   type: $Enums.WikiSpaceType | null
   pageSeq: number | null
   archived: boolean | null
+  announceSlackChannelId: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -70,6 +72,7 @@ export type WikiSpaceCountAggregateOutputType = {
   type: number
   pageSeq: number
   archived: number
+  announceSlackChannelId: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -93,6 +96,7 @@ export type WikiSpaceMinAggregateInputType = {
   type?: true
   pageSeq?: true
   archived?: true
+  announceSlackChannelId?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -106,6 +110,7 @@ export type WikiSpaceMaxAggregateInputType = {
   type?: true
   pageSeq?: true
   archived?: true
+  announceSlackChannelId?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -119,6 +124,7 @@ export type WikiSpaceCountAggregateInputType = {
   type?: true
   pageSeq?: true
   archived?: true
+  announceSlackChannelId?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -219,6 +225,7 @@ export type WikiSpaceGroupByOutputType = {
   type: $Enums.WikiSpaceType
   pageSeq: number
   archived: boolean
+  announceSlackChannelId: string | null
   createdAt: Date
   updatedAt: Date
   _count: WikiSpaceCountAggregateOutputType | null
@@ -255,6 +262,7 @@ export type WikiSpaceWhereInput = {
   type?: Prisma.EnumWikiSpaceTypeFilter<"WikiSpace"> | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFilter<"WikiSpace"> | number
   archived?: Prisma.BoolFilter<"WikiSpace"> | boolean
+  announceSlackChannelId?: Prisma.StringNullableFilter<"WikiSpace"> | string | null
   createdAt?: Prisma.DateTimeFilter<"WikiSpace"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"WikiSpace"> | Date | string
   members?: Prisma.WikiSpaceMemberListRelationFilter
@@ -265,6 +273,7 @@ export type WikiSpaceWhereInput = {
   revisions?: Prisma.WikiPageRevisionListRelationFilter
   attachments?: Prisma.AttachmentListRelationFilter
   templates?: Prisma.WikiTemplateListRelationFilter
+  notifies?: Prisma.WikiAnnouncementNotifyListRelationFilter
 }
 
 export type WikiSpaceOrderByWithRelationInput = {
@@ -276,6 +285,7 @@ export type WikiSpaceOrderByWithRelationInput = {
   type?: Prisma.SortOrder
   pageSeq?: Prisma.SortOrder
   archived?: Prisma.SortOrder
+  announceSlackChannelId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   members?: Prisma.WikiSpaceMemberOrderByRelationAggregateInput
@@ -286,6 +296,7 @@ export type WikiSpaceOrderByWithRelationInput = {
   revisions?: Prisma.WikiPageRevisionOrderByRelationAggregateInput
   attachments?: Prisma.AttachmentOrderByRelationAggregateInput
   templates?: Prisma.WikiTemplateOrderByRelationAggregateInput
+  notifies?: Prisma.WikiAnnouncementNotifyOrderByRelationAggregateInput
 }
 
 export type WikiSpaceWhereUniqueInput = Prisma.AtLeast<{
@@ -300,6 +311,7 @@ export type WikiSpaceWhereUniqueInput = Prisma.AtLeast<{
   type?: Prisma.EnumWikiSpaceTypeFilter<"WikiSpace"> | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFilter<"WikiSpace"> | number
   archived?: Prisma.BoolFilter<"WikiSpace"> | boolean
+  announceSlackChannelId?: Prisma.StringNullableFilter<"WikiSpace"> | string | null
   createdAt?: Prisma.DateTimeFilter<"WikiSpace"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"WikiSpace"> | Date | string
   members?: Prisma.WikiSpaceMemberListRelationFilter
@@ -310,6 +322,7 @@ export type WikiSpaceWhereUniqueInput = Prisma.AtLeast<{
   revisions?: Prisma.WikiPageRevisionListRelationFilter
   attachments?: Prisma.AttachmentListRelationFilter
   templates?: Prisma.WikiTemplateListRelationFilter
+  notifies?: Prisma.WikiAnnouncementNotifyListRelationFilter
 }, "id" | "key">
 
 export type WikiSpaceOrderByWithAggregationInput = {
@@ -321,6 +334,7 @@ export type WikiSpaceOrderByWithAggregationInput = {
   type?: Prisma.SortOrder
   pageSeq?: Prisma.SortOrder
   archived?: Prisma.SortOrder
+  announceSlackChannelId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.WikiSpaceCountOrderByAggregateInput
@@ -342,6 +356,7 @@ export type WikiSpaceScalarWhereWithAggregatesInput = {
   type?: Prisma.EnumWikiSpaceTypeWithAggregatesFilter<"WikiSpace"> | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntWithAggregatesFilter<"WikiSpace"> | number
   archived?: Prisma.BoolWithAggregatesFilter<"WikiSpace"> | boolean
+  announceSlackChannelId?: Prisma.StringNullableWithAggregatesFilter<"WikiSpace"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"WikiSpace"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"WikiSpace"> | Date | string
 }
@@ -355,6 +370,7 @@ export type WikiSpaceCreateInput = {
   type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
+  announceSlackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.WikiSpaceMemberCreateNestedManyWithoutSpaceInput
@@ -365,6 +381,7 @@ export type WikiSpaceCreateInput = {
   revisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutSpaceInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutWikiSpaceInput
   templates?: Prisma.WikiTemplateCreateNestedManyWithoutSpaceInput
+  notifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutSpaceInput
 }
 
 export type WikiSpaceUncheckedCreateInput = {
@@ -376,6 +393,7 @@ export type WikiSpaceUncheckedCreateInput = {
   type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
+  announceSlackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.WikiSpaceMemberUncheckedCreateNestedManyWithoutSpaceInput
@@ -386,6 +404,7 @@ export type WikiSpaceUncheckedCreateInput = {
   revisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutSpaceInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutWikiSpaceInput
   templates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutSpaceInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutSpaceInput
 }
 
 export type WikiSpaceUpdateInput = {
@@ -397,6 +416,7 @@ export type WikiSpaceUpdateInput = {
   type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  announceSlackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.WikiSpaceMemberUpdateManyWithoutSpaceNestedInput
@@ -407,6 +427,7 @@ export type WikiSpaceUpdateInput = {
   revisions?: Prisma.WikiPageRevisionUpdateManyWithoutSpaceNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutWikiSpaceNestedInput
   templates?: Prisma.WikiTemplateUpdateManyWithoutSpaceNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutSpaceNestedInput
 }
 
 export type WikiSpaceUncheckedUpdateInput = {
@@ -418,6 +439,7 @@ export type WikiSpaceUncheckedUpdateInput = {
   type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  announceSlackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.WikiSpaceMemberUncheckedUpdateManyWithoutSpaceNestedInput
@@ -428,6 +450,7 @@ export type WikiSpaceUncheckedUpdateInput = {
   revisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutSpaceNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutWikiSpaceNestedInput
   templates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutSpaceNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutSpaceNestedInput
 }
 
 export type WikiSpaceCreateManyInput = {
@@ -439,6 +462,7 @@ export type WikiSpaceCreateManyInput = {
   type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
+  announceSlackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -452,6 +476,7 @@ export type WikiSpaceUpdateManyMutationInput = {
   type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  announceSlackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -465,6 +490,7 @@ export type WikiSpaceUncheckedUpdateManyInput = {
   type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  announceSlackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -483,6 +509,7 @@ export type WikiSpaceCountOrderByAggregateInput = {
   type?: Prisma.SortOrder
   pageSeq?: Prisma.SortOrder
   archived?: Prisma.SortOrder
+  announceSlackChannelId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -500,6 +527,7 @@ export type WikiSpaceMaxOrderByAggregateInput = {
   type?: Prisma.SortOrder
   pageSeq?: Prisma.SortOrder
   archived?: Prisma.SortOrder
+  announceSlackChannelId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -513,6 +541,7 @@ export type WikiSpaceMinOrderByAggregateInput = {
   type?: Prisma.SortOrder
   pageSeq?: Prisma.SortOrder
   archived?: Prisma.SortOrder
+  announceSlackChannelId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -648,6 +677,20 @@ export type WikiSpaceUpdateOneRequiredWithoutTemplatesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.WikiSpaceUpdateToOneWithWhereWithoutTemplatesInput, Prisma.WikiSpaceUpdateWithoutTemplatesInput>, Prisma.WikiSpaceUncheckedUpdateWithoutTemplatesInput>
 }
 
+export type WikiSpaceCreateNestedOneWithoutNotifiesInput = {
+  create?: Prisma.XOR<Prisma.WikiSpaceCreateWithoutNotifiesInput, Prisma.WikiSpaceUncheckedCreateWithoutNotifiesInput>
+  connectOrCreate?: Prisma.WikiSpaceCreateOrConnectWithoutNotifiesInput
+  connect?: Prisma.WikiSpaceWhereUniqueInput
+}
+
+export type WikiSpaceUpdateOneRequiredWithoutNotifiesNestedInput = {
+  create?: Prisma.XOR<Prisma.WikiSpaceCreateWithoutNotifiesInput, Prisma.WikiSpaceUncheckedCreateWithoutNotifiesInput>
+  connectOrCreate?: Prisma.WikiSpaceCreateOrConnectWithoutNotifiesInput
+  upsert?: Prisma.WikiSpaceUpsertWithoutNotifiesInput
+  connect?: Prisma.WikiSpaceWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.WikiSpaceUpdateToOneWithWhereWithoutNotifiesInput, Prisma.WikiSpaceUpdateWithoutNotifiesInput>, Prisma.WikiSpaceUncheckedUpdateWithoutNotifiesInput>
+}
+
 export type WikiSpaceCreateWithoutAttachmentsInput = {
   id?: string
   key: string
@@ -657,6 +700,7 @@ export type WikiSpaceCreateWithoutAttachmentsInput = {
   type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
+  announceSlackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.WikiSpaceMemberCreateNestedManyWithoutSpaceInput
@@ -666,6 +710,7 @@ export type WikiSpaceCreateWithoutAttachmentsInput = {
   tags?: Prisma.WikiTagCreateNestedManyWithoutSpaceInput
   revisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutSpaceInput
   templates?: Prisma.WikiTemplateCreateNestedManyWithoutSpaceInput
+  notifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutSpaceInput
 }
 
 export type WikiSpaceUncheckedCreateWithoutAttachmentsInput = {
@@ -677,6 +722,7 @@ export type WikiSpaceUncheckedCreateWithoutAttachmentsInput = {
   type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
+  announceSlackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.WikiSpaceMemberUncheckedCreateNestedManyWithoutSpaceInput
@@ -686,6 +732,7 @@ export type WikiSpaceUncheckedCreateWithoutAttachmentsInput = {
   tags?: Prisma.WikiTagUncheckedCreateNestedManyWithoutSpaceInput
   revisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutSpaceInput
   templates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutSpaceInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutSpaceInput
 }
 
 export type WikiSpaceCreateOrConnectWithoutAttachmentsInput = {
@@ -713,6 +760,7 @@ export type WikiSpaceUpdateWithoutAttachmentsInput = {
   type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  announceSlackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.WikiSpaceMemberUpdateManyWithoutSpaceNestedInput
@@ -722,6 +770,7 @@ export type WikiSpaceUpdateWithoutAttachmentsInput = {
   tags?: Prisma.WikiTagUpdateManyWithoutSpaceNestedInput
   revisions?: Prisma.WikiPageRevisionUpdateManyWithoutSpaceNestedInput
   templates?: Prisma.WikiTemplateUpdateManyWithoutSpaceNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutSpaceNestedInput
 }
 
 export type WikiSpaceUncheckedUpdateWithoutAttachmentsInput = {
@@ -733,6 +782,7 @@ export type WikiSpaceUncheckedUpdateWithoutAttachmentsInput = {
   type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  announceSlackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.WikiSpaceMemberUncheckedUpdateManyWithoutSpaceNestedInput
@@ -742,6 +792,7 @@ export type WikiSpaceUncheckedUpdateWithoutAttachmentsInput = {
   tags?: Prisma.WikiTagUncheckedUpdateManyWithoutSpaceNestedInput
   revisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutSpaceNestedInput
   templates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutSpaceNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutSpaceNestedInput
 }
 
 export type WikiSpaceCreateWithoutMembersInput = {
@@ -753,6 +804,7 @@ export type WikiSpaceCreateWithoutMembersInput = {
   type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
+  announceSlackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   groups?: Prisma.WikiSpaceGroupCreateNestedManyWithoutSpaceInput
@@ -762,6 +814,7 @@ export type WikiSpaceCreateWithoutMembersInput = {
   revisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutSpaceInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutWikiSpaceInput
   templates?: Prisma.WikiTemplateCreateNestedManyWithoutSpaceInput
+  notifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutSpaceInput
 }
 
 export type WikiSpaceUncheckedCreateWithoutMembersInput = {
@@ -773,6 +826,7 @@ export type WikiSpaceUncheckedCreateWithoutMembersInput = {
   type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
+  announceSlackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   groups?: Prisma.WikiSpaceGroupUncheckedCreateNestedManyWithoutSpaceInput
@@ -782,6 +836,7 @@ export type WikiSpaceUncheckedCreateWithoutMembersInput = {
   revisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutSpaceInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutWikiSpaceInput
   templates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutSpaceInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutSpaceInput
 }
 
 export type WikiSpaceCreateOrConnectWithoutMembersInput = {
@@ -809,6 +864,7 @@ export type WikiSpaceUpdateWithoutMembersInput = {
   type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  announceSlackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   groups?: Prisma.WikiSpaceGroupUpdateManyWithoutSpaceNestedInput
@@ -818,6 +874,7 @@ export type WikiSpaceUpdateWithoutMembersInput = {
   revisions?: Prisma.WikiPageRevisionUpdateManyWithoutSpaceNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutWikiSpaceNestedInput
   templates?: Prisma.WikiTemplateUpdateManyWithoutSpaceNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutSpaceNestedInput
 }
 
 export type WikiSpaceUncheckedUpdateWithoutMembersInput = {
@@ -829,6 +886,7 @@ export type WikiSpaceUncheckedUpdateWithoutMembersInput = {
   type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  announceSlackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   groups?: Prisma.WikiSpaceGroupUncheckedUpdateManyWithoutSpaceNestedInput
@@ -838,6 +896,7 @@ export type WikiSpaceUncheckedUpdateWithoutMembersInput = {
   revisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutSpaceNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutWikiSpaceNestedInput
   templates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutSpaceNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutSpaceNestedInput
 }
 
 export type WikiSpaceCreateWithoutGroupsInput = {
@@ -849,6 +908,7 @@ export type WikiSpaceCreateWithoutGroupsInput = {
   type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
+  announceSlackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.WikiSpaceMemberCreateNestedManyWithoutSpaceInput
@@ -858,6 +918,7 @@ export type WikiSpaceCreateWithoutGroupsInput = {
   revisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutSpaceInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutWikiSpaceInput
   templates?: Prisma.WikiTemplateCreateNestedManyWithoutSpaceInput
+  notifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutSpaceInput
 }
 
 export type WikiSpaceUncheckedCreateWithoutGroupsInput = {
@@ -869,6 +930,7 @@ export type WikiSpaceUncheckedCreateWithoutGroupsInput = {
   type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
+  announceSlackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.WikiSpaceMemberUncheckedCreateNestedManyWithoutSpaceInput
@@ -878,6 +940,7 @@ export type WikiSpaceUncheckedCreateWithoutGroupsInput = {
   revisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutSpaceInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutWikiSpaceInput
   templates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutSpaceInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutSpaceInput
 }
 
 export type WikiSpaceCreateOrConnectWithoutGroupsInput = {
@@ -905,6 +968,7 @@ export type WikiSpaceUpdateWithoutGroupsInput = {
   type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  announceSlackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.WikiSpaceMemberUpdateManyWithoutSpaceNestedInput
@@ -914,6 +978,7 @@ export type WikiSpaceUpdateWithoutGroupsInput = {
   revisions?: Prisma.WikiPageRevisionUpdateManyWithoutSpaceNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutWikiSpaceNestedInput
   templates?: Prisma.WikiTemplateUpdateManyWithoutSpaceNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutSpaceNestedInput
 }
 
 export type WikiSpaceUncheckedUpdateWithoutGroupsInput = {
@@ -925,6 +990,7 @@ export type WikiSpaceUncheckedUpdateWithoutGroupsInput = {
   type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  announceSlackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.WikiSpaceMemberUncheckedUpdateManyWithoutSpaceNestedInput
@@ -934,6 +1000,7 @@ export type WikiSpaceUncheckedUpdateWithoutGroupsInput = {
   revisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutSpaceNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutWikiSpaceNestedInput
   templates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutSpaceNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutSpaceNestedInput
 }
 
 export type WikiSpaceCreateWithoutBoardsInput = {
@@ -945,6 +1012,7 @@ export type WikiSpaceCreateWithoutBoardsInput = {
   type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
+  announceSlackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.WikiSpaceMemberCreateNestedManyWithoutSpaceInput
@@ -954,6 +1022,7 @@ export type WikiSpaceCreateWithoutBoardsInput = {
   revisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutSpaceInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutWikiSpaceInput
   templates?: Prisma.WikiTemplateCreateNestedManyWithoutSpaceInput
+  notifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutSpaceInput
 }
 
 export type WikiSpaceUncheckedCreateWithoutBoardsInput = {
@@ -965,6 +1034,7 @@ export type WikiSpaceUncheckedCreateWithoutBoardsInput = {
   type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
+  announceSlackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.WikiSpaceMemberUncheckedCreateNestedManyWithoutSpaceInput
@@ -974,6 +1044,7 @@ export type WikiSpaceUncheckedCreateWithoutBoardsInput = {
   revisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutSpaceInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutWikiSpaceInput
   templates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutSpaceInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutSpaceInput
 }
 
 export type WikiSpaceCreateOrConnectWithoutBoardsInput = {
@@ -1001,6 +1072,7 @@ export type WikiSpaceUpdateWithoutBoardsInput = {
   type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  announceSlackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.WikiSpaceMemberUpdateManyWithoutSpaceNestedInput
@@ -1010,6 +1082,7 @@ export type WikiSpaceUpdateWithoutBoardsInput = {
   revisions?: Prisma.WikiPageRevisionUpdateManyWithoutSpaceNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutWikiSpaceNestedInput
   templates?: Prisma.WikiTemplateUpdateManyWithoutSpaceNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutSpaceNestedInput
 }
 
 export type WikiSpaceUncheckedUpdateWithoutBoardsInput = {
@@ -1021,6 +1094,7 @@ export type WikiSpaceUncheckedUpdateWithoutBoardsInput = {
   type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  announceSlackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.WikiSpaceMemberUncheckedUpdateManyWithoutSpaceNestedInput
@@ -1030,6 +1104,7 @@ export type WikiSpaceUncheckedUpdateWithoutBoardsInput = {
   revisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutSpaceNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutWikiSpaceNestedInput
   templates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutSpaceNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutSpaceNestedInput
 }
 
 export type WikiSpaceCreateWithoutPagesInput = {
@@ -1041,6 +1116,7 @@ export type WikiSpaceCreateWithoutPagesInput = {
   type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
+  announceSlackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.WikiSpaceMemberCreateNestedManyWithoutSpaceInput
@@ -1050,6 +1126,7 @@ export type WikiSpaceCreateWithoutPagesInput = {
   revisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutSpaceInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutWikiSpaceInput
   templates?: Prisma.WikiTemplateCreateNestedManyWithoutSpaceInput
+  notifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutSpaceInput
 }
 
 export type WikiSpaceUncheckedCreateWithoutPagesInput = {
@@ -1061,6 +1138,7 @@ export type WikiSpaceUncheckedCreateWithoutPagesInput = {
   type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
+  announceSlackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.WikiSpaceMemberUncheckedCreateNestedManyWithoutSpaceInput
@@ -1070,6 +1148,7 @@ export type WikiSpaceUncheckedCreateWithoutPagesInput = {
   revisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutSpaceInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutWikiSpaceInput
   templates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutSpaceInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutSpaceInput
 }
 
 export type WikiSpaceCreateOrConnectWithoutPagesInput = {
@@ -1097,6 +1176,7 @@ export type WikiSpaceUpdateWithoutPagesInput = {
   type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  announceSlackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.WikiSpaceMemberUpdateManyWithoutSpaceNestedInput
@@ -1106,6 +1186,7 @@ export type WikiSpaceUpdateWithoutPagesInput = {
   revisions?: Prisma.WikiPageRevisionUpdateManyWithoutSpaceNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutWikiSpaceNestedInput
   templates?: Prisma.WikiTemplateUpdateManyWithoutSpaceNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutSpaceNestedInput
 }
 
 export type WikiSpaceUncheckedUpdateWithoutPagesInput = {
@@ -1117,6 +1198,7 @@ export type WikiSpaceUncheckedUpdateWithoutPagesInput = {
   type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  announceSlackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.WikiSpaceMemberUncheckedUpdateManyWithoutSpaceNestedInput
@@ -1126,6 +1208,7 @@ export type WikiSpaceUncheckedUpdateWithoutPagesInput = {
   revisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutSpaceNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutWikiSpaceNestedInput
   templates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutSpaceNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutSpaceNestedInput
 }
 
 export type WikiSpaceCreateWithoutTagsInput = {
@@ -1137,6 +1220,7 @@ export type WikiSpaceCreateWithoutTagsInput = {
   type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
+  announceSlackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.WikiSpaceMemberCreateNestedManyWithoutSpaceInput
@@ -1146,6 +1230,7 @@ export type WikiSpaceCreateWithoutTagsInput = {
   revisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutSpaceInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutWikiSpaceInput
   templates?: Prisma.WikiTemplateCreateNestedManyWithoutSpaceInput
+  notifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutSpaceInput
 }
 
 export type WikiSpaceUncheckedCreateWithoutTagsInput = {
@@ -1157,6 +1242,7 @@ export type WikiSpaceUncheckedCreateWithoutTagsInput = {
   type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
+  announceSlackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.WikiSpaceMemberUncheckedCreateNestedManyWithoutSpaceInput
@@ -1166,6 +1252,7 @@ export type WikiSpaceUncheckedCreateWithoutTagsInput = {
   revisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutSpaceInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutWikiSpaceInput
   templates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutSpaceInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutSpaceInput
 }
 
 export type WikiSpaceCreateOrConnectWithoutTagsInput = {
@@ -1193,6 +1280,7 @@ export type WikiSpaceUpdateWithoutTagsInput = {
   type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  announceSlackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.WikiSpaceMemberUpdateManyWithoutSpaceNestedInput
@@ -1202,6 +1290,7 @@ export type WikiSpaceUpdateWithoutTagsInput = {
   revisions?: Prisma.WikiPageRevisionUpdateManyWithoutSpaceNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutWikiSpaceNestedInput
   templates?: Prisma.WikiTemplateUpdateManyWithoutSpaceNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutSpaceNestedInput
 }
 
 export type WikiSpaceUncheckedUpdateWithoutTagsInput = {
@@ -1213,6 +1302,7 @@ export type WikiSpaceUncheckedUpdateWithoutTagsInput = {
   type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  announceSlackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.WikiSpaceMemberUncheckedUpdateManyWithoutSpaceNestedInput
@@ -1222,6 +1312,7 @@ export type WikiSpaceUncheckedUpdateWithoutTagsInput = {
   revisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutSpaceNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutWikiSpaceNestedInput
   templates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutSpaceNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutSpaceNestedInput
 }
 
 export type WikiSpaceCreateWithoutRevisionsInput = {
@@ -1233,6 +1324,7 @@ export type WikiSpaceCreateWithoutRevisionsInput = {
   type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
+  announceSlackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.WikiSpaceMemberCreateNestedManyWithoutSpaceInput
@@ -1242,6 +1334,7 @@ export type WikiSpaceCreateWithoutRevisionsInput = {
   tags?: Prisma.WikiTagCreateNestedManyWithoutSpaceInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutWikiSpaceInput
   templates?: Prisma.WikiTemplateCreateNestedManyWithoutSpaceInput
+  notifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutSpaceInput
 }
 
 export type WikiSpaceUncheckedCreateWithoutRevisionsInput = {
@@ -1253,6 +1346,7 @@ export type WikiSpaceUncheckedCreateWithoutRevisionsInput = {
   type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
+  announceSlackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.WikiSpaceMemberUncheckedCreateNestedManyWithoutSpaceInput
@@ -1262,6 +1356,7 @@ export type WikiSpaceUncheckedCreateWithoutRevisionsInput = {
   tags?: Prisma.WikiTagUncheckedCreateNestedManyWithoutSpaceInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutWikiSpaceInput
   templates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutSpaceInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutSpaceInput
 }
 
 export type WikiSpaceCreateOrConnectWithoutRevisionsInput = {
@@ -1289,6 +1384,7 @@ export type WikiSpaceUpdateWithoutRevisionsInput = {
   type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  announceSlackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.WikiSpaceMemberUpdateManyWithoutSpaceNestedInput
@@ -1298,6 +1394,7 @@ export type WikiSpaceUpdateWithoutRevisionsInput = {
   tags?: Prisma.WikiTagUpdateManyWithoutSpaceNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutWikiSpaceNestedInput
   templates?: Prisma.WikiTemplateUpdateManyWithoutSpaceNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutSpaceNestedInput
 }
 
 export type WikiSpaceUncheckedUpdateWithoutRevisionsInput = {
@@ -1309,6 +1406,7 @@ export type WikiSpaceUncheckedUpdateWithoutRevisionsInput = {
   type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  announceSlackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.WikiSpaceMemberUncheckedUpdateManyWithoutSpaceNestedInput
@@ -1318,6 +1416,7 @@ export type WikiSpaceUncheckedUpdateWithoutRevisionsInput = {
   tags?: Prisma.WikiTagUncheckedUpdateManyWithoutSpaceNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutWikiSpaceNestedInput
   templates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutSpaceNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutSpaceNestedInput
 }
 
 export type WikiSpaceCreateWithoutTemplatesInput = {
@@ -1329,6 +1428,7 @@ export type WikiSpaceCreateWithoutTemplatesInput = {
   type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
+  announceSlackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.WikiSpaceMemberCreateNestedManyWithoutSpaceInput
@@ -1338,6 +1438,7 @@ export type WikiSpaceCreateWithoutTemplatesInput = {
   tags?: Prisma.WikiTagCreateNestedManyWithoutSpaceInput
   revisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutSpaceInput
   attachments?: Prisma.AttachmentCreateNestedManyWithoutWikiSpaceInput
+  notifies?: Prisma.WikiAnnouncementNotifyCreateNestedManyWithoutSpaceInput
 }
 
 export type WikiSpaceUncheckedCreateWithoutTemplatesInput = {
@@ -1349,6 +1450,7 @@ export type WikiSpaceUncheckedCreateWithoutTemplatesInput = {
   type?: $Enums.WikiSpaceType
   pageSeq?: number
   archived?: boolean
+  announceSlackChannelId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.WikiSpaceMemberUncheckedCreateNestedManyWithoutSpaceInput
@@ -1358,6 +1460,7 @@ export type WikiSpaceUncheckedCreateWithoutTemplatesInput = {
   tags?: Prisma.WikiTagUncheckedCreateNestedManyWithoutSpaceInput
   revisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutSpaceInput
   attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutWikiSpaceInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedCreateNestedManyWithoutSpaceInput
 }
 
 export type WikiSpaceCreateOrConnectWithoutTemplatesInput = {
@@ -1385,6 +1488,7 @@ export type WikiSpaceUpdateWithoutTemplatesInput = {
   type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  announceSlackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.WikiSpaceMemberUpdateManyWithoutSpaceNestedInput
@@ -1394,6 +1498,7 @@ export type WikiSpaceUpdateWithoutTemplatesInput = {
   tags?: Prisma.WikiTagUpdateManyWithoutSpaceNestedInput
   revisions?: Prisma.WikiPageRevisionUpdateManyWithoutSpaceNestedInput
   attachments?: Prisma.AttachmentUpdateManyWithoutWikiSpaceNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUpdateManyWithoutSpaceNestedInput
 }
 
 export type WikiSpaceUncheckedUpdateWithoutTemplatesInput = {
@@ -1405,6 +1510,7 @@ export type WikiSpaceUncheckedUpdateWithoutTemplatesInput = {
   type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
   pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
   archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  announceSlackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.WikiSpaceMemberUncheckedUpdateManyWithoutSpaceNestedInput
@@ -1414,6 +1520,111 @@ export type WikiSpaceUncheckedUpdateWithoutTemplatesInput = {
   tags?: Prisma.WikiTagUncheckedUpdateManyWithoutSpaceNestedInput
   revisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutSpaceNestedInput
   attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutWikiSpaceNestedInput
+  notifies?: Prisma.WikiAnnouncementNotifyUncheckedUpdateManyWithoutSpaceNestedInput
+}
+
+export type WikiSpaceCreateWithoutNotifiesInput = {
+  id?: string
+  key: string
+  name: string
+  description?: string | null
+  visibility?: $Enums.WikiVisibility
+  type?: $Enums.WikiSpaceType
+  pageSeq?: number
+  archived?: boolean
+  announceSlackChannelId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  members?: Prisma.WikiSpaceMemberCreateNestedManyWithoutSpaceInput
+  groups?: Prisma.WikiSpaceGroupCreateNestedManyWithoutSpaceInput
+  boards?: Prisma.WikiSpaceBoardCreateNestedManyWithoutSpaceInput
+  pages?: Prisma.WikiPageCreateNestedManyWithoutSpaceInput
+  tags?: Prisma.WikiTagCreateNestedManyWithoutSpaceInput
+  revisions?: Prisma.WikiPageRevisionCreateNestedManyWithoutSpaceInput
+  attachments?: Prisma.AttachmentCreateNestedManyWithoutWikiSpaceInput
+  templates?: Prisma.WikiTemplateCreateNestedManyWithoutSpaceInput
+}
+
+export type WikiSpaceUncheckedCreateWithoutNotifiesInput = {
+  id?: string
+  key: string
+  name: string
+  description?: string | null
+  visibility?: $Enums.WikiVisibility
+  type?: $Enums.WikiSpaceType
+  pageSeq?: number
+  archived?: boolean
+  announceSlackChannelId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  members?: Prisma.WikiSpaceMemberUncheckedCreateNestedManyWithoutSpaceInput
+  groups?: Prisma.WikiSpaceGroupUncheckedCreateNestedManyWithoutSpaceInput
+  boards?: Prisma.WikiSpaceBoardUncheckedCreateNestedManyWithoutSpaceInput
+  pages?: Prisma.WikiPageUncheckedCreateNestedManyWithoutSpaceInput
+  tags?: Prisma.WikiTagUncheckedCreateNestedManyWithoutSpaceInput
+  revisions?: Prisma.WikiPageRevisionUncheckedCreateNestedManyWithoutSpaceInput
+  attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutWikiSpaceInput
+  templates?: Prisma.WikiTemplateUncheckedCreateNestedManyWithoutSpaceInput
+}
+
+export type WikiSpaceCreateOrConnectWithoutNotifiesInput = {
+  where: Prisma.WikiSpaceWhereUniqueInput
+  create: Prisma.XOR<Prisma.WikiSpaceCreateWithoutNotifiesInput, Prisma.WikiSpaceUncheckedCreateWithoutNotifiesInput>
+}
+
+export type WikiSpaceUpsertWithoutNotifiesInput = {
+  update: Prisma.XOR<Prisma.WikiSpaceUpdateWithoutNotifiesInput, Prisma.WikiSpaceUncheckedUpdateWithoutNotifiesInput>
+  create: Prisma.XOR<Prisma.WikiSpaceCreateWithoutNotifiesInput, Prisma.WikiSpaceUncheckedCreateWithoutNotifiesInput>
+  where?: Prisma.WikiSpaceWhereInput
+}
+
+export type WikiSpaceUpdateToOneWithWhereWithoutNotifiesInput = {
+  where?: Prisma.WikiSpaceWhereInput
+  data: Prisma.XOR<Prisma.WikiSpaceUpdateWithoutNotifiesInput, Prisma.WikiSpaceUncheckedUpdateWithoutNotifiesInput>
+}
+
+export type WikiSpaceUpdateWithoutNotifiesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  visibility?: Prisma.EnumWikiVisibilityFieldUpdateOperationsInput | $Enums.WikiVisibility
+  type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
+  pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
+  archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  announceSlackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.WikiSpaceMemberUpdateManyWithoutSpaceNestedInput
+  groups?: Prisma.WikiSpaceGroupUpdateManyWithoutSpaceNestedInput
+  boards?: Prisma.WikiSpaceBoardUpdateManyWithoutSpaceNestedInput
+  pages?: Prisma.WikiPageUpdateManyWithoutSpaceNestedInput
+  tags?: Prisma.WikiTagUpdateManyWithoutSpaceNestedInput
+  revisions?: Prisma.WikiPageRevisionUpdateManyWithoutSpaceNestedInput
+  attachments?: Prisma.AttachmentUpdateManyWithoutWikiSpaceNestedInput
+  templates?: Prisma.WikiTemplateUpdateManyWithoutSpaceNestedInput
+}
+
+export type WikiSpaceUncheckedUpdateWithoutNotifiesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  visibility?: Prisma.EnumWikiVisibilityFieldUpdateOperationsInput | $Enums.WikiVisibility
+  type?: Prisma.EnumWikiSpaceTypeFieldUpdateOperationsInput | $Enums.WikiSpaceType
+  pageSeq?: Prisma.IntFieldUpdateOperationsInput | number
+  archived?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  announceSlackChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.WikiSpaceMemberUncheckedUpdateManyWithoutSpaceNestedInput
+  groups?: Prisma.WikiSpaceGroupUncheckedUpdateManyWithoutSpaceNestedInput
+  boards?: Prisma.WikiSpaceBoardUncheckedUpdateManyWithoutSpaceNestedInput
+  pages?: Prisma.WikiPageUncheckedUpdateManyWithoutSpaceNestedInput
+  tags?: Prisma.WikiTagUncheckedUpdateManyWithoutSpaceNestedInput
+  revisions?: Prisma.WikiPageRevisionUncheckedUpdateManyWithoutSpaceNestedInput
+  attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutWikiSpaceNestedInput
+  templates?: Prisma.WikiTemplateUncheckedUpdateManyWithoutSpaceNestedInput
 }
 
 
@@ -1430,6 +1641,7 @@ export type WikiSpaceCountOutputType = {
   revisions: number
   attachments: number
   templates: number
+  notifies: number
 }
 
 export type WikiSpaceCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1441,6 +1653,7 @@ export type WikiSpaceCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensi
   revisions?: boolean | WikiSpaceCountOutputTypeCountRevisionsArgs
   attachments?: boolean | WikiSpaceCountOutputTypeCountAttachmentsArgs
   templates?: boolean | WikiSpaceCountOutputTypeCountTemplatesArgs
+  notifies?: boolean | WikiSpaceCountOutputTypeCountNotifiesArgs
 }
 
 /**
@@ -1509,6 +1722,13 @@ export type WikiSpaceCountOutputTypeCountTemplatesArgs<ExtArgs extends runtime.T
   where?: Prisma.WikiTemplateWhereInput
 }
 
+/**
+ * WikiSpaceCountOutputType without action
+ */
+export type WikiSpaceCountOutputTypeCountNotifiesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.WikiAnnouncementNotifyWhereInput
+}
+
 
 export type WikiSpaceSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1519,6 +1739,7 @@ export type WikiSpaceSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   type?: boolean
   pageSeq?: boolean
   archived?: boolean
+  announceSlackChannelId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   members?: boolean | Prisma.WikiSpace$membersArgs<ExtArgs>
@@ -1529,6 +1750,7 @@ export type WikiSpaceSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   revisions?: boolean | Prisma.WikiSpace$revisionsArgs<ExtArgs>
   attachments?: boolean | Prisma.WikiSpace$attachmentsArgs<ExtArgs>
   templates?: boolean | Prisma.WikiSpace$templatesArgs<ExtArgs>
+  notifies?: boolean | Prisma.WikiSpace$notifiesArgs<ExtArgs>
   _count?: boolean | Prisma.WikiSpaceCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["wikiSpace"]>
 
@@ -1541,6 +1763,7 @@ export type WikiSpaceSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ext
   type?: boolean
   pageSeq?: boolean
   archived?: boolean
+  announceSlackChannelId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["wikiSpace"]>
@@ -1554,6 +1777,7 @@ export type WikiSpaceSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
   type?: boolean
   pageSeq?: boolean
   archived?: boolean
+  announceSlackChannelId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["wikiSpace"]>
@@ -1567,11 +1791,12 @@ export type WikiSpaceSelectScalar = {
   type?: boolean
   pageSeq?: boolean
   archived?: boolean
+  announceSlackChannelId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type WikiSpaceOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "key" | "name" | "description" | "visibility" | "type" | "pageSeq" | "archived" | "createdAt" | "updatedAt", ExtArgs["result"]["wikiSpace"]>
+export type WikiSpaceOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "key" | "name" | "description" | "visibility" | "type" | "pageSeq" | "archived" | "announceSlackChannelId" | "createdAt" | "updatedAt", ExtArgs["result"]["wikiSpace"]>
 export type WikiSpaceInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   members?: boolean | Prisma.WikiSpace$membersArgs<ExtArgs>
   groups?: boolean | Prisma.WikiSpace$groupsArgs<ExtArgs>
@@ -1581,6 +1806,7 @@ export type WikiSpaceInclude<ExtArgs extends runtime.Types.Extensions.InternalAr
   revisions?: boolean | Prisma.WikiSpace$revisionsArgs<ExtArgs>
   attachments?: boolean | Prisma.WikiSpace$attachmentsArgs<ExtArgs>
   templates?: boolean | Prisma.WikiSpace$templatesArgs<ExtArgs>
+  notifies?: boolean | Prisma.WikiSpace$notifiesArgs<ExtArgs>
   _count?: boolean | Prisma.WikiSpaceCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type WikiSpaceIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1597,6 +1823,7 @@ export type $WikiSpacePayload<ExtArgs extends runtime.Types.Extensions.InternalA
     revisions: Prisma.$WikiPageRevisionPayload<ExtArgs>[]
     attachments: Prisma.$AttachmentPayload<ExtArgs>[]
     templates: Prisma.$WikiTemplatePayload<ExtArgs>[]
+    notifies: Prisma.$WikiAnnouncementNotifyPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1629,6 +1856,10 @@ export type $WikiSpacePayload<ExtArgs extends runtime.Types.Extensions.InternalA
      * アーカイブ済み。閲覧のみになる
      */
     archived: boolean
+    /**
+     * アナウンスの通知先の Slack チャンネル ID。区分が announcement のときだけ使う
+     */
+    announceSlackChannelId: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["wikiSpace"]>
@@ -2033,6 +2264,7 @@ export interface Prisma__WikiSpaceClient<T, Null = never, ExtArgs extends runtim
   revisions<T extends Prisma.WikiSpace$revisionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WikiSpace$revisionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WikiPageRevisionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   attachments<T extends Prisma.WikiSpace$attachmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WikiSpace$attachmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AttachmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   templates<T extends Prisma.WikiSpace$templatesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WikiSpace$templatesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WikiTemplatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  notifies<T extends Prisma.WikiSpace$notifiesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WikiSpace$notifiesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WikiAnnouncementNotifyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2070,6 +2302,7 @@ export interface WikiSpaceFieldRefs {
   readonly type: Prisma.FieldRef<"WikiSpace", 'WikiSpaceType'>
   readonly pageSeq: Prisma.FieldRef<"WikiSpace", 'Int'>
   readonly archived: Prisma.FieldRef<"WikiSpace", 'Boolean'>
+  readonly announceSlackChannelId: Prisma.FieldRef<"WikiSpace", 'String'>
   readonly createdAt: Prisma.FieldRef<"WikiSpace", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"WikiSpace", 'DateTime'>
 }
@@ -2654,6 +2887,30 @@ export type WikiSpace$templatesArgs<ExtArgs extends runtime.Types.Extensions.Int
   take?: number
   skip?: number
   distinct?: Prisma.WikiTemplateScalarFieldEnum | Prisma.WikiTemplateScalarFieldEnum[]
+}
+
+/**
+ * WikiSpace.notifies
+ */
+export type WikiSpace$notifiesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the WikiAnnouncementNotify
+   */
+  select?: Prisma.WikiAnnouncementNotifySelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the WikiAnnouncementNotify
+   */
+  omit?: Prisma.WikiAnnouncementNotifyOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.WikiAnnouncementNotifyInclude<ExtArgs> | null
+  where?: Prisma.WikiAnnouncementNotifyWhereInput
+  orderBy?: Prisma.WikiAnnouncementNotifyOrderByWithRelationInput | Prisma.WikiAnnouncementNotifyOrderByWithRelationInput[]
+  cursor?: Prisma.WikiAnnouncementNotifyWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.WikiAnnouncementNotifyScalarFieldEnum | Prisma.WikiAnnouncementNotifyScalarFieldEnum[]
 }
 
 /**

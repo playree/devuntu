@@ -77,6 +77,7 @@ docker compose up -d --wait
 - A Wiki for hierarchical documents (permissions per space, tags, search, page history and restore), which AI can also read and write over MCP
   - Design document pages in the [Markdown Design Doc Viewer](https://github.com/playree/markdown-design-doc-viewer) format
     (diagrams linked to their step headings, item tables, document headers), viewed and edited in place
+  - Announcement spaces that keep notices by date, and post them to a Slack channel right away or at a scheduled time
 - Google Calendar integration, and sharing your free/busy time through a public URL that needs no sign-in
 - Email / Slack DM / web push notifications for mentions, assignee changes, AI agent run results, auto-completion held on merge and due date reminders,
   and Slack channel notifications per team board (tickets created / completed, assignee changes, agent run results, auto-completion held on merge, announcements)

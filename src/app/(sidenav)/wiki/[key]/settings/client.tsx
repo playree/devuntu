@@ -10,6 +10,7 @@ import { usePagingList } from '@/components/general/paging'
 import { ContentHeader } from '@/components/header'
 import {
   ArrowLeftCircleIcon,
+  BellIcon,
   Cog6ToothIcon,
   DocumentDuplicateIcon,
   ExclamationTriangleIcon,
@@ -46,6 +47,7 @@ import {
   upsertWikiSpaceMember,
 } from './server'
 import { WikiSpaceProfile } from './space-profile'
+import { WikiSpaceSlackNotify } from './space-slack-notify'
 import { WikiSpaceTemplates } from './space-templates'
 
 const defaultExpandedKeys = new Set(['wiki_space_profile', 'wiki_space_members'])
@@ -215,6 +217,12 @@ export const WikiSpaceSettingsClient: FC = () => {
         <AccordionSection id='wiki_space_templates' icon={<DocumentDuplicateIcon />} title={t('ticket_template')}>
           <WikiSpaceTemplates space={space} />
         </AccordionSection>
+
+        {space.type === 'announcement' ? (
+          <AccordionSection id='wiki_announce_channel' icon={<BellIcon />} title={t('wiki_announce_channel')}>
+            <WikiSpaceSlackNotify space={space} />
+          </AccordionSection>
+        ) : null}
 
         <AccordionSection
           id='danger_zone'

@@ -46,7 +46,7 @@ export const deliverSlack = async (param: {
     return 'unlinked'
   }
 
-  const { subject, url, body, excerpt } = content
+  const { subject, url, body, excerpt, openLabel } = content
   return postSlackMessage(
     channel,
     buildTicketMessage({
@@ -54,7 +54,7 @@ export const deliverSlack = async (param: {
       url,
       body,
       excerpt,
-      openLabel: t(locale, 'slack_msg_open_ticket'),
+      openLabel: openLabel ?? t(locale, 'slack_msg_open_ticket'),
     }),
   )
 }
