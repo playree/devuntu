@@ -393,11 +393,28 @@ describe('runNotifyDispatch: Web プッシュ', () => {
   })
 
   it('チケットを持たない通知(Wiki のアナウンス)は、ページ単位のタグにする', async () => {
-    claimed.webpush = [delivery({ id: 'w1', channel: 'webpush', payload: { pageId: 'p9' } })]
+    claimed.webpush = [
+      delivery({
+        id: 'w1',
+        channel: 'webpush',
+        event: 'wiki_announcement',
+        payload: {
+          spaceId: 's1',
+          spaceKey: 'NEWS',
+          pageId: 'p9',
+          pageNumber: 3,
+          pageTitle: 'お知らせ',
+          kind: 'published',
+          fromName: 'テストユーザー',
+        },
+      }),
+    ]
 
     await runNotifyDispatch(now)
 
     expect(deliverWebPush).toHaveBeenCalledWith(expect.objectContaining({ tag: 'wiki:p9' }))
+    // まとめキーもイベントに合ったスキーマで読む
+    expect(parseNotifyPayload).toHaveBeenCalledWith('wiki_announcement', expect.objectContaining({ pageId: 'p9' }))
   })
 
   it('宛先ユーザーの無い行は送らず unlinked にする', async () => {

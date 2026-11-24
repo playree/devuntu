@@ -951,6 +951,7 @@ export const ja: DefaultLocaleItems = {
   msg_wiki_announcement_flat:
     'アナウンス用スペースのページは親子にできず、並べ替え・移動もできません(作成日時の新しい順に並びます)。',
   msg_wiki_announcements_load_failed: 'アナウンスを読み込めませんでした。リロードしてください。',
+  msg_slack_notify_load_failed: '通知の設定を読み込めませんでした。リロードしてください。',
   msg_wiki_announce_cancel_confirm: 'この予約を取り消します。',
   msg_wiki_announce_canceled: '予約を取り消しました',
   msg_wiki_announce_channel_desc:

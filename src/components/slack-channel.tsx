@@ -103,34 +103,46 @@ const ChannelsNotice: FC<{
  * 一覧には Bot が参加しているチャンネルだけが出る。出てこない = 招待されていない、と
  * 1 対 1 で対応するので、空のときは選択させずに招待を案内する。
  * 取得に失敗したときは招待しても解決しないので、案内を分ける。
+ * どちらの場合も、通知先が設定済み(`currentId`)なら案内の下にフォームを出して解除だけはできるようにする
+ * (Bot がチャンネルから外されると一覧が空になり、そのままでは「通知しない」を選べなくなるため)
  */
 export const SlackChannelsGuard: FC<{
   channels: SlackChannel[] | null | undefined
+  currentId: string | null | undefined
   refreshChannels: () => void
   isChannelsRefreshing: boolean
   children: (channels: SlackChannel[]) => ReactNode
-}> = ({ channels, refreshChannels, isChannelsRefreshing, children }) => {
+}> = ({ channels, currentId, refreshChannels, isChannelsRefreshing, children }) => {
   const { t } = useLocale()
-  if (!channels) {
-    return (
+  if (channels && channels.length > 0) {
+    return children(channels)
+  }
+  return (
+    <FlexCol>
       <ChannelsNotice
-        message={t('msg_slack_channel_failed')}
-        status='warning'
+        message={channels ? t('msg_slack_channel_empty') : t('msg_slack_channel_failed')}
+        status={channels ? undefined : 'warning'}
         onReload={refreshChannels}
         isPending={isChannelsRefreshing}
       />
-    )
-  }
-  if (channels.length === 0) {
-    return (
-      <ChannelsNotice
-        message={t('msg_slack_channel_empty')}
-        onReload={refreshChannels}
-        isPending={isChannelsRefreshing}
-      />
-    )
-  }
-  return children(channels)
+      {currentId && children([])}
+    </FlexCol>
+  )
+}
+
+/**
+ * 通知先の現在値を取得できなかったときの案内 + リロード
+ */
+export const SlackCurrentFailedNotice: FC<{ onReload: () => void }> = ({ onReload }) => {
+  const { t } = useLocale()
+  return (
+    <ChannelsNotice
+      message={t('msg_slack_notify_load_failed')}
+      status='warning'
+      onReload={onReload}
+      isPending={false}
+    />
+  )
 }
 
 /** Bot を招待した直後は一覧のキャッシュに乗っていないので、その場で取り直せるようにするボタン */

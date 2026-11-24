@@ -672,9 +672,14 @@ describe('deleteWikiPage', () => {
   })
 
   it('消すページの予約中の Slack 通知を、同じトランザクションで見送りにする', async () => {
+    // トランザクションのクライアントを別の参照にして、prisma を直接渡す退行を見分ける
+    const tx = { ...prisma }
+    vi.mocked(prisma.$transaction).mockImplementationOnce((async (cb: (client: unknown) => unknown) => cb(tx)) as never)
+
     await deleteWikiPage(actor, MCP, 'a', { recursive: true })
     expect(skipScheduledWikiAnnouncementsOf).toHaveBeenCalledTimes(1)
-    const [, pageIds] = vi.mocked(skipScheduledWikiAnnouncementsOf).mock.calls[0]
+    const [client, pageIds] = vi.mocked(skipScheduledWikiAnnouncementsOf).mock.calls[0]
+    expect(client).toBe(tx)
     expect([...pageIds].sort()).toEqual(['a', 'b', 'c', 'd'])
   })
 

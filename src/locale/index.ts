@@ -936,6 +936,7 @@ export type LocaleItemBase =
   | 'msg_widget_load_failed'
   | 'msg_wiki_announcement_flat'
   | 'msg_wiki_announcements_load_failed'
+  | 'msg_slack_notify_load_failed'
   | 'msg_wiki_announce_cancel_confirm'
   | 'msg_wiki_announce_canceled'
   | 'msg_wiki_announce_channel_desc'

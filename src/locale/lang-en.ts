@@ -953,6 +953,7 @@ Please copy and use the connection information above.
   msg_wiki_announcement_flat:
     'Pages in an announcement space cannot have parents and cannot be reordered or moved (they are listed newest first).',
   msg_wiki_announcements_load_failed: 'Failed to load the announcements. Reload to try again.',
+  msg_slack_notify_load_failed: 'Failed to load the notification settings. Reload to try again.',
   msg_wiki_announce_cancel_confirm: 'This scheduled notification will be canceled.',
   msg_wiki_announce_canceled: 'Schedule canceled',
   msg_wiki_announce_channel_desc:

@@ -388,13 +388,15 @@ Wiki のアナウンス用スペースのページを、スペースに設定し
   状態は `scheduled` / `sent` / `canceled` / `skipped`。ページは物理削除で、復元すると同じ id で作り直すので、
   `pageId` には外部キーを張らない(履歴を残し、復元で戻す)。スペースの削除では Cascade で消える
 - **今すぐ** : `sent` の行の作成と `enqueueNotify()` を同じトランザクションで行う。流量制限で投入できなければ `TOO_MANY_REQUESTS` にしてロールバックする
-- **予約** : `scheduled` で保存するだけ。変更・取り消しは `updateMany({ where: { id, status: 'scheduled' } })` で行い、
+- **予約** : `scheduled` で保存するだけ。日時は 15 分刻みに限る(時差は 15 分の倍数なので、UTC で揃っていればどのタイムゾーンでも揃う。変更の画面が刻みで出しても、保存済みの時刻がずれない)。変更・取り消しは `updateMany({ where: { id, status: 'scheduled' } })` で行い、
   件数が 0 なら `WIKI_ANNOUNCE_NOT_SCHEDULED`。変更した人を送信者(`createdById`)に置き換え、送る時点の権限もその人で確かめる
 - **ワーカー**(`wiki-announcement-notify-worker.ts`): `createWorkerLoop` で 1 分ごとに回す。`NOTIFY_WORKER_ENABLED` に従う
   - 期限の来た `scheduled` の ID を引き、1 件ずつトランザクションを分けて、スペース行を `FOR SHARE` でロックしてから予約行を `FOR UPDATE SKIP LOCKED` で取り直す(ロックの条件にも `status` と `scheduledAt` を入れる)。スペース行を先に取るのは、利用者の操作と同じ順にしてアーカイブ・区分の変更・ページの削除・通知先の変更と直列にするため(予約行を先に取ると、スペース行の後に予約行を待つページの削除とデッドロックする)。
     利用者の変更・取り消しが行を持っている間は飛ばし、ワーカーが持っている間は利用者の更新が待ってから `status` を見直す
   - 送る時点のページ・スペース・送信者を引き直し、満たさなければ `skipped` にして理由(`skipReason`)を残す:
     `page_deleted` / `archived` / `not_announcement` / `channel_unset` / `slack_disabled` / `no_permission`(退会・BAN を含む)
+  - 候補は `scheduledAt, id` の順に `WIKI_ANNOUNCE_BATCH` 件ずつ、前の続き(カーソル)から読む。流量制限に当たった送信者の分は読み直しの条件で外す。
+    送れない予約(流量制限・想定外の例外)が先頭に溜まっても後ろの予約は止まらない。1 周で送るのは `WIKI_ANNOUNCE_BATCH` 件、読むのは `WIKI_ANNOUNCE_SCAN_MAX` 件まで
   - 満たせば**送る時点の最新のタイトルと本文**で `enqueueNotify()` して `sent` にする。流量制限で投入できなければ予約のまま残し、その送信者の分だけをこの周で飛ばす(ほかの送信者の予約は遅らせない)
   - 1 件の失敗(想定外の例外)はログに残して次へ進む。行は予約のまま残り、次の周でやり直す
 - 予約の作成は、ページ行を `FOR NO KEY UPDATE` でロックしてから予約中の件数を数える(スペース行の共有ロック同士は競合しないので、1 ページの上限 `MAX_WIKI_ANNOUNCE_SCHEDULED_PER_PAGE` を同時の作成で超えないように)

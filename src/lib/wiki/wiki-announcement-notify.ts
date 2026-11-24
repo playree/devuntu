@@ -28,6 +28,7 @@ import {
   WIKI_ANNOUNCE_BATCH,
   WIKI_ANNOUNCE_INVALID_SCHEDULE,
   WIKI_ANNOUNCE_NOT_SCHEDULED,
+  WIKI_ANNOUNCE_SCAN_MAX,
   WIKI_ANNOUNCE_TOO_MANY_SCHEDULED,
   WIKI_ANNOUNCE_UNAVAILABLE,
 } from './wiki-announcement-notify-rule'
@@ -51,7 +52,10 @@ const errUnavailable = () =>
 const errNotScheduled = () =>
   new ClientError(WIKI_ANNOUNCE_NOT_SCHEDULED, 'The notification is no longer scheduled (sent, canceled or skipped)')
 const errInvalidSchedule = () =>
-  new ClientError(WIKI_ANNOUNCE_INVALID_SCHEDULE, 'scheduledAt must be in the future and within a year')
+  new ClientError(
+    WIKI_ANNOUNCE_INVALID_SCHEDULE,
+    'scheduledAt must be on a 15-minute boundary, in the future and within a year',
+  )
 const errTooManyScheduled = () =>
   new ClientError(
     WIKI_ANNOUNCE_TOO_MANY_SCHEDULED,
@@ -385,39 +389,73 @@ const sendScheduled = async (
   return 'sent'
 }
 
+/** 期限の来た予約の続き(`scheduledAt, id` の順で `cursor` より後)。流量制限に当たった送信者の分は読まない */
+const dueAfter = (now: Date, cursor: { scheduledAt: Date; id: string } | null, throttled: ReadonlySet<string>) =>
+  prisma.wikiAnnouncementNotify.findMany({
+    where: {
+      status: 'scheduled',
+      scheduledAt: { lte: now },
+      AND: [
+        ...(cursor
+          ? [
+              {
+                OR: [
+                  { scheduledAt: { gt: cursor.scheduledAt } },
+                  { scheduledAt: cursor.scheduledAt, id: { gt: cursor.id } },
+                ],
+              },
+            ]
+          : []),
+        ...(throttled.size > 0 ? [{ OR: [{ createdById: null }, { createdById: { notIn: [...throttled] } }] }] : []),
+      ],
+    },
+    select: { id: true, spaceId: true, createdById: true, scheduledAt: true },
+    orderBy: [{ scheduledAt: 'asc' }, { id: 'asc' }],
+    take: WIKI_ANNOUNCE_BATCH,
+  })
+
 /**
  * 期限の来た予約を送る(ワーカーの 1 周)。戻り値は送った件数。
  *
  * 1 件ずつトランザクションを分け、1 件の失敗で残りを止めない。流量制限で投入できなかったときは
- * 予約のまま残し、その送信者の分だけをこの周で飛ばして次の周で送り直す(他の送信者の予約は遅らせない)
+ * 予約のまま残し、その送信者の分だけをこの周で飛ばして次の周で送り直す。
+ * 候補は `scheduledAt, id` の続きから読むので、送れない予約(流量制限・想定外の例外)が先頭に溜まっても
+ * 後ろの予約は止まらない。1 周で送るのは `WIKI_ANNOUNCE_BATCH` 件、読むのは `WIKI_ANNOUNCE_SCAN_MAX` 件まで
  */
 export const runWikiAnnouncementSchedule = async (now: Date = nowDate()): Promise<number> => {
-  const due = await prisma.wikiAnnouncementNotify.findMany({
-    where: { status: 'scheduled', scheduledAt: { lte: now } },
-    select: { id: true, spaceId: true, createdById: true },
-    orderBy: [{ scheduledAt: 'asc' }, { id: 'asc' }],
-    take: WIKI_ANNOUNCE_BATCH,
-  })
   const throttled = new Set<string>()
+  let cursor: { scheduledAt: Date; id: string } | null = null
   let sent = 0
-  for (const row of due) {
-    if (row.createdById && throttled.has(row.createdById)) {
-      continue
+  let scanned = 0
+  while (sent < WIKI_ANNOUNCE_BATCH && scanned < WIKI_ANNOUNCE_SCAN_MAX) {
+    const due = await dueAfter(now, cursor, throttled)
+    if (due.length === 0) {
+      break
     }
-    try {
-      if ((await prisma.$transaction((tx) => sendScheduled(tx, row, now))) === 'sent') {
-        sent++
+    for (const row of due) {
+      cursor = row
+      scanned++
+      if (sent >= WIKI_ANNOUNCE_BATCH || scanned > WIKI_ANNOUNCE_SCAN_MAX) {
+        break
       }
-    } catch (error) {
-      if (error instanceof AnnounceThrottled) {
-        throttled.add(error.senderId)
+      if (row.createdById && throttled.has(row.createdById)) {
         continue
       }
-      logger.warn({ error, id: row.id }, 'wiki announcement send failed')
+      try {
+        if ((await prisma.$transaction((tx) => sendScheduled(tx, row, now))) === 'sent') {
+          sent++
+        }
+      } catch (error) {
+        if (error instanceof AnnounceThrottled) {
+          throttled.add(error.senderId)
+          continue
+        }
+        logger.warn({ error, id: row.id }, 'wiki announcement send failed')
+      }
     }
   }
   if (sent > 0) {
-    logger.info({ sent, candidates: due.length }, 'wiki announcement schedule sent')
+    logger.info({ sent, scanned }, 'wiki announcement schedule sent')
   }
   return sent
 }

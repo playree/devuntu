@@ -32,11 +32,18 @@ describe('isValidWikiAnnounceSchedule', () => {
   const now = new Date('2026-11-23T00:00:00.000Z')
   const at = (ms: number) => new Date(now.getTime() + ms)
 
-  it('未来で、上限より先でない日時だけを受け付ける', () => {
-    expect(isValidWikiAnnounceSchedule(at(1), now)).toBe(true)
+  const STEP = 15 * 60 * 1000
+
+  it('15分刻みで、未来で、上限より先でない日時だけを受け付ける', () => {
+    expect(isValidWikiAnnounceSchedule(at(STEP), now)).toBe(true)
     expect(isValidWikiAnnounceSchedule(at(MAX_WIKI_ANNOUNCE_SCHEDULE_MS), now)).toBe(true)
     expect(isValidWikiAnnounceSchedule(now, now)).toBe(false)
-    expect(isValidWikiAnnounceSchedule(at(-1), now)).toBe(false)
-    expect(isValidWikiAnnounceSchedule(at(MAX_WIKI_ANNOUNCE_SCHEDULE_MS + 1), now)).toBe(false)
+    expect(isValidWikiAnnounceSchedule(at(-STEP), now)).toBe(false)
+    expect(isValidWikiAnnounceSchedule(at(MAX_WIKI_ANNOUNCE_SCHEDULE_MS + STEP), now)).toBe(false)
+  })
+
+  it('15分刻みでない時刻は受け付けない(変更の画面が刻みに切り下げても、保存済みの時刻がずれない)', () => {
+    expect(isValidWikiAnnounceSchedule(at(STEP + 7 * 60 * 1000), now)).toBe(false)
+    expect(isValidWikiAnnounceSchedule(at(STEP + 1), now)).toBe(false)
   })
 })

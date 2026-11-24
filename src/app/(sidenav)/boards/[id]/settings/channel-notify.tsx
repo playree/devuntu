@@ -11,6 +11,7 @@ import {
   SLACK_CHANNEL_NONE_KEY,
   SlackChannelsGuard,
   SlackChannelsReloadButton,
+  SlackCurrentFailedNotice,
   useSlackChannelOptions,
   useSlackChannels,
 } from '@/components/slack-channel'
@@ -123,24 +124,27 @@ export const BoardChannelNotify: FC<{ boardId: string }> = ({ boardId }) => {
   if (isLoading || isCurrentLoading) {
     return <PanelSkeleton />
   }
+  // 現在値が取れないと、保存済みの通知先を空欄に見せて上書きさせてしまうので、フォームを出さずに取り直させる
+  if (!current) {
+    return <SlackCurrentFailedNotice onReload={refresh} />
+  }
   return (
     <SlackChannelsGuard
       channels={channels}
+      currentId={current.slackChannelId}
       refreshChannels={refreshChannels}
       isChannelsRefreshing={isChannelsRefreshing}
     >
-      {(channels) =>
-        current && (
-          <NotifyForm
-            boardId={boardId}
-            current={current}
-            channels={channels}
-            refresh={refresh}
-            refreshChannels={refreshChannels}
-            isChannelsRefreshing={isChannelsRefreshing}
-          />
-        )
-      }
+      {(channels) => (
+        <NotifyForm
+          boardId={boardId}
+          current={current}
+          channels={channels}
+          refresh={refresh}
+          refreshChannels={refreshChannels}
+          isChannelsRefreshing={isChannelsRefreshing}
+        />
+      )}
     </SlackChannelsGuard>
   )
 }

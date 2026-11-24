@@ -18,8 +18,11 @@ export const WIKI_ANNOUNCE_TIME_STEP_MIN = 15
 /** 予約を見るワーカーの間隔 */
 export const WIKI_ANNOUNCE_TICK_MS = MINUTE_MS
 
-/** ワーカーが 1 周で送る予約の上限 */
+/** ワーカーが 1 周で送る予約の上限。候補もこの件数ずつ読む */
 export const WIKI_ANNOUNCE_BATCH = 50
+
+/** ワーカーが 1 周で読む候補の上限(送れない予約が溜まっても 1 周の仕事量を抑える) */
+export const WIKI_ANNOUNCE_SCAN_MAX = WIKI_ANNOUNCE_BATCH * 10
 
 /** 1 ページに置ける予約中の通知の上限 */
 export const MAX_WIKI_ANNOUNCE_SCHEDULED_PER_PAGE = 10
@@ -28,7 +31,7 @@ export const MAX_WIKI_ANNOUNCE_SCHEDULED_PER_PAGE = 10
 export const WIKI_ANNOUNCE_UNAVAILABLE = 'WIKI_ANNOUNCE_UNAVAILABLE'
 /** 予約中でなくなった(送信済み・取り消し済み・見送り)通知を変えようとした */
 export const WIKI_ANNOUNCE_NOT_SCHEDULED = 'WIKI_ANNOUNCE_NOT_SCHEDULED'
-/** 予約の日時が過去、または先すぎる */
+/** 予約の日時が刻み(15 分)に揃っていない、過去、または先すぎる */
 export const WIKI_ANNOUNCE_INVALID_SCHEDULE = 'WIKI_ANNOUNCE_INVALID_SCHEDULE'
 /** 1 ページの予約中の通知が上限に達した */
 export const WIKI_ANNOUNCE_TOO_MANY_SCHEDULED = 'WIKI_ANNOUNCE_TOO_MANY_SCHEDULED'
@@ -47,8 +50,13 @@ export const wikiAnnounceStateOf = (statuses: readonly WikiAnnouncementNotifySta
  */
 export const canSeeWikiAnnounce = (role: WikiRole | null): boolean => hasWikiRole(role, 'editor')
 
-/** 予約の日時が受け付けられる範囲か(未来で、上限より先でない) */
+/**
+ * 予約の日時が受け付けられるか(刻みに揃っていて、未来で、上限より先でない)。
+ * タイムゾーンの時差は 15 分の倍数なので、UTC で刻みに揃っていれば利用者のタイムゾーンでも揃う
+ * (変更の画面が刻みに切り下げて出しても、保存済みの時刻がずれない)
+ */
 export const isValidWikiAnnounceSchedule = (scheduledAt: Date, now: Date): boolean => {
-  const diff = scheduledAt.getTime() - now.getTime()
-  return diff > 0 && diff <= MAX_WIKI_ANNOUNCE_SCHEDULE_MS
+  const at = scheduledAt.getTime()
+  const diff = at - now.getTime()
+  return at % (WIKI_ANNOUNCE_TIME_STEP_MIN * MINUTE_MS) === 0 && diff > 0 && diff <= MAX_WIKI_ANNOUNCE_SCHEDULE_MS
 }

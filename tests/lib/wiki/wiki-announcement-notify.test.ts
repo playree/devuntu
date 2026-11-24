@@ -22,6 +22,7 @@ import {
 } from '@/lib/wiki/wiki-announcement-notify'
 import {
   MAX_WIKI_ANNOUNCE_SCHEDULED_PER_PAGE,
+  WIKI_ANNOUNCE_BATCH,
   WIKI_ANNOUNCE_INVALID_SCHEDULE,
   WIKI_ANNOUNCE_NOT_SCHEDULED,
   WIKI_ANNOUNCE_TOO_MANY_SCHEDULED,
@@ -197,7 +198,8 @@ describe('scheduleWikiAnnouncement', () => {
   })
 
   it.each([
-    ['過去', new Date(NOW.getTime() - 1000)],
+    ['15分刻みでない', new Date(NOW.getTime() + 60 * 60 * 1000 + 7 * 60 * 1000)],
+    ['過去', new Date(NOW.getTime() - 15 * 60 * 1000)],
     ['現在', NOW],
     ['1年より先', new Date(NOW.getTime() + 366 * 24 * 60 * 60 * 1000)],
   ])('%s の日時は WIKI_ANNOUNCE_INVALID_SCHEDULE', async (_label, scheduledAt) => {
@@ -302,11 +304,18 @@ describe('runWikiAnnouncementSchedule', () => {
     createdBy: sender,
     ...override,
   })
+  const AT = new Date(NOW.getTime() - 60 * 1000)
+  const due = (id: string, createdById = 'u1') => ({ id, spaceId: SPACE_ID, createdById, scheduledAt: AT })
+  /** 候補の読み出し。1 回目に `rows`、続きの読み出しでは空を返す */
+  const dueRows = (...pages: ReturnType<typeof due>[][]) => {
+    const findMany = vi.mocked(prisma.wikiAnnouncementNotify.findMany).mockReset().mockResolvedValue([])
+    for (const rows of pages) {
+      findMany.mockResolvedValueOnce(rows as never)
+    }
+  }
 
   beforeEach(() => {
-    vi.mocked(prisma.wikiAnnouncementNotify.findMany).mockResolvedValue([
-      { id: 'n1', spaceId: SPACE_ID, createdById: 'u1' },
-    ] as never)
+    dueRows([due('n1', 'u1')])
     // 予約中で期限の来た行のロックが取れた
     vi.mocked(prisma.$queryRaw).mockResolvedValue([{ id: 'n1' }] as never)
     vi.mocked(prisma.wikiAnnouncementNotify.findUniqueOrThrow).mockResolvedValue(scheduledRow() as never)
@@ -356,7 +365,7 @@ describe('runWikiAnnouncementSchedule', () => {
   })
 
   it('候補が無ければ何もしない', async () => {
-    vi.mocked(prisma.wikiAnnouncementNotify.findMany).mockResolvedValue([])
+    dueRows()
     expect(await runWikiAnnouncementSchedule(NOW)).toBe(0)
     expect(prisma.$transaction).not.toHaveBeenCalled()
   })
@@ -402,11 +411,7 @@ describe('runWikiAnnouncementSchedule', () => {
   })
 
   it('流量制限で投入できなければ予約のまま残し、その送信者の分だけをこの周で飛ばす', async () => {
-    vi.mocked(prisma.wikiAnnouncementNotify.findMany).mockResolvedValue([
-      { id: 'n1', spaceId: SPACE_ID, createdById: 'u1' },
-      { id: 'n2', spaceId: SPACE_ID, createdById: 'u1' },
-      { id: 'n3', spaceId: SPACE_ID, createdById: 'u2' },
-    ] as never)
+    dueRows([due('n1', 'u1'), due('n2', 'u1'), due('n3', 'u2')])
     vi.mocked(prisma.wikiAnnouncementNotify.findUniqueOrThrow)
       .mockResolvedValueOnce(scheduledRow() as never)
       .mockResolvedValueOnce(scheduledRow({ createdBy: { ...sender, id: 'u2', name: '別の人' } }) as never)
@@ -418,11 +423,27 @@ describe('runWikiAnnouncementSchedule', () => {
     expect(updated()).toEqual([{ status: 'sent', sentAt: NOW }])
   })
 
+  it('先頭が送れない予約で埋まっていても、続きを読んで後ろの予約を送る', async () => {
+    const blocked = Array.from({ length: WIKI_ANNOUNCE_BATCH }, (_, i) => due(`a${i}`, 'u1'))
+    dueRows(blocked, [due('b1', 'u2')])
+    vi.mocked(prisma.wikiAnnouncementNotify.findUniqueOrThrow)
+      .mockResolvedValueOnce(scheduledRow() as never)
+      .mockResolvedValueOnce(scheduledRow({ createdBy: { ...sender, id: 'u2', name: '別の人' } }) as never)
+    vi.mocked(enqueueNotify).mockResolvedValueOnce(false).mockResolvedValueOnce(true)
+
+    expect(await runWikiAnnouncementSchedule(NOW)).toBe(1)
+    // 流量制限に当たった u1 の残りは試さない
+    expect(prisma.$transaction).toHaveBeenCalledTimes(2)
+    // 続きは最後に読んだ行の後から、u1 を除いて読む
+    const second = vi.mocked(prisma.wikiAnnouncementNotify.findMany).mock.calls[1][0]
+    expect(second?.where?.AND).toEqual([
+      { OR: [{ scheduledAt: { gt: AT } }, { scheduledAt: AT, id: { gt: `a${WIKI_ANNOUNCE_BATCH - 1}` } }] },
+      { OR: [{ createdById: null }, { createdById: { notIn: ['u1'] } }] },
+    ])
+  })
+
   it('1件が失敗しても残りは送る', async () => {
-    vi.mocked(prisma.wikiAnnouncementNotify.findMany).mockResolvedValue([
-      { id: 'n1', spaceId: SPACE_ID, createdById: 'u1' },
-      { id: 'n2', spaceId: SPACE_ID, createdById: 'u1' },
-    ] as never)
+    dueRows([due('n1', 'u1'), due('n2', 'u1')])
     vi.mocked(prisma.wikiAnnouncementNotify.findUniqueOrThrow)
       .mockRejectedValueOnce(new Error('P2025'))
       .mockResolvedValue(scheduledRow() as never)
