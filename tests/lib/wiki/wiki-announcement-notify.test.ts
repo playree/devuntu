@@ -25,6 +25,7 @@ import {
   WIKI_ANNOUNCE_BATCH,
   WIKI_ANNOUNCE_INVALID_SCHEDULE,
   WIKI_ANNOUNCE_NOT_SCHEDULED,
+  WIKI_ANNOUNCE_SCAN_MAX,
   WIKI_ANNOUNCE_TOO_MANY_SCHEDULED,
   WIKI_ANNOUNCE_UNAVAILABLE,
 } from '@/lib/wiki/wiki-announcement-notify-rule'
@@ -326,7 +327,7 @@ describe('runWikiAnnouncementSchedule', () => {
   const updated = () => vi.mocked(prisma.wikiAnnouncementNotify.update).mock.calls.map(([arg]) => arg.data)
 
   it('期限の来た予約中の行だけを候補にする', async () => {
-    await runWikiAnnouncementSchedule(NOW)
+    await runWikiAnnouncementSchedule(NOW, { resumeFrom: null })
     expect(vi.mocked(prisma.wikiAnnouncementNotify.findMany).mock.calls[0][0]).toMatchObject({
       where: { status: 'scheduled', scheduledAt: { lte: NOW } },
     })
@@ -346,7 +347,7 @@ describe('runWikiAnnouncementSchedule', () => {
   })
 
   it('送信時点の最新の内容で投入し、送信済みにする', async () => {
-    expect(await runWikiAnnouncementSchedule(NOW)).toBe(1)
+    expect(await runWikiAnnouncementSchedule(NOW, { resumeFrom: null })).toBe(1)
     expect(enqueuedPayload()).toMatchObject({
       pageTitle: '送る時点のタイトル',
       kind: 'updated',
@@ -359,14 +360,14 @@ describe('runWikiAnnouncementSchedule', () => {
 
   it('予約時刻の前の行・送信済み・取り消し済みの行(ロックの条件に合わない)は送らない', async () => {
     vi.mocked(prisma.$queryRaw).mockResolvedValue([] as never)
-    expect(await runWikiAnnouncementSchedule(NOW)).toBe(0)
+    expect(await runWikiAnnouncementSchedule(NOW, { resumeFrom: null })).toBe(0)
     expect(enqueueNotify).not.toHaveBeenCalled()
     expect(prisma.wikiAnnouncementNotify.update).not.toHaveBeenCalled()
   })
 
   it('候補が無ければ何もしない', async () => {
     dueRows()
-    expect(await runWikiAnnouncementSchedule(NOW)).toBe(0)
+    expect(await runWikiAnnouncementSchedule(NOW, { resumeFrom: null })).toBe(0)
     expect(prisma.$transaction).not.toHaveBeenCalled()
   })
 
@@ -405,7 +406,7 @@ describe('runWikiAnnouncementSchedule', () => {
     ],
   ])('送れない状態(%s)なら理由を付けて見送る', async (skipReason, arrange) => {
     arrange()
-    expect(await runWikiAnnouncementSchedule(NOW)).toBe(0)
+    expect(await runWikiAnnouncementSchedule(NOW, { resumeFrom: null })).toBe(0)
     expect(enqueueNotify).not.toHaveBeenCalled()
     expect(updated()).toEqual([{ status: 'skipped', skipReason }])
   })
@@ -417,7 +418,7 @@ describe('runWikiAnnouncementSchedule', () => {
       .mockResolvedValueOnce(scheduledRow({ createdBy: { ...sender, id: 'u2', name: '別の人' } }) as never)
     vi.mocked(enqueueNotify).mockResolvedValueOnce(false).mockResolvedValueOnce(true)
 
-    expect(await runWikiAnnouncementSchedule(NOW)).toBe(1)
+    expect(await runWikiAnnouncementSchedule(NOW, { resumeFrom: null })).toBe(1)
     // n2(同じ送信者)は試さず、n3(別の送信者)は送る
     expect(prisma.$transaction).toHaveBeenCalledTimes(2)
     expect(updated()).toEqual([{ status: 'sent', sentAt: NOW }])
@@ -431,7 +432,7 @@ describe('runWikiAnnouncementSchedule', () => {
       .mockResolvedValueOnce(scheduledRow({ createdBy: { ...sender, id: 'u2', name: '別の人' } }) as never)
     vi.mocked(enqueueNotify).mockResolvedValueOnce(false).mockResolvedValueOnce(true)
 
-    expect(await runWikiAnnouncementSchedule(NOW)).toBe(1)
+    expect(await runWikiAnnouncementSchedule(NOW, { resumeFrom: null })).toBe(1)
     // 流量制限に当たった u1 の残りは試さない
     expect(prisma.$transaction).toHaveBeenCalledTimes(2)
     // 続きは最後に読んだ行の後から、u1 を除いて読む
@@ -442,11 +443,37 @@ describe('runWikiAnnouncementSchedule', () => {
     ])
   })
 
+  it('読む上限まで失敗し続けたら、次の周はその続きから読む(末尾まで読んだら先頭へ戻る)', async () => {
+    const failing = Array.from({ length: WIKI_ANNOUNCE_SCAN_MAX }, (_, i) => due(`a${String(i).padStart(3, '0')}`))
+    const pages = Array.from({ length: WIKI_ANNOUNCE_SCAN_MAX / WIKI_ANNOUNCE_BATCH }, (_, i) =>
+      failing.slice(i * WIKI_ANNOUNCE_BATCH, (i + 1) * WIKI_ANNOUNCE_BATCH),
+    )
+    dueRows(...pages)
+    vi.mocked(prisma.wikiAnnouncementNotify.findUniqueOrThrow).mockRejectedValue(new Error('unexpected'))
+    const state = { resumeFrom: null }
+
+    expect(await runWikiAnnouncementSchedule(NOW, state)).toBe(0)
+    const last = failing.at(-1)!
+    expect(state.resumeFrom).toEqual({ scheduledAt: AT, id: last.id })
+
+    // 次の周は続きから読み、後ろの予約を送る
+    dueRows([due('b1', 'u2')])
+    vi.mocked(prisma.wikiAnnouncementNotify.findUniqueOrThrow)
+      .mockReset()
+      .mockResolvedValue(scheduledRow() as never)
+    expect(await runWikiAnnouncementSchedule(NOW, state)).toBe(1)
+    expect(vi.mocked(prisma.wikiAnnouncementNotify.findMany).mock.calls[0][0]?.where?.AND).toEqual([
+      { OR: [{ scheduledAt: { gt: AT } }, { scheduledAt: AT, id: { gt: last.id } }] },
+    ])
+    // 末尾まで読んだので、その次の周は先頭から
+    expect(state.resumeFrom).toBeNull()
+  })
+
   it('1件が失敗しても残りは送る', async () => {
     dueRows([due('n1', 'u1'), due('n2', 'u1')])
     vi.mocked(prisma.wikiAnnouncementNotify.findUniqueOrThrow)
       .mockRejectedValueOnce(new Error('P2025'))
       .mockResolvedValue(scheduledRow() as never)
-    expect(await runWikiAnnouncementSchedule(NOW)).toBe(1)
+    expect(await runWikiAnnouncementSchedule(NOW, { resumeFrom: null })).toBe(1)
   })
 })

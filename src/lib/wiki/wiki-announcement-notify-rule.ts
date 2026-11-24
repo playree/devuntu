@@ -3,7 +3,7 @@
  */
 
 import type { WikiAnnouncementNotifyStatus } from '@/generated/prisma/enums'
-import { DAY_MS, MINUTE_MS } from '../day'
+import { DAY_MS, MINUTE_MS, toZone, zonedMinutes } from '../day'
 import { hasWikiRole, type WikiRole } from './wiki-rule'
 
 /** 一言の最大長。Slack へは `announcementText()` で同じ長さに丸める */
@@ -60,3 +60,31 @@ export const isValidWikiAnnounceSchedule = (scheduledAt: Date, now: Date): boole
   const diff = at - now.getTime()
   return at % (WIKI_ANNOUNCE_TIME_STEP_MIN * MINUTE_MS) === 0 && diff > 0 && diff <= MAX_WIKI_ANNOUNCE_SCHEDULE_MS
 }
+
+const DAY_MIN = 24 * 60
+
+/** 予約の日付(YYYY-MM-DD)と 0:00 からの分。利用者のタイムゾーンで持つ */
+export type WikiAnnounceScheduleParts = { date: string; minutes: number }
+
+/** 利用者のタイムゾーンでの日付と 0:00 からの分。`roundUp` なら刻みに切り上げ、そうでなければ切り下げる */
+export const wikiAnnounceScheduleParts = (at: Date, tz: string, roundUp: boolean): WikiAnnounceScheduleParts => {
+  const zoned = toZone(at, tz)
+  const min = zoned.hour() * 60 + zoned.minute()
+  const step = WIKI_ANNOUNCE_TIME_STEP_MIN
+  const rounded = roundUp ? Math.ceil(min / step) * step : Math.floor(min / step) * step
+  const day = rounded >= DAY_MIN ? zoned.add(1, 'day') : zoned
+  return { date: day.format('YYYY-MM-DD'), minutes: rounded % DAY_MIN }
+}
+
+/**
+ * 画面で選んだ日付と時刻を絶対時刻にする。予約の変更で日付も時刻も変えていなければ、保存済みの時刻をそのまま使う
+ * (夏時間の終わりの重なる時間帯は、`zonedMinutes` が早い側を選ぶので、変えていない予約が 1 時間ずれるのを防ぐ)
+ */
+export const resolveWikiAnnounceScheduledAt = (
+  selected: WikiAnnounceScheduleParts,
+  tz: string,
+  original?: { at: Date; parts: WikiAnnounceScheduleParts },
+): Date =>
+  original && original.parts.date === selected.date && original.parts.minutes === selected.minutes
+    ? original.at
+    : zonedMinutes(selected.date, selected.minutes, tz).toDate()

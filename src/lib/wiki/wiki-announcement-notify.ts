@@ -389,8 +389,10 @@ const sendScheduled = async (
   return 'sent'
 }
 
+type DueCursor = { scheduledAt: Date; id: string }
+
 /** 期限の来た予約の続き(`scheduledAt, id` の順で `cursor` より後)。流量制限に当たった送信者の分は読まない */
-const dueAfter = (now: Date, cursor: { scheduledAt: Date; id: string } | null, throttled: ReadonlySet<string>) =>
+const dueAfter = (now: Date, cursor: DueCursor | null, throttled: ReadonlySet<string>) =>
   prisma.wikiAnnouncementNotify.findMany({
     where: {
       status: 'scheduled',
@@ -414,30 +416,42 @@ const dueAfter = (now: Date, cursor: { scheduledAt: Date; id: string } | null, t
     take: WIKI_ANNOUNCE_BATCH,
   })
 
+/** 周をまたいで持つワーカーの状態。上限で打ち切った周の続きから次の周を始める */
+export type WikiAnnounceScheduleState = { resumeFrom: DueCursor | null }
+
+const defaultScheduleState: WikiAnnounceScheduleState = { resumeFrom: null }
+
 /**
  * 期限の来た予約を送る(ワーカーの 1 周)。戻り値は送った件数。
  *
  * 1 件ずつトランザクションを分け、1 件の失敗で残りを止めない。流量制限で投入できなかったときは
  * 予約のまま残し、その送信者の分だけをこの周で飛ばして次の周で送り直す。
  * 候補は `scheduledAt, id` の続きから読むので、送れない予約(流量制限・想定外の例外)が先頭に溜まっても
- * 後ろの予約は止まらない。1 周で送るのは `WIKI_ANNOUNCE_BATCH` 件、読むのは `WIKI_ANNOUNCE_SCAN_MAX` 件まで
+ * 後ろの予約は止まらない。1 周で送るのは `WIKI_ANNOUNCE_BATCH` 件、読むのは `WIKI_ANNOUNCE_SCAN_MAX` 件まで。
+ * 上限で打ち切ったときは、次の周をその続きから始める(末尾まで読んだら先頭へ戻る)ので、
+ * 失敗し続ける予約が読む上限を超えて溜まっても、後ろの予約はいずれ読まれる
  */
-export const runWikiAnnouncementSchedule = async (now: Date = nowDate()): Promise<number> => {
+export const runWikiAnnouncementSchedule = async (
+  now: Date = nowDate(),
+  state: WikiAnnounceScheduleState = defaultScheduleState,
+): Promise<number> => {
   const throttled = new Set<string>()
-  let cursor: { scheduledAt: Date; id: string } | null = null
+  let cursor = state.resumeFrom
   let sent = 0
   let scanned = 0
+  let reachedEnd = false
   while (sent < WIKI_ANNOUNCE_BATCH && scanned < WIKI_ANNOUNCE_SCAN_MAX) {
     const due = await dueAfter(now, cursor, throttled)
     if (due.length === 0) {
+      reachedEnd = true
       break
     }
     for (const row of due) {
-      cursor = row
-      scanned++
-      if (sent >= WIKI_ANNOUNCE_BATCH || scanned > WIKI_ANNOUNCE_SCAN_MAX) {
+      if (sent >= WIKI_ANNOUNCE_BATCH || scanned >= WIKI_ANNOUNCE_SCAN_MAX) {
         break
       }
+      cursor = row
+      scanned++
       if (row.createdById && throttled.has(row.createdById)) {
         continue
       }
@@ -454,6 +468,7 @@ export const runWikiAnnouncementSchedule = async (now: Date = nowDate()): Promis
       }
     }
   }
+  state.resumeFrom = reachedEnd ? null : cursor && { scheduledAt: cursor.scheduledAt, id: cursor.id }
   if (sent > 0) {
     logger.info({ sent, scanned }, 'wiki announcement schedule sent')
   }

@@ -13,10 +13,15 @@ import { useWikiAnnounceKindOptions } from '@/components/wiki-chip'
 import type { WikiAnnouncementNotifyKind } from '@/generated/prisma/enums'
 import { parseAction } from '@/lib/action/action-client'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
-import { minToHHmm, toZone, zonedMinutes } from '@/lib/day'
+import { minToHHmm } from '@/lib/day'
 import { ClientError } from '@/lib/error'
 import { scWikiAnnounceForm, type WikiAnnounceForm, type WikiAnnounceFormIn } from '@/lib/schema/schema-wiki'
-import { isValidWikiAnnounceSchedule, WIKI_ANNOUNCE_TIME_STEP_MIN } from '@/lib/wiki/wiki-announcement-notify-rule'
+import {
+  isValidWikiAnnounceSchedule,
+  resolveWikiAnnounceScheduledAt,
+  WIKI_ANNOUNCE_TIME_STEP_MIN,
+  wikiAnnounceScheduleParts,
+} from '@/lib/wiki/wiki-announcement-notify-rule'
 import { el } from '@/locale'
 import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -41,16 +46,6 @@ const TIME_OPTIONS = Object.fromEntries(
   }),
 )
 
-/** 利用者のタイムゾーンでの日付と 0:00 からの分。新しい予約は 1 時間後を刻みに切り上げた時刻にする */
-const zonedParts = (date: Date, tz: string, roundUp: boolean) => {
-  const zoned = toZone(date, tz)
-  const min = zoned.hour() * 60 + zoned.minute()
-  const step = WIKI_ANNOUNCE_TIME_STEP_MIN
-  const rounded = roundUp ? Math.ceil(min / step) * step : Math.floor(min / step) * step
-  const day = rounded >= DAY_MIN ? zoned.add(1, 'day') : zoned
-  return { date: day.format('YYYY-MM-DD'), minutes: rounded % DAY_MIN }
-}
-
 /**
  * アナウンスの通知(今すぐ / 日時指定)。`target` を渡すと予約の変更になり、日時指定に固定する。
  * 送れない(通知先が未設定・Slack 連携が無効)ときは案内を出して送らせない
@@ -67,10 +62,11 @@ export const WikiAnnounceModal: FC<
   const timezone = useUserTimezone()
   const kindOptions = useWikiAnnounceKindOptions()
   // 開いた時点の時刻から決める(モーダルは開くたびに key で作り直される)
+  // 新しい予約は 1 時間後を刻みに切り上げた時刻にする。変更では保存済みの時刻(刻みに揃っている)を出す
   const [initial] = useState(() =>
     target
-      ? zonedParts(target.scheduledAt, timezone, false)
-      : zonedParts(new Date(Date.now() + 60 * 60 * 1000), timezone, true),
+      ? wikiAnnounceScheduleParts(target.scheduledAt, timezone, false)
+      : wikiAnnounceScheduleParts(new Date(Date.now() + 60 * 60 * 1000), timezone, true),
   )
 
   const {
@@ -98,7 +94,11 @@ export const WikiAnnounceModal: FC<
       notify.success(t('msg_wiki_announce_sent'))
       return true
     }
-    const scheduledAt = zonedMinutes(date, minutes, timezone).toDate()
+    const scheduledAt = resolveWikiAnnounceScheduledAt(
+      { date, minutes },
+      timezone,
+      target && { at: target.scheduledAt, parts: initial },
+    )
     if (!isValidWikiAnnounceSchedule(scheduledAt, new Date())) {
       setError('date', { message: el('@invalid_wiki_announce_schedule') })
       return false
