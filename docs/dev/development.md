@@ -113,22 +113,67 @@ Wiki のマイグレーションは、リリース前に `20261124133420_wiki` �
 データが要らなければ `pnpm exec prisma migrate reset` で作り直す(サンプルスペースも入る)。
 
 データを残す場合は、6本を適用済みの DB に次を流してから履歴だけを貼り替える(edge など、開発中の版を適用済みの環境も同じ)。
-それより前の開発中の状態の DB は、先に当時のマイグレーション(git の履歴)で6本の状態まで上げるか、作り直す。
+`20261117120207_wiki` は、キー履歴・版のタグ ID を足す前の版を当てた DB でも、先頭でそれらを足すので同じ手順で揃う。
+それより前の開発中の状態の DB(`20261108062633_wiki` などを当てたもの)は、先に当時のマイグレーション(git の履歴)で6本の状態まで上げるか、作り直す。
 
-- 物理削除していた頃に消したページ(行が無いページ)の版と通知は、戻し先が無いので消す
-- 見送り理由 `not_announcement` は区分の変更が無くなったので、`archived` に寄せてから型を作り直す
-- CHECK 制約を満たさない行があると失敗する(通常は無い)。その場合は行を直してから流し直す(1トランザクションで流すので途中で止まっても変わらない)
+- 物理削除していた頃に消したページは、最後の削除の版から削除済みのページ(`deletedAt` あり)として作り直す。保持期間の掃除で消えるまでは、削除済みのページの一覧から復元できる。
+  元の親が残っていなければスペース直下、タグはスペースに残っているものだけを付ける
+- 削除の版が掃除で消えていて作り直せないページの版と通知は消す(移行前にも復元できなかったもの)
+- 区分を変えて `announcement` でなくなったスペースの通知先を外し、その未送信の予約を見送り(`channel_unset`)にする。見送り理由 `not_announcement` も `channel_unset` に寄せる
+- CHECK 制約を満たさない行があると失敗する(通常は無い)。1トランザクションで流すので途中で止まっても DB は変わらず、履歴の貼り替えにも進まない。行を直してから流し直す
 
 ```sh
-cat <<'SQL' | pnpm exec prisma db execute --stdin
+cat <<'SQL' | pnpm exec prisma db execute --stdin \
+  && pnpm exec prisma migrate resolve --applied 20261124133420_wiki \
+  && pnpm exec prisma migrate status   # Database schema is up to date!
 BEGIN;
 DELETE FROM "_prisma_migrations" WHERE migration_name IN ('20261117120207_wiki', '20261122130229_attachment_detached_at', '20261123082754_wiki_template', '20261123093623_wiki_announcement', '20261123095222_wiki_revision_page_created', '20261123124620_wiki_announcement_notify');
+-- キー履歴・版のタグ ID を足す前の 20261117120207_wiki を当てた DB 向け(足した後の DB では何もしない)
+CREATE TABLE IF NOT EXISTS "wiki_space_key_history" ("key" TEXT NOT NULL, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "wiki_space_key_history_pkey" PRIMARY KEY ("key"));
+INSERT INTO "wiki_space_key_history" ("key") SELECT "key" FROM "wiki_space" ON CONFLICT DO NOTHING;
+ALTER TABLE "wiki_page_revision" ADD COLUMN IF NOT EXISTS "tagIds" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];
+UPDATE "wiki_page_revision" AS r SET ("tagIds", "tagNames") = (
+  SELECT COALESCE(array_agg(t."id" ORDER BY n.ord), ARRAY[]::TEXT[]), COALESCE(array_agg(t."name" ORDER BY n.ord), ARRAY[]::TEXT[])
+  FROM unnest(r."tagNames") WITH ORDINALITY AS n(name, ord)
+  JOIN "wiki_tag" AS t ON t."spaceId" = r."spaceId" AND t."name" = n.name AND t."createdAt" <= r."updatedAt"
+) WHERE cardinality(r."tagIds") = 0 AND cardinality(r."tagNames") > 0;
 -- ページの論理削除
 ALTER TABLE "wiki_page" ADD COLUMN "deletedAt" TIMESTAMP(3), ADD COLUMN "deletedById" TEXT;
 CREATE INDEX "wiki_page_spaceId_deletedAt_idx" ON "wiki_page"("spaceId", "deletedAt");
 CREATE INDEX "wiki_page_deletedAt_idx" ON "wiki_page"("deletedAt");
 ALTER TABLE "wiki_page" ADD CONSTRAINT "wiki_page_deletedById_fkey" FOREIGN KEY ("deletedById") REFERENCES "user"("id") ON DELETE SET NULL ON UPDATE CASCADE;
--- 版: 物理削除したページの版は戻せないので消し、タグを JSON にする
+-- 物理削除していた頃に消したページを、最後の削除の版から削除済みのページとして作り直す(保持期間の掃除で消えるまで復元できる)。
+-- 元の親が残っていなければスペース直下にする。作成日時・作成者は削除の版に残した値、無ければ最も古い版のもの
+CREATE TEMP TABLE "wiki_gone" ON COMMIT DROP AS
+  SELECT DISTINCT ON (r."pageId") r.*
+  FROM "wiki_page_revision" AS r
+  WHERE r."action" = 'deleted' AND NOT EXISTS (SELECT 1 FROM "wiki_page" AS p WHERE p."id" = r."pageId")
+  ORDER BY r."pageId", r."number" DESC;
+INSERT INTO "wiki_page" (
+  "id", "spaceId", "parentId", "number", "title", "content", "type", "order",
+  "createdById", "updatedById", "updatedVia", "deletedAt", "deletedById", "createdAt", "updatedAt"
+)
+SELECT g."pageId", g."spaceId",
+  CASE WHEN EXISTS (SELECT 1 FROM "wiki_page" AS p WHERE p."id" = g."parentId")
+    OR EXISTS (SELECT 1 FROM "wiki_gone" AS o WHERE o."pageId" = g."parentId") THEN g."parentId" END,
+  g."pageNumber", g."title", g."content", g."type", g."order",
+  (SELECT u."id" FROM "user" AS u WHERE u."id" = COALESCE(g."pageCreatedById", f."actorId")),
+  w."actorId", COALESCE(w."via", 'web'), g."updatedAt", g."actorId",
+  COALESCE(g."pageCreatedAt", f."createdAt", g."createdAt"), COALESCE(w."updatedAt", g."updatedAt")
+FROM "wiki_gone" AS g
+LEFT JOIN LATERAL (
+  SELECT o."actorId", o."createdAt" FROM "wiki_page_revision" AS o WHERE o."pageId" = g."pageId" ORDER BY o."number" LIMIT 1
+) AS f ON TRUE
+LEFT JOIN LATERAL (
+  SELECT o."actorId", o."via", o."updatedAt" FROM "wiki_page_revision" AS o
+  WHERE o."pageId" = g."pageId" AND o."action" <> 'deleted' ORDER BY o."number" DESC LIMIT 1
+) AS w ON TRUE;
+INSERT INTO "wiki_page_tag" ("id", "pageId", "tagId")
+SELECT gen_random_uuid()::text, g."pageId", t."id"
+FROM "wiki_gone" AS g CROSS JOIN LATERAL unnest(g."tagIds") AS i(id)
+JOIN "wiki_tag" AS t ON t."id" = i.id AND t."spaceId" = g."spaceId"
+ON CONFLICT DO NOTHING;
+-- 版: 削除の版が掃除で消えて作り直せないページの版は消し、タグを JSON にする
 DELETE FROM "wiki_page_revision" AS r WHERE NOT EXISTS (SELECT 1 FROM "wiki_page" AS p WHERE p."id" = r."pageId");
 ALTER TABLE "wiki_page_revision" ADD COLUMN "tags" JSONB NOT NULL DEFAULT '[]';
 UPDATE "wiki_page_revision" SET "tags" = COALESCE(
@@ -137,26 +182,29 @@ UPDATE "wiki_page_revision" SET "tags" = COALESCE(
   '[]'::jsonb);
 ALTER TABLE "wiki_page_revision" DROP COLUMN "tagIds", DROP COLUMN "tagNames", DROP COLUMN "pageNumber", DROP COLUMN "pageCreatedAt", DROP COLUMN "pageCreatedById";
 ALTER TABLE "wiki_page_revision" ADD CONSTRAINT "wiki_page_revision_pageId_fkey" FOREIGN KEY ("pageId") REFERENCES "wiki_page"("id") ON DELETE CASCADE ON UPDATE CASCADE;
--- アナウンスの通知: 送信者の改名、見送り理由 not_announcement の削除、ページへの外部キー
+-- アナウンスの通知: 送信者の改名、ページへの外部キー
 DELETE FROM "wiki_announcement_notify" AS n WHERE NOT EXISTS (SELECT 1 FROM "wiki_page" AS p WHERE p."id" = n."pageId");
 ALTER TABLE "wiki_announcement_notify" RENAME COLUMN "createdById" TO "senderId";
 ALTER TABLE "wiki_announcement_notify" RENAME CONSTRAINT "wiki_announcement_notify_createdById_fkey" TO "wiki_announcement_notify_senderId_fkey";
 ALTER INDEX "wiki_announcement_notify_createdById_idx" RENAME TO "wiki_announcement_notify_senderId_idx";
-UPDATE "wiki_announcement_notify" SET "skipReason" = 'archived' WHERE "skipReason" = 'not_announcement';
+ALTER TABLE "wiki_announcement_notify" ADD CONSTRAINT "wiki_announcement_notify_pageId_fkey" FOREIGN KEY ("pageId") REFERENCES "wiki_page"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- 区分の固定: アナウンス用でなくなったスペースの通知先を外し、その予約を見送りにする(送信時は区分を見なくなるため)。
+-- 見送り理由 not_announcement は channel_unset に寄せてから型を作り直す
+UPDATE "wiki_announcement_notify" AS n SET "status" = 'skipped', "skipReason" = 'channel_unset'
+  FROM "wiki_space" AS s WHERE s."id" = n."spaceId" AND s."type" <> 'announcement' AND n."status" = 'scheduled';
+UPDATE "wiki_space" SET "announceSlackChannelId" = NULL WHERE "type" <> 'announcement';
+UPDATE "wiki_announcement_notify" SET "skipReason" = 'channel_unset' WHERE "skipReason" = 'not_announcement';
 ALTER TYPE "WikiAnnouncementNotifySkipReason" RENAME TO "WikiAnnouncementNotifySkipReason_old";
 CREATE TYPE "WikiAnnouncementNotifySkipReason" AS ENUM ('archived', 'channel_unset', 'slack_disabled', 'no_permission', 'page_deleted');
 ALTER TABLE "wiki_announcement_notify" ALTER COLUMN "skipReason" TYPE "WikiAnnouncementNotifySkipReason" USING ("skipReason"::text::"WikiAnnouncementNotifySkipReason");
 DROP TYPE "WikiAnnouncementNotifySkipReason_old";
-ALTER TABLE "wiki_announcement_notify" ADD CONSTRAINT "wiki_announcement_notify_pageId_fkey" FOREIGN KEY ("pageId") REFERENCES "wiki_page"("id") ON DELETE CASCADE ON UPDATE CASCADE;
--- CHECK 制約(満たさない行は手で直してから流す)
+-- CHECK 制約(満たさない行があれば失敗する。行を直してから流し直す)
 ALTER TABLE "attachment" ADD CONSTRAINT "attachment_owner_check" CHECK (num_nonnulls("boardId", "wikiSpaceId") <= 1);
 ALTER TABLE "attachment" ADD CONSTRAINT "attachment_detached_check" CHECK ("detachedAt" IS NULL OR ("boardId" IS NULL AND "wikiSpaceId" IS NULL));
 ALTER TABLE "wiki_announcement_notify" ADD CONSTRAINT "wiki_announcement_notify_sent_check" CHECK (("status" = 'sent') = ("sentAt" IS NOT NULL));
 ALTER TABLE "wiki_announcement_notify" ADD CONSTRAINT "wiki_announcement_notify_skipped_check" CHECK (("status" = 'skipped') = ("skipReason" IS NOT NULL));
 COMMIT;
 SQL
-pnpm exec prisma migrate resolve --applied 20261124133420_wiki
-pnpm exec prisma migrate status   # Database schema is up to date!
 pnpm exec prisma migrate diff --from-config-datasource --to-schema prisma/schema --script   # -- This is an empty migration.
 ```
 

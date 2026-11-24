@@ -377,8 +377,12 @@ describe('sweepDeletedWikiPages', () => {
     expect(await sweepDeletedWikiPages(now)).toBe(2)
     const { sql, values } = deleteSql()
     expect(sql).toMatch(/DELETE FROM "wiki_page" WHERE "id" IN \( SELECT "id" FROM "wiki_page" WHERE "deletedAt" < \?/)
-    expect(sql).toContain('ORDER BY "deletedAt", "id" LIMIT ?')
-    expect(values).toEqual([msBefore(now, 7 * DAY_MS), MAINTENANCE_DELETE_BATCH])
+    expect(sql).toContain('ORDER BY "deletedAt", "id" LIMIT ? ) AND "deletedAt" < ?')
+    expect(values, '候補の後に復元されたページを消さないよう、外側でも削除日時を確かめる').toEqual([
+      msBefore(now, 7 * DAY_MS),
+      MAINTENANCE_DELETE_BATCH,
+      msBefore(now, 7 * DAY_MS),
+    ])
   })
 
   it('WIKI_REVISION_RETENTION_DAYS で保持期間を変えられる', async () => {

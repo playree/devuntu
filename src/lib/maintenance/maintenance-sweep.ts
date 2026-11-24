@@ -191,15 +191,18 @@ export const sweepBoardNoteRevisions = async (now: Date): Promise<number> =>
  * (生きているページの親は常に生きているので、Cascade が生きているページへ及ぶことはない)。
  * 本文に貼っていた添付は参照が無くなり、添付の掃除が回収する
  */
-export const sweepDeletedWikiPages = async (now: Date): Promise<number> =>
-  prisma.$executeRaw`
+export const sweepDeletedWikiPages = async (now: Date): Promise<number> => {
+  const cutoff = wikiRevisionCutoff(now)
+  // 外側でも削除日時を確かめる。候補を選んだ後に復元されたページは、行ロックを待った後の再評価で外れる
+  return prisma.$executeRaw`
     DELETE FROM "wiki_page" WHERE "id" IN (
       SELECT "id" FROM "wiki_page"
-      WHERE "deletedAt" < ${wikiRevisionCutoff(now)}
+      WHERE "deletedAt" < ${cutoff}
       ORDER BY "deletedAt", "id"
       LIMIT ${MAINTENANCE_DELETE_BATCH}
-    )
+    ) AND "deletedAt" < ${cutoff}
   `
+}
 
 /**
  * Wiki ページの版。最後の保存(updatedAt)が保持期間(`WIKI_REVISION_RETENTION_DAYS`)より古いものを消す。

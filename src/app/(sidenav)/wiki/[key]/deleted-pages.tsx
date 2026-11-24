@@ -7,8 +7,9 @@ import { ArrowTopRightOnSquareIcon, ArrowUturnLeftIcon, TrashIcon } from '@/comp
 import { notify } from '@/components/notify'
 import { UpdatedBy } from '@/components/updated-by'
 import { parseAction, useActionData } from '@/lib/action/action-client'
+import { ClientError } from '@/lib/error'
 import { useConfirmAction } from '@/lib/use-confirm-action'
-import { isFlatWikiSpace } from '@/lib/wiki/wiki-rule'
+import { isFlatWikiSpace, WIKI_TREE_CHANGED } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { useRouter } from 'next/navigation'
 import { FC, useState } from 'react'
@@ -64,14 +65,14 @@ const restorableDescendantsAt = (
 /**
  * 削除済みのページの一覧。削除したときの内容・タグ・作成者のまま戻る(削除前の内容は、復元したページの履歴で確かめられる)。
  * 一覧は元の親 → 子の順で、上から順に復元すれば元の親子関係に戻る。配下ごとの復元は1回の操作でまとめて戻す。
- * 復元してもモーダルは閉じず、開き直すまで一覧は取り直さない。復元した行はページを開くボタンに替える
+ * 復元してもモーダルは閉じず、開き直すまで一覧は取り直さない(配下が変わっていて弾かれたときだけ取り直す)。復元した行はページを開くボタンに替える
  */
 export const DeletedPagesModal: FC<{ state: ReturnType<typeof useModalState<string>> }> = ({ state }) => {
   const { t } = useLocale()
   const router = useRouter()
   const confirmAction = useConfirmAction()
   const { space, access, reloadSpace } = useWikiSpace()
-  const { data, isLoading } = useActionData(() => getDeletedWikiPages({ id: space.id }), {
+  const { data, isLoading, reload } = useActionData(() => getDeletedWikiPages({ id: space.id }), {
     skip: !state.isOpen,
     key: `${space.id}_${state.isOpen}`,
   })
@@ -83,7 +84,10 @@ export const DeletedPagesModal: FC<{ state: ReturnType<typeof useModalState<stri
   // アナウンス用スペースは平らで、どのページもスペース直下に戻るので、元の親は示さない
   const isFlat = isFlatWikiSpace(space.type)
 
-  /** 戻して、戻した行を復元済みにする。既に戻されていて戻すものが無ければ false */
+  /**
+   * 戻して、戻した行を復元済みにする。
+   * 確認で見せた配下と今の削除済みの配下が違えば(WIKI_TREE_CHANGED)何も戻っていないので、一覧を取り直して確認し直せるようにする
+   */
   const restorePage = async (page: DeletedPage, descendants: readonly DeletedPage[]) => {
     setIsRestoring(true)
     try {
@@ -92,6 +96,11 @@ export const DeletedPagesModal: FC<{ state: ReturnType<typeof useModalState<stri
       )
       setRestored((prev) => new Set([...prev, page.id, ...descendants.map(({ id }) => id)]))
       return result
+    } catch (e) {
+      if (e instanceof ClientError && e.errorType === WIKI_TREE_CHANGED) {
+        await reload()
+      }
+      throw e
     } finally {
       setIsRestoring(false)
       await reloadSpace()
