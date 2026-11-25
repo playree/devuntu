@@ -53,11 +53,18 @@ export const hasDesignDocFrontMatter = (content: string): boolean =>
 
 /**
  * front matter のタイトルの値。ビューアは引用符を外すだけでエスケープを戻さないので、
- * エスケープが要らなければダブルクオート、要るならブロックスカラーにする(どちらも YAML として同じ値になる)
+ * エスケープが要らなければダブルクオート、要るならブロックスカラーにする(どちらも YAML として同じ値になる)。
+ * ブロックスカラーは改行を含むタイトルでも全行を字下げしてスカラー内に収める
  */
 const frontMatterTitle = (title: string): string => {
   const quoted = JSON.stringify(title)
-  return quoted === `"${title}"` ? quoted : `|-\n  ${title}`
+  if (quoted === `"${title}"`) {
+    return quoted
+  }
+  return `|-\n${title
+    .split(/\r\n|\r|\n/)
+    .map((line) => `  ${line}`)
+    .join('\n')}`
 }
 
 /** 設計書の最小の front matter(本文の先頭に置く) */

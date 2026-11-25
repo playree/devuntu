@@ -402,6 +402,15 @@ describe('updateWikiPage', () => {
     expect(vi.mocked(prisma.wikiPage.update).mock.calls[0][0].data).toMatchObject({ content, type: 'design_doc' })
   })
 
+  it('本文を渡さずに設計書へ変えても、保存済みの本文が front matter を持っていれば足さない', async () => {
+    const content = '---\ntitle: 既存\n---\n\n# 概要'
+    vi.mocked(prisma.wikiPage.findUnique).mockResolvedValue(pageRow('b', { content }) as never)
+
+    await updateWikiPage(actor, WEB, 'b', { type: 'design_doc' })
+
+    expect(vi.mocked(prisma.wikiPage.update).mock.calls[0][0].data).toMatchObject({ content, type: 'design_doc' })
+  })
+
   it('本文を関数で渡すと、ロックの後に読んだ今の本文から組み立てる', async () => {
     await updateWikiPage(actor, MCP, 'b', { content: (current) => `${current}\n追記` })
 

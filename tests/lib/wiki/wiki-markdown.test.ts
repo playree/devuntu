@@ -276,6 +276,17 @@ describe('designDocFrontMatter', () => {
     }
   })
 
+  it('改行を含むタイトルは、ブロックスカラーの全行を字下げする', () => {
+    for (const title of ['A\nB', 'A\r\nB', 'A\rB', '一行目\n\n  三行目']) {
+      const header = designDocFrontMatter(title)
+      expect(hasDesignDocFrontMatter(`${header}# 本文`)).toBe(true)
+      expect(parse(header.split('---\n')[1])).toEqual({
+        type: 'design_doc',
+        title: title.replace(/\r\n|\r/g, '\n'),
+      })
+    }
+  })
+
   it('hasFrontMatter は閉じた front matter の有無だけを見る', () => {
     expect(hasFrontMatter('---\ntitle: a\n---\n')).toBe(true)
     expect(hasFrontMatter('# a\n---\n')).toBe(false)
