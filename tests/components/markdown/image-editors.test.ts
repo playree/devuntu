@@ -4,7 +4,7 @@
  * Markdown エディタは `allowImages` を付けたときだけ画像をアップロードできる。
  * 付けた本文の保存先が `src/lib/storage/attachment-ref.ts` の参照元に無いと、
  * 貼った画像は猶予を過ぎると「どこからも参照されていない」とみなされて消える。
- * `allowImages` を付けたファイルを走査し、下の一覧と一致することを確かめる。
+ * `allowImages` を付けたファイルと、画像を許可する共通の Wiki エディタの利用箇所を走査し、下の一覧と照合する。
  */
 
 import type { AttachmentRefSource } from '@/lib/storage/attachment-ref'
@@ -13,7 +13,7 @@ import { join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
-/** `allowImages` を付けているファイル → 保存先を拾う参照元 */
+/** 画像を挿入できるエディタを使うファイル → 保存先を拾う参照元 */
 const IMAGE_EDITORS: Record<string, AttachmentRefSource> = {
   'src/app/(sidenav)/tickets/[id]/ticket-body.tsx': 'ticket',
   'src/app/(sidenav)/tickets/modals.tsx': 'ticket',
@@ -23,8 +23,8 @@ const IMAGE_EDITORS: Record<string, AttachmentRefSource> = {
   'src/app/(sidenav)/tickets/[id]/decision-buttons.tsx': 'comment',
   'src/app/(sidenav)/boards/[id]/settings/board-ticket-templates.tsx': 'ticketTemplate',
   'src/app/(sidenav)/admin/dashboard/announcement-edit.tsx': 'announcement',
-  'src/app/(sidenav)/wiki/[key]/[number]/page-body.tsx': 'wikiPage',
-  'src/app/(sidenav)/wiki/[key]/settings/space-templates.tsx': 'wikiTemplate',
+  'src/app/(sidenav)/wiki/[key]/[number]/page-content.tsx': 'wikiPage',
+  'src/app/(sidenav)/wiki/[key]/settings/wiki-template-modal.tsx': 'wikiTemplate',
 }
 
 const rootDir = fileURLToPath(new URL('../../../', import.meta.url))
@@ -33,7 +33,7 @@ const rootDir = fileURLToPath(new URL('../../../', import.meta.url))
 const EXCLUDED_DIRS = ['src/components/markdown', 'src/generated']
 
 /** `allowImages={false}` は既定と同じなので、許可として数えない */
-const ALLOW_IMAGES = /\ballowImages(?!=\{false\})/
+const IMAGE_EDITOR = /\ballowImages(?!=\{false\})|<WikiContentEditor\b/
 
 const listTsx = (dir: string): string[] =>
   readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -46,9 +46,9 @@ const listTsx = (dir: string): string[] =>
   })
 
 describe('画像を挿入できる本文', () => {
-  it('allowImages を付けたファイルが一覧と一致する(足したら attachment-ref.ts の参照元に加え、この一覧に登録する)', () => {
+  it('画像を挿入できるエディタの利用箇所が参照元の一覧と一致する', () => {
     const actual = listTsx(join(rootDir, 'src'))
-      .filter((file) => ALLOW_IMAGES.test(readFileSync(join(rootDir, file), 'utf8')))
+      .filter((file) => IMAGE_EDITOR.test(readFileSync(join(rootDir, file), 'utf8')))
       .sort()
 
     expect(actual).toEqual(Object.keys(IMAGE_EDITORS).sort())

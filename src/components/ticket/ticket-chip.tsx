@@ -1,11 +1,11 @@
 'use client'
 
 import { createEnumChip } from '@/components/enum-chip'
-import type { AgentTaskState, TagColor, TicketCommentDecision, TicketPriority } from '@/generated/prisma/enums'
-import { Chip, ChipProps, cn } from '@heroui/react'
-import { FC, ReactNode } from 'react'
+import type { AgentTaskState, TicketCommentDecision, TicketPriority } from '@/generated/prisma/enums'
+import { cn } from '@heroui/react'
+import { FC } from 'react'
 import { agentStateChip, priorityChip, statusChip } from './ticket-options'
-import { priorityBarClass, tagColorClass } from './ticket-style'
+import { priorityBarClass } from './ticket-style'
 
 export const StatusChip = statusChip.EnumChip
 
@@ -48,40 +48,3 @@ export const PriorityBar: FC<{ priority: TicketPriority; className?: string }> =
 export const TicketIdText: FC<{ displayId: string; className?: string }> = ({ displayId, className }) => (
   <span className={cn('text-muted font-mono text-xs', className)}>{displayId}</span>
 )
-
-/** タグ 1 件ぶんの Chip。色は tagStyles で当てる */
-export const TagChip: FC<{
-  tag: { name: string; color: TagColor }
-  size?: ChipProps['size']
-  className?: string
-  /** クリックで選択させる場合に渡す(Chip は role / onClick を透過する) */
-  onClick?: () => void
-  /** ラベルの後ろに置く要素(× ボタンなど) */
-  children?: ReactNode
-}> = ({ tag, size = 'sm', className, onClick, children }) => (
-  <Chip
-    variant='tertiary'
-    size={size}
-    className={tagColorClass(tag.color, className)}
-    {...(onClick ? { role: 'button', onClick } : {})}
-  >
-    <Chip.Label>{tag.name}</Chip.Label>
-    {children}
-  </Chip>
-)
-
-export const TagChips: FC<{ tags: { id: string; name: string; color: TagColor }[]; size?: ChipProps['size'] }> = ({
-  tags,
-  size = 'sm',
-}) => {
-  if (tags.length === 0) {
-    return null
-  }
-  return (
-    <div className='flex flex-wrap gap-1'>
-      {tags.map((tag) => (
-        <TagChip key={tag.id} tag={tag} size={size} />
-      ))}
-    </div>
-  )
-}

@@ -3,7 +3,7 @@
 import type { GetWikiPageReturnType } from '@/app/(sidenav)/wiki/[key]/[number]/server'
 import { DesignDocPrintView } from '@/components/markdown/design-doc-print-view'
 import { MarkdownView } from '@/components/markdown/markdown-view'
-import { TagChips } from '@/components/ticket/ticket-chip'
+import { TagChips } from '@/components/tag/tag-chip'
 import type { TagColor, WikiPageType } from '@/generated/prisma/enums'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { dayformat } from '@/lib/day'

@@ -4,8 +4,8 @@ import type { TagColor } from '@/generated/prisma/enums'
 import { wikiSearchHref } from '@/lib/wiki/wiki-rule'
 import Link from 'next/link'
 import { FC } from 'react'
-import { TagChip } from './ticket/ticket-chip'
-import { tagDotClass } from './ticket/ticket-style'
+import { TagChip } from './tag/tag-chip'
+import { tagDotClass } from './tag/tag-style'
 
 type WikiTag = { id: string; name: string; color: TagColor }
 

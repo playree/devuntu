@@ -11,14 +11,8 @@ import {
   LinkIcon,
   PlusIcon,
 } from '@/components/icon'
-import {
-  AgentProgressChip,
-  PriorityBar,
-  PriorityChip,
-  StatusChip,
-  TagChips,
-  TicketIdText,
-} from '@/components/ticket/ticket-chip'
+import { TagChips } from '@/components/tag/tag-chip'
+import { AgentProgressChip, PriorityBar, PriorityChip, StatusChip, TicketIdText } from '@/components/ticket/ticket-chip'
 import {
   CARD_BACKDROP_CLASS,
   priorityBgClass,

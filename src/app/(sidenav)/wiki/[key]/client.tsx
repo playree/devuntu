@@ -16,9 +16,9 @@ import { useRouter } from 'next/navigation'
 import { FC } from 'react'
 import { WikiAnnouncementIndex } from './announcement-index'
 import { ChildPages } from './child-pages'
+import { CreatePageModal } from './create-page-modal'
 import { DeletedPagesModal } from './deleted-pages'
 import { WikiDesignDocIndex } from './design-doc-index'
-import { CreatePageModal } from './page-modals'
 import { useWikiSpace } from './space-context'
 
 /** スペースのトップ。説明とスペース直下のページ(設計書スペースでは設計書一覧、アナウンス用スペースでは新しい順の一覧とバックナンバー) */

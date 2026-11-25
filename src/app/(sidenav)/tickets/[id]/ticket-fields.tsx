@@ -8,8 +8,9 @@ import { InputField } from '@/components/general/input'
 import { NoticePanel, Panel } from '@/components/general/panel'
 import { SingleSelectField } from '@/components/general/select'
 import { TrashIcon } from '@/components/icon'
-import { TagIdSelectField } from '@/components/ticket/tag-id-select'
-import { AgentProgressChip, PriorityChip, StatusChip, TagChips } from '@/components/ticket/ticket-chip'
+import { TagChips } from '@/components/tag/tag-chip'
+import { TagIdSelectField } from '@/components/tag/tag-id-select'
+import { AgentProgressChip, PriorityChip, StatusChip } from '@/components/ticket/ticket-chip'
 import { TicketExportMenu } from '@/components/ticket/ticket-export-menu'
 import {
   AGENT_MODE_NONE,

@@ -3,7 +3,7 @@
 import { Grid } from '@/components/general/grid'
 import { InputField } from '@/components/general/input'
 import { SingleSelectField } from '@/components/general/select'
-import { TagIdSelectField } from '@/components/ticket/tag-id-select'
+import { TagIdSelectField } from '@/components/tag/tag-id-select'
 import { useWikiPageTypeOptions } from '@/components/wiki-chip'
 import type { WikiPageType } from '@/generated/prisma/enums'
 import { parseAction } from '@/lib/action/action-client'
