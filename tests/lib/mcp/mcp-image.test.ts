@@ -176,7 +176,7 @@ describe('upload_image', () => {
     ).callTool({ name: 'upload_image', arguments: { ...args, data: pngBase64 } })
 
     const [file, target] = vi.mocked(saveContentImage).mock.calls[0] ?? []
-    expect(target).toEqual({ boardId: BOARD_ID, wikiSpaceId: null, userId: 'u1' })
+    expect(target).toEqual({ owner: { kind: 'board', boardId: BOARD_ID }, userId: 'u1' })
     expect(file?.name).toBe('shot.png')
     expect(await file?.text()).toBe('dummy-png-bytes')
     expect(jsonOf(result)).toEqual({ url: `/api/upload/${KEY}`, markdown: `![shot.png](/api/upload/${KEY})` })
@@ -197,8 +197,7 @@ describe('upload_image', () => {
     })
 
     expect(vi.mocked(saveContentImage).mock.calls[0]?.[1]).toEqual({
-      boardId: null,
-      wikiSpaceId: SPACE_ID,
+      owner: { kind: 'wikiSpace', wikiSpaceId: SPACE_ID },
       userId: 'u1',
     })
   })

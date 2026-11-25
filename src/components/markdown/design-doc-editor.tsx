@@ -4,6 +4,7 @@ import type { CodeEditorHandle } from '@/components/code/code-editor-core'
 import { EditorField } from '@/components/general/editor-field'
 import { TabsBox } from '@/components/general/tabs'
 import { notify } from '@/components/notify'
+import { PUBLIC_ATTACHMENT_OWNER, type AttachmentOwner } from '@/lib/storage/attachment-owner'
 import { uploadImage } from '@/lib/storage/upload'
 import { useDebounced } from '@/lib/use-debounced'
 import { useMediaQuery } from '@/lib/use-media-query'
@@ -55,10 +56,10 @@ export const DesignDocEditor: FC<{
   isLabelHidden?: boolean
   /** ラベル行の左側に置く補足({@link EditorField} 参照) */
   info?: ReactNode
-  /** 画像の挿入を許可する。添付先のスペースと一緒に渡す */
+  /** 画像の挿入を許可する。添付の持ち主と一緒に渡す */
   allowImages?: boolean
-  /** 挿入した画像の添付先 Wiki スペース。配信時にこのスペースの閲覧判定が掛かる */
-  uploadWikiSpaceId?: string | null
+  /** 挿入した画像の持ち主(Wiki スペースなど)。配信時にその閲覧判定が掛かる */
+  uploadOwner?: AttachmentOwner
   /** 画像のアップロード中かどうかが変わったとき。終わるまでは本文に仮の印が残るので、保存を止めるのに使う */
   onUploadingChange?: (isUploading: boolean) => void
   /** ラベル行の右端に置く操作 */
@@ -75,7 +76,7 @@ export const DesignDocEditor: FC<{
   isLabelHidden,
   info,
   allowImages,
-  uploadWikiSpaceId,
+  uploadOwner = PUBLIC_ATTACHMENT_OWNER,
   onUploadingChange,
   action,
   footer,
@@ -89,6 +90,11 @@ export const DesignDocEditor: FC<{
   const viewerRef = useRef<DesignDocViewerHandle>(null)
   // アップロード中の件数と、仮の印を一意にする連番。isActive はこのエディタがマウント中か
   const uploads = useRef({ pending: 0, seq: 0, isActive: false })
+  // 持ち主は呼び出し側で毎回作られうるので、貼り付けのハンドラを作り直さず ref 越しに最新値を読む
+  const ownerRef = useRef(uploadOwner)
+  useEffect(() => {
+    ownerRef.current = uploadOwner
+  }, [uploadOwner])
   useEffect(() => {
     const state = uploads.current
     state.isActive = true
@@ -128,7 +134,7 @@ export const DesignDocEditor: FC<{
       void (async () => {
         for (const { file, mark } of items) {
           try {
-            const url = await uploadImage(file, { wikiSpaceId: uploadWikiSpaceId })
+            const url = await uploadImage(file, ownerRef.current)
             // 印を消されていたら差し込まない。幅の変化でエディタを作り直していても、本文に残った印を置き換える
             editorRef.current?.replaceText(mark, `![${altOf(file)}](${url})`)
           } catch (e) {
@@ -147,7 +153,7 @@ export const DesignDocEditor: FC<{
       })()
       return true
     },
-    [allowImages, uploadWikiSpaceId, onUploadingChange, t],
+    [allowImages, onUploadingChange, t],
   )
 
   const editor = (

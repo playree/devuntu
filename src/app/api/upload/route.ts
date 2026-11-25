@@ -7,9 +7,10 @@ import { MAINTENANCE_MODE_RETRY_AFTER_SEC } from '@/lib/maintenance/maintenance'
 import { isMaintenanceMode } from '@/lib/maintenance/maintenance-mode'
 import { consumeRateLimit } from '@/lib/rate-limit'
 import { MAX_IMAGE_SIZE, zAttachmentFile, zImageFile } from '@/lib/schema/schema'
-import { saveContentFile, saveContentImage } from '@/lib/storage/attachment'
+import { saveContentFile, saveContentImage, type AttachmentUploader } from '@/lib/storage/attachment'
+import { PUBLIC_ATTACHMENT_OWNER, type AttachmentOwner } from '@/lib/storage/attachment-owner'
 import { UPLOAD_BOARD_ID_FIELD, UPLOAD_KIND_PARAM, UPLOAD_WIKI_SPACE_ID_FIELD } from '@/lib/storage/upload'
-import { resolveUploadToken, type UploadActor } from '@/lib/storage/upload-token'
+import { resolveUploadToken } from '@/lib/storage/upload-token'
 import { assertWikiSpaceAccess } from '@/lib/wiki/wiki-access'
 import { LocaleItem } from '@/locale'
 import { requestLocale } from '@/locale/request'
@@ -45,7 +46,7 @@ const UPLOAD_RATE_LIMIT = { limit: 60, windowMs: 10 * 60 * 1000 }
 const badRequest = async (message: LocaleItem, values?: Record<string, number>) =>
   Response.json({ message: t(await requestLocale(), message, values) }, { status: 400 })
 
-type UploadAuth = { kind: 'token'; actor: UploadActor } | { kind: 'session'; user: Actor }
+type UploadAuth = { kind: 'token'; actor: AttachmentUploader } | { kind: 'session'; user: Actor }
 
 /** 本文の解析より前に済ませる認証。Bearer があれば短命トークン、無ければログインセッションで見る */
 const authenticate = async (req: Request): Promise<UploadAuth | null> => {
@@ -69,13 +70,20 @@ const isPermitted = (assertion: Promise<unknown>): Promise<boolean> =>
     },
   )
 
-/** 添付先ボードへ本文を書けるか(メンバー かつ 未アーカイブ)。MCP の添付と同じ判定を使う */
-const canWriteBoard = (user: Actor, boardId: string): Promise<boolean> =>
-  isPermitted(assertBoardAccess(user, boardId, 'write'))
-
-/** 添付先の Wiki スペースへページを書けるか(editor 以上 かつ 未アーカイブ) */
-const canWriteWikiSpace = (user: Actor, spaceId: string): Promise<boolean> =>
-  isPermitted(assertWikiSpaceAccess(user, spaceId, 'write'))
+/**
+ * 添付先へ書き込めるか。ボードは本文を書けること(メンバー かつ 未アーカイブ。MCP の添付と同じ判定)、
+ * Wiki スペースはページを書けること(editor 以上 かつ 未アーカイブ)。public は誰でも作れる
+ */
+const canWriteOwner = (user: Actor, owner: AttachmentOwner): Promise<boolean> => {
+  switch (owner.kind) {
+    case 'board':
+      return isPermitted(assertBoardAccess(user, owner.boardId, 'write'))
+    case 'wikiSpace':
+      return isPermitted(assertWikiSpaceAccess(user, owner.wikiSpaceId, 'write'))
+    case 'public':
+      return Promise.resolve(true)
+  }
+}
 
 /** フォームの ID 項目。未指定は null、uuidv7 でなければ false */
 const readIdField = (form: FormData, name: string): string | null | false => {
@@ -151,7 +159,7 @@ export const POST = async (req: Request) => {
     return new Response(null, { status: limited.isExceeded() ? 413 : 400 })
   }
 
-  let actor: UploadActor
+  let actor: AttachmentUploader
   if (auth.kind === 'token') {
     // 添付先はトークンで確定しているため、フォームの boardId / wikiSpaceId は見ない
     actor = auth.actor
@@ -166,13 +174,15 @@ export const POST = async (req: Request) => {
     if (boardId === false || wikiSpaceId === false || (boardId && wikiSpaceId)) {
       return new Response(null, { status: 400 })
     }
-    if (boardId && !(await canWriteBoard(auth.user, boardId))) {
+    const owner: AttachmentOwner = boardId
+      ? { kind: 'board', boardId }
+      : wikiSpaceId
+        ? { kind: 'wikiSpace', wikiSpaceId }
+        : PUBLIC_ATTACHMENT_OWNER
+    if (!(await canWriteOwner(auth.user, owner))) {
       return new Response(null, { status: 403 })
     }
-    if (wikiSpaceId && !(await canWriteWikiSpace(auth.user, wikiSpaceId))) {
-      return new Response(null, { status: 403 })
-    }
-    actor = { userId, boardId, wikiSpaceId }
+    actor = { userId, owner }
   }
 
   if (isFile) {

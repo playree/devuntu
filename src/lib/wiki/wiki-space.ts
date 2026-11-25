@@ -153,8 +153,9 @@ export const deleteWikiSpace = async (actor: Actor, spaceId: string) => {
     await lockWikiSpaceForDelete(tx, spaceId)
     await assertWikiSpaceAccess(actor, spaceId, 'manage', tx)
     // 紐付けを外すとスペースから辿れなくなるので、キーはここで控える
-    const keys = await listAttachmentKeysOf(tx, { wikiSpaceId: spaceId })
-    await detachAttachmentsOf(tx, { wikiSpaceId: spaceId })
+    const target = { kind: 'wikiSpace', wikiSpaceId: spaceId } as const
+    const keys = await listAttachmentKeysOf(tx, target)
+    await detachAttachmentsOf(tx, target)
     await tx.wikiSpace.delete({ where: { id: spaceId }, select: { id: true } })
     return keys
   })

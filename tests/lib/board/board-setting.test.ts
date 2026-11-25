@@ -413,6 +413,7 @@ describe('deleteBoard', () => {
     await deleteBoard(user, 'b1')
 
     expect(order).toEqual(['list', 'detach', 'delete'])
+    expect(mocks.detachAttachmentsOf).toHaveBeenCalledWith(expect.anything(), { kind: 'board', boardId: 'b1' })
     expect(board.delete).toHaveBeenCalledWith({ where: { id: 'b1' } })
   })
 

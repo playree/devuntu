@@ -10,15 +10,11 @@ import { approvableAgentWhere } from '../agent/agent-approver'
 import { getBoardAccess, type Actor } from '../board/board-access'
 import { prisma } from '../prisma'
 import { getWikiSpaceAccess } from '../wiki/wiki-access'
+import { storedAttachmentOwnerOf, type StoredAttachmentOwner } from './attachment-owner'
 import { toUploadUrl } from './upload'
 
 /** 可視判定に要る添付の項目 */
-export type AttachmentScope = {
-  key: string
-  boardId: string | null
-  wikiSpaceId: string | null
-  detachedAt: Date | null
-}
+export type AttachmentScope = { key: string; owner: StoredAttachmentOwner }
 
 /**
  * 添付を配信してよいか。配信API と MCP の画像・ファイル取得で共通に使う。
@@ -30,17 +26,20 @@ export type AttachmentScope = {
  * そのコメントから参照されている添付だけを許す。ボード単位で許すと、同じボードの無関係な
  * チケットの画像までキーさえ分かれば読めてしまう。
  */
-export const canViewAttachment = async (actor: Actor, attachment: AttachmentScope): Promise<boolean> => {
-  const { key, boardId, wikiSpaceId, detachedAt } = attachment
-  if (detachedAt) {
-    return false
+export const canViewAttachment = async (actor: Actor, { key, owner }: AttachmentScope): Promise<boolean> => {
+  switch (owner.kind) {
+    case 'detached':
+      return false
+    case 'public':
+      return true
+    case 'wikiSpace':
+      return (await getWikiSpaceAccess(actor, owner.wikiSpaceId))?.canView ?? false
+    case 'board':
+      return canViewBoardAttachment(actor, key, owner.boardId)
   }
-  if (wikiSpaceId) {
-    return (await getWikiSpaceAccess(actor, wikiSpaceId))?.canView ?? false
-  }
-  if (!boardId) {
-    return true
-  }
+}
+
+const canViewBoardAttachment = async (actor: Actor, key: string, boardId: string): Promise<boolean> => {
   if (await getBoardAccess(actor, boardId)) {
     return true
   }
@@ -71,5 +70,6 @@ export const findViewableAttachment = async (actor: Actor, key: string): Promise
     return null
   }
   const { boardId, wikiSpaceId, detachedAt, ...meta } = attachment
-  return (await canViewAttachment(actor, { key, boardId, wikiSpaceId, detachedAt })) ? meta : null
+  const owner = storedAttachmentOwnerOf({ boardId, wikiSpaceId, detachedAt })
+  return (await canViewAttachment(actor, { key, owner })) ? meta : null
 }

@@ -77,14 +77,14 @@ afterEach(() => {
 
 describe('signUploadToken / verifyUploadToken', () => {
   it('発行したトークンから実行者と添付先ボードを復元できる', async () => {
-    const token = await signUploadToken({ userId: USER_ID, boardId: BOARD_ID })
+    const token = await signUploadToken({ userId: USER_ID, target: { kind: 'board', boardId: BOARD_ID } })
 
-    expect(await verifyUploadToken(token)).toEqual({ userId: USER_ID, boardId: BOARD_ID })
+    expect(await verifyUploadToken(token)).toEqual({ userId: USER_ID, owner: { kind: 'board', boardId: BOARD_ID } })
   })
 
   it('同じトークンは2回目以降を拒否する(jti の一意制約違反)', async () => {
     createNonce.mockResolvedValueOnce({ jti: 'x' } as never).mockRejectedValue({ code: 'P2002' })
-    const token = await signUploadToken({ userId: USER_ID, boardId: BOARD_ID })
+    const token = await signUploadToken({ userId: USER_ID, target: { kind: 'board', boardId: BOARD_ID } })
 
     expect(await verifyUploadToken(token)).not.toBeNull()
     expect(await verifyUploadToken(token)).toBeNull()
@@ -92,14 +92,14 @@ describe('signUploadToken / verifyUploadToken', () => {
 
   it('使用済み記録に失敗した場合は拒否する(fail-closed)', async () => {
     createNonce.mockRejectedValue(new Error('db down'))
-    const token = await signUploadToken({ userId: USER_ID, boardId: BOARD_ID })
+    const token = await signUploadToken({ userId: USER_ID, target: { kind: 'board', boardId: BOARD_ID } })
 
     expect(await verifyUploadToken(token)).toBeNull()
   })
 
   it('有効期限を過ぎたトークンを拒否する', async () => {
     vi.useFakeTimers()
-    const token = await signUploadToken({ userId: USER_ID, boardId: BOARD_ID })
+    const token = await signUploadToken({ userId: USER_ID, target: { kind: 'board', boardId: BOARD_ID } })
     vi.advanceTimersByTime((UPLOAD_TOKEN_TTL_SECONDS + 60) * 1000)
 
     expect(await verifyUploadToken(token)).toBeNull()
@@ -139,7 +139,7 @@ describe('signUploadToken / verifyUploadToken', () => {
   })
 
   it('ペイロードを改竄したトークンを拒否する', async () => {
-    const token = await signUploadToken({ userId: USER_ID, boardId: BOARD_ID })
+    const token = await signUploadToken({ userId: USER_ID, target: { kind: 'board', boardId: BOARD_ID } })
     const [header, payload, signature] = token.split('.')
     const tampered = JSON.parse(Buffer.from(payload as string, 'base64url').toString())
     tampered.boardId = '019eef64-6cc1-78f1-8f50-1ef869860099'
@@ -150,37 +150,40 @@ describe('signUploadToken / verifyUploadToken', () => {
 
   it('発行後にBANされた利用者を拒否する', async () => {
     findUser.mockResolvedValue({ id: USER_ID, role: null, banned: true } as never)
-    const token = await signUploadToken({ userId: USER_ID, boardId: BOARD_ID })
+    const token = await signUploadToken({ userId: USER_ID, target: { kind: 'board', boardId: BOARD_ID } })
 
     expect(await verifyUploadToken(token)).toBeNull()
   })
 
   it('発行後にボードのアクセス権を失った場合を拒否する', async () => {
     vi.mocked(getBoardAccess).mockResolvedValue(null)
-    const token = await signUploadToken({ userId: USER_ID, boardId: BOARD_ID })
+    const token = await signUploadToken({ userId: USER_ID, target: { kind: 'board', boardId: BOARD_ID } })
 
     expect(await verifyUploadToken(token)).toBeNull()
   })
 
   it('発行後にアーカイブされたボードを拒否する', async () => {
     vi.mocked(getBoardAccess).mockResolvedValue({ boardId: BOARD_ID, archived: true } as never)
-    const token = await signUploadToken({ userId: USER_ID, boardId: BOARD_ID })
+    const token = await signUploadToken({ userId: USER_ID, target: { kind: 'board', boardId: BOARD_ID } })
 
     expect(await verifyUploadToken(token)).toBeNull()
   })
 
   it('Wiki スペースを添付先にしたトークンは、利用時点で書き込めれば添付先を復元する', async () => {
     vi.mocked(getWikiSpaceAccess).mockResolvedValue({ canWrite: true } as never)
-    const token = await signUploadToken({ userId: USER_ID, wikiSpaceId: SPACE_ID })
+    const token = await signUploadToken({ userId: USER_ID, target: { kind: 'wikiSpace', wikiSpaceId: SPACE_ID } })
 
-    expect(await verifyUploadToken(token)).toEqual({ userId: USER_ID, boardId: null, wikiSpaceId: SPACE_ID })
+    expect(await verifyUploadToken(token)).toEqual({
+      userId: USER_ID,
+      owner: { kind: 'wikiSpace', wikiSpaceId: SPACE_ID },
+    })
     expect(getWikiSpaceAccess).toHaveBeenCalledWith(expect.objectContaining({ id: USER_ID }), SPACE_ID)
     expect(getBoardAccess).not.toHaveBeenCalled()
   })
 
   it('発行後に Wiki スペースへ書き込めなくなった(外された・アーカイブされた)場合を拒否する', async () => {
     vi.mocked(getWikiSpaceAccess).mockResolvedValue({ canWrite: false } as never)
-    const token = await signUploadToken({ userId: USER_ID, wikiSpaceId: SPACE_ID })
+    const token = await signUploadToken({ userId: USER_ID, target: { kind: 'wikiSpace', wikiSpaceId: SPACE_ID } })
 
     expect(await verifyUploadToken(token)).toBeNull()
   })
@@ -221,7 +224,7 @@ describe('signDownloadToken / verifyDownloadToken', () => {
   })
 
   it('アップロード用トークンはダウンロードに使えず、ダウンロード用トークンはアップロードに使えない', async () => {
-    const uploadToken = await signUploadToken({ userId: USER_ID, boardId: BOARD_ID })
+    const uploadToken = await signUploadToken({ userId: USER_ID, target: { kind: 'board', boardId: BOARD_ID } })
     const downloadToken = await signDownloadToken({ userId: USER_ID, key: KEY })
 
     expect(await verifyDownloadToken(uploadToken, KEY)).toBeNull()

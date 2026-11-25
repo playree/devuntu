@@ -168,8 +168,8 @@ describe('deleteWikiSpace', () => {
 
     expect(order).toEqual(['lock', 'assert', 'list', 'detach', 'delete'])
     expect(assertWikiSpaceAccess).toHaveBeenCalledWith(actor, 's1', 'manage', expect.anything())
-    expect(listAttachmentKeysOf).toHaveBeenCalledWith(expect.anything(), { wikiSpaceId: 's1' })
-    expect(detachAttachmentsOf).toHaveBeenCalledWith(expect.anything(), { wikiSpaceId: 's1' })
+    expect(listAttachmentKeysOf).toHaveBeenCalledWith(expect.anything(), { kind: 'wikiSpace', wikiSpaceId: 's1' })
+    expect(detachAttachmentsOf).toHaveBeenCalledWith(expect.anything(), { kind: 'wikiSpace', wikiSpaceId: 's1' })
     expect(prisma.wikiSpace.delete).toHaveBeenCalledWith({ where: { id: 's1' }, select: { id: true } })
   })
 

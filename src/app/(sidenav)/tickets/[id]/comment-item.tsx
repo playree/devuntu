@@ -168,7 +168,7 @@ export const CommentItem: FC<{
             length={draft.length}
             maxLength={MAX_COMMENT_LENGTH}
             label={t('comment')}
-            uploadBoardId={boardId}
+            uploadOwner={{ kind: 'board', boardId }}
             mentionCandidates={mentionCandidates}
           />
           <div className='flex justify-end gap-2'>
@@ -247,7 +247,7 @@ export const CommentReplyAction: FC<{
         length={replyDraft.length}
         maxLength={MAX_COMMENT_LENGTH}
         label={t('reply')}
-        uploadBoardId={boardId}
+        uploadOwner={{ kind: 'board', boardId }}
         mentionCandidates={mentionCandidates}
       />
       <div className='flex justify-end gap-2'>
