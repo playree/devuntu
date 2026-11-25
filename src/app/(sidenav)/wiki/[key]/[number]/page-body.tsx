@@ -347,7 +347,7 @@ export const WikiPageBody: FC<{
         info={isEditing ? updatedInfo : undefined}
         minRows={6}
         allowImages
-        uploadWikiSpaceId={page.spaceId}
+        uploadOwner={{ kind: 'wikiSpace', wikiSpaceId: page.spaceId }}
         footer={footer}
       />
     ) : isEditing ? (
@@ -362,7 +362,7 @@ export const WikiPageBody: FC<{
         isLabelHidden
         info={updatedInfo}
         allowImages
-        uploadWikiSpaceId={page.spaceId}
+        uploadOwner={{ kind: 'wikiSpace', wikiSpaceId: page.spaceId }}
         onUploadingChange={setUploading}
         footer={footer}
       />

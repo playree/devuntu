@@ -1,15 +1,30 @@
 import { Prisma } from '@/generated/prisma/client'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
+import {
+  attachmentOwnerColumns,
+  attachmentTargetFields,
+  PUBLIC_ATTACHMENT_OWNER,
+  type AttachmentOwner,
+  type AttachmentTarget,
+} from './attachment-owner'
 import { toWebp, toWebpBytes, WEBP_EXT, WEBP_MIME } from './image'
 import { fetchRemoteImage } from './remote-image'
 import { deleteObject, putObject } from './storage'
 import { isUploadUrl, newUploadKey, toUploadExt, toUploadKey, toUploadUrl } from './upload'
 
-/** 添付先。`boardId` / `wikiSpaceId` は同時に持たない。どちらも null なら全ログインユーザーへ配信する */
-export type AttachmentOwner = { boardId: string | null; wikiSpaceId?: string | null; userId: string }
+/** 添付を保存する人と、添付の持ち主(配信の範囲) */
+export type AttachmentUploader = { userId: string; owner: AttachmentOwner }
 
-type AttachmentMeta = AttachmentOwner & { originalName: string }
+type AttachmentMeta = AttachmentUploader & { originalName: string }
+
+/** 全ログインユーザーへ配信してよい(public で、削除待ちでない)添付の条件 */
+const PUBLIC_ATTACHMENT_WHERE = { ...attachmentOwnerColumns(PUBLIC_ATTACHMENT_OWNER), detachedAt: null }
+
+const logFieldsOf = ({ userId, owner }: AttachmentUploader) => ({
+  userId,
+  ...(owner.kind === 'public' ? {} : attachmentTargetFields(owner)),
+})
 
 /**
  * オブジェクトストレージへ保存し、Attachment を作る。
@@ -28,8 +43,7 @@ const storeAttachment = async (
         mimeType,
         size: bytes.byteLength,
         originalName: meta.originalName,
-        boardId: meta.boardId,
-        wikiSpaceId: meta.wikiSpaceId ?? null,
+        ...attachmentOwnerColumns(meta.owner),
         createdById: meta.userId,
       },
     })
@@ -49,14 +63,13 @@ const ICON_SIZE = 128
 
 const saveSquareImage = async (bytes: Uint8Array, originalName: string, userId: string, size: number) => {
   const webp = await toWebpBytes(bytes, { size, fit: 'cover' }) // 正方形にクロップ
-  const attachment = await storeWebp(webp, { originalName, boardId: null, userId })
+  const attachment = await storeWebp(webp, { originalName, owner: PUBLIC_ATTACHMENT_OWNER, userId })
   return toUploadUrl(attachment.key)
 }
 
 /**
  * 画像を正方形にクロップしてwebpでオブジェクトストレージに保存し、公開URLを返す。
- * LinkWidgetアイコン・ユーザーアバターなど、全ログインユーザーへ配信してよい画像
- * (Attachment.boardId は null のまま)で共通利用する。
+ * LinkWidgetアイコン・ユーザーアバターなど、全ログインユーザーへ配信してよい画像(持ち主は public)で共通利用する。
  */
 export const saveImageAttachment = async (file: File, userId: string, size = ICON_SIZE) =>
   saveSquareImage(new Uint8Array(await file.arrayBuffer()), file.name, userId, size)
@@ -90,15 +103,15 @@ export const saveImageAttachmentFromUrl = async (url: string, userId: string): P
  * 本文(チケット/コメント/お知らせ)へ貼る画像を保存して公開URLを返す。
  *
  * アイコン用途と違い縦横比は保ったまま長辺だけ上限を掛ける。
- * `boardId` を渡した添付は配信時にそのボードの可視判定を通すので、ボードのメンバーしか読めない。
- * `wikiSpaceId` を渡した添付は、そのスペースを閲覧できる人しか読めない。
- * どちらも null は全ログインユーザーへ配信してよいもの(お知らせなどボードに属さない本文)。
+ * 持ち主がボードの添付は配信時にそのボードの可視判定を通すので、ボードのメンバーしか読めない。
+ * Wiki スペースの添付は、そのスペースを閲覧できる人しか読めない。
+ * public は全ログインユーザーへ配信してよいもの(お知らせなどボードに属さない本文)。
  */
-export const saveContentImage = async (file: File, owner: AttachmentOwner) => {
+export const saveContentImage = async (file: File, uploader: AttachmentUploader) => {
   // 保存形式はwebpに統一する。長辺のみ上限を掛けて縦横比は保つ
   const webp = await toWebp(file, { size: 2000, fit: 'inside' })
-  const attachment = await storeWebp(webp, { ...owner, originalName: file.name })
-  logger.info({ key: attachment.key, size: attachment.size, ...owner }, 'attachment uploaded')
+  const attachment = await storeWebp(webp, { ...uploader, originalName: file.name })
+  logger.info({ key: attachment.key, size: attachment.size, ...logFieldsOf(uploader) }, 'attachment uploaded')
   return { url: toUploadUrl(attachment.key), key: attachment.key, size: attachment.size }
 }
 
@@ -148,14 +161,14 @@ export const toStoredMimeType = (type: string) => {
  * 本文(チケット/コメント/お知らせ)へリンクとして貼るファイルを、変換せずに保存して公開URLを返す。
  * 添付先の扱いは {@link saveContentImage} と同じ。
  */
-export const saveContentFile = async (file: File, owner: AttachmentOwner) => {
+export const saveContentFile = async (file: File, uploader: AttachmentUploader) => {
   const attachment = await storeAttachment(new Uint8Array(await file.arrayBuffer()), {
-    ...owner,
+    ...uploader,
     ext: toUploadExt(file.name),
     mimeType: toStoredMimeType(file.type),
     originalName: [...file.name].slice(-MAX_ORIGINAL_NAME_LENGTH).join(''),
   })
-  logger.info({ key: attachment.key, size: attachment.size, ...owner }, 'file attachment uploaded')
+  logger.info({ key: attachment.key, size: attachment.size, ...logFieldsOf(uploader) }, 'file attachment uploaded')
   return { url: toUploadUrl(attachment.key), key: attachment.key, size: attachment.size }
 }
 
@@ -170,7 +183,7 @@ export const listContentAttachments = async (keys: string[], boardId: string) =>
     return []
   }
   const rows = await prisma.attachment.findMany({
-    where: { key: { in: keys }, OR: [{ boardId }, { boardId: null, wikiSpaceId: null, detachedAt: null }] },
+    where: { key: { in: keys }, OR: [{ boardId }, PUBLIC_ATTACHMENT_WHERE] },
     select: { key: true, originalName: true, size: true, mimeType: true, createdAt: true },
   })
   const byKey = new Map(rows.map((row) => [row.key, row]))
@@ -224,7 +237,7 @@ export const removeOwnedImageAttachment = async (url: string, userId: string): P
   const key = toUploadKey(url)
   // 削除はベストエフォート(removeAttachmentByKey と同じ)。確認に失敗したら消さずに戻る
   const owned = await prisma.attachment
-    .count({ where: { key, createdById: userId, boardId: null, wikiSpaceId: null, detachedAt: null } })
+    .count({ where: { key, createdById: userId, ...PUBLIC_ATTACHMENT_WHERE } })
     .catch((err) => {
       logger.error({ err, key, userId }, 'failed to check attachment owner')
       return 0
@@ -236,17 +249,15 @@ export const removeOwnedImageAttachment = async (url: string, userId: string): P
   await removeAttachmentByKey(key)
 }
 
-/** 添付先。ボードか Wiki スペースのどちらか一方 */
-export type AttachmentTarget = { boardId: string; wikiSpaceId?: never } | { wikiSpaceId: string; boardId?: never }
-
 /**
  * 添付先をそのまま where に使う前の確認。ID が空だと Prisma は条件を落とし、全添付が対象になってしまう
  */
 const attachmentTargetWhere = (target: AttachmentTarget) => {
-  if (!target.boardId === !target.wikiSpaceId) {
-    throw new Error('attachment target must have exactly one of boardId / wikiSpaceId')
+  const where = attachmentTargetFields(target)
+  if (!Object.values(where)[0]) {
+    throw new Error('attachment target must have a non-empty boardId / wikiSpaceId')
   }
-  return target.boardId ? { boardId: target.boardId } : { wikiSpaceId: target.wikiSpaceId }
+  return where
 }
 
 /**
@@ -273,7 +284,8 @@ export const detachAttachmentsOf = async (
   target: AttachmentTarget,
   now: Date = new Date(),
 ): Promise<void> => {
-  const where = attachmentTargetWhere(target)
-  const unlink = 'boardId' in where ? { boardId: null } : { wikiSpaceId: null }
-  await tx.attachment.updateMany({ where, data: { ...unlink, detachedAt: now } })
+  await tx.attachment.updateMany({
+    where: attachmentTargetWhere(target),
+    data: { ...attachmentOwnerColumns(PUBLIC_ATTACHMENT_OWNER), detachedAt: now },
+  })
 }

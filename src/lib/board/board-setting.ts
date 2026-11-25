@@ -206,8 +206,9 @@ export const deleteBoard = async (actor: Actor, id: string) => {
     await assertBoardAccess(actor, id, 'manage', tx)
     await assertTeamBoard(tx, id)
     // 紐付けを外すとボードから辿れなくなるので、キーはここで控える
-    const keys = await listAttachmentKeysOf(tx, { boardId: id })
-    await detachAttachmentsOf(tx, { boardId: id })
+    const target = { kind: 'board', boardId: id } as const
+    const keys = await listAttachmentKeysOf(tx, target)
+    await detachAttachmentsOf(tx, target)
     await tx.board.delete({ where: { id } })
     return keys
   })

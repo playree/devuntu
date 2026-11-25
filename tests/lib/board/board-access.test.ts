@@ -570,17 +570,13 @@ describe('findTicketIdByDisplayId', () => {
 describe('canViewAttachment', () => {
   it('グループ経由のメンバーならチケットを数えずに読める', async () => {
     mockBoard({ viaGroup: true })
-    expect(
-      await canViewAttachment(user, { key: 'k.webp', boardId: BOARD_ID, wikiSpaceId: null, detachedAt: null }),
-    ).toBe(true)
+    expect(await canViewAttachment(user, { key: 'k.webp', owner: { kind: 'board', boardId: BOARD_ID } })).toBe(true)
     expect(prisma.ticket.count).not.toHaveBeenCalled()
   })
 
   it('管理者でも非メンバーなら承認対象の参照が無ければ読めない', async () => {
     mockBoard({})
     vi.mocked(prisma.ticket.count).mockResolvedValue(0)
-    expect(
-      await canViewAttachment(admin, { key: 'k.webp', boardId: BOARD_ID, wikiSpaceId: null, detachedAt: null }),
-    ).toBe(false)
+    expect(await canViewAttachment(admin, { key: 'k.webp', owner: { kind: 'board', boardId: BOARD_ID } })).toBe(false)
   })
 })

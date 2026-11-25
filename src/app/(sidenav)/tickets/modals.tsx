@@ -235,7 +235,7 @@ export const AddModal: FC<
             name='content'
             constraintSchema={scCreateTicket}
             errorMessage={fet(errors.content)}
-            uploadBoardId={boardId}
+            uploadOwner={{ kind: 'board', boardId }}
             // メンション候補は担当者候補と同じボードメンバー(取得を 1 本にまとめている)
             mentionCandidates={boardAssignees}
           />

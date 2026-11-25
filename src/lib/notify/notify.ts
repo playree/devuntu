@@ -24,35 +24,42 @@ export const NOTIFY_EVENTS = [
   'wiki_announcement',
 ] as const satisfies readonly NotifyEvent[]
 
-/**
- * ユーザーごとの設定(`/account` の通知設定)に出す DM 通知のイベント。
- * 宛先がチャンネルだけのイベントは `UserNotifySetting` で表せないので含めない。
- */
-export const DM_NOTIFY_EVENTS = [
-  'mention',
-  'agent_run',
-  'ticket_assigned',
-  'ticket_merge_held',
-  'ticket_due',
-] as const satisfies readonly NotifyEvent[]
-export type DmNotifyEvent = (typeof DM_NOTIFY_EVENTS)[number]
-
-/** ボードごとの設定に出すチャネル通知のイベント */
-export const CHANNEL_NOTIFY_EVENTS = [
-  'agent_run',
-  'ticket_assigned',
-  'ticket_created',
-  'ticket_completed',
-  'ticket_merge_held',
-  'announcement',
-] as const satisfies readonly NotifyEvent[]
-export type ChannelNotifyEvent = (typeof CHANNEL_NOTIFY_EVENTS)[number]
+export type NotifyEventSpec = {
+  /** ユーザーごとの設定(`/account` の通知設定)に出す DM 通知か。宛先がチャンネルだけのイベントは `UserNotifySetting` で表せない */
+  dm: boolean
+  /** チャンネルの宛先の決め方。board: ボードの通知設定で選ぶ / space: Wiki スペースの通知先 / null: チャンネルへは送らない */
+  channel: 'board' | 'space' | null
+}
 
 /**
- * Wiki スペースの設定で宛先を決めるイベント。
- * ボード設定と個人設定のどちらにも出さない(通知先はスペースのチャンネルだけ)
+ * イベントごとの宛先の種類。DM / チャネル通知の一覧と設定画面の項目はここから導く。
+ * 宛先の解決(`notify-recipient.ts` の RESOLVERS)はこの表に合わせる(tests/lib/notify/notify-recipient.test.ts で一致を確かめる)
  */
-export const SPACE_NOTIFY_EVENTS = ['wiki_announcement'] as const satisfies readonly NotifyEvent[]
+export const NOTIFY_EVENT_SPEC = {
+  mention: { dm: true, channel: null },
+  agent_run: { dm: true, channel: 'board' },
+  ticket_assigned: { dm: true, channel: 'board' },
+  ticket_created: { dm: false, channel: 'board' },
+  ticket_completed: { dm: false, channel: 'board' },
+  ticket_merge_held: { dm: true, channel: 'board' },
+  ticket_due: { dm: true, channel: null },
+  announcement: { dm: false, channel: 'board' },
+  wiki_announcement: { dm: false, channel: 'space' },
+} as const satisfies Record<NotifyEvent, NotifyEventSpec>
+
+type NotifyEventsWhere<P> = { [E in NotifyEvent]: (typeof NOTIFY_EVENT_SPEC)[E] extends P ? E : never }[NotifyEvent]
+
+/** ユーザーごとの設定に出す DM 通知のイベント(`NOTIFY_EVENTS` の並び) */
+export type DmNotifyEvent = NotifyEventsWhere<{ dm: true }>
+export const DM_NOTIFY_EVENTS: readonly DmNotifyEvent[] = NOTIFY_EVENTS.filter(
+  (event): event is DmNotifyEvent => NOTIFY_EVENT_SPEC[event].dm,
+)
+
+/** ボードごとの設定に出すチャネル通知のイベント(`NOTIFY_EVENTS` の並び) */
+export type ChannelNotifyEvent = NotifyEventsWhere<{ channel: 'board' }>
+export const CHANNEL_NOTIFY_EVENTS: readonly ChannelNotifyEvent[] = NOTIFY_EVENTS.filter(
+  (event): event is ChannelNotifyEvent => NOTIFY_EVENT_SPEC[event].channel === 'board',
+)
 
 /** 通知チャネル。UserNotifySetting の列名と一致させる */
 export const NOTIFY_CHANNELS = ['email', 'slack', 'webpush'] as const satisfies readonly PrismaNotifyChannel[]

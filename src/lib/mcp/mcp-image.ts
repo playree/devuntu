@@ -21,9 +21,9 @@ import type { ResourceAuth } from '../oauth/oauth-resource'
 import { assertRateLimit } from '../rate-limit'
 import { ACCEPTED_IMAGE_TYPES, zImageFile } from '../schema/schema'
 import { makeUrl } from '../server-utils'
-import type { AttachmentTarget } from '../storage/attachment'
 import { saveContentImage } from '../storage/attachment'
 import { findViewableAttachment } from '../storage/attachment-access'
+import { attachmentTargetFields, type AttachmentTarget } from '../storage/attachment-owner'
 import { resizeWebp, WEBP_MIME } from '../storage/image'
 import { getObject } from '../storage/storage'
 import { isValidUploadKey, toUploadKey, UPLOAD_URL_PREFIX } from '../storage/upload'
@@ -92,7 +92,7 @@ const resolveUploadTarget = async (
   if (ticketId) {
     // 'edit' は canEdit(= メンバー かつ 未アーカイブ)なので、アーカイブ済みボードはここで弾かれる
     const access = await assertTicketAccess(auth.user, await resolveTicketId(auth, ticketId), 'edit')
-    return { boardId: access.boardId }
+    return { kind: 'board', boardId: access.boardId }
   }
   if (wikiPage) {
     // 'write' は editor 以上 かつ 未アーカイブ。添付はスペースに属する(ページ単位では持たない)
@@ -100,15 +100,11 @@ const resolveUploadTarget = async (
     if (!page) {
       throw errValidation(`No page ${ref} exists`)
     }
-    return { wikiSpaceId: access.spaceId }
+    return { kind: 'wikiSpace', wikiSpaceId: access.spaceId }
   }
   const board = await assertBoardAccess(auth.user, await resolveBoardId(boardId as string), 'write')
-  return { boardId: board.boardId }
+  return { kind: 'board', boardId: board.boardId }
 }
-
-/** 応答とログに載せる添付先(boardId か wikiSpaceId のどちらか) */
-const targetFields = (target: AttachmentTarget) =>
-  target.boardId ? { boardId: target.boardId } : { wikiSpaceId: target.wikiSpaceId }
 
 /** `data:image/png;base64,...` 形式で渡されることが多いので接頭辞を許容する */
 const stripDataUrl = (data: string) => data.replace(/^data:[^;,]*;base64,/, '').trim()
@@ -136,12 +132,8 @@ const uploadImageForMcp = async (
     throw errValidation(t('en', (parsed.error.issues[0]?.message ?? '@invalid_image_type') as LocaleItem))
   }
 
-  const { url } = await saveContentImage(parsed.data, {
-    boardId: target.boardId ?? null,
-    wikiSpaceId: target.wikiSpaceId ?? null,
-    userId: auth.user.id,
-  })
-  logger.info({ userId: auth.user.id, ...targetFields(target) }, 'mcp image uploaded')
+  const { url } = await saveContentImage(parsed.data, { userId: auth.user.id, owner: target })
+  logger.info({ userId: auth.user.id, ...attachmentTargetFields(target) }, 'mcp image uploaded')
   return { url, markdown: `![${input.filename}](${url})` }
 }
 
@@ -154,9 +146,9 @@ export const issueUploadToken = async (auth: ResourceAuth, input: UploadTargetIn
   const target = await resolveUploadTarget(auth, input)
   assertRateLimit(`upload-token:user:${auth.user.id}`, UPLOAD_TOKEN_RATE_LIMIT)
 
-  const token = await signUploadToken({ userId: auth.user.id, ...target })
-  logger.info({ userId: auth.user.id, ...targetFields(target) }, 'mcp upload token issued')
-  return { target: targetFields(target), token }
+  const token = await signUploadToken({ userId: auth.user.id, target })
+  logger.info({ userId: auth.user.id, ...attachmentTargetFields(target) }, 'mcp upload token issued')
+  return { target: attachmentTargetFields(target), token }
 }
 
 const createImageUploadTokenForMcp = async (auth: ResourceAuth, input: UploadTargetInput) => {

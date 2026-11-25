@@ -63,7 +63,7 @@ export const TicketBody: FC<{
           length={contentDraft.length}
           maxLength={MAX_CONTENT_LENGTH}
           label={t('content')}
-          uploadBoardId={ticket.boardId}
+          uploadOwner={{ kind: 'board', boardId: ticket.boardId }}
           // メンション候補は担当者候補と同じボードメンバー(取得を 1 本にまとめている)
           mentionCandidates={boardAssignees}
           // ツールバー + 2 行が MarkdownField の最小高に収まるので、短い本文でも高さが動かない

@@ -243,7 +243,7 @@ export const TicketComments: FC<{
             length={draft.length}
             maxLength={MAX_COMMENT_LENGTH}
             label={t('add_comment')}
-            uploadBoardId={ticket.boardId}
+            uploadOwner={{ kind: 'board', boardId: ticket.boardId }}
             mentionCandidates={mentionCandidates}
           />
           <div className='flex items-center gap-2'>

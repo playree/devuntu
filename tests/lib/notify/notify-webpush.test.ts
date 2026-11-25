@@ -26,6 +26,8 @@ const content: NotifyContent = {
   subject: '[ABC-1] チケット1',
   body: 'メンションされました',
   url: 'https://devuntu.example.com/t/ABC-1',
+  openLabel: 'チケットを開く',
+  tag: 't1',
 }
 
 const subscription = (id: string): StoredSubscription => ({

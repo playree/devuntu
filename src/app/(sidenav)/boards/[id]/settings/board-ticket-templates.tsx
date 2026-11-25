@@ -121,7 +121,7 @@ const TemplateModal: FC<{
             name='content'
             constraintSchema={scTicketTemplateFields}
             errorMessage={fet(errors.content)}
-            uploadBoardId={boardId}
+            uploadOwner={{ kind: 'board', boardId }}
           />
         </div>
 

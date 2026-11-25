@@ -13,7 +13,7 @@
 
 import { jwtVerify, SignJWT, type JWTPayload } from 'jose'
 import { uuidv7 } from 'uuidv7'
-import { getBoardAccess } from '../board/board-access'
+import { getBoardAccess, type Actor } from '../board/board-access'
 import { nowDate, withinMinutes } from '../day'
 import { envu } from '../env-util'
 import { logger } from '../logger'
@@ -21,7 +21,8 @@ import { parseBearerToken } from '../oauth/oauth-resource'
 import { isUniqueViolation, prisma } from '../prisma'
 import { makeUrl } from '../server-utils'
 import { getWikiSpaceAccess } from '../wiki/wiki-access'
-import type { AttachmentOwner, AttachmentTarget } from './attachment'
+import type { AttachmentUploader } from './attachment'
+import { attachmentTargetFields, type AttachmentTarget } from './attachment-owner'
 import { toUploadUrl, UPLOAD_URL_PREFIX } from './upload'
 
 /**
@@ -38,8 +39,14 @@ const issuer = () => envu.server.BETTER_AUTH_URL
 const audience = () => makeUrl(UPLOAD_URL_PREFIX).toString()
 
 /** 戻り値の平文は発行時にしか取得できない(保存もしない) */
-export const signUploadToken = async ({ userId, ...target }: { userId: string } & AttachmentTarget): Promise<string> =>
-  new SignJWT(target.boardId ? { boardId: target.boardId } : { wikiSpaceId: target.wikiSpaceId })
+export const signUploadToken = async ({
+  userId,
+  target,
+}: {
+  userId: string
+  target: AttachmentTarget
+}): Promise<string> =>
+  new SignJWT(attachmentTargetFields(target))
     .setProtectedHeader({ alg: ALGORITHM })
     .setSubject(userId)
     .setIssuer(issuer())
@@ -88,16 +95,23 @@ const consumeUploadNonce = async (jti: string, expiresAt: Date): Promise<boolean
 /** トークンが主張する添付先。ボードか Wiki スペースのちょうど一方でなければ null */
 const targetOf = ({ boardId, wikiSpaceId }: JWTPayload): AttachmentTarget | null => {
   if (typeof boardId === 'string' && wikiSpaceId === undefined) {
-    return { boardId }
+    return { kind: 'board', boardId }
   }
   if (typeof wikiSpaceId === 'string' && boardId === undefined) {
-    return { wikiSpaceId }
+    return { kind: 'wikiSpace', wikiSpaceId }
   }
   return null
 }
 
-/** アップロードの実行者と添付先 */
-export type UploadActor = AttachmentOwner
+/** 添付先(ボード / Wiki スペース)へ書き込めるか。canWrite は editor 以上かつ未アーカイブ、ボードはメンバーかつ未アーカイブ */
+const canWriteTarget = async (user: Actor, target: AttachmentTarget): Promise<boolean> => {
+  if (target.kind === 'wikiSpace') {
+    return (await getWikiSpaceAccess(user, target.wikiSpaceId))?.canWrite ?? false
+  }
+  // アーカイブ済みボードは本文の編集自体が禁止されるので、添付だけ増やせないようにする
+  const access = await getBoardAccess(user, target.boardId)
+  return !!access && !access.archived
+}
 
 /**
  * 短命トークンを検証し、アップロードの実行者と添付先(ボード / Wiki スペース)を返す。
@@ -105,7 +119,7 @@ export type UploadActor = AttachmentOwner
  * トークンが主張する添付先は信用せず、利用時点でBAN・所属(書き込み権限)とアーカイブを引き直す
  * (発行後にBANされた/ボード・スペースから外れた/アーカイブされたケースを塞ぐ)。
  */
-export const verifyUploadToken = async (token: string): Promise<UploadActor | null> => {
+export const verifyUploadToken = async (token: string): Promise<AttachmentUploader | null> => {
   let payload
   try {
     payload = (await jwtVerify(token, secret(), { issuer: issuer(), audience: audience(), algorithms: [ALGORITHM] }))
@@ -129,27 +143,14 @@ export const verifyUploadToken = async (token: string): Promise<UploadActor | nu
   if (!user || user.banned) {
     return null
   }
-  if (target.wikiSpaceId !== undefined) {
-    const { wikiSpaceId } = target
-    // canWrite は editor 以上かつ未アーカイブ
-    if (!(await getWikiSpaceAccess(user, wikiSpaceId))?.canWrite) {
-      logger.info({ userId: user.id, wikiSpaceId }, 'upload token wiki space unavailable')
-      return null
-    }
-    return { userId: user.id, boardId: null, wikiSpaceId }
-  }
-  // アーカイブ済みボードは本文の編集自体が禁止されるので、添付だけ増やせないようにする
-  const { boardId } = target
-  const access = await getBoardAccess(user, boardId)
-  if (!access || access.archived) {
-    logger.info({ userId: user.id, boardId }, 'upload token board unavailable')
+  if (!(await canWriteTarget(user, target))) {
+    logger.info({ userId: user.id, ...attachmentTargetFields(target) }, 'upload token target unavailable')
     return null
   }
-
-  return { userId: user.id, boardId }
+  return { userId: user.id, owner: target }
 }
 
-export type UploadAuthResult = { ok: true; actor: UploadActor } | { ok: false }
+export type UploadAuthResult = { ok: true; actor: AttachmentUploader } | { ok: false }
 
 /** リクエストに Bearer があれば短命トークンとして扱う。無ければセッション経路にフォールバックさせる */
 export const resolveUploadToken = async (req: Request): Promise<UploadAuthResult | null> => {

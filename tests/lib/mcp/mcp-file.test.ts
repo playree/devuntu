@@ -92,7 +92,7 @@ describe('create_file_upload_token', () => {
     expect(json.uploadUrl).toBe('http://localhost:3000/api/upload?kind=file')
     expect(json.curl).toContain(json.uploadUrl)
     expect(json.maxSizeMb).toBe(10)
-    expect(await verifyUploadToken(json.token)).toEqual({ userId: 'u1', boardId: BOARD_ID })
+    expect(await verifyUploadToken(json.token)).toEqual({ userId: 'u1', owner: { kind: 'board', boardId: BOARD_ID } })
   })
 })
 

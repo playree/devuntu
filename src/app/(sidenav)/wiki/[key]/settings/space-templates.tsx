@@ -137,7 +137,7 @@ const TemplateModal: FC<{
               maxLength={MAX_WIKI_CONTENT}
               label={t('content')}
               allowImages
-              uploadWikiSpaceId={space.id}
+              uploadOwner={{ kind: 'wikiSpace', wikiSpaceId: space.id }}
               onUploadingChange={setUploading}
             />
           ) : (
@@ -152,7 +152,7 @@ const TemplateModal: FC<{
               label={t('content')}
               minRows={8}
               allowImages
-              uploadWikiSpaceId={space.id}
+              uploadOwner={{ kind: 'wikiSpace', wikiSpaceId: space.id }}
             />
           )}
           {errors.content && <p className='text-danger text-xs'>{fet(errors.content)}</p>}

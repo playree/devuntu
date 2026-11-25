@@ -81,8 +81,7 @@ describe('POST /api/upload(Wiki スペースを添付先にする)', () => {
     expect(await res.json()).toEqual({ url: URL_OF_KEY })
     expect(saveContentImage).toHaveBeenCalledWith(expect.any(File), {
       userId: 'u1',
-      boardId: null,
-      wikiSpaceId: SPACE_ID,
+      owner: { kind: 'wikiSpace', wikiSpaceId: SPACE_ID },
     })
   })
 
@@ -94,8 +93,7 @@ describe('POST /api/upload(Wiki スペースを添付先にする)', () => {
     expect(res.status).toBe(200)
     expect(saveContentFile).toHaveBeenCalledWith(expect.any(File), {
       userId: 'u1',
-      boardId: null,
-      wikiSpaceId: SPACE_ID,
+      owner: { kind: 'wikiSpace', wikiSpaceId: SPACE_ID },
     })
   })
 

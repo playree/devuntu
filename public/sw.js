@@ -96,7 +96,7 @@ self.addEventListener('push', (event) => {
       body: payload.body || '',
       icon: '/icon-192.png',
       badge: '/icon-192.png',
-      // 同じチケットの通知を積み上げない
+      // 同じ対象(チケット・Wiki のページ)の通知を積み上げない
       tag: payload.tag,
       data: { url: payload.url || '/' },
     }),
