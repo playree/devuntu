@@ -11,6 +11,7 @@ import {
   AGENT_ANNOUNCEMENT_GUIDE,
   ANNOUNCEMENT_GUIDE,
   mcpInstructions,
+  PLAN_REPORT_FORMAT_GUIDE,
 } from '@/lib/mcp/mcp-instructions'
 import { registerSkillTools } from '@/lib/mcp/mcp-skill'
 import {
@@ -301,11 +302,12 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
         'Adds a comment to a ticket. Post with type=plan once you have a plan and type=report when you finish ' +
         '(record acceptance criteria results with report_acceptance_criteria, not in the report); ' +
         'these are shown collapsed on the detail screen, distinct from regular comments. ' +
+        `${PLAN_REPORT_FORMAT_GUIDE} ` +
         (auth.kind === 'agent' ? AGENT_ANNOUNCEMENT_GUIDE : ANNOUNCEMENT_GUIDE) +
         '. Reply to an existing comment with parentId (one level only)',
       inputSchema: z.strictObject({
         ticketId: z.string().min(1),
-        content: zCommentContent,
+        content: zCommentContent.describe('Comment body (Markdown)'),
         type: zCommentType.describe(
           'plan=work plan, report=work report, announcement=announcement for all board members. Omit for a regular comment',
         ),
@@ -331,7 +333,10 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
       title: 'Update comment',
       annotations: TOOL_ANNOTATIONS.destructiveIdempotent,
       description: 'Edits a comment you posted',
-      inputSchema: z.strictObject({ commentId: z.uuidv7(), content: zCommentContent }),
+      inputSchema: z.strictObject({
+        commentId: z.uuidv7(),
+        content: zCommentContent.describe('Comment body (Markdown)'),
+      }),
     },
     async ({ commentId, content }) => jsonResult(await updateTicketCommentForMcp(auth, commentId, content)),
   )

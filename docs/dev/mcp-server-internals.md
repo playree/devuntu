@@ -82,6 +82,11 @@ MCP サーバーの認証の振り分け・ツールの入力仕様・実装上�
 各受け入れ条件を満たしたかは `type=report` の本文に並べさせず、`report_acceptance_criteria` でチケットの自己申告として記録させる
 (`add_ticket_comment` の description にも添える)。
 
+プランと報告書は、項目ごとに改行し、節の間に空行を入れた Markdown で書くよう伝える。プランは作業手順と確認方法を番号付きリストにし、
+報告書は対応内容・確認結果・残課題を見出しと箇条書きで整理する。詳しい書き方は `add_ticket_comment` の description とエージェント経路の
+`instructions` に載せ、人の経路では `instructions` と `get_ticket` の `workflow` の手順2・5で短い形の書式を案内する。子チケットの起票案には `propose_child_tickets` の
+`content` の入力説明で見出しと箇条書きの使い方を伝える。
+
 マージによる自動完了で受け入れ条件を見るボードのため、`acceptanceCriteria` の入力説明ではマージ後に残る作業(タグ打ちなど)も
 条件に入れるよう、`report_acceptance_criteria` の description と `met` の入力説明では、まだ行っていない作業を `met=false` で報告するよう伝える。
 `instructions` は文字数の上限とドキュメントとの一致テストがあるため、この案内は載せない。
@@ -112,10 +117,10 @@ Where to keep what you learn:
 
 Default steps when working on a ticket (no need to confirm each time):
 1. Start: set status to doing with update_ticket (unless already doing / done)
-2. Plan: post it with add_ticket_comment type=plan. Questions for the user: comments without type
+2. Plan: add_ticket_comment type=plan as numbered Markdown steps; questions as regular comments
 3. Branch / PR / commit: link the URL with link_ticket_artifact (feature/<display ID> branches link automatically)
 4. Done: record whether each acceptance criterion is met, with evidence, via report_acceptance_criteria (not in the report)
-5. Report: add_ticket_comment type=report with what you did, how you verified it, and remaining issues (attach via create_image_upload_token / create_file_upload_token)
+5. Report: add_ticket_comment type=report with Markdown sections: changes, verification, open issues (attach via create_image_upload_token / create_file_upload_token)
 
 Precedence: user instructions > the ticket > project rules (CLAUDE.md / AGENTS.md) and boardContext > boardKnowledge > boardMemory > these default steps. If only asked to read or answer, do not comment or change the status.
 ```
@@ -136,10 +141,10 @@ Precedence: user instructions > the ticket > project rules (CLAUDE.md / AGENTS.m
    - 確かめられたメモリや、残しておくべき情報: ナレッジにするかを提案する。ナレッジは利用者の同意があるときだけ変える
 4. チケットに対応するときの既定の手順(都度の確認は不要)
    1. 着手: update_ticket で status を doing にする(既に doing / done なら変えない)
-   2. プラン: add_ticket_comment で type=plan として投稿する。利用者への質問は type を付けない通常コメントで
+   2. プラン: add_ticket_comment で type=plan として Markdown の番号付きリストで投稿する。利用者への質問は通常コメントで
    3. ブランチ / PR / コミット: link_ticket_artifact で URL を紐付ける(ブランチ名を feature/<表示ID> にすると自動で紐付く)
    4. 完了: 受け入れ条件のそれぞれを満たしたかを、根拠付きで report_acceptance_criteria に記録する(report には書かない)
-   5. 報告: add_ticket_comment で type=report として、やったこと・確認方法・残課題を報告する(添付は create_image_upload_token / create_file_upload_token で)
+   5. 報告: add_ticket_comment で type=report として、対応内容・確認結果・残課題を Markdown の節に分けて報告する(添付は create_image_upload_token / create_file_upload_token で)
 5. 優先順位: 利用者の指示 > チケット > プロジェクトのルール(CLAUDE.md / AGENTS.md など)と boardContext > boardKnowledge > boardMemory > この既定の手順。
    読む・答えるだけを頼まれたときは、コメントもステータス変更もしない
 
@@ -171,15 +176,15 @@ Where to keep what you learn:
 
 In automated operation, follow the rule returned by get_agent_task and the runner instructions, and finally report the result with finish_agent_task.
 Link GitHub / GitLab branches, PRs (MRs) and commits with link_ticket_artifact to show their state and CI results on the ticket.
-Precedence: the ticket > boardContext > boardKnowledge > boardMemory. Comments with type=plan / type=report are shown separately from regular comments as a plan / a report. Agents cannot post type=announcement: if the result is worth telling all board members (e.g. a release), propose an announcement text in your report.
+Precedence: the ticket > boardContext > boardKnowledge > boardMemory. Write type=plan and type=report bodies in Markdown with real line breaks, blank lines between sections, and one list item per line. For a plan, list the steps as a numbered list and say how you will verify the work. For a report, use headings and bullets for changes, verification, and open issues. Agents cannot post type=announcement: if the result is worth telling all board members (e.g. a release), propose an announcement text in your report.
 ```
 
 前置き・ボードの前提・残し先の先頭2項目は人の経路と同じ。エージェントはナレッジを変更できないので、残し先の3項目めは
 「確かめられたメモリや残しておくべき情報は、ナレッジにするよう報告で提案する」になる。
 続く行は「自動運用では get_agent_task が返す rule とランナーの指示に従い、最後に finish_agent_task で結果を報告する」と、紐付けの説明。
-最後の行は優先順位(チケット > boardContext > boardKnowledge > boardMemory)とコメントの種別(type=plan / type=report は通常コメントと分けて表示される)、
+最後の行は優先順位(チケット > boardContext > boardKnowledge > boardMemory)とプラン・報告書の Markdown 書式、
 アナウンスは投稿できないので、告知すべき結果なら告知文の案を報告に載せること([アナウンス](#アナウンス))。
-エージェントには手順と人の経路の優先順位を載せないので、紐付け・優先順位・コメントの種別をここで補う。
+エージェントには手順と人の経路の優先順位を載せないので、紐付け・優先順位・プラン・報告書の書式をここで補う。
 
 **`get_ticket` の `workflow`**
 

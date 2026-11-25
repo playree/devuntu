@@ -12,14 +12,23 @@
 
 import type { ResourceAuth } from '../oauth/oauth-resource'
 
-/** チケットに対応するときの手順(人の経路の既定) */
+/** チケットに対応するときの手順(人の経路の既定)。instructions の文字数の上限(2000字未満)に余裕が少ないので短く保つ */
 export const TICKET_WORKFLOW = [
   'Start: set status to doing with update_ticket (unless already doing / done)',
-  'Plan: post it with add_ticket_comment type=plan. Questions for the user: comments without type',
+  'Plan: add_ticket_comment type=plan as numbered Markdown steps; questions as regular comments',
   'Branch / PR / commit: link the URL with link_ticket_artifact (feature/<display ID> branches link automatically)',
   'Done: record whether each acceptance criterion is met, with evidence, via report_acceptance_criteria (not in the report)',
-  'Report: add_ticket_comment type=report with what you did, how you verified it, and remaining issues (attach via create_image_upload_token / create_file_upload_token)',
+  'Report: add_ticket_comment type=report with Markdown sections: changes, verification, open issues (attach via create_image_upload_token / create_file_upload_token)',
 ] as const
+
+/**
+ * プラン・報告書の書式。改行の無い文章で投稿するクライアントがあるため、どのクライアントも読む add_ticket_comment の description と
+ * エージェントの instructions に載せる(人の経路の instructions は手順2・5の短い形で伝える)
+ */
+export const PLAN_REPORT_FORMAT_GUIDE =
+  'Write type=plan and type=report bodies in Markdown with real line breaks, blank lines between sections, and one list item per line. ' +
+  'For a plan, list the steps as a numbered list and say how you will verify the work. ' +
+  'For a report, use headings and bullets for changes, verification, and open issues.'
 
 /**
  * 結果の告知(アナウンス)の手順。instructions は文字数の上限に余裕が無いので `get_ticket` の workflow にだけ載せ、
@@ -87,12 +96,12 @@ const PRECEDENCE =
   'If only asked to read or answer, do not comment or change the status.'
 
 /**
- * エージェントの経路の優先順位とコメントの種別。人の経路は PRECEDENCE と手順(TICKET_WORKFLOW)で伝わるが、
- * エージェントには手順を載せないので、ここで補う
+ * エージェントの経路の優先順位とプラン・報告書の書式。人の経路は PRECEDENCE と手順(TICKET_WORKFLOW)で伝わるが、
+ * エージェントには手順を載せないので、ここで補う。plan / report が通常コメントと分けて表示されることは add_ticket_comment の description で伝える
  */
 const AGENT_PRECEDENCE =
   'Precedence: the ticket > boardContext > boardKnowledge > boardMemory. ' +
-  'Comments with type=plan / type=report are shown separately from regular comments as a plan / a report. ' +
+  `${PLAN_REPORT_FORMAT_GUIDE} ` +
   `${AGENT_ANNOUNCEMENT_GUIDE}.`
 
 /**
