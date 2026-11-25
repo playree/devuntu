@@ -12,10 +12,10 @@
 
 import type { ResourceAuth } from '../oauth/oauth-resource'
 
-/** チケットに対応するときの手順(人の経路の既定) */
+/** チケットに対応するときの手順(人の経路の既定)。instructions の文字数の上限(2000字未満)に余裕が少ないので短く保つ */
 export const TICKET_WORKFLOW = [
   'Start: set status to doing with update_ticket (unless already doing / done)',
-  'Plan: add_ticket_comment type=plan as numbered Markdown steps. Ask questions in regular comments',
+  'Plan: add_ticket_comment type=plan as numbered Markdown steps; questions as regular comments',
   'Branch / PR / commit: link the URL with link_ticket_artifact (feature/<display ID> branches link automatically)',
   'Done: record whether each acceptance criterion is met, with evidence, via report_acceptance_criteria (not in the report)',
   'Report: add_ticket_comment type=report with Markdown sections: changes, verification, open issues (attach via create_image_upload_token / create_file_upload_token)',
@@ -97,7 +97,7 @@ const PRECEDENCE =
 
 /**
  * エージェントの経路の優先順位とプラン・報告書の書式。人の経路は PRECEDENCE と手順(TICKET_WORKFLOW)で伝わるが、
- * エージェントには手順を載せないので、ここで補う
+ * エージェントには手順を載せないので、ここで補う。plan / report が通常コメントと分けて表示されることは add_ticket_comment の description で伝える
  */
 const AGENT_PRECEDENCE =
   'Precedence: the ticket > boardContext > boardKnowledge > boardMemory. ' +

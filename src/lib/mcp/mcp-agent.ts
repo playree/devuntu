@@ -254,7 +254,7 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
       inputSchema: z.strictObject({
         ticketId: z.string().min(1),
         content: zCommentContent.describe(
-          'Plan body in Markdown. Explain why and how the work is split using headings and lists',
+          'Plan body in Markdown with real line breaks and one list item per line. Explain why and how the work is split using headings and lists',
         ),
         ...zChildProposal.shape,
       }),

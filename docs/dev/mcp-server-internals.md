@@ -84,7 +84,7 @@ MCP サーバーの認証の振り分け・ツールの入力仕様・実装上�
 
 プランと報告書は、項目ごとに改行し、節の間に空行を入れた Markdown で書くよう伝える。プランは作業手順と確認方法を番号付きリストにし、
 報告書は対応内容・確認結果・残課題を見出しと箇条書きで整理する。詳しい書き方は `add_ticket_comment` の description とエージェント経路の
-`instructions` に載せ、人の経路では `get_ticket` の `workflow` でも書式を案内する。子チケットの起票案には `propose_child_tickets` の
+`instructions` に載せ、人の経路では `instructions` と `get_ticket` の `workflow` の手順2・5で短い形の書式を案内する。子チケットの起票案には `propose_child_tickets` の
 `content` の入力説明で見出しと箇条書きの使い方を伝える。
 
 マージによる自動完了で受け入れ条件を見るボードのため、`acceptanceCriteria` の入力説明ではマージ後に残る作業(タグ打ちなど)も
@@ -117,7 +117,7 @@ Where to keep what you learn:
 
 Default steps when working on a ticket (no need to confirm each time):
 1. Start: set status to doing with update_ticket (unless already doing / done)
-2. Plan: add_ticket_comment type=plan as numbered Markdown steps. Ask questions in regular comments
+2. Plan: add_ticket_comment type=plan as numbered Markdown steps; questions as regular comments
 3. Branch / PR / commit: link the URL with link_ticket_artifact (feature/<display ID> branches link automatically)
 4. Done: record whether each acceptance criterion is met, with evidence, via report_acceptance_criteria (not in the report)
 5. Report: add_ticket_comment type=report with Markdown sections: changes, verification, open issues (attach via create_image_upload_token / create_file_upload_token)
