@@ -29,19 +29,20 @@ export const attachmentOwnerColumns = (owner: AttachmentOwner): OwnerColumns => 
   wikiSpaceId: owner.kind === 'wikiSpace' ? owner.wikiSpaceId : null,
 })
 
-/** DB の列から読む */
-export const storedAttachmentOwnerOf = (row: OwnerColumns & { detachedAt: Date | null }): StoredAttachmentOwner => {
-  if (row.detachedAt) {
-    return { kind: 'detached' }
+/** 列の値から持ち主を作る(ボードを優先し、どちらも無ければ public) */
+export const attachmentOwnerOf = ({ boardId, wikiSpaceId }: OwnerColumns): AttachmentOwner => {
+  if (boardId) {
+    return { kind: 'board', boardId }
   }
-  if (row.boardId) {
-    return { kind: 'board', boardId: row.boardId }
-  }
-  if (row.wikiSpaceId) {
-    return { kind: 'wikiSpace', wikiSpaceId: row.wikiSpaceId }
+  if (wikiSpaceId) {
+    return { kind: 'wikiSpace', wikiSpaceId }
   }
   return PUBLIC_ATTACHMENT_OWNER
 }
+
+/** DB の列から読む */
+export const storedAttachmentOwnerOf = (row: OwnerColumns & { detachedAt: Date | null }): StoredAttachmentOwner =>
+  row.detachedAt ? { kind: 'detached' } : attachmentOwnerOf(row)
 
 /** 応答とログに載せる形(`boardId` / `wikiSpaceId` のどちらか一方) */
 export const attachmentTargetFields = (target: AttachmentTarget) =>

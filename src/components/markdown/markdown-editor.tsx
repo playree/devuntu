@@ -5,12 +5,17 @@ import { getFieldConstraints } from '@/components/general/field-constraints'
 import { useLocale } from '@/locale/client'
 import { Skeleton } from '@heroui/react'
 import dynamic from 'next/dynamic'
-import { CSSProperties, FC, memo, ReactNode, useCallback, useState } from 'react'
+import { CSSProperties, FC, memo, ReactNode, useCallback, useMemo, useState } from 'react'
 import { Control, FieldPath, FieldValues, useController } from 'react-hook-form'
 import { z } from 'zod'
 import { MarkdownView } from './markdown-view'
 // 型のみの参照。実体(lexical / MDXEditor)は mdx-editor-core 側の動的 import に閉じたままになる
-import type { AttachmentOwner } from '@/lib/storage/attachment-owner'
+import {
+  attachmentOwnerColumns,
+  attachmentOwnerOf,
+  PUBLIC_ATTACHMENT_OWNER,
+  type AttachmentOwner,
+} from '@/lib/storage/attachment-owner'
 import type { MentionCandidate } from './mention-menu'
 
 /** 枠なし表示用のクラス。実体は globals.css(style.css の padding を上書きするためレイヤー外) */
@@ -36,6 +41,14 @@ const MdxEditorCore = dynamic(() => import('./mdx-editor-core'), {
   ssr: false,
   loading: () => <Skeleton className='w-full rounded-xl' style={{ minHeight: MIN_HEIGHT }} />,
 })
+
+/**
+ * 呼び出し側が描画のたびに作る持ち主を、値が同じ間は同じ参照にする(MdxEditorHost の memo を効かせるため)
+ */
+const useStableOwner = (owner: AttachmentOwner = PUBLIC_ATTACHMENT_OWNER): AttachmentOwner => {
+  const { boardId, wikiSpaceId } = attachmentOwnerColumns(owner)
+  return useMemo(() => attachmentOwnerOf({ boardId, wikiSpaceId }), [boardId, wikiSpaceId])
+}
 
 /**
  * MDXEditor のマウント位置を確定させるラッパー。
@@ -148,13 +161,14 @@ export const MarkdownInput: FC<{
   const { t } = useLocale()
   // 初回マウント時の値を固定する(MDXEditor は markdown prop の変更を取り込まない)
   const [initialMarkdown] = useState(defaultValue)
+  const stableOwner = useStableOwner(uploadOwner)
 
   return (
     <EditorField label={label ?? t('content')} length={length} maxLength={maxLength} errorMessage={errorMessage}>
       <MdxEditorHost
         initialMarkdown={initialMarkdown}
         onChange={onChange}
-        uploadOwner={uploadOwner}
+        uploadOwner={stableOwner}
         allowImages={allowImages}
         mentionCandidates={mentionCandidates}
         minRows={minRows}
@@ -215,6 +229,7 @@ export const MarkdownField: FC<{
   footer,
 }) => {
   const { t } = useLocale()
+  const stableOwner = useStableOwner(uploadOwner)
 
   return (
     <EditorField
@@ -241,7 +256,7 @@ export const MarkdownField: FC<{
           <MdxEditorHost
             initialMarkdown={defaultValue}
             onChange={onChange}
-            uploadOwner={uploadOwner}
+            uploadOwner={stableOwner}
             allowImages={allowImages}
             mentionCandidates={mentionCandidates}
             minRows={minRows}
@@ -295,6 +310,7 @@ export const MarkdownCtrl = <
   const current = typeof field.value === 'string' ? field.value : ''
   // 初回マウント時の値を固定する(MDXEditor は markdown prop の変更を取り込まない)
   const [initialMarkdown] = useState(current)
+  const stableOwner = useStableOwner(uploadOwner)
 
   return (
     <EditorField
@@ -308,7 +324,7 @@ export const MarkdownCtrl = <
         initialMarkdown={initialMarkdown}
         onChange={field.onChange}
         onBlur={field.onBlur}
-        uploadOwner={uploadOwner}
+        uploadOwner={stableOwner}
         allowImages={allowImages}
         mentionCandidates={mentionCandidates}
         minRows={minRows}
