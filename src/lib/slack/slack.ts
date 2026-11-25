@@ -136,10 +136,10 @@ export const buildTicketUnfurlBlocks = ({ url, displayId, title, fields }: Ticke
   return filled.length > 0 ? [heading, { type: 'section', fields: filled }] : [heading]
 }
 
-export type TicketMessageParam = {
-  /** 見出し(表示ID + チケット名)。利用者入力を含むのでエスケープ前の生文字列を渡す */
+export type LinkMessageParam = {
+  /** 見出し(チケットの表示ID + チケット名、Wiki の `KEY/番号` + ページ名など)。利用者入力を含むのでエスケープ前の生文字列を渡す */
   subject: string
-  /** チケットを開く URL */
+  /** 対象(チケット・Wiki のページ)を開く URL */
   url: string
   /** 「〇〇さんがメンションしました」などの本文。呼び出し側でロケール解決済みのものを渡す */
   body: string
@@ -215,13 +215,13 @@ const withQuote = (lines: string[], excerpt: string | undefined): string => {
 }
 
 /**
- * チケットに紐づく通知の chat.postMessage ペイロードを組み立てる。
- * メンションの DM と、ボードのチャンネル通知で共用する。
+ * 対象へのリンクを持つ通知の chat.postMessage ペイロードを組み立てる。
+ * 見出しのリンクと、対象を開くボタンを持つ。DM・ボードのチャンネル通知・Wiki スペースのチャンネル通知で共用する。
  *
  * `text` は通知バナー / プッシュ通知のフォールバックに使われるため必ず埋める
  * (blocks だけだと通知に本文が出ない)。抜粋もここに含めて、開かなくても内容が分かるようにする。
  */
-export const buildTicketMessage = ({ subject, url, body, excerpt, openLabel }: TicketMessageParam) => {
+export const buildLinkMessage = ({ subject, url, body, excerpt, openLabel }: LinkMessageParam) => {
   const safeSubject = escapeSlackText(subject)
   const safeBody = escapeSlackText(body)
 

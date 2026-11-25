@@ -26,8 +26,8 @@ export const findMailRecipient = async (userId: string): Promise<MailRecipient |
 /**
  * 1 件だけの通知。
  *
- * 件名は `[表示ID] チケット名` をそのまま使う。受け取った側が本文を開かずに
- * どのチケットの話かを判別できるようにするため、集約時とは違って畳まない。
+ * 件名は文面の見出し(`[表示ID] チケット名`、Wiki は `[KEY/番号] ページ名`)をそのまま使う。受け取った側が本文を開かずに
+ * 何の話かを判別できるようにするため、集約時とは違って畳まない。
  */
 const single = (content: NotifyContent, locale: string | null) => {
   const { subject, body: message, url, excerpt } = content

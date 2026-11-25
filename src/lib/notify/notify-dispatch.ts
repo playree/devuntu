@@ -131,7 +131,7 @@ const deliverSlackBatch = async (now: Date, limit: number): Promise<number> => {
     let outcome: DeliveryOutcome
     try {
       const locale = userId ? await userLocale(userId) : null
-      outcome = await deliverSlack({ userId, slackChannelId, content: await contentOf(delivery, locale), locale })
+      outcome = await deliverSlack({ userId, slackChannelId, content: await contentOf(delivery, locale) })
     } catch (error) {
       logger.error({ error, deliveryId: delivery.id }, 'notify delivery failed')
       outcome = 'failed'
@@ -239,12 +239,7 @@ const deliverWebPushBatch = async (now: Date, limit: number): Promise<number> =>
         outcome = 'unlinked'
       } else {
         const locale = await userLocale(userId)
-        outcome = await deliverWebPush({
-          userId,
-          content: await contentOf(delivery, locale),
-          // 同じチケットの通知を積み上げない
-          tag: notifyTagOf(delivery),
-        })
+        outcome = await deliverWebPush({ userId, content: await contentOf(delivery, locale) })
       }
     } catch (error) {
       logger.error({ error, deliveryId: delivery.id }, 'notify delivery failed')
@@ -288,12 +283,6 @@ const deliverWebPushBatch = async (now: Date, limit: number): Promise<number> =>
     await settleDelivery(suspect.delivery, 'failed', now)
   }
   return claimed.length
-}
-
-/** 通知のまとめキー。同じチケット(Wiki はページ)の通知は端末上で 1 件に畳まれる */
-export const notifyTagOf = (delivery: Pick<ClaimedDelivery, 'event' | 'payload'>): string | undefined => {
-  const payload = parseNotifyPayload(delivery.event, delivery.payload)
-  return 'ticketId' in payload ? payload.ticketId : `wiki:${payload.pageId}`
 }
 
 /** 引数は 1 周で扱う上限、戻り値は実際に送った件数(= 消費する枠) */

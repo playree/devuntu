@@ -19,7 +19,7 @@ import {
 import { z } from 'zod'
 import { errValidation } from '../error'
 
-/** どのイベントも持つチケットの参照。件名とリンクの組み立てに使う */
+/** チケットのイベント(wiki_announcement 以外)が持つチケットの参照。件名とリンクの組み立てに使う */
 const scTicketRef = z.object({
   ticketId: z.string().min(1),
   /**

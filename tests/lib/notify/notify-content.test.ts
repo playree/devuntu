@@ -180,6 +180,21 @@ const wikiAnnouncement = (
   ...override,
 })
 
+describe('buildNotifyContent: チケットの通知に共通の項目', () => {
+  it.each([
+    ['mention', mention()],
+    ['ticket_assigned', assigned()],
+    ['ticket_created', changed()],
+    ['ticket_merge_held', mergeHeld()],
+    ['ticket_due', due()],
+    ['announcement', announcement()],
+  ] as const)('%s はチケット ID をまとめキーにし、ボタンは「チケットを開く」', (event, payload) => {
+    const content = buildNotifyContent(event, payload as never, 'ja', 'dm')
+    expect(content.tag).toBe(ticketRef.ticketId)
+    expect(content.openLabel).toBe('チケットを開く')
+  })
+})
+
 describe('buildNotifyContent: wiki_announcement', () => {
   it('見出しはページ指定(KEY/番号)、リンクはページ、ボタンは「ページを開く」', () => {
     const content = buildNotifyContent('wiki_announcement', wikiAnnouncement(), 'ja', 'channel')
@@ -188,6 +203,7 @@ describe('buildNotifyContent: wiki_announcement', () => {
     expect(content.body).toBe('テストユーザーさんがアナウンスを公開しました')
     expect(content.excerpt).toBe('12/29〜1/3 は休業です')
     expect(content.openLabel).toBe('ページを開く')
+    expect(content.tag, '同じページの通知を端末上で畳む').toBe('wiki:page-1')
   })
 
   it('更新のお知らせは初回と文面を分ける', () => {

@@ -27,7 +27,7 @@ import type { AgentRunNotifyState, NotifyPayload } from './notify-payload'
 export type NotifyAudience = 'dm' | 'channel'
 
 export type NotifyContent = {
-  /** 見出し。メールの件名にもそのまま使えるよう表示IDを先頭に置く */
+  /** 見出し。メールの件名にもそのまま使えるよう、対象の参照(チケットの表示ID・Wiki の `KEY/番号`)を先頭に置く */
   subject: string
   /** 誰が何をしたかの一文。宛先のロケールで解決済み */
   body: string
@@ -35,16 +35,25 @@ export type NotifyContent = {
   url: string
   /** 引用として出す抜粋。無い場合は持たせない */
   excerpt?: string
-  /** 遷移先を開くボタンの文言。無ければチャネル側の既定(チケットを開く)を使う */
-  openLabel?: string
+  /** 遷移先を開くボタンの文言(Slack) */
+  openLabel: string
+  /** 端末上で通知を畳むまとめキー(Web プッシュの tag)。同じ対象(チケット・Wiki のページ)の通知は 1 件に畳む */
+  tag: string
 }
 
 /**
+ * チケットの通知に共通の見出し・まとめキー・ボタンの文言。
  * 見出しは表示IDを先頭に置く。受け取った側が本文を開かなくてもどのチケットの話かが分かる。
  * 利用者の入力(チケット名)を含むため、ログには出さない。
  */
-const subjectOf = ({ displayId, ticketTitle }: { displayId: string; ticketTitle: string }) =>
-  `[${displayId}] ${ticketTitle}`
+const ticketHeading = (
+  { ticketId, displayId, ticketTitle }: { ticketId: string; displayId: string; ticketTitle: string },
+  locale: string | null,
+) => ({
+  subject: `[${displayId}] ${ticketTitle}`,
+  tag: ticketId,
+  openLabel: t(locale, 'slack_msg_open_ticket'),
+})
 
 /** チケットの短縮URL(`/t/<表示ID>`) */
 const shortUrl = (displayId: string, commentId?: string) =>
@@ -80,7 +89,7 @@ const BUILDERS = {
   mention: (payload, locale) => {
     const { displayId, commentId, excerpt, fromName } = payload
     return {
-      subject: subjectOf(payload),
+      ...ticketHeading(payload, locale),
       body: t(locale, commentId ? 'notify_msg_mentioned_comment' : 'notify_msg_mentioned', { from: fromName }),
       url: shortUrl(displayId, commentId).toString(),
       ...(excerpt && { excerpt }),
@@ -100,7 +109,7 @@ const BUILDERS = {
       duration: agentRunDuration(startedAt, finishedAt),
     }
     return {
-      subject: subjectOf(payload),
+      ...ticketHeading(payload, locale),
       body: state
         ? t(locale, AGENT_RUN_NOTIFY_MSG[state], param)
         : t(locale, 'notify_msg_agent_run_finished', { ...param, result: t(locale, AGENT_RUN_STATUS_LOCALE[status]) }),
@@ -114,7 +123,7 @@ const BUILDERS = {
    * チャンネルは第三者が読むので担当者の名前を出す。
    */
   ticket_assigned: (payload, locale, audience) => ({
-    subject: subjectOf(payload),
+    ...ticketHeading(payload, locale),
     body:
       audience === 'dm'
         ? t(locale, 'notify_msg_ticket_assigned', { from: payload.fromName })
@@ -126,13 +135,13 @@ const BUILDERS = {
   }),
 
   ticket_created: (payload, locale) => ({
-    subject: subjectOf(payload),
+    ...ticketHeading(payload, locale),
     body: t(locale, 'notify_msg_ticket_created', { from: payload.fromName }),
     url: shortUrl(payload.displayId).toString(),
   }),
 
   ticket_completed: (payload, locale) => ({
-    subject: subjectOf(payload),
+    ...ticketHeading(payload, locale),
     body: payload.pullRequest
       ? t(locale, 'notify_msg_ticket_completed_by_pr', { pr: payload.pullRequest })
       : t(locale, 'notify_msg_ticket_completed', { from: payload.fromName }),
@@ -140,20 +149,20 @@ const BUILDERS = {
   }),
 
   ticket_merge_held: (payload, locale) => ({
-    subject: subjectOf(payload),
+    ...ticketHeading(payload, locale),
     body: t(locale, 'notify_msg_ticket_merge_held', { pr: payload.pullRequest, count: String(payload.unmetCount) }),
     url: shortUrl(payload.displayId).toString(),
   }),
 
   ticket_due: (payload, locale) => ({
-    subject: subjectOf(payload),
+    ...ticketHeading(payload, locale),
     body: t(locale, TICKET_DUE_MSG[payload.kind], { due: payload.dueDate }),
     url: shortUrl(payload.displayId).toString(),
   }),
 
   /** アナウンスは本文そのものが知らせたい内容なので、改行を残した本文を抜粋の位置に出す */
   announcement: (payload, locale) => ({
-    subject: subjectOf(payload),
+    ...ticketHeading(payload, locale),
     body: t(locale, 'notify_msg_announcement', { from: payload.fromName }),
     url: shortUrl(payload.displayId, payload.commentId).toString(),
     excerpt: payload.excerpt,
@@ -172,6 +181,7 @@ const BUILDERS = {
       url: makeUrl(wikiPagePath(page)).toString(),
       ...(payload.excerpt && { excerpt: payload.excerpt }),
       openLabel: t(locale, 'slack_msg_open_wiki_page'),
+      tag: `wiki:${payload.pageId}`,
     }
   },
 } as const satisfies { [E in NotifyEvent]: ContentBuilder<E> }

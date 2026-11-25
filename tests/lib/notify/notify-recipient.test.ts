@@ -6,6 +6,7 @@
  */
 
 import { getTicketAccess } from '@/lib/board/board-access'
+import { NOTIFY_EVENT_SPEC, NOTIFY_EVENTS } from '@/lib/notify/notify'
 import { getBoardNotifyChannels } from '@/lib/notify/notify-board-setting'
 import type { NotifyPayload } from '@/lib/notify/notify-payload'
 import { resolveNotifyTargets } from '@/lib/notify/notify-recipient'
@@ -224,5 +225,30 @@ describe('resolveNotifyTargets(wiki_announcement)', () => {
       userIds: [],
       slackChannelIds: [],
     })
+  })
+})
+
+describe('resolveNotifyTargets: イベントごとの定義表(NOTIFY_EVENT_SPEC)との一致', () => {
+  it.each(NOTIFY_EVENTS)('%s は定義表の dm / channel のとおりに宛先を返す', async (event) => {
+    const human = { id: 'u1', role: 'user', isAgent: false }
+    vi.mocked(prisma.ticket.findUnique).mockResolvedValue({
+      createdBy: human,
+      assignee: null,
+      status: 'todo',
+      dueDate: new Date('2026-12-01T00:00:00.000Z'),
+      board: { archived: false },
+    } as never)
+    vi.mocked(getTicketAccess).mockResolvedValue({ canView: true } as never)
+    vi.mocked(getBoardNotifyChannels).mockResolvedValue(['C-board'])
+    vi.mocked(prisma.wikiSpace.findUnique).mockResolvedValue({ announceSlackChannelId: 'C-space' } as never)
+    const anyPayload = { ticketId: 't1', boardId: 'b1', spaceId: 's1', dueDate: '2026-12-01' } as never
+
+    const targets = await resolveNotifyTargets(event, anyPayload, { userIds: ['u2'] })
+
+    const spec = NOTIFY_EVENT_SPEC[event]
+    expect(targets.userIds.length > 0, 'dm').toBe(spec.dm)
+    expect(targets.slackChannelIds).toEqual(
+      spec.channel === 'board' ? ['C-board'] : spec.channel === 'space' ? ['C-space'] : [],
+    )
   })
 })

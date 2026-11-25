@@ -4,10 +4,14 @@
 
 import type { WikiAnnouncementNotifyStatus } from '@/generated/prisma/enums'
 import { DAY_MS, MINUTE_MS, toZone, zonedMinutes } from '../day'
+import { NOTIFY_ANNOUNCEMENT_MAX } from '../notify/notify'
 import { hasWikiRole, type WikiRole } from './wiki-rule'
 
-/** 一言の最大長。Slack へは `announcementText()` で同じ長さに丸める */
-export const MAX_WIKI_ANNOUNCE_MESSAGE = 2000
+/**
+ * 一言の最大長。一言は本文の抜粋の代わりに通知の抜粋へそのまま入るので、本文から作る抜粋(`announcementText()`)と
+ * 同じ上限にする(見出し・本文と合わせても Slack の section に収まる)
+ */
+export const MAX_WIKI_ANNOUNCE_MESSAGE = NOTIFY_ANNOUNCEMENT_MAX
 
 /** 予約できる先の上限 */
 export const MAX_WIKI_ANNOUNCE_SCHEDULE_MS = 365 * DAY_MS

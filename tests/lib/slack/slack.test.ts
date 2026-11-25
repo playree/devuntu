@@ -7,7 +7,7 @@
  */
 
 import {
-  buildTicketMessage,
+  buildLinkMessage,
   buildTicketUnfurlBlocks,
   classifySlackError,
   escapeSlackText,
@@ -84,7 +84,7 @@ describe('classifySlackError: error コードを後処理の分類へ落とす',
   })
 })
 
-describe('buildTicketMessage: chat.postMessage のペイロードを組み立てる', () => {
+describe('buildLinkMessage: chat.postMessage のペイロードを組み立てる', () => {
   const base = {
     subject: '[PRJ-12] ログイン画面のレイアウト崩れ',
     url: 'https://devuntu.example.com/t/PRJ-12',
@@ -94,28 +94,28 @@ describe('buildTicketMessage: chat.postMessage のペイロードを組み立て
 
   it('text(フォールバック)が空にならない', () => {
     // blocks だけだと通知バナー / プッシュ通知の本文が空になる
-    const res = buildTicketMessage(base)
+    const res = buildLinkMessage(base)
     expect(res.text.length, '通知プレビューに使われるので必須').toBeGreaterThan(0)
     expect(res.text).toContain('[PRJ-12]')
   })
 
   it('section にチケットURLのリンクが入る', () => {
-    const res = buildTicketMessage(base)
+    const res = buildLinkMessage(base)
     expect(JSON.stringify(res.blocks)).toContain(`<${base.url}|`)
   })
 
   it('チケットを開くボタンに URL が入る', () => {
-    const res = buildTicketMessage(base)
+    const res = buildLinkMessage(base)
     expect(JSON.stringify(res.blocks)).toContain('"url":"https://devuntu.example.com/t/PRJ-12"')
   })
 
   it('本文の差し替えで文言が切り替わる(コメント経由かどうかは呼び出し側が決める)', () => {
-    const res = buildTicketMessage({ ...base, body: '田中太郎さんがあなたをメンションしました' })
+    const res = buildLinkMessage({ ...base, body: '田中太郎さんがあなたをメンションしました' })
     expect(res.text).toContain('田中太郎さんがあなたをメンションしました')
   })
 
   it('件名の利用者入力がエスケープされる', () => {
-    const res = buildTicketMessage({ ...base, subject: '[PRJ-1] <!channel> を直す' })
+    const res = buildLinkMessage({ ...base, subject: '[PRJ-1] <!channel> を直す' })
     const blocks = JSON.stringify(res.blocks)
     expect(blocks, 'blocks 側は必ずエスケープを通す').toContain('&lt;!channel&gt;')
     expect(blocks, '生の全体メンションが残ってはいけない').not.toContain('<!channel>')
@@ -124,7 +124,7 @@ describe('buildTicketMessage: chat.postMessage のペイロードを組み立て
   })
 
   it('3000字を超える件名は切り詰める(invalid_blocks で落ちないようにする)', () => {
-    const res = buildTicketMessage({ ...base, subject: 'あ'.repeat(5000) })
+    const res = buildLinkMessage({ ...base, subject: 'あ'.repeat(5000) })
     const sectionText = (res.blocks[0] as { text: { text: string } }).text.text
     expect(sectionText.length, 'Block Kit の section は 3000 字が上限').toBeLessThanOrEqual(3000)
     expect(res.text.length).toBeLessThanOrEqual(3000)
@@ -134,7 +134,7 @@ describe('buildTicketMessage: chat.postMessage のペイロードを組み立て
   })
 
   it('本文が長くてもリンク記法は壊さない', () => {
-    const res = buildTicketMessage({ ...base, body: 'い'.repeat(5000) })
+    const res = buildLinkMessage({ ...base, body: 'い'.repeat(5000) })
     const sectionText = (res.blocks[0] as { text: { text: string } }).text.text
     expect(sectionText.length).toBeLessThanOrEqual(3000)
     // 切り詰めの対象は本文側。見出しのリンクは丸ごと残る
@@ -142,7 +142,7 @@ describe('buildTicketMessage: chat.postMessage のペイロードを組み立て
   })
 
   it('抜粋が引用として本文の下に入る', () => {
-    const res = buildTicketMessage({ ...base, excerpt: 'iOS Safari だけで再現しました' })
+    const res = buildLinkMessage({ ...base, excerpt: 'iOS Safari だけで再現しました' })
     const sectionText = (res.blocks[0] as { text: { text: string } }).text.text
     expect(sectionText, 'mrkdwn の引用にして本文と区別する').toContain('\n>iOS Safari だけで再現しました')
     // 抜粋を届けるのが目的なので、プッシュ通知の時点で内容が見えるようにする
@@ -150,7 +150,7 @@ describe('buildTicketMessage: chat.postMessage のペイロードを組み立て
   })
 
   it('複数行の抜粋(アナウンスの本文)は行ごとに引用にする', () => {
-    const res = buildTicketMessage({ ...base, excerpt: 'v1.0.0\n\n• 機能A' })
+    const res = buildLinkMessage({ ...base, excerpt: 'v1.0.0\n\n• 機能A' })
     const sectionText = (res.blocks[0] as { text: { text: string } }).text.text
     // mrkdwn の引用は行頭の `>` でしか続かない。空行も引用の中に残す
     expect(sectionText.endsWith('\n>v1.0.0\n>\n>• 機能A')).toBe(true)
@@ -158,7 +158,7 @@ describe('buildTicketMessage: chat.postMessage のペイロードを組み立て
 
   it('長い複数行の抜粋は、収まらない行を途中で切らずに落として `>…` で続きを示す', () => {
     const line = 'あ'.repeat(900)
-    const res = buildTicketMessage({ ...base, excerpt: [line, line, line, line].join('\n') })
+    const res = buildLinkMessage({ ...base, excerpt: [line, line, line, line].join('\n') })
     const sectionText = (res.blocks[0] as { text: { text: string } }).text.text
     expect(sectionText.length).toBeLessThanOrEqual(3000)
     expect(sectionText.endsWith(`\n>${line}\n>${line}\n>${line}\n>…`)).toBe(true)
@@ -166,26 +166,26 @@ describe('buildTicketMessage: chat.postMessage のペイロードを組み立て
   })
 
   it('エスケープで伸びた抜粋も上限に収め、1 行目を切り詰めるときは文字参照を壊さない', () => {
-    const res = buildTicketMessage({ ...base, excerpt: '&'.repeat(1000) })
+    const res = buildLinkMessage({ ...base, excerpt: '&'.repeat(1000) })
     const sectionText = (res.blocks[0] as { text: { text: string } }).text.text
     expect(sectionText.length).toBeLessThanOrEqual(3000)
     expect(sectionText).toMatch(/(&amp;)+…$/)
   })
 
   it('抜粋が無い場合は引用行を作らない', () => {
-    const res = buildTicketMessage(base)
+    const res = buildLinkMessage(base)
     const sectionText = (res.blocks[0] as { text: { text: string } }).text.text
     expect(sectionText).toBe(`*<${base.url}|${base.subject}>*\n${base.body}`)
   })
 
   it('抜粋の利用者入力がエスケープされる', () => {
-    const res = buildTicketMessage({ ...base, excerpt: '<!channel> 見てください' })
+    const res = buildLinkMessage({ ...base, excerpt: '<!channel> 見てください' })
     expect(JSON.stringify(res.blocks)).not.toContain('<!channel>')
     expect(res.text, 'フォールバックの text にも生の全体メンションを残さない').not.toContain('<!channel>')
   })
 
   it('本文で予算を使い切ったら抜粋を落とす(壊れた記法より欠落を選ぶ)', () => {
-    const res = buildTicketMessage({ ...base, body: 'い'.repeat(5000), excerpt: 'う'.repeat(500) })
+    const res = buildLinkMessage({ ...base, body: 'い'.repeat(5000), excerpt: 'う'.repeat(500) })
     const sectionText = (res.blocks[0] as { text: { text: string } }).text.text
     expect(sectionText.length).toBeLessThanOrEqual(3000)
     expect(sectionText.startsWith(`*<${base.url}|${base.subject}>*\n`)).toBe(true)
