@@ -92,7 +92,9 @@ Keep in sync with `path_filters` in `.coderabbit.yaml`.
 
 # Self-review before creating a PR
 
-- Before creating a PR, self-review the diff against main
+- Before creating a PR, check that it changes 100 files or fewer against its base branch, not counting the files excluded from code review (command in CONTRIBUTING.md). If it exceeds 100, split it into multiple PRs
+  - PRs from an integration branch (e.g. `feature/wiki`, whose changes were already reviewed in ticket-branch PRs into it) to main are exempt
+- Before creating a PR, self-review the diff against its base branch (main, or the integration branch it targets)
 - Fix each finding, or decide why not to, before opening the PR. List unfixed findings and the reasons in the PR description
 - If you fixed anything during self-review, re-run `pnpm lint` / `pnpm typecheck` / `pnpm test` before opening the PR
 - Skip the files excluded from code review (above)
