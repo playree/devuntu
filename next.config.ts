@@ -46,6 +46,17 @@ const nextConfig: NextConfig = {
   headers: async () => [
     { source: '/:path*', headers: securityHeaders },
     /**
+     * 印刷用ページ。HTML 出力は出力メニューの画面がこのページを見えない iframe で開いて描くので、同一オリジンからの埋め込みだけ許す。
+     * /consent・/auth/signin を含むほかのページは 'none' のまま
+     */
+    {
+      source: '/print/:path*',
+      headers: [
+        { key: 'Content-Security-Policy', value: "frame-ancestors 'self'" },
+        { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+      ],
+    },
+    /**
      * アップロードファイルの配信。添付ファイルは利用者が中身を決められるので、万一ブラウザで直接開かれても
      * 同一オリジンのスクリプトとして動かないよう sandbox を足す(同じキーは後に書いたものが勝つ)。
      * `<img>` での表示には効かないので画像はそのまま使える

@@ -7,9 +7,11 @@ import { MAINTENANCE_MODE_RETRY_AFTER_SEC } from '@/lib/maintenance/maintenance'
 import { isMaintenanceMode } from '@/lib/maintenance/maintenance-mode'
 import { consumeRateLimit } from '@/lib/rate-limit'
 import { MAX_IMAGE_SIZE, zAttachmentFile, zImageFile } from '@/lib/schema/schema'
-import { saveContentFile, saveContentImage } from '@/lib/storage/attachment'
-import { UPLOAD_BOARD_ID_FIELD, UPLOAD_KIND_PARAM } from '@/lib/storage/upload'
-import { resolveUploadToken, type UploadActor } from '@/lib/storage/upload-token'
+import { saveContentFile, saveContentImage, type AttachmentUploader } from '@/lib/storage/attachment'
+import { PUBLIC_ATTACHMENT_OWNER, type AttachmentOwner } from '@/lib/storage/attachment-owner'
+import { UPLOAD_BOARD_ID_FIELD, UPLOAD_KIND_PARAM, UPLOAD_WIKI_SPACE_ID_FIELD } from '@/lib/storage/upload'
+import { resolveUploadToken } from '@/lib/storage/upload-token'
+import { assertWikiSpaceAccess } from '@/lib/wiki/wiki-access'
 import { LocaleItem } from '@/locale'
 import { requestLocale } from '@/locale/request'
 import { t } from '@/locale/server'
@@ -44,7 +46,7 @@ const UPLOAD_RATE_LIMIT = { limit: 60, windowMs: 10 * 60 * 1000 }
 const badRequest = async (message: LocaleItem, values?: Record<string, number>) =>
   Response.json({ message: t(await requestLocale(), message, values) }, { status: 400 })
 
-type UploadAuth = { kind: 'token'; actor: UploadActor } | { kind: 'session'; user: Actor }
+type UploadAuth = { kind: 'token'; actor: AttachmentUploader } | { kind: 'session'; user: Actor }
 
 /** 本文の解析より前に済ませる認証。Bearer があれば短命トークン、無ければログインセッションで見る */
 const authenticate = async (req: Request): Promise<UploadAuth | null> => {
@@ -56,19 +58,9 @@ const authenticate = async (req: Request): Promise<UploadAuth | null> => {
   return user ? { kind: 'session', user } : null
 }
 
-/**
- * ボディを読みながら実バイト数で打ち切るリクエストを作る。
- *
- * `Content-Length` は省略でき(chunked)、値も送り手が決めるものなので、事前判定だけでは
- * 巨大な本文をメモリへ載せられてしまう。上限を超えた時点でストリームを落とし、
- * `formData()` を失敗させる。
- */
-/**
- * 添付先ボードへ本文を書けるか(メンバー かつ 未アーカイブ)。MCP の添付と同じ判定を使う。
- * 権限が無いことだけを false にし、DB エラーなどはそのまま投げて 500 にする
- */
-const canWriteBoard = (user: Actor, boardId: string): Promise<boolean> =>
-  assertBoardAccess(user, boardId, 'write').then(
+/** 権限が無いことだけを false にし、DB エラーなどはそのまま投げて 500 にする */
+const isPermitted = (assertion: Promise<unknown>): Promise<boolean> =>
+  assertion.then(
     () => true,
     (err) => {
       if (err instanceof ClientError) {
@@ -78,6 +70,37 @@ const canWriteBoard = (user: Actor, boardId: string): Promise<boolean> =>
     },
   )
 
+/**
+ * 添付先へ書き込めるか。ボードは本文を書けること(メンバー かつ 未アーカイブ。MCP の添付と同じ判定)、
+ * Wiki スペースはページを書けること(editor 以上 かつ 未アーカイブ)。public は誰でも作れる
+ */
+const canWriteOwner = (user: Actor, owner: AttachmentOwner): Promise<boolean> => {
+  switch (owner.kind) {
+    case 'board':
+      return isPermitted(assertBoardAccess(user, owner.boardId, 'write'))
+    case 'wikiSpace':
+      return isPermitted(assertWikiSpaceAccess(user, owner.wikiSpaceId, 'write'))
+    case 'public':
+      return Promise.resolve(true)
+  }
+}
+
+/** フォームの ID 項目。未指定は null、uuidv7 でなければ false */
+const readIdField = (form: FormData, name: string): string | null | false => {
+  const value = form.get(name)
+  if (value === null) {
+    return null
+  }
+  return typeof value === 'string' ? (z.uuidv7().safeParse(value).data ?? false) : false
+}
+
+/**
+ * ボディを読みながら実バイト数で打ち切るリクエストを作る。
+ *
+ * `Content-Length` は省略でき(chunked)、値も送り手が決めるものなので、事前判定だけでは
+ * 巨大な本文をメモリへ載せられてしまう。上限を超えた時点でストリームを落とし、
+ * `formData()` を失敗させる。
+ */
 const limitBody = (req: Request, max: number) => {
   let exceeded = false
   if (!req.body) {
@@ -136,25 +159,30 @@ export const POST = async (req: Request) => {
     return new Response(null, { status: limited.isExceeded() ? 413 : 400 })
   }
 
-  let actor: UploadActor
+  let actor: AttachmentUploader
   if (auth.kind === 'token') {
-    // 添付先はトークンで確定しているため、フォームの boardId は見ない
+    // 添付先はトークンで確定しているため、フォームの boardId / wikiSpaceId は見ない
     actor = auth.actor
   } else {
     /**
-     * 添付先のボード。配信(`/api/upload/<key>`)の可視判定に使う。
-     * 未指定は「ボードに属さない本文」(お知らせなど)とみなし全ログインユーザーへ配信する。
-     * 指定がある場合はその時点でメンバーであることを確認し、他人のボードへ紐付けさせない。
+     * 添付先のボード / Wiki スペース。配信(`/api/upload/<key>`)の可視判定に使う。
+     * どちらも未指定は「ボードに属さない本文」(お知らせなど)とみなし全ログインユーザーへ配信する。
+     * 指定がある場合はその時点で書き込めることを確認し、他人のボード・スペースへ紐付けさせない。
      */
-    const boardIdInput = form.get(UPLOAD_BOARD_ID_FIELD)
-    const boardId = typeof boardIdInput === 'string' ? (z.uuidv7().safeParse(boardIdInput).data ?? false) : null
-    if (boardId === false) {
+    const boardId = readIdField(form, UPLOAD_BOARD_ID_FIELD)
+    const wikiSpaceId = readIdField(form, UPLOAD_WIKI_SPACE_ID_FIELD)
+    if (boardId === false || wikiSpaceId === false || (boardId && wikiSpaceId)) {
       return new Response(null, { status: 400 })
     }
-    if (boardId && !(await canWriteBoard(auth.user, boardId))) {
+    const owner: AttachmentOwner = boardId
+      ? { kind: 'board', boardId }
+      : wikiSpaceId
+        ? { kind: 'wikiSpace', wikiSpaceId }
+        : PUBLIC_ATTACHMENT_OWNER
+    if (!(await canWriteOwner(auth.user, owner))) {
       return new Response(null, { status: 403 })
     }
-    actor = { userId, boardId }
+    actor = { userId, owner }
   }
 
   if (isFile) {

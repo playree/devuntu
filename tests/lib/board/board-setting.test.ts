@@ -6,6 +6,7 @@
  */
 
 import type { NotifyEvent } from '@/generated/prisma/enums'
+import { errValidation } from '@/lib/error'
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -20,11 +21,11 @@ const mocks = vi.hoisted(() => ({
   countTicketsByBoard: vi.fn(),
   getSlackSettings: vi.fn(),
   hasSlackCredentials: vi.fn(),
-  listSlackChannels: vi.fn(),
+  assertSlackChannelExists: vi.fn(),
   getBoardNotifySetting: vi.fn(),
   setBoardNotifySetting: vi.fn(),
-  detachBoardAttachments: vi.fn(),
-  listBoardAttachmentKeys: vi.fn(),
+  detachAttachmentsOf: vi.fn(),
+  listAttachmentKeysOf: vi.fn(),
   removeAttachmentByKey: vi.fn(),
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }))
@@ -48,14 +49,14 @@ vi.mock('@/lib/slack/slack-account', () => ({
   getSlackSettings: mocks.getSlackSettings,
   hasSlackCredentials: mocks.hasSlackCredentials,
 }))
-vi.mock('@/lib/slack/slack-server', () => ({ listSlackChannels: mocks.listSlackChannels }))
+vi.mock('@/lib/slack/slack-server', () => ({ assertSlackChannelExists: mocks.assertSlackChannelExists }))
 vi.mock('@/lib/notify/notify-board-setting', () => ({
   getBoardNotifySetting: mocks.getBoardNotifySetting,
   setBoardNotifySetting: mocks.setBoardNotifySetting,
 }))
 vi.mock('@/lib/storage/attachment', () => ({
-  detachBoardAttachments: mocks.detachBoardAttachments,
-  listBoardAttachmentKeys: mocks.listBoardAttachmentKeys,
+  detachAttachmentsOf: mocks.detachAttachmentsOf,
+  listAttachmentKeysOf: mocks.listAttachmentKeysOf,
   removeAttachmentByKey: mocks.removeAttachmentByKey,
 }))
 
@@ -97,8 +98,8 @@ beforeEach(() => {
   mocks.hasSlackCredentials.mockReturnValue(true)
   mocks.getSlackSettings.mockResolvedValue({ enabled: true, allowedGroupIds: [] })
   mocks.isGitlabVisible.mockResolvedValue(false)
-  mocks.listSlackChannels.mockResolvedValue([{ id: 'C1', name: 'general' }])
-  mocks.listBoardAttachmentKeys.mockResolvedValue([])
+  mocks.assertSlackChannelExists.mockResolvedValue(undefined)
+  mocks.listAttachmentKeysOf.mockResolvedValue([])
   board.findUnique.mockResolvedValue(boardRow as never)
   board.update.mockResolvedValue({ id: 'b1', name: 'ボード' } as never)
   board.delete.mockResolvedValue({} as never)
@@ -353,6 +354,7 @@ describe('setBoardNotify', () => {
   it('一覧にあるチャンネルなら保存する', async () => {
     await setBoardNotify(user, { id: 'b1', slackChannelId: 'C1', events })
 
+    expect(mocks.assertSlackChannelExists).toHaveBeenCalledWith('C1')
     expect(mocks.setBoardNotifySetting).toHaveBeenCalledWith('b1', { slackChannelId: 'C1', events }, prisma)
   })
 
@@ -366,15 +368,12 @@ describe('setBoardNotify', () => {
   it('通知先が空なら一覧と突き合わせず、null で保存する', async () => {
     await setBoardNotify(user, { id: 'b1', slackChannelId: '', events })
 
-    expect(mocks.listSlackChannels).not.toHaveBeenCalled()
+    expect(mocks.assertSlackChannelExists).not.toHaveBeenCalled()
     expect(mocks.setBoardNotifySetting).toHaveBeenCalledWith('b1', { slackChannelId: null, events }, prisma)
   })
 
-  it.each([
-    ['一覧に無い', [{ id: 'C2', name: 'other' }]],
-    ['一覧が取れない', null],
-  ])('%sチャンネルは入力エラーにして保存しない', async (_, channels) => {
-    mocks.listSlackChannels.mockResolvedValue(channels)
+  it('一覧と突き合わせられないチャンネルは入力エラーにして保存しない', async () => {
+    mocks.assertSlackChannelExists.mockRejectedValue(errValidation('slackChannelId'))
 
     await expect(setBoardNotify(user, { id: 'b1', slackChannelId: 'C1', events })).rejects.toMatchObject({
       errorType: 'VALIDATION_ERROR',
@@ -386,7 +385,7 @@ describe('setBoardNotify', () => {
     mocks.assertBoardAccess.mockRejectedValue(denied)
 
     await expect(setBoardNotify(user, { id: 'b1', slackChannelId: 'C1', events })).rejects.toBe(denied)
-    expect(mocks.listSlackChannels).not.toHaveBeenCalled()
+    expect(mocks.assertSlackChannelExists).not.toHaveBeenCalled()
   })
 
   it('確定後に権限が外れていれば保存しない', async () => {
@@ -400,11 +399,11 @@ describe('setBoardNotify', () => {
 describe('deleteBoard', () => {
   it('キーを控えてから紐付けを外し、ボードを消す', async () => {
     const order: string[] = []
-    mocks.listBoardAttachmentKeys.mockImplementation(async () => {
+    mocks.listAttachmentKeysOf.mockImplementation(async () => {
       order.push('list')
       return []
     })
-    mocks.detachBoardAttachments.mockImplementation(async () => {
+    mocks.detachAttachmentsOf.mockImplementation(async () => {
       order.push('detach')
     })
     board.delete.mockImplementation((async () => {
@@ -414,11 +413,12 @@ describe('deleteBoard', () => {
     await deleteBoard(user, 'b1')
 
     expect(order).toEqual(['list', 'detach', 'delete'])
+    expect(mocks.detachAttachmentsOf).toHaveBeenCalledWith(expect.anything(), { kind: 'board', boardId: 'b1' })
     expect(board.delete).toHaveBeenCalledWith({ where: { id: 'b1' } })
   })
 
   it('コミット後に添付の実体を 1 つずつ消し、消せた数をログに残す', async () => {
-    mocks.listBoardAttachmentKeys.mockResolvedValue(['k1', 'k2', 'k3'])
+    mocks.listAttachmentKeysOf.mockResolvedValue(['k1', 'k2', 'k3'])
     mocks.removeAttachmentByKey.mockResolvedValueOnce(true).mockResolvedValueOnce(false).mockResolvedValueOnce(true)
 
     await deleteBoard(user, 'b1')
@@ -432,7 +432,7 @@ describe('deleteBoard', () => {
 
   it('ボードの削除に失敗したら実体は消さない', async () => {
     const error = new Error('db')
-    mocks.listBoardAttachmentKeys.mockResolvedValue(['k1'])
+    mocks.listAttachmentKeysOf.mockResolvedValue(['k1'])
     board.delete.mockRejectedValue(error)
 
     await expect(deleteBoard(user, 'b1')).rejects.toBe(error)
@@ -446,7 +446,7 @@ describe('deleteBoard', () => {
     arrange()
 
     await expect(deleteBoard(user, 'b1')).rejects.toBe(denied)
-    expect(mocks.detachBoardAttachments).not.toHaveBeenCalled()
+    expect(mocks.detachAttachmentsOf).not.toHaveBeenCalled()
     expect(board.delete).not.toHaveBeenCalled()
   })
 })

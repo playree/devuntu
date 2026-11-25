@@ -131,7 +131,7 @@ export const AgentDecisionButtons: FC<{
           length={reason.length}
           maxLength={MAX_REASON_LENGTH}
           label={t('decision_reject_reason')}
-          uploadBoardId={boardId}
+          uploadOwner={{ kind: 'board', boardId }}
           mentionCandidates={mentionCandidates}
         />
       </DialogModal>

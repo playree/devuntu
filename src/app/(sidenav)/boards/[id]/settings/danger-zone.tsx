@@ -1,5 +1,6 @@
 'use client'
 
+import { DangerRow } from '@/components/danger-row'
 import { MultiButton } from '@/components/general/button'
 import { ArchiveBoxIcon, TrashIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
@@ -8,25 +9,10 @@ import { parseAction } from '@/lib/action/action-client'
 import { useConfirmAction } from '@/lib/use-confirm-action'
 import { useLocale } from '@/locale/client'
 import { useRouter } from 'next/navigation'
-import { FC, ReactNode } from 'react'
+import { FC } from 'react'
 import { deleteBoard, GetBoardDetailReturnType, setBoardArchived } from './server'
 
 type Board = NonNullable<GetBoardDetailReturnType>
-
-/** 危険操作 1 件分の行。見出し + 説明 + 右寄せのボタン */
-const DangerRow: FC<{ title: string; description: string; children: ReactNode }> = ({
-  title,
-  description,
-  children,
-}) => (
-  <div className='flex flex-wrap items-center gap-2 py-3'>
-    <div className='min-w-0 flex-1'>
-      <div className='text-sm font-semibold'>{title}</div>
-      <div className='text-muted text-xs'>{description}</div>
-    </div>
-    {children}
-  </div>
-)
 
 /**
  * アーカイブ / 削除をまとめたセクション。
@@ -43,7 +29,7 @@ export const DangerZone: FC<{ board: Board; reload: () => void }> = ({ board, re
     const next = !board.archived
     await confirmAction(
       {
-        title: t('confirm_archive'),
+        title: next ? t('confirm_archive') : t('confirm_unarchive'),
         text: next
           ? t('msg_confirm_archive_board', { target: name })
           : t('msg_confirm_unarchive_board', { target: name }),

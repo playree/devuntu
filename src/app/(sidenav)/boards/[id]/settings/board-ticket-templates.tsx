@@ -1,14 +1,15 @@
 'use client'
 
-import { MultiButton } from '@/components/general/button'
 import { GridBox } from '@/components/general/grid'
 import { InputCtrl } from '@/components/general/input'
 import { FormModal, useModalState } from '@/components/general/modal'
-import { NoticePanel } from '@/components/general/panel'
 import { SingleSelectCtrl } from '@/components/general/select'
-import { DocumentDuplicateIcon, PencilSquareIcon, PlusIcon, TrashIcon } from '@/components/icon'
+import { PencilSquareIcon, PlusIcon } from '@/components/icon'
 import { MarkdownCtrl } from '@/components/markdown/markdown-editor'
 import { notify } from '@/components/notify'
+import { TagChips } from '@/components/tag/tag-chip'
+import { TagSelectCtrl, type TagSelectOption } from '@/components/tag/tag-id-select'
+import { TemplateListEditor } from '@/components/template-list-editor'
 import {
   CriteriaRowsField,
   type CriterionDraftRow,
@@ -16,8 +17,7 @@ import {
   isValidCriterionRows,
   toCriterionDraftRows,
 } from '@/components/ticket/criteria-rows-field'
-import { TagSelectCtrl, type TagSelectOption } from '@/components/ticket/tag-id-select'
-import { PriorityChip, TagChips } from '@/components/ticket/ticket-chip'
+import { PriorityChip } from '@/components/ticket/ticket-chip'
 import { useTicketOptions } from '@/components/ticket/ticket-options'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { MAX_TEMPLATES_PER_BOARD } from '@/lib/board/ticket-template-rule'
@@ -26,7 +26,6 @@ import {
   type TicketTemplateFields,
   type TicketTemplateFieldsIn,
 } from '@/lib/schema/schema-ticket-template'
-import { useConfirmAction } from '@/lib/use-confirm-action'
 import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FC, useState } from 'react'
@@ -85,7 +84,7 @@ const TemplateModal: FC<{
         state.close()
       })}
       title={{
-        text: t(template ? 'update_ticket_template' : 'add_ticket_template'),
+        text: t(template ? 'template_update' : 'template_add'),
         icon: template ? <PencilSquareIcon /> : <PlusIcon />,
       }}
       submit={{ isPending: isSubmitting, isDisabled: !isValidCriterionRows(criteria) }}
@@ -96,7 +95,7 @@ const TemplateModal: FC<{
             control={control}
             name='name'
             constraintSchema={scTicketTemplateFields}
-            label={t('ticket_template_name')}
+            label={t('template_name')}
             errorMessage={fet(errors.name)}
             autoFocus
           />
@@ -121,7 +120,7 @@ const TemplateModal: FC<{
             name='content'
             constraintSchema={scTicketTemplateFields}
             errorMessage={fet(errors.content)}
-            uploadBoardId={boardId}
+            uploadOwner={{ kind: 'board', boardId }}
           />
         </div>
 
@@ -134,116 +133,35 @@ const TemplateModal: FC<{
   )
 }
 
-const TemplateRow: FC<{
-  template: Template
-  tags: TagSelectOption[]
-  canManage: boolean
-  onEdit: () => void
-  onDelete: () => void
-}> = ({ template, tags, canManage, onEdit, onDelete }) => {
-  const { t } = useLocale()
-  const templateTags = tags.filter((tag) => template.tagIds.includes(tag.id))
-
-  return (
-    <div className='flex items-start gap-2 rounded-xl border-2 px-2 py-1'>
-      <div className='min-w-0 grow space-y-1'>
-        <div className='text-sm font-medium wrap-break-word'>{template.name}</div>
-        <div className='text-muted flex flex-wrap items-center gap-2 text-xs'>
-          {template.priority && <PriorityChip value={template.priority} />}
-          {templateTags.length > 0 && <TagChips tags={templateTags} />}
-          <span>
-            {t('acceptance_criteria')}: {template.criteria.length}
-          </span>
-        </div>
-      </div>
-      {canManage && (
-        <div className='flex shrink-0 items-center gap-0.5'>
-          <MultiButton
-            isIconOnly
-            size='sm'
-            variant='ghost'
-            tooltip={t('update')}
-            icon={<PencilSquareIcon width={16} />}
-            onPress={onEdit}
-          />
-          <MultiButton
-            isIconOnly
-            size='sm'
-            variant='ghost'
-            tooltip={t('delete')}
-            icon={<TrashIcon width={16} />}
-            onPress={onDelete}
-          />
-        </div>
-      )}
-    </div>
-  )
-}
-
-/**
- * チケットテンプレート。閲覧はメンバー全員、追加・編集・削除は owner と管理者(`canManage`)。
- */
 export const BoardTicketTemplates: FC<{ boardId: string; tags: TagSelectOption[]; canManage: boolean }> = ({
   boardId,
   tags,
   canManage,
 }) => {
   const { t } = useLocale()
-  const confirmAction = useConfirmAction()
-  const modalState = useModalState<Template>()
   const { data: templates, refresh } = useActionData(() => getBoardTicketTemplates({ id: boardId }))
 
-  const list = templates ?? []
-
-  const remove = (template: Template) =>
-    confirmAction(
-      { title: t('confirm_deletion'), text: t('msg_confirm_deletion', { target: template.name }) },
-      async () => {
-        await parseAction(deleteBoardTicketTemplate({ id: template.id }))
-        notify.success(t('msg_deleted_target', { target: template.name }))
-        refresh()
-      },
-    )
-
   return (
-    <div className='space-y-2'>
-      <NoticePanel className='text-xs'>{t('msg_ticket_template_desc')}</NoticePanel>
-
-      {canManage && (
-        <MultiButton
-          size='sm'
-          variant='outline'
-          icon={<PlusIcon width={16} />}
-          isDisabled={list.length >= MAX_TEMPLATES_PER_BOARD}
-          onPress={() => modalState.open()}
-        >
-          {t('add_ticket_template')}
-        </MultiButton>
-      )}
-
-      {list.length === 0 ? (
-        <div className='text-muted flex items-center gap-1 px-1 text-sm'>
-          <DocumentDuplicateIcon width={16} />
-          {t('msg_no_ticket_templates')}
-        </div>
-      ) : (
-        <div className='space-y-1'>
-          {list.map((template) => (
-            <TemplateRow
-              key={template.id}
-              template={template}
-              tags={tags}
-              canManage={canManage}
-              onEdit={() => modalState.open(template)}
-              onDelete={() => remove(template)}
-            />
-          ))}
-        </div>
-      )}
-
-      {canManage && (
-        <TemplateModal key={modalState.key} state={modalState} boardId={boardId} tags={tags} reload={refresh} />
-      )}
-    </div>
+    <TemplateListEditor
+      templates={templates ?? []}
+      description={t('msg_ticket_template_desc')}
+      limit={MAX_TEMPLATES_PER_BOARD}
+      canManage={canManage}
+      onDelete={(id) => parseAction(deleteBoardTicketTemplate({ id }))}
+      reload={refresh}
+      renderDetails={(template) => {
+        const templateTags = tags.filter((tag) => template.tagIds.includes(tag.id))
+        return (
+          <div className='text-muted flex flex-wrap items-center gap-2 text-xs'>
+            {template.priority && <PriorityChip value={template.priority} />}
+            {templateTags.length > 0 && <TagChips tags={templateTags} />}
+            <span>
+              {t('acceptance_criteria')}: {template.criteria.length}
+            </span>
+          </div>
+        )
+      }}
+      renderModal={(state) => <TemplateModal state={state} boardId={boardId} tags={tags} reload={refresh} />}
+    />
   )
 }

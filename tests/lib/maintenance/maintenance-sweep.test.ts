@@ -9,6 +9,7 @@ import { DAY_MS, msBefore } from '@/lib/day'
 import {
   DUE_REMINDER_RETENTION_MS,
   GIT_CHECK_SUITE_RETENTION_MS,
+  MAINTENANCE_DELETE_BATCH,
   OAUTH_TOKEN_RETENTION_MS,
   SESSION_RETENTION_MS,
   VERIFICATION_RETENTION_MS,
@@ -18,6 +19,7 @@ import {
   sweepAgentRuns,
   sweepBoardNoteRevisions,
   sweepCommandRuns,
+  sweepDeletedWikiPages,
   sweepDueReminders,
   sweepGitCheckSuites,
   sweepOauthAccessTokens,
@@ -27,6 +29,7 @@ import {
   sweepTicketActivities,
   sweepUploadNonces,
   sweepVerifications,
+  sweepWikiPageRevisions,
 } from '@/lib/maintenance/maintenance-sweep'
 import { prisma } from '@/lib/prisma'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -38,6 +41,8 @@ const COMMAND_RETENTION_DAYS = 10
 const COMMAND_KEEP = 50
 const TICKET_ACTIVITY_DAYS = 60
 const BOARD_NOTE_REVISION_DAYS = 90
+// 版の保持期間はテストごとに変える(既定値の 7 は env-util.test.ts で確かめている)
+const wiki = { retentionDays: 7, keepRecent: 2 }
 
 vi.mock('@/lib/env-util', () => ({
   envu: {
@@ -59,6 +64,12 @@ vi.mock('@/lib/env-util', () => ({
       },
       get BOARD_NOTE_REVISION_RETENTION_DAYS() {
         return BOARD_NOTE_REVISION_DAYS
+      },
+      get WIKI_REVISION_RETENTION_DAYS() {
+        return wiki.retentionDays
+      },
+      get WIKI_REVISION_KEEP_RECENT() {
+        return wiki.keepRecent
       },
     },
   },
@@ -107,6 +118,9 @@ beforeEach(() => {
   ]) {
     vi.mocked(model.deleteMany).mockResolvedValue({ count: 0 })
   }
+  wiki.retentionDays = 7
+  wiki.keepRecent = 2
+  vi.mocked(prisma.$executeRaw).mockResolvedValue(0 as never)
   vi.mocked(prisma.agentRunner.findMany).mockResolvedValue([] as never)
   vi.mocked(prisma.agentRun.findMany).mockResolvedValue([] as never)
   vi.mocked(prisma.commandRun.findMany).mockResolvedValue([] as never)
@@ -293,6 +307,91 @@ describe('sweepCommandRuns', () => {
   })
 })
 
+describe('sweepWikiPageRevisions', () => {
+  /** 掃除の DELETE 文(テンプレートの文字列と埋め込んだ値) */
+  const deleteSql = () => {
+    const [strings, ...values] = vi.mocked(prisma.$executeRaw).mock.calls[0] as unknown as [
+      TemplateStringsArray,
+      ...unknown[],
+    ]
+    return { sql: strings.join('?').replace(/\s+/g, ' '), values }
+  }
+
+  it('消す版の選択と削除を 1 文で行い、消した件数を返す(版はアプリへ読み込まない)', async () => {
+    vi.mocked(prisma.$executeRaw).mockResolvedValue(3 as never)
+    expect(await sweepWikiPageRevisions(now)).toBe(3)
+    expect(prisma.$executeRaw).toHaveBeenCalledTimes(1)
+    expect(deleteSql().sql).toMatch(
+      /^ ?WITH .* DELETE FROM "wiki_page_revision" WHERE "id" IN \(SELECT "id" FROM doomed\)/,
+    )
+  })
+
+  it('最後の保存が保持期間(既定7日)より前の版を対象にし、期限内の版を同じ境界で数える', async () => {
+    await sweepWikiPageRevisions(now)
+    const { sql, values } = deleteSql()
+    expect(sql).toContain('WHERE r."updatedAt" < ?')
+    expect(sql).toContain('WHERE "updatedAt" >= ? AND "pageId" IN (SELECT "pageId" FROM expired WHERE "rank" > 1)')
+    expect(values.slice(0, 2)).toEqual([msBefore(now, 7 * DAY_MS), msBefore(now, 7 * DAY_MS)])
+  })
+
+  it('WIKI_REVISION_RETENTION_DAYS で保持期間を変えられる', async () => {
+    wiki.retentionDays = 30
+    await sweepWikiPageRevisions(now)
+    expect(deleteSql().values[0]).toEqual(msBefore(now, 30 * DAY_MS))
+  })
+
+  it('ページ(削除済みを含む)ごとに、期限より古い版の新しい順に max(1, 1 + keepRecent - 期限内の版の数) を残して消す', async () => {
+    await sweepWikiPageRevisions(now)
+    const { sql, values } = deleteSql()
+    expect(sql).toContain('ROW_NUMBER() OVER (PARTITION BY r."pageId" ORDER BY r."updatedAt" DESC, r."id" DESC)')
+    expect(sql).toContain('WHERE e."rank" > GREATEST(1, 1 + ?::int - COALESCE(c."count", 0))')
+    expect(sql, '削除済みのページの版も一律には消さない(ページの物理削除で消える)').not.toContain('"wiki_page" AS p')
+    expect(values[2]).toBe(2)
+  })
+
+  it('WIKI_REVISION_KEEP_RECENT で残す版の数を変えられる', async () => {
+    wiki.keepRecent = 0
+    await sweepWikiPageRevisions(now)
+    expect(deleteSql().values[2]).toBe(0)
+  })
+
+  it('1回に消すのは、残す版を除いたうえで古い順にバッチの上限まで(残す版で上限が埋まらない)', async () => {
+    await sweepWikiPageRevisions(now)
+    const { sql, values } = deleteSql()
+    expect(sql).toMatch(/WHERE e\."rank" > .* ORDER BY e\."updatedAt", e\."id" LIMIT \?/)
+    expect(values[3]).toBe(MAINTENANCE_DELETE_BATCH)
+  })
+})
+
+describe('sweepDeletedWikiPages', () => {
+  const deleteSql = () => {
+    const [strings, ...values] = vi.mocked(prisma.$executeRaw).mock.calls[0] as unknown as [
+      TemplateStringsArray,
+      ...unknown[],
+    ]
+    return { sql: strings.join('?').replace(/\s+/g, ' '), values }
+  }
+
+  it('削除から保持期間(既定7日)を過ぎたページを、古い順にバッチの上限まで1文で物理削除する', async () => {
+    vi.mocked(prisma.$executeRaw).mockResolvedValue(2 as never)
+    expect(await sweepDeletedWikiPages(now)).toBe(2)
+    const { sql, values } = deleteSql()
+    expect(sql).toMatch(/DELETE FROM "wiki_page" WHERE "id" IN \( SELECT "id" FROM "wiki_page" WHERE "deletedAt" < \?/)
+    expect(sql).toContain('ORDER BY "deletedAt", "id" LIMIT ? ) AND "deletedAt" < ?')
+    expect(values, '候補の後に復元されたページを消さないよう、外側でも削除日時を確かめる').toEqual([
+      msBefore(now, 7 * DAY_MS),
+      MAINTENANCE_DELETE_BATCH,
+      msBefore(now, 7 * DAY_MS),
+    ])
+  })
+
+  it('WIKI_REVISION_RETENTION_DAYS で保持期間を変えられる', async () => {
+    wiki.retentionDays = 30
+    await sweepDeletedWikiPages(now)
+    expect(deleteSql().values[0]).toEqual(msBefore(now, 30 * DAY_MS))
+  })
+})
+
 describe('runMaintenanceSweep', () => {
   it('リフレッシュトークンをアクセストークンより先に処理する', async () => {
     await runMaintenanceSweep(now)
@@ -313,5 +412,14 @@ describe('runMaintenanceSweep', () => {
     expect(vi.mocked(prisma.uploadNonce.deleteMany)).toHaveBeenCalled()
     expect(vi.mocked(prisma.commandRun.deleteMany)).toHaveBeenCalled()
     expect(counts.dueReminder).toBe(0)
+  })
+
+  it('Wiki の削除済みページの掃除を、版の掃除より先に手順に含める', async () => {
+    vi.mocked(prisma.$executeRaw)
+      .mockResolvedValueOnce(1 as never)
+      .mockResolvedValueOnce(4 as never)
+    const counts = await runMaintenanceSweep(now)
+    expect(counts.wikiPage).toBe(1)
+    expect(counts.wikiPageRevision).toBe(4)
   })
 })

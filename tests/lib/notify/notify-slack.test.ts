@@ -22,6 +22,8 @@ const content = (override: Partial<NotifyContent> = {}): NotifyContent => ({
   subject: '[ABC-42] ログイン画面のレイアウト崩れ',
   body: 'テストエージェントが処理を終えました',
   url: 'https://devuntu.example.com/tickets/0198c0de-0000-7000-8000-000000000001',
+  openLabel: 'チケットを開く',
+  tag: '0198c0de-0000-7000-8000-000000000001',
   ...override,
 })
 
@@ -39,7 +41,6 @@ describe('deliverSlack: 宛先の解決', () => {
       userId: null,
       slackChannelId: 'C0123ABCD',
       content: content(),
-      locale: null,
     })
     expect(outcome).toBe('ok')
     expect(post).toHaveBeenCalledWith('C0123ABCD', expect.objectContaining({ text: expect.any(String) }))
@@ -47,26 +48,26 @@ describe('deliverSlack: 宛先の解決', () => {
 
   it('DM 宛は連携済みの Slack ユーザーIDへ投稿する', async () => {
     findAccount.mockResolvedValue({ accountId: 'U0123ABCD' } as never)
-    await deliverSlack({ userId: 'user-1', slackChannelId: null, content: content(), locale: 'ja' })
+    await deliverSlack({ userId: 'user-1', slackChannelId: null, content: content() })
     expect(post).toHaveBeenCalledWith('U0123ABCD', expect.anything())
   })
 
   it('連携が外れていれば送らず unlinked を返す(その配信だけ諦める)', async () => {
     findAccount.mockResolvedValue(null as never)
-    const outcome = await deliverSlack({ userId: 'user-1', slackChannelId: null, content: content(), locale: 'ja' })
+    const outcome = await deliverSlack({ userId: 'user-1', slackChannelId: null, content: content() })
     expect(outcome).toBe('unlinked')
     expect(post).not.toHaveBeenCalled()
   })
 
   it('チャンネルIDが指定されていればアカウントは引かない', async () => {
-    await deliverSlack({ userId: 'user-1', slackChannelId: 'C0123ABCD', content: content(), locale: null })
+    await deliverSlack({ userId: 'user-1', slackChannelId: 'C0123ABCD', content: content() })
     expect(findAccount).not.toHaveBeenCalled()
   })
 })
 
 describe('deliverSlack: 送る内容', () => {
   it('見出しと本文を載せる', async () => {
-    await deliverSlack({ userId: null, slackChannelId: 'C0123ABCD', content: content(), locale: null })
+    await deliverSlack({ userId: null, slackChannelId: 'C0123ABCD', content: content() })
     const text = postedText()
     expect(text).toContain('[ABC-42] ログイン画面のレイアウト崩れ')
     expect(text).toContain('テストエージェントが処理を終えました')
@@ -77,21 +78,35 @@ describe('deliverSlack: 送る内容', () => {
       userId: null,
       slackChannelId: 'C0123ABCD',
       content: content({ excerpt: '原因を特定して修正した' }),
-      locale: null,
     })
     expect(postedText()).toContain('>原因を特定して修正した')
   })
 
   it('抜粋が無ければ引用行を出さない', async () => {
-    await deliverSlack({ userId: null, slackChannelId: 'C0123ABCD', content: content(), locale: null })
+    await deliverSlack({ userId: null, slackChannelId: 'C0123ABCD', content: content() })
     expect(postedText()).not.toContain('\n>')
   })
 
   it('ボタンは文面のURLへリンクする', async () => {
-    await deliverSlack({ userId: null, slackChannelId: 'C0123ABCD', content: content(), locale: null })
+    await deliverSlack({ userId: null, slackChannelId: 'C0123ABCD', content: content() })
     const { blocks } = post.mock.calls[0][1] as { blocks: { elements?: { url?: string }[] }[] }
     expect(blocks.at(-1)?.elements?.[0]?.url).toBe(
       'https://devuntu.example.com/tickets/0198c0de-0000-7000-8000-000000000001',
     )
+  })
+
+  it('ボタンの文言は文面の指定(チケットは「チケットを開く」、Wiki は「ページを開く」)を使う', async () => {
+    const label = () => {
+      const { blocks } = post.mock.calls.at(-1)?.[1] as { blocks: { elements?: { text?: { text: string } }[] }[] }
+      return blocks.at(-1)?.elements?.[0]?.text?.text
+    }
+    await deliverSlack({ userId: null, slackChannelId: 'C0123ABCD', content: content() })
+    expect(label()).toBe('チケットを開く')
+    await deliverSlack({
+      userId: null,
+      slackChannelId: 'C0123ABCD',
+      content: content({ openLabel: 'ページを開く' }),
+    })
+    expect(label()).toBe('ページを開く')
   })
 })

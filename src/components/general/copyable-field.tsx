@@ -15,6 +15,8 @@ export const CopyableField: FC<
     copyText?: string
     /** 改行を含む値(行を継いだコマンドなど)を、行ごとに見せる */
     isMultiline?: boolean
+    /** 欄の幅を text の文字数に合わせる(単一行のみ)。親の幅に依らず全文を見せたい短い値向け */
+    isFitContent?: boolean
     variant?: InputGroupProps['variant']
     isSmart?: boolean
     className?: string
@@ -32,6 +34,7 @@ export const CopyableField: FC<
   label,
   'aria-label': ariaLabel,
   isMultiline,
+  isFitContent,
   variant,
   isSmart: isSmartProp,
   className,
@@ -56,7 +59,7 @@ export const CopyableField: FC<
       <div className='relative'>
         <InputGroup // isSmart: 既定 36px を 28px に詰める
           variant={variant}
-          fullWidth
+          fullWidth={!isFitContent || isMultiline}
           className={isSmart ? 'min-h-7' : ''}
         >
           {isMultiline ? (
@@ -75,7 +78,12 @@ export const CopyableField: FC<
               value={text}
               disabled
               // min-w-0: 幅を絞って使ったときに input の既定幅(約20文字)が優先され、コピーボタンが枠外へ押し出されるのを防ぐ
-              className={cn('min-w-0 font-mono', isSmart ? 'py-1' : '')}
+              className={cn('min-w-0 font-mono', isSmart ? 'py-1' : '', isFitContent ? 'flex-none' : '')}
+              /**
+               * isFitContent: ch は input 自身の等幅フォント基準なので、スマホで文字が大きくなっても文字数ぶんになる。
+               * 0.75rem は左 padding(suffix があるので右は 0)
+               */
+              style={isFitContent ? { width: `calc(${text.length}ch + 0.75rem)` } : undefined}
             />
           )}
           <InputGroup.Suffix className={cn('pr-0', isMultiline ? 'self-start pt-1' : '')}>

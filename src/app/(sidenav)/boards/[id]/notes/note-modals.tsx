@@ -19,6 +19,7 @@ import {
 import { MarkdownCtrl } from '@/components/markdown/markdown-editor'
 import { MarkdownView } from '@/components/markdown/markdown-view'
 import { notify } from '@/components/notify'
+import { UpdatedBy } from '@/components/updated-by'
 import type { BoardNoteKind } from '@/generated/prisma/enums'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { MAX_BOARD_NOTE_CONTENT } from '@/lib/board-note/board-note-rule'
@@ -29,7 +30,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { FC } from 'react'
 import { useForm } from 'react-hook-form'
 import type { HistoryTarget } from './note-history'
-import { NoteUpdatedBy } from './note-updated-by'
 import {
   createBoardNote,
   deleteBoardNote,
@@ -138,7 +138,7 @@ export const NoteDetailModal: FC<{
           </div>
           <div className='text-sm wrap-break-word'>{note.description}</div>
           <MarkdownView body={note.content} className='border-border rounded-lg border px-3 py-2' />
-          <NoteUpdatedBy
+          <UpdatedBy
             name={note.updatedBy?.name}
             isAgent={note.updatedBy?.isAgent}
             via={note.updatedVia}

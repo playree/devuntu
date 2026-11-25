@@ -1,7 +1,7 @@
 'use client'
 
 import { cn, Radio, RadioGroup, RadioGroupProps } from '@heroui/react'
-import { FC } from 'react'
+import { FC, ReactNode } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 import { FieldBaseProps, FieldError, FieldLabel } from './field'
 import { useSmart } from './smart'
@@ -11,6 +11,8 @@ export type RadioOption = { value: string; label: string }
 type RadioFieldProps = Omit<RadioGroupProps, 'children' | 'onChange'> &
   FieldBaseProps & {
     label: string
+    /** ラベル横の「?」で出す説明 */
+    help?: ReactNode
     options: RadioOption[]
     onChange?: (value: string) => void
   }
@@ -24,6 +26,7 @@ type RadioFieldProps = Omit<RadioGroupProps, 'children' | 'onChange'> &
 export const RadioField: FC<RadioFieldProps> = ({
   label,
   isLabelHidden,
+  help,
   options,
   errorMessage,
   isRequired,
@@ -44,7 +47,7 @@ export const RadioField: FC<RadioFieldProps> = ({
       className={cn('gap-2 **:data-[slot=radio]:mt-0', className)}
       onChange={onChange}
     >
-      <FieldLabel isCompact={isCompact} isHidden={isLabelHidden} isRequired={isRequired}>
+      <FieldLabel isCompact={isCompact} isHidden={isLabelHidden} isRequired={isRequired} help={help}>
         {label}
       </FieldLabel>
       {options.map((option) => (

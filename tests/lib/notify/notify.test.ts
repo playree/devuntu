@@ -16,6 +16,7 @@ import {
   NOTIFY_CHANNEL_RATE_LIMIT,
   NOTIFY_CHANNELS,
   NOTIFY_DELIVER_BATCH,
+  NOTIFY_EVENT_SPEC,
   NOTIFY_EVENTS,
   NOTIFY_EXCERPT_MAX,
 } from '@/lib/notify/notify'
@@ -49,17 +50,47 @@ describe('DM_NOTIFY_EVENTS / CHANNEL_NOTIFY_EVENTS: 宛先ごとの内訳', () =
     })
   }
 
-  it('どちらの宛先にも出ないイベントは無い(設定できない通知を作らない)', () => {
-    const covered = new Set<string>([...DM_NOTIFY_EVENTS, ...CHANNEL_NOTIFY_EVENTS])
-    expect(NOTIFY_EVENTS.filter((event) => !covered.has(event))).toEqual([])
+  it('定義表から導く: DM は dm、チャネル通知はボードで宛先を選ぶもの', () => {
+    expect([...DM_NOTIFY_EVENTS]).toEqual([
+      'mention',
+      'agent_run',
+      'ticket_assigned',
+      'ticket_merge_held',
+      'ticket_due',
+    ])
+    expect([...CHANNEL_NOTIFY_EVENTS]).toEqual([
+      'agent_run',
+      'ticket_assigned',
+      'ticket_created',
+      'ticket_completed',
+      'ticket_merge_held',
+      'announcement',
+    ])
+  })
+
+  it('どの宛先も持たないイベントは無い(送り先の無い通知を作らない)', () => {
+    expect(NOTIFY_EVENTS.filter((event) => !NOTIFY_EVENT_SPEC[event].dm && !NOTIFY_EVENT_SPEC[event].channel)).toEqual(
+      [],
+    )
+  })
+
+  it('Wiki スペースが宛先を決めるイベントは、ボード設定・個人設定に出さない', () => {
+    const boardOrUser = new Set<string>([...DM_NOTIFY_EVENTS, ...CHANNEL_NOTIFY_EVENTS])
+    const spaceEvents = NOTIFY_EVENTS.filter((event) => NOTIFY_EVENT_SPEC[event].channel === 'space')
+    expect(spaceEvents).toEqual(['wiki_announcement'])
+    expect(spaceEvents.filter((event) => boardOrUser.has(event))).toEqual([])
   })
 
   it('設定画面に出る全イベントに項目名がある', () => {
-    // 設定画面(`/account` とボード設定)は `notify_event_<event>` でラベルを引くので、
+    // `/account` は `notify_event_<event>`、ボード設定は `board_notify_event_<event>` でラベルを引くので、
     // キーが無いとイベント名が出ない
-    for (const event of [...DM_NOTIFY_EVENTS, ...CHANNEL_NOTIFY_EVENTS]) {
+    for (const event of DM_NOTIFY_EVENTS) {
       expect(ja[`notify_event_${event}`], `ja: notify_event_${event}`).toBeTruthy()
       expect(en[`notify_event_${event}`], `en: notify_event_${event}`).toBeTruthy()
+    }
+    for (const event of CHANNEL_NOTIFY_EVENTS) {
+      expect(ja[`board_notify_event_${event}`], `ja: board_notify_event_${event}`).toBeTruthy()
+      expect(en[`board_notify_event_${event}`], `en: board_notify_event_${event}`).toBeTruthy()
     }
   })
 })

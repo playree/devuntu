@@ -22,6 +22,7 @@ import { NoAccessView } from '@/components/no-access-view'
 import { notify } from '@/components/notify'
 import { ReloadButton } from '@/components/reload-button'
 import { useBoardName } from '@/components/ticket/ticket-options'
+import { UpdatedBy } from '@/components/updated-by'
 import type { BoardNoteKind } from '@/generated/prisma/enums'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
@@ -34,7 +35,6 @@ import { useRouter } from 'next/navigation'
 import { FC, useState } from 'react'
 import { NoteHistoryModal, type HistoryTarget } from './note-history'
 import { NoteDetailModal, NoteEditModal, type EditTarget } from './note-modals'
-import { NoteUpdatedBy } from './note-updated-by'
 import { getBoardNotes, getDeletedBoardNotes, restoreBoardNoteRevision, type GetBoardNotesReturnType } from './server'
 
 type Page = NonNullable<GetBoardNotesReturnType>
@@ -50,7 +50,7 @@ const NoteRow: FC<{ note: Note; onOpen: () => void }> = ({ note, onOpen }) => (
       <span className='font-mono text-sm font-medium break-all'>{note.name}</span>
     </span>
     <span className='text-sm wrap-break-word'>{note.description}</span>
-    <NoteUpdatedBy
+    <UpdatedBy
       name={note.updatedBy?.name}
       isAgent={note.updatedBy?.isAgent}
       via={note.updatedVia}

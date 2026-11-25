@@ -1,5 +1,5 @@
 /**
- * 描画済みの画面を、1 ファイルで完結する HTML として保存する(チケットの HTML 出力)。
+ * 描画済みの画面を、1 ファイルで完結する HTML として保存する(チケット・Wiki の HTML 出力)。
  *
  * `buildHtmlDocument` 以外はブラウザ専用。
  */
@@ -45,6 +45,16 @@ export const buildHtmlDocument = ({
   ].join('\n')
 
 /**
+ * HTML 文字列の中の、ルートからの相対リンク(`<a href="/...">`)を絶対 URL にする。
+ * 保存したファイルからでも、Devuntu のページや添付(`/api/upload/...`)を開けるようにする
+ */
+export const absolutizeRootLinks = (html: string, origin: string): string =>
+  html.replace(
+    /(<a\b[^>]*?\shref=)(["'])\/(?!\/)/gi,
+    (_, before: string, quote: string) => `${before}${quote}${origin}/`,
+  )
+
+/**
  * ページに読み込まれている CSS を 1 つにまとめる。
  * `@font-face` は保存先から参照できない相対 URL なので外す(フォントは閲覧環境のものになる)
  */
@@ -65,7 +75,8 @@ export const collectPageCss = (): string =>
 /** 画像 1 枚の取得を待つ上限。応答しない画像で保存が止まらないようにする */
 const IMAGE_FETCH_TIMEOUT = 10_000
 
-const toDataUrl = async (src: string): Promise<string> => {
+/** 画像を取得して data URI にする。応答しない・取得できないときは reject する */
+export const toDataUrl = async (src: string): Promise<string> => {
   const res = await fetch(src, { signal: AbortSignal.timeout(IMAGE_FETCH_TIMEOUT) })
   if (!res.ok) {
     throw new Error(`${res.status}`)
@@ -109,9 +120,9 @@ export const snapshotElement = async (element: HTMLElement): Promise<string> => 
   return clone.outerHTML
 }
 
-/** HTML をファイルとしてダウンロードさせる */
-export const downloadHtml = (fileName: string, html: string) => {
-  const url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }))
+/** 文字列をファイルとしてダウンロードさせる。type は charset 付きの MIME タイプ */
+export const downloadText = (fileName: string, text: string, type: string) => {
+  const url = URL.createObjectURL(new Blob([text], { type }))
   const anchor = document.createElement('a')
   anchor.href = url
   anchor.download = fileName
@@ -119,3 +130,6 @@ export const downloadHtml = (fileName: string, html: string) => {
   // クリック直後に破棄するとダウンロードが始まらないブラウザがある
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
+
+/** HTML をファイルとしてダウンロードさせる */
+export const downloadHtml = (fileName: string, html: string) => downloadText(fileName, html, 'text/html;charset=utf-8')

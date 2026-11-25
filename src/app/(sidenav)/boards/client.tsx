@@ -60,6 +60,7 @@ export const BoardsClient: FC = () => {
       </ContentHeader>
 
       <MultiTable
+        isSmart
         aria-label='board list'
         pagingList={list}
         emptyContent={t('msg_no_boards')}
@@ -82,7 +83,7 @@ export const BoardsClient: FC = () => {
                 >
                   {boardName(item)}
                 </Link>
-                <span className='text-muted flex items-center gap-2 text-xs'>
+                <span className='text-muted flex items-center gap-2 text-xs whitespace-nowrap'>
                   {item.kind === 'private' ? t('private') : t('team')}
                   <span // このボードのチケット表示IDの接頭辞
                     className='font-mono'
@@ -92,7 +93,7 @@ export const BoardsClient: FC = () => {
                 </span>
               </div>
             </Table.Cell>
-            <Table.Cell className='truncate'>{item.description}</Table.Cell>
+            <Table.Cell className='truncate'>{item.description || '-'}</Table.Cell>
             <Table.Cell>
               <RoleChip value={item.role} />
             </Table.Cell>

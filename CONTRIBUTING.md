@@ -35,6 +35,14 @@ Devuntu への Issue・Pull Request を歓迎します。
 ## Pull Request
 
 - 内容は箇条書き程度に簡潔にまとめます
+- 対象ファイルは 100 以下にします(`src/generated/**` / `prisma/migrations/**` / `*.lock` は数えません)。超える場合は機能単位などで Pull Request を分けてください
+  - 取りまとめ用のブランチ(例: `feature/wiki`。ここからチケットのブランチを切り、取りまとめ用のブランチへの Pull Request でレビューする)から `main` への Pull Request は対象外です
+  - `<base>` は Pull Request のマージ先ブランチ(`main` または取りまとめ用のブランチ)です
+
+  ```sh
+  git diff --name-only <base>...HEAD -- . ':!src/generated/**' ':!prisma/migrations/**' ':!**/*.lock' | wc -l
+  ```
+
 - 出す前に、以下が通ることを確認してください(CI でも同じものを実行します)
 
 ```sh

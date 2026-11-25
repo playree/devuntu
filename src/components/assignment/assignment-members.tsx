@@ -10,33 +10,38 @@ import { ContentHeader } from '@/components/header'
 import { PencilSquareIcon, UserPlusIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { ReloadButton } from '@/components/reload-button'
-import { type AssignRole, RoleChip } from '@/components/role-chip'
+import { type AssignRole } from '@/components/role-chip'
 import { type UserSelectOption } from '@/components/user-select'
 import { parseAction } from '@/lib/action/action-client'
-import { type AssignMember } from '@/lib/schema/schema-board'
 import { useLocale } from '@/locale/client'
 import { Table } from '@heroui/react'
-import { type ActionResult, AssignMemberModal } from './assign-member-modal'
+import {
+  type ActionResult,
+  AssignMemberModal,
+  type AssignMemberRequest,
+  type AssignRoles,
+  useAssignRoles,
+} from './assign-member-modal'
 
 /** 一覧の 1 行。via が 'group' の行はグループ経由で、外す対象の行(直接アサイン)を持たない */
-export type AssignmentMember = {
+export type AssignmentMember<R extends string = AssignRole> = {
   id: string
   name: string
   email: string
   via: string
-  role?: AssignRole | null
+  role?: R | null
 }
 
 /** 編集の操作。渡さない場合は一覧だけを見せる */
-export type AssignmentManage = {
+export type AssignmentManage<R extends string = AssignRole> = {
   /** 追加ボタンとモーダルの見出し */
   addLabel: string
   /** すべての候補。すでに直接アサインされているユーザーは assignedUserIds で除く */
   userOptions: UserSelectOption[]
   assignedUserIds: string[]
-  add: (req: AssignMember) => ActionResult
+  add: (req: AssignMemberRequest<R>) => ActionResult
   /** 渡さないとロール変更の操作を出さない */
-  updateRole?: (req: AssignMember) => ActionResult
+  updateRole?: (req: AssignMemberRequest<R>) => ActionResult
   remove: (userId: string) => ActionResult
   /** モーダルのロール欄の下に出す補足 */
   roleNote?: string
@@ -52,9 +57,10 @@ export type AssignmentManage = {
  * グループの保存と合わせてリロードできるよう、`usePagingList` の呼び出しは親で行い、
  * ここでは結果だけを受け取る。
  */
-export const AssignmentMembers = <T extends AssignmentMember>({
+export const AssignmentMembers = <T extends AssignmentMember<R>, R extends string = AssignRole>({
   'aria-label': ariaLabel,
   hasRole,
+  roles: customRoles,
   pagingList,
   reloadAssignments,
   manage,
@@ -62,11 +68,15 @@ export const AssignmentMembers = <T extends AssignmentMember>({
   'aria-label': string
   /** ロール列を出す */
   hasRole: boolean
+  /** ロールの種類。省略するとボードのロール(owner / member) */
+  roles?: AssignRoles<R>
   pagingList: PagingList<T>
   reloadAssignments: () => void
-  manage?: AssignmentManage
+  manage?: AssignmentManage<R>
 }) => {
   const { t } = useLocale()
+  const roles = useAssignRoles(customRoles)
+  const { Chip: RoleChip } = roles
   const addModalState = useModalState()
   const updateModalState = useModalState<T>()
 
@@ -156,6 +166,7 @@ export const AssignmentMembers = <T extends AssignmentMember>({
           title={manage.addLabel}
           candidates={candidates}
           hasRole={hasRole}
+          roles={roles}
           roleNote={manage.roleNote}
           onSave={manage.add}
         />
@@ -169,6 +180,7 @@ export const AssignmentMembers = <T extends AssignmentMember>({
           candidates={candidates}
           target={updateModalState.target}
           hasRole={hasRole}
+          roles={roles}
           roleNote={manage?.roleNote}
           onSave={updateRole}
         />

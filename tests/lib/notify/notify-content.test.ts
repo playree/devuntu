@@ -166,6 +166,60 @@ describe('buildNotifyContent: announcement', () => {
   })
 })
 
+const wikiAnnouncement = (
+  override: Partial<NotifyPayload<'wiki_announcement'>> = {},
+): NotifyPayload<'wiki_announcement'> => ({
+  spaceId: 'space-1',
+  spaceKey: 'NEWS',
+  pageId: 'page-1',
+  pageNumber: 12,
+  pageTitle: '年末年始の休業について',
+  kind: 'published',
+  fromName: 'テストユーザー',
+  excerpt: '12/29〜1/3 は休業です',
+  ...override,
+})
+
+describe('buildNotifyContent: チケットの通知に共通の項目', () => {
+  it.each([
+    ['mention', mention()],
+    ['ticket_assigned', assigned()],
+    ['ticket_created', changed()],
+    ['ticket_merge_held', mergeHeld()],
+    ['ticket_due', due()],
+    ['announcement', announcement()],
+  ] as const)('%s はチケット ID をまとめキーにし、ボタンは「チケットを開く」', (event, payload) => {
+    const content = buildNotifyContent(event, payload as never, 'ja', 'dm')
+    expect(content.tag).toBe(ticketRef.ticketId)
+    expect(content.openLabel).toBe('チケットを開く')
+  })
+})
+
+describe('buildNotifyContent: wiki_announcement', () => {
+  it('見出しはページ指定(KEY/番号)、リンクはページ、ボタンは「ページを開く」', () => {
+    const content = buildNotifyContent('wiki_announcement', wikiAnnouncement(), 'ja', 'channel')
+    expect(content.subject).toBe('[NEWS/12] 年末年始の休業について')
+    expect(content.url).toBe('https://devuntu.example.com/wiki/NEWS/12')
+    expect(content.body).toBe('テストユーザーさんがアナウンスを公開しました')
+    expect(content.excerpt).toBe('12/29〜1/3 は休業です')
+    expect(content.openLabel).toBe('ページを開く')
+    expect(content.tag, '同じページの通知を端末上で畳む').toBe('wiki:page-1')
+  })
+
+  it('更新のお知らせは初回と文面を分ける', () => {
+    const published = buildNotifyContent('wiki_announcement', wikiAnnouncement(), 'ja', 'channel').body
+    const updated = buildNotifyContent('wiki_announcement', wikiAnnouncement({ kind: 'updated' }), 'ja', 'channel').body
+    expect(updated).toBe('テストユーザーさんがアナウンスを更新しました')
+    expect(updated).not.toBe(published)
+  })
+
+  it('抜粋が無ければ持たせない', () => {
+    expect(
+      buildNotifyContent('wiki_announcement', wikiAnnouncement({ excerpt: undefined }), 'ja', 'channel'),
+    ).not.toHaveProperty('excerpt')
+  })
+})
+
 describe('buildNotifyContent: mention', () => {
   it('チケット本文のメンションは短縮URLへリンクする', () => {
     expect(buildNotifyContent('mention', mention(), 'ja', 'dm').url).toBe('https://devuntu.example.com/t/ABC-42')
@@ -236,6 +290,8 @@ describe('buildNotifyContent: ロケール', () => {
         buildNotifyContent('ticket_due', due(), locale, 'dm'),
         buildNotifyContent('ticket_due', due({ kind: 'due_day' }), locale, 'dm'),
         buildNotifyContent('announcement', announcement(), locale, 'channel'),
+        buildNotifyContent('wiki_announcement', wikiAnnouncement(), locale, 'channel'),
+        buildNotifyContent('wiki_announcement', wikiAnnouncement({ kind: 'updated' }), locale, 'channel'),
       ]) {
         expect(content.subject).not.toMatch(/\$\{/)
         expect(content.body).not.toMatch(/\$\{/)

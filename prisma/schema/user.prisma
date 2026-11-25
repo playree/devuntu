@@ -89,6 +89,16 @@ model User {
   updatedBoardNotes  BoardNote[]         @relation("BoardNoteUpdatedBy")
   boardNoteRevisions BoardNoteRevision[]
 
+  // Wiki
+  wikiSpaceMembers         WikiSpaceMember[]
+  createdWikiPages         WikiPage[]               @relation("WikiPageCreatedBy")
+  updatedWikiPages         WikiPage[]               @relation("WikiPageUpdatedBy")
+  deletedWikiPages         WikiPage[]               @relation("WikiPageDeletedBy")
+  createdWikiTemplates     WikiTemplate[]           @relation("WikiTemplateCreatedBy")
+  updatedWikiTemplates     WikiTemplate[]           @relation("WikiTemplateUpdatedBy")
+  wikiPageRevisions        WikiPageRevision[]
+  wikiAnnouncementNotifies WikiAnnouncementNotify[] @relation("WikiAnnouncementNotifySender")
+
   // MCP
   mcpTokens McpToken[]
 
@@ -128,6 +138,7 @@ model Group {
   boardGroups         BoardGroup[]
   agentApproverGroups AgentApproverGroup[]
   commandTargetGroups CommandTargetGroup[]
+  wikiSpaceGroups     WikiSpaceGroup[]
 
   @@map("group")
 }

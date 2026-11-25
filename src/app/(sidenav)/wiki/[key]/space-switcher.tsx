@@ -1,0 +1,91 @@
+'use client'
+
+import { usePushIfLeavable } from '@/components/general/leave-guard'
+import { useSideNav } from '@/components/general/side-nav-slot'
+import { ChevronDownIcon } from '@/components/icon'
+import { WikiSpaceTypeIcon } from '@/components/wiki-chip'
+import { useActionData } from '@/lib/action/action-client'
+import { WIKI_TOP_PATH, wikiSpacePath } from '@/lib/wiki/wiki-rule'
+import { useLocale } from '@/locale/client'
+import { Button, cn, Dropdown, Label, Separator } from '@heroui/react'
+import { usePathname } from 'next/navigation'
+import { FC, useMemo } from 'react'
+import { getWikiSpaces } from '../server'
+import { useWikiSpace } from './space-context'
+
+/** スペースキーは英大文字始まりなので、小文字の値とは衝突しない */
+const ALL_SPACES_KEY = 'all'
+
+/** ツリーの見出し。スペース名を押すと、閲覧できるスペースの一覧から切り替えられる */
+export const WikiSpaceSwitcher: FC = () => {
+  const { t } = useLocale()
+  const { space } = useWikiSpace()
+  const pushIfLeavable = usePushIfLeavable()
+  const { closeMenu } = useSideNav()
+  const pathname = usePathname()
+  const { data } = useActionData(() => getWikiSpaces({ includeArchived: false }))
+
+  // アーカイブ済み・取得中でも、今のスペースは必ず選べるようにする
+  const spaces = useMemo(() => {
+    const list = (data ?? []).map(({ key, name, type }) => ({ key, name, type }))
+    return list.some((s) => s.key === space.key)
+      ? list
+      : [{ key: space.key, name: space.name, type: space.type }, ...list]
+  }, [data, space.key, space.name, space.type])
+  const isTop = pathname === wikiSpacePath(space.key)
+
+  return (
+    <Dropdown>
+      <Button
+        variant='ghost'
+        size='sm'
+        aria-label={`${space.name} - ${t('wiki_switch_space')}`}
+        className={cn(
+          'min-w-0 flex-1 justify-start gap-1.5 rounded-lg px-2 font-semibold',
+          isTop ? 'bg-accent-soft text-accent-soft-foreground' : 'hover:bg-mist-100 dark:hover:bg-neutral-900',
+        )}
+      >
+        <WikiSpaceTypeIcon type={space.type} width={16} className='shrink-0' />
+        <span className='truncate' title={space.name}>
+          {space.name}
+        </span>
+        <ChevronDownIcon width={12} className='ml-auto shrink-0' />
+      </Button>
+      <Dropdown.Popover placement='bottom start'>
+        <Dropdown.Menu
+          aria-label={t('wiki_switch_space')}
+          onAction={(key) => {
+            void pushIfLeavable(key === ALL_SPACES_KEY ? WIKI_TOP_PATH : wikiSpacePath(String(key))).then((moved) => {
+              if (moved) {
+                closeMenu()
+              }
+            })
+          }}
+        >
+          <Dropdown.Section
+            aria-label={t('wiki_switch_space')}
+            selectionMode='single'
+            disallowEmptySelection
+            selectedKeys={new Set([space.key])}
+          >
+            {spaces.map((s) => (
+              <Dropdown.Item key={s.key} id={s.key} textValue={s.name}>
+                <Dropdown.ItemIndicator />
+                <WikiSpaceTypeIcon type={s.type} width={16} className='shrink-0' />
+                <Label className='truncate'>{s.name}</Label>
+              </Dropdown.Item>
+            ))}
+          </Dropdown.Section>
+          <Separator />
+          <Dropdown.Section aria-label={t('wiki_all_spaces')}>
+            <Dropdown.Item id={ALL_SPACES_KEY} textValue={t('wiki_all_spaces')}>
+              <Dropdown.ItemIndicator // 選択はしないが、上のスペース名と頭をそろえる
+              />
+              <Label>{t('wiki_all_spaces')}</Label>
+            </Dropdown.Item>
+          </Dropdown.Section>
+        </Dropdown.Menu>
+      </Dropdown.Popover>
+    </Dropdown>
+  )
+}

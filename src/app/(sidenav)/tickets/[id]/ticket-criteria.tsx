@@ -3,6 +3,7 @@
 import { MultiButton, SubmitButtons } from '@/components/general/button'
 import { CheckboxField } from '@/components/general/checkbox'
 import { FlexCol } from '@/components/general/flex'
+import { HoverPopover } from '@/components/general/hover-popover'
 import { CheckBadgeIcon, CheckIcon, ClipboardDocumentCheckIcon, PencilSquareIcon, XCircleIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import {
@@ -15,81 +16,37 @@ import { parseAction } from '@/lib/action/action-client'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { dayformat } from '@/lib/day'
 import { useLocale } from '@/locale/client'
-import { Popover } from '@heroui/react'
-import { FC, PointerEvent, useEffect, useRef, useState } from 'react'
+import { FC, useState } from 'react'
 import { checkTicketCriterion, GetTicketReturnType, saveTicketCriteria } from './server'
 
 type Ticket = NonNullable<GetTicketReturnType>
 type Criterion = Ticket['criteria'][number]
 
-/** 閉じた状態 / マウスを乗せて開いた状態 / 押して開いた状態 */
-type SelfReportOpenMode = 'closed' | 'hover' | 'press'
-
-const HOVER_OPEN_DELAY = 300
-const HOVER_CLOSE_DELAY = 150
-
-/**
- * エージェントの自己申告。根拠は行を圧迫しないようポップオーバーに回す。
- * Tooltip はタップで開けずスマホで根拠を見られないため、マウスを乗せても押しても開く Popover にしている。
- * マウスで開いたときは外へ出れば閉じるよう非モーダルにし、押して開いたときは外側のタップで閉じられるようモーダルにする。
- */
+/** エージェントの自己申告。根拠は行を圧迫しないようポップオーバーに回す */
 const CriterionSelfReport: FC<{ met: boolean; evidence: string | null }> = ({ met, evidence }) => {
   const { t } = useLocale()
-  const [mode, setMode] = useState<SelfReportOpenMode>('closed')
-  const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
-  const isPressing = useRef(false)
-  useEffect(() => () => clearTimeout(timer.current), [])
-
-  const schedule = (next: (current: SelfReportOpenMode) => SelfReportOpenMode, delay: number) => {
-    clearTimeout(timer.current)
-    timer.current = setTimeout(() => setMode(next), delay)
-  }
-  const hoverHandlers = {
-    onPointerEnter: (e: PointerEvent) => {
-      if (e.pointerType === 'mouse') {
-        schedule((current) => (current === 'closed' ? 'hover' : current), HOVER_OPEN_DELAY)
-      }
-    },
-    onPointerLeave: (e: PointerEvent) => {
-      if (e.pointerType === 'mouse') {
-        schedule((current) => (current === 'hover' ? 'closed' : current), HOVER_CLOSE_DELAY)
-      }
-    },
-  }
-
-  const onOpenChange = (isOpen: boolean) => {
-    clearTimeout(timer.current)
-    // マウスで開いている最中のクリックは閉じずに押して開いた状態へ切り替える
-    setMode(isOpen || (mode === 'hover' && isPressing.current) ? 'press' : 'closed')
-    isPressing.current = false
-  }
-
   const result = t(met ? 'criterion_agent_met' : 'criterion_agent_unmet')
   return (
-    <Popover isOpen={mode !== 'closed'} onOpenChange={onOpenChange}>
-      <Popover.Trigger
-        aria-label={`${t('criterion_self_report')}: ${result}`}
-        className='flex cursor-pointer items-center gap-0.5'
-        onPointerDown={() => (isPressing.current = true)}
-        {...hoverHandlers}
-      >
-        {met ? (
-          <CheckBadgeIcon width={14} className='text-success' />
-        ) : (
-          <XCircleIcon width={14} className='text-danger' />
-        )}
-        {t('criterion_self_report')}
-      </Popover.Trigger>
-      <Popover.Content isNonModal={mode === 'hover'} placement='bottom start' className='max-w-sm' {...hoverHandlers}>
-        <Popover.Dialog
-          aria-label={t('criterion_self_report')}
-          className='max-h-64 overflow-y-auto text-sm wrap-break-word whitespace-pre-wrap'
-        >
-          <div className='font-medium'>{result}</div>
-          {evidence && <div>{evidence}</div>}
-        </Popover.Dialog>
-      </Popover.Content>
-    </Popover>
+    <HoverPopover
+      aria-label={`${t('criterion_self_report')}: ${result}`}
+      triggerClassName='flex items-center gap-0.5'
+      trigger={
+        <>
+          {met ? (
+            <CheckBadgeIcon width={14} className='text-success' />
+          ) : (
+            <XCircleIcon width={14} className='text-danger' />
+          )}
+          {t('criterion_self_report')}
+        </>
+      }
+      contentClassName='max-w-sm'
+      dialogAriaLabel={t('criterion_self_report')}
+      dialogClassName='max-h-64 overflow-y-auto text-sm wrap-break-word whitespace-pre-wrap'
+    >
+      <div className='font-medium'>{result}</div>
+      {evidence && <div>{evidence}</div>}
+    </HoverPopover>
   )
 }
 

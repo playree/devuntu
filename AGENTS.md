@@ -14,6 +14,10 @@ notifications (email / Slack / web push), an MCP server, and AI agent integratio
 - Zod v4
 - next-safe-action v8
 
+## Local instructions
+
+If `CLAUDE.local.md` exists in the repository root, read it at the start of the first task in the session and follow its instructions for this repository.
+
 ## Documentation
 
 When investigating or changing a feature or spec, read and update the corresponding docs. The docs are written in Japanese.
@@ -57,10 +61,11 @@ Branch, commit, PR, and coding rules are in [CONTRIBUTING.md](CONTRIBUTING.md). 
 
 # Checking screens
 
+- Follow the shared [screen-check skill](.claude/skills/screen-check/SKILL.md) with Playwright MCP. See [development setup](docs/dev/development.md#画面の動作確認) for client configuration.
 - Keep screen checks to the minimum needed. Not required for minor fixes.
 - Run the browser headless (no DISPLAY)
 - The dev server must be `http://localhost:3000`. `BETTER_AUTH_URL` is fixed to localhost:3000, so on any other port auth POSTs fail the origin check with 403
-- If `pnpm dev` is already running, reuse it and do not restart it. If you started it yourself, stop it when done
+- Reuse an existing `pnpm dev` server from the current checkout. Only stop a server you started during this session
 - Login is via email OTP. Get the OTP from the `verification` table (`sign-in-otp-<lowercased email>`)
 - Dev server log goes to `.work/dev-server.log`, screenshots to `.work/playwright`
 
@@ -88,7 +93,9 @@ Keep in sync with `path_filters` in `.coderabbit.yaml`.
 
 # Self-review before creating a PR
 
-- Before creating a PR, self-review the diff against main
+- Before creating a PR, check that it changes 100 files or fewer against its base branch, not counting the files excluded from code review (command in CONTRIBUTING.md). If it exceeds 100, split it into multiple PRs
+  - PRs from an integration branch (e.g. `feature/wiki`, whose changes were already reviewed in ticket-branch PRs into it) to main are exempt
+- Before creating a PR, self-review the diff against its base branch (main, or the integration branch it targets)
 - Fix each finding, or decide why not to, before opening the PR. List unfixed findings and the reasons in the PR description
 - If you fixed anything during self-review, re-run `pnpm lint` / `pnpm typecheck` / `pnpm test` before opening the PR
 - Skip the files excluded from code review (above)

@@ -40,7 +40,8 @@ vi.mock('@/lib/env-util', () => ({
 }))
 
 const now = new Date('2026-09-08T10:00:00.000Z')
-const orphan = { id: 'a1', key: 'orphan.webp', size: 100 }
+const orphan = { id: 'a1', key: 'orphan.webp', size: 100, detachedAt: null }
+const detached = { id: 'a3', key: 'detached.webp', size: 10, detachedAt: new Date('2026-09-08T09:59:00.000Z') }
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -58,19 +59,21 @@ describe('猶予', () => {
   it('猶予を過ぎた添付だけを候補にする', async () => {
     await sweepOrphanAttachments(now)
     const where = vi.mocked(prisma.attachment.findMany).mock.calls[0][0]?.where as {
-      createdAt: { lt: Date }
+      OR: [{ createdAt: { lt: Date } }, { detachedAt: { not: null } }]
     }
     // 既定24時間
-    expect(where.createdAt.lt.toISOString()).toBe('2026-09-07T10:00:00.000Z')
+    expect(where.OR[0].createdAt.lt.toISOString()).toBe('2026-09-07T10:00:00.000Z')
+    // 削除待ちは猶予に関わらず候補にする
+    expect(where.OR[1]).toEqual({ detachedAt: { not: null } })
   })
 
   it('猶予は環境変数で変えられる', async () => {
     graceHours.mockReturnValue(1)
     await sweepOrphanAttachments(now)
     const where = vi.mocked(prisma.attachment.findMany).mock.calls[0][0]?.where as {
-      createdAt: { lt: Date }
+      OR: [{ createdAt: { lt: Date } }, { detachedAt: { not: null } }]
     }
-    expect(where.createdAt.lt.toISOString()).toBe('2026-09-08T09:00:00.000Z')
+    expect(where.OR[0].createdAt.lt.toISOString()).toBe('2026-09-08T09:00:00.000Z')
   })
 })
 
@@ -96,6 +99,16 @@ describe('参照の判定', () => {
   it('どこからも参照されていなければ消す', async () => {
     vi.mocked(prisma.attachment.findMany).mockResolvedValue([orphan] as never)
     expect(await sweepOrphanAttachments(now)).toBe(1)
+  })
+
+  it('削除待ち(ボード / スペースの削除で外した添付)は、本文から参照されていても消す', async () => {
+    collectReferencedUploadKeys.mockResolvedValue(new Set([detached.key]))
+    findAttachmentReference.mockResolvedValue('ticket')
+    vi.mocked(prisma.attachment.findMany).mockResolvedValue([detached] as never)
+
+    expect(await sweepOrphanAttachments(now)).toBe(1)
+    expect(findAttachmentReference).not.toHaveBeenCalled()
+    expect(deleteObject).toHaveBeenCalledWith(detached.key)
   })
 })
 

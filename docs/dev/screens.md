@@ -1,7 +1,7 @@
 ---
 type: design_doc
 title: 画面一覧とアクセス制御
-updated: 2026-10-27
+updated: 2026-11-08
 ---
 
 # 画面一覧とアクセス制御
@@ -55,16 +55,109 @@ Proxy は通るリクエストのボディを既定 10MB まで複製して溜�
 
 ## タスク管理
 
-| 画面名称                        | パス                    | アクセス制御                                                                                                                                                                                                                                                                                                 |
-| ------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| ボード一覧                      | `/boards`               | 認証必須(自分がアクセスできるボードのみ表示)                                                                                                                                                                                                                                                                 |
-| かんばん                        | `/boards/[id]`          | 認証必須 + 対象ボードの参照権限(`owner` / `member`)                                                                                                                                                                                                                                                          |
-| ボード設定                      | `/boards/[id]/settings` | 認証必須 + 対象ボードの参照権限。メンバー/グループ/タグ・AI向けコンテキスト・チケットテンプレートの変更と Git 連携(provider ごと)の閲覧・変更は `owner` または管理者のみ。テンプレートの閲覧はメンバーなら可能                                                                                               |
-| ボードノート                    | `/boards/[id]/notes`    | 認証必須 + 対象ボードの参照権限。ナレッジ / メモリの閲覧と履歴はメンバーなら可能。追加・編集・削除・昇格 / 降格・履歴からの復元はメンバー(アーカイブ済みのボードは不可)                                                                                                                                      |
-| チケット一覧                    | `/tickets`              | 認証必須(アクセスできるボードのチケットのみ表示)。`?boardId=` / `?status=`(複数可) / `?assignee=`(`none` = 未割り当て) / `?relatedTo=`(表示ID) / `?relation=`(`child` / `related` / `all`)で初期の絞り込みを指定できる                                                                                       |
-| チケット詳細                    | `/tickets/[id]`         | 認証必須 + 対象チケットの参照権限(所属ボード経由で判定)。親子・関連と順番待ちはボードのメンバーにだけ表示し、変更履歴は閲覧できる人全員に表示。エージェントの処理の停止・再実行はエージェントの承認者(`'agentMode'`)だけ                                                                                     |
-| チケット表示IDでの参照          | `/t/[displayId]`        | 認証必須。表示ID(`ボードキー-番号`)で `findTicketIdByDisplayId`(`src/lib/board/board-access.ts`)が参照権限を判定し、`/tickets/[id]` へリダイレクト。アクセスできない場合は存在しない場合と同じく404                                                                                                          |
-| チケットの印刷(PDF / HTML 出力) | `/print/tickets/[id]`   | 認証必須 + 対象チケットの参照権限(チケット詳細と同じ `getTicket` で判定)。サイドバー無し。`?comment=<id>` でプラン/報告書/アナウンスの 1 件だけを出す(通常のコメント・存在しない ID は権限なしと同じ表示)。`?format=html` で印刷ダイアログの代わりに HTML ファイルを保存する。配下はダーク設定でもライト表示 |
+| 画面名称                        | パス                    | アクセス制御                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ------------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ボード一覧                      | `/boards`               | 認証必須(自分がアクセスできるボードのみ表示)                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| かんばん                        | `/boards/[id]`          | 認証必須 + 対象ボードの参照権限(`owner` / `member`)                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ボード設定                      | `/boards/[id]/settings` | 認証必須 + 対象ボードの参照権限。メンバー/グループ/タグ・AI向けコンテキスト・チケットテンプレートの変更と Git 連携(provider ごと)の閲覧・変更は `owner` または管理者のみ。テンプレートの閲覧はメンバーなら可能                                                                                                                                                                                                                                                  |
+| ボードノート                    | `/boards/[id]/notes`    | 認証必須 + 対象ボードの参照権限。ナレッジ / メモリの閲覧と履歴はメンバーなら可能。追加・編集・削除・昇格 / 降格・履歴からの復元はメンバー(アーカイブ済みのボードは不可)                                                                                                                                                                                                                                                                                         |
+| チケット一覧                    | `/tickets`              | 認証必須(アクセスできるボードのチケットのみ表示)。`?boardId=` / `?status=`(複数可) / `?assignee=`(`none` = 未割り当て) / `?relatedTo=`(表示ID) / `?relation=`(`child` / `related` / `all`)で初期の絞り込みを指定できる                                                                                                                                                                                                                                          |
+| チケット詳細                    | `/tickets/[id]`         | 認証必須 + 対象チケットの参照権限(所属ボード経由で判定)。親子・関連と順番待ちはボードのメンバーにだけ表示し、変更履歴は閲覧できる人全員に表示。エージェントの処理の停止・再実行はエージェントの承認者(`'agentMode'`)だけ                                                                                                                                                                                                                                        |
+| チケット表示IDでの参照          | `/t/[displayId]`        | 認証必須。表示ID(`ボードキー-番号`)で `findTicketIdByDisplayId`(`src/lib/board/board-access.ts`)が参照権限を判定し、`/tickets/[id]` へリダイレクト。アクセスできない場合は存在しない場合と同じく404                                                                                                                                                                                                                                                             |
+| チケットの印刷(PDF / HTML 出力) | `/print/tickets/[id]`   | 認証必須 + 対象チケットの参照権限(チケット詳細と同じ `getTicket` で判定)。サイドバー無し。`?comment=<id>` でプラン/報告書/アナウンスの 1 件だけを出す(通常のコメント・存在しない ID は権限なしと同じ表示)。`?format=html` で印刷ダイアログの代わりに HTML を作り、出力メニューの見えない iframe の中なら親へ `postMessage` で返す(直接開いたときは自分で保存する)。配下はダーク設定でもライト表示で、同一オリジンからだけ iframe に埋め込める(`next.config.ts`) |
+
+## Wiki
+
+| 画面名称                      | パス                         | アクセス制御                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ----------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Wiki スペース一覧             | `/wiki`                      | 認証必須(閲覧できるスペースのみ表示)。スペースの作成はログインユーザーなら誰でも可能で、作成者が `owner` になる                                                                                                                                                                                                                                                                                                                                                                      |
+| スペースのトップ              | `/wiki/[key]`                | 認証必須 + スペースの閲覧権限(`viewer` 以上。`everyone` のスペースは全ログインユーザー)。割り当ての無い管理者は、ページ一覧を出さずに設定への導線だけを表示する。設計書スペースではページ一覧の代わりに設計書一覧を出す。アナウンス用スペースでは新しい順の一覧とバックナンバーを出す(絞り込みは `?month=` / `?year=` / `?tag=`)                                                                                                                                                     |
+| ページ詳細                    | `/wiki/[key]/[number]`       | 認証必須 + スペースの閲覧権限。作成・編集・移動・削除・版の復元は `editor` 以上かつ未アーカイブ。版の削除は閲覧できる `owner` と管理者かつ未アーカイブ(`canDeleteWikiRevision`)。アナウンス用スペースでは、Slack への通知(今すぐ・予約・予約の変更と取り消し)が `editor` 以上かつ未アーカイブ、通知の履歴は `editor` 以上(`canSeeWikiAnnounce`)                                                                                                                                      |
+| ページの印刷(PDF / HTML 出力) | `/print/wiki/[key]/[number]` | 認証必須 + スペースの閲覧権限(ページ詳細と同じ `getWikiPage` で判定)。サイドバー無し。`?rev=<版 ID>` でその版の内容を出す(版は `getWikiPageRevisionSnapshot` で引き、そのページの版でない・存在しない ID は権限なしと同じ表示)。`?format=html` で印刷ダイアログの代わりに HTML を作り、出力メニューの見えない iframe の中なら親へ `postMessage` で返す(直接開いたときは自分で保存する)。配下はダーク設定でもライト表示で、同一オリジンからだけ iframe に埋め込める(`next.config.ts`) |
+| スペース内検索                | `/wiki/[key]/search`         | 認証必須 + スペースの閲覧権限。条件は `?q=` と `?tags=`(複数可)で持つ。`/wiki?q=` は閲覧できる全スペース(アーカイブ済みを除く)の横断検索                                                                                                                                                                                                                                                                                                                                             |
+| スペース設定                  | `/wiki/[key]/settings`       | 認証必須 + `owner` または管理者。タグ・ページテンプレートの管理と、スペースの削除(`deleteWikiSpace`)もここから行う。アナウンス用スペースでは通知先の Slack チャンネルも設定する                                                                                                                                                                                                                                                                                                      |
+
+権限はスペース単位で、直接割り当て(`WikiSpaceMember`)・グループ(`WikiSpaceGroup`)・ボード(`WikiSpaceBoard`。ボードのメンバーが対象)のうち最も強いロールを採る。
+判定は `src/lib/wiki/wiki-access.ts`(`assertWikiSpaceAccess`)、割り当ての変更は `src/lib/wiki/wiki-assignment.ts`。
+
+- `owner` はユーザーの直接割り当てに限り、最後の `owner` を外す・降格する変更は拒む(管理者は除く)
+- 割り当てられるボードは、アーカイブしていないチームボードのうち操作者が参加しているもの(管理者はすべて)
+- スペース内の画面は `wiki/[key]/layout.tsx` でスペース・ツリー(本文なし。タグの ID 付き)・タグを 1 度だけ取得し、`SideNavPortal` でサイドメニューへツリーを差し込む。スペース一覧(`/wiki`)と、取得中・閲覧できないスペースでもスペース一覧などを差し込み、Wiki の中を移る間はサイドメニューのタブを出したままにする
+- スペースの削除(`deleteWikiSpace`。`src/lib/wiki/wiki-space.ts`)は `manage` を要求し、スペース行のロックを取ってから消す。ページ・版・タグ・割り当ては Cascade で消し、添付はボード削除と同じく紐付けを外して削除待ち(`detachedAt`)にしてから、コミット後に実体を消す(`listAttachmentKeysOf` / `detachAttachmentsOf`)。実体の削除に失敗して残った添付は、掃除が回収するまで誰にも配信しない(`canViewAttachment`)。
+  キーは作成時に `WikiSpaceKeyHistory` へ登録し、スペースを消しても残す(共有済みの `KEY/番号` が別のスペースのページを指さないため)。履歴にあるキーでの作成は `DUPLICATED_WIKI_SPACE_KEY`
+- スペースの区分(`WikiSpaceType`)は作成時にだけ決め、後から変えない(`updateWikiSpace` / `scUpdateWikiSpace` は区分を受けない。設定画面は表示だけ)。作れるページの種類・ページの置き方が区分で決まるため、変更に伴う既存ページ・テンプレート・予約通知の整合を持たない。
+  区分ごとの違い(置ける種類と既定・木を持たないか・アナウンス用か・トップの一覧・種類のエラー文)は仕様表 `WIKI_SPACE_TYPE_SPEC`(`src/lib/wiki/wiki-rule.ts`)に置き、lib・MCP・画面の分岐はここから引く(区分を直接比べない)
+- Wiki のスペース行 / ページ行のロックは `src/lib/wiki/wiki-lock.ts` の関数だけで取る(ロックの順序もそのファイルの先頭に書く)。構造と設定を変える書き込みは `lockWikiSpace`、本文の更新・版の削除・アナウンスは `shareLockWikiSpace`、スペースの削除は `lockWikiSpaceForDelete`、ページ行は常にスペース行の後に `lockWikiPages`
+- ページの書き込みは `wiki-page.ts`(作成・更新・削除・参照)、`wiki-page-tree.ts`(木の読み込み・移動)、`wiki-page-restore.ts`(版の内容へ戻す・削除済みを戻す)に分け、共通の部品(エラー・検証・版のスナップショット・競合判定)は `wiki-page-write.ts` に置く
+- ページ詳細の `page-body.tsx` は、`use-page-editor.ts` の下書き・保存状態と選択中の版を、`page-toolbar.tsx` の操作欄と `page-content.tsx` の本文へ渡す。作成直後の編集開始に使う `EDIT_QUERY` は `wiki-rule.ts` に置く。
+  保存中に下書きが変わった場合は編集を続け、送信した下書きと保存アクションが返した更新日時を、次回の変更・競合判定の基準にする。
+  作成・移動・削除の確認は `create-page-modal.tsx`、`move-page-modal.tsx`、`use-delete-wiki-page.ts` が担う。移動ダイアログの送信位置と同じ並びかどうかは `wiki-tree.ts` の `planWikiMove` で求める。操作欄・検索・設定のタグ選択や表示には、チケットと共通の `src/components/tag/` の部品を使う
+- タグ(`src/lib/wiki/wiki-tag.ts`)はスペースごと。作成は `editor` 以上、更新・削除は `manage`。ページへの付与は `assertWikiTagIdsInSpace` で同じスペースのタグに限る
+- ページテンプレート(`WikiTemplate`。`src/lib/wiki/wiki-template.ts`)はスペースごと(20件まで、`MAX_WIKI_TEMPLATES_PER_SPACE`)。設定画面の一覧(本文込み)・追加・編集・削除・並べ替えは `manage` かつ未アーカイブ(`wiki/[key]/settings/space-templates.tsx`)。
+  一覧はボードのチケットテンプレートと共通の `TemplateListEditor` を使い、Wiki の編集フォームは `wiki-template-modal.tsx` に置く。本文の編集はページと同じ `WikiContentEditor` が種類に応じて切り替える。
+  種類は `isWikiPageTypeAllowed` で区分に合うものに限る(エラー文は `wikiPageTypeRuleMessage` で区分に合わせる)。並べ替え(`moveWikiTemplate`)はロックの下で今の並びの隣と入れ替えて `order` を 0 から振り直す。
+  ページ作成のモーダル(`CreatePageModal`)は、開いたときに `getWikiTemplateOptions`(`write`。本文なし)で選択肢を引き、選ぶとタイトルと種類を埋めて `createWikiPage` に `templateId` を渡す。
+  サーバーは `renderWikiTemplate` で、`write` を確かめてから同じスペースのテンプレートを引き、作成者の表示名・タイムゾーン(未設定は `DEFAULT_TIMEZONE`)で `{{date}}` / `{{month}}` / `{{user}}` を置き換える(`applyWikiTemplatePlaceholders`。1回の走査で置き換え、置き換えた値は置き換え直さない)。
+  ページへの当て方は画面と MCP で共通の `applyWikiTemplateToPage`(明示した値 > 本文の front matter > テンプレート の順で、省いた項目だけを埋める)。種類がどれでも決まらなければ `createWikiPage` が区分の既定にする。
+  本文が空の設計書は `createWikiPage` が最小の front matter を入れて作り、本文を渡さずに種類だけを設計書へ変えたときに front matter が無ければ `updateWikiPage` が先頭に入れる(画面・MCP 共通。`designDocFrontMatter`。画面は種類を切り替えた時点で本文へ入れるので、本文を渡す保存ではそのまま使う)。
+  タイトルは画面がテンプレートから置き換えて入れたものをそのまま使い、サーバーでは置き換え直さない(表示名の中の `{{date}}` などを置き換えないため)。
+  登録時の長さの検査は置き換える前の値で行うので、ページに採るテンプレートの値(画面では本文、MCP では明示しなかったタイトル・本文)が置き換えた結果で最大長を超えたら `WIKI_TEMPLATE_TOO_LONG` にする(`assertWikiTemplateFits`。明示した値で置き換えて使わない項目の長さでは拒まない)。
+  更新・削除・並べ替えはスペース行のロックを取ってからテンプレートの有無を確かめ直す(同時の削除で Prisma の行なしエラーにしない)。
+  本文の画像は添付の掃除で参照として扱う(`attachment-ref.ts` の `wikiTemplate`)
+- 版(`src/lib/wiki/wiki-revision.ts`)の一覧は本文を含めず、ページ詳細で過去の版を選んだときにその版の本文だけを引く(本文の最大長 × 版数を一度に転送しない)。
+  `use-wiki-page-revisions.ts` がページと版一覧の同期、選択、本文取得を担う。版の選択(`revision-select.tsx`)は更新者・日時の表示を兼ねる。過去の版の表示中のロールバックと版の削除(`deleteWikiPageRevision`。最新の版は消せない)は `revision-actions.tsx` に置く。
+  版の削除を `editor` に許すと、本文を空にしてから前の版を消して内容を戻せなくできるので、`manage` に限る。
+  上限(`WIKI_REVISION_MAX_PER_PAGE`)を超えた古い版は保存のたびに消えるため、`editor` も保存を重ねれば古い版を押し出せるが、
+  その保存は本人の名前で版に残り追跡できるので許容する。
+  過去の版の表示中は「差分」で、その版から最新への差分に切り替えられる(状態は `useWikiPageRevisions` が持ち、選択を外すと戻す)。表示の形は最新の種類で決め、
+  設計書は `DesignDocView` に最新の本文と `compareWith`(選んだ版の本文)を渡して embed の差分表示を使い(差分バーの × は `onCloseDiff` で切り替えを戻す)、通常のページは `TextDiffView` で行単位に出す。タイトル・種類・タグの変化は `WikiRevisionFieldChanges` が判定し、ボードノートと共通の `RevisionChanges` で本文の上に出す。出力メニューは差分中も選んだ版の内容が対象。
+  保存時のコミットメッセージ(`WikiPageRevision.message`)が付いた版は、連続保存のまとめ(`shouldMergeWikiRevision`)の対象にしない。
+  版の内容への復元(`restoreWikiPageRevision`)は削除されていないページだけが対象で、タイトル・本文・種類・タグだけを戻して位置を変えない。
+  版のタグは ID と書いたときの名前を JSON(`tags: [{ id, name }]`)で持ち、表示・出力・復元では ID で今のタグに引き当てる(`resolveWikiRevisionTags` / `findWikiTagsByIds`)。改名しても外れず、削除したタグは同名で作り直しても引き当てない。名前は差分で削除済みのタグを出すためだけに使う(`wikiRevisionTagLabels`)。
+- ページの削除は論理削除(`WikiPage.deletedAt` / `deletedById`)。`deleteWikiPage` は対象と配下に同じ削除日時を立て、ページごとに `deleted` の版を残す(本文は変えないので `updatedAt` は進めない)。
+  ページを読むクエリはすべて `WIKI_PAGE_ALIVE`(`deletedAt: null`。生 SQL は `"deletedAt" IS NULL`)で削除済みを除く。
+  添付の参照判定(`attachment-ref.ts` / `ticket-write.ts` の `isAttachmentInUse`)だけは、復元したときに添付が消えていないよう削除済みのページも数える。
+  生きているページの親は常に生きている(削除は配下ごと、復元は親が削除済みならスペース直下へ戻す)。
+  削除から保持期間(`WIKI_REVISION_RETENTION_DAYS`)を過ぎたページは自動メンテナンス(`sweepDeletedWikiPages`)で物理削除し、版・タグの紐づけ・アナウンスの通知は Cascade で消える。
+  スペースのトップの「削除済みのページ」(`listDeletedWikiPages`)は `deletedAt` のあるページを引き、
+  `parentId` / `order` で元の親 → 子の前順に並べ(`arrangeDeletedWikiPages`)、元の親の状態(スペース直下 / 存在する親のパンくず / 削除済み)と削除した人・日時、削除の版の経路を添える。
+  一覧からの復元は `restoreDeletedWikiPage` で、`deletedAt` を外すだけなので作成者・作成日時・更新者・更新日時・タグ・本文は削除したときのまま。
+  元の親が生きていて深さの上限に収まればその下の元の位置へ、そうでなければスペース直下の末尾へ戻す。
+  「配下ごと」(`withDescendants`)は、親をたどって着く削除済みの配下を同じトランザクションで戻す(配下は親子関係を保つ。上限の判定は戻す部分木の高さで行う)。
+  画面は `wiki-tree.ts` の `restorableDescendantsAt` で復元済みの枝を除いた候補を求め、確認で見せた配下を1回のアクションで渡す。サーバーは `expectedDescendantIds` と今の削除済みの配下が違えば `WIKI_TREE_CHANGED` で弾く(削除と同じ)。
+  ページ自体が既に戻されていて配下だけを戻すときも、今の位置で深さの上限を超えるなら `WIKI_PAGE_TOO_DEEP` で弾く。
+  一覧を開いた後に別の人が戻したページは上書きせず、戻すものが無ければ unchanged を返す
+- ページの種類(`WikiPageType`)が `design_doc` のページは、`markdown-design-doc-viewer-embed` のビューアで表示し(`src/components/markdown/design-doc-view.tsx`)、
+  CodeMirror のソースとプレビューで編集する(`design-doc-editor.tsx`)。ビューアの本体と `viewer.css` は `design-doc-viewer-core.tsx` を `next/dynamic` で読むので、
+  通常のページではチャンクも CSS も読み込まない。ワイヤーフレームの別ファイルは扱わない(`readFile` は常に undefined を返し、`baseUrl` は渡さない)。
+  mermaid の設定はグローバルなので、Devuntu の mermaid 表示(`mermaid-diagram.tsx`)と設計書のビューアは描画のたびに `initialize` し直している。
+  ページを素早く行き来して両方の描画が重なると、どちらかの図に相手の設定(テーマ・フォント)が当たることがある
+- 出力(`wiki/[key]/[number]/page-export.tsx`)は表示中の版が対象。PDF / HTML はチケットと同じく印刷用ページ(`src/app/print/wiki/[key]/[number]/`)を使う。PDF は別タブで開き、HTML は `useHtmlExport`(`src/components/print-export.tsx`)が見えない iframe で開いて、描画結果の HTML を受け取って保存する。設計書ページの HTML だけは印刷用ページを使わず、`exportDesignDocHtml`(`src/components/markdown/design-doc-export.ts`)が embed の `exportHtml`(`markdown-design-doc-viewer-embed/export`)で表示中の本文から作る(画像は data URI、ルートからの相対リンクは絶対 URL にする)。印刷用ページの HTML 保存(`snapshotElement`)は shadow root を書き出さないので、設計書には使わない。
+  Markdown は表示中の本文から `wikiMarkdownExport`(`src/lib/wiki/wiki-export.ts`。`/api/upload/` を絶対 URL にする)で組み立ててその場で保存する。
+  設計書の印刷は `design-doc-print-view.tsx` が `createViewer` で目次なしに描き、`ready` まで `data-markdown-loading` を置いて描画の完了を待たせる。
+  ビューアの内部スクロールは `globals.css` の `.design-doc-print` で外す。描画の完了待ち(`useWhenRendered`)は、ワイヤーフレームの shadow root の中の画像も待つ
+- スペースの区分(`WikiSpaceType`)が `announcement` のスペース(アナウンス用スペース)には、通常のページだけを平らに置く(`isFlatWikiSpace`)
+  - `createWikiPage` は親・位置の指定を、`moveWikiPage` は常に `WIKI_ANNOUNCEMENT_FLAT` で弾く。作成・削除・削除済みページの復元・ページ詳細(`getWikiPage`)は、全件の木を読まない(作成と復元はスペース直下・`order` 0 に置く)
+  - 並びは作成日時の新しい順(同時刻は番号の大きい順)。索引 `wiki_page(spaceId, createdAt)` を使う
+  - `getWikiSpace` はツリーを返さない(`tree: []`)。トップの一覧(`announcement-index.tsx`)とサイドメニュー(`side-announcements.tsx`、最新 `WIKI_ANNOUNCEMENT_SIDEBAR_LIMIT` 件)は `getWikiAnnouncements`(`src/lib/wiki/wiki-announcement.ts` の `listWikiAnnouncements`。`useServerPagingList` でページごとに引く)で、
+    バックナンバーは `getWikiAnnouncementArchive`(年月ごとの件数の `GROUP BY`。タグで絞り込んでいる間はそのタグのものだけを数える)で取得する。どちらもスペースを取り直したとき(`tree` の参照が変わる)に取り直す
+  - 年・月の範囲と集計は、閲覧者のタイムゾーン(未設定なら `DEFAULT_TIMEZONE`)で区切る(`wikiAnnouncementPeriodRange` / `to_char(... AT TIME ZONE tz)`)
+  - Slack への通知(`src/lib/wiki/wiki-announcement-notify.ts`。仕組みは [notifications-internals.md](notifications-internals.md#wiki-アナウンス))
+    - 通知先は `WikiSpace.announceSlackChannelId`。設定画面のセクション(`settings/space-slack-notify.tsx`)は区分が `announcement` のときだけ出し、`getWikiSlackChannels` / `getWikiAnnounceChannel` / `setWikiAnnounceChannel`(`assertWikiAnnounceChannelManageable` = `manage` + 区分)で扱う。区分は作成後に変わらないので、値を持つのはアナウンス用スペースだけ。
+      保存の前に Bot が参加しているチャンネルと突き合わせる(`assertSlackChannelExists`。一覧の取り直しの回数制限は `listSlackChannelsWithRefreshLimit`。どちらもボードのチャネル通知と共通)。チャンネルの選択・一覧の再取得・取れないときの案内は、ボードのチャネル通知と共通の `src/components/slack-channel.tsx`
+    - ページ詳細の「通知」ボタンとモーダル(`[number]/page-announce-modal.tsx`)、下部の履歴(`[number]/page-announce-history.tsx`)。履歴と送れる状態は `getWikiAnnouncementNotifies` で取り、`editor` 以上でなければ引かない。
+      予約の日時は利用者のタイムゾーンの日付と時刻(15 分刻み)を `zonedMinutes` で絶対時刻にして送る
+    - 一覧・サイドメニューのバッジは `listWikiAnnouncements` の `notifyState`(`editor` 以上にだけ付く)。予約中があれば予約中、送信済みがあれば通知済み、無ければ未通知
+- スペースの区分(`WikiSpaceType`)が `design_doc` のスペース(設計書スペース)には設計書だけを置く
+  - 判定は `isWikiPageTypeAllowed`(`src/lib/wiki/wiki-rule.ts`)。ページの作成・種類の変更・版の復元で弾く(`WIKI_PAGE_TYPE_NOT_ALLOWED`)。種類を省いた作成は区分の既定(`defaultWikiPageType`)にする
+  - スペースのトップの設計書一覧(`wiki/[key]/design-doc-index.tsx`)は、`getWikiDesignDocIndex`(`src/lib/wiki/wiki-design-doc-index.ts`)が返す設計書の front matter(本文は返さない。DB からも本文は先頭だけを読み、判定は `frontMatterBlock` で行う。先頭に収まらない長い front matter の行だけ本文全体を読み直す)を、embed の `DesignDocList`(`markdown-design-doc-viewer-embed/react`)に渡して描く。
+    列(版数など)は embed が mddv と同じ解釈で front matter から取り出す。フォルダには親ページのタイトルのパス、ファイル名にはページ番号を渡し(組み立ては `src/lib/wiki/wiki-design-doc-list.ts`)、リンクは `onOpenLink` で `router.push` する
+- 検索(`src/lib/wiki/wiki-search.ts`)は `$queryRaw` で組む
+  - 語ごとに、3文字以上なら「title / content の ILIKE(`gin_trgm_ops` の GIN 索引で BitmapOr)とタグ名の完全一致の UNION」に `IN` で当てる。タグとの OR を EXISTS で書くと索引が使われなくなるため
+  - 2文字以下の語はトライグラムが作れず索引が効かないので、他の語で絞った行へのフィルタとして書く(すべての語が短いときだけ全件を走査する)
+  - 並べて `LIMIT` を掛けてから、本文の一致位置の前後だけを `substr` で返す(本文の全文は転送しない)
+  - 確かめ方: 開発 DB でダミーページを数万件入れ、`gin_clean_pending_list` で GIN の pending list を掃いて `ANALYZE` した後、`EXPLAIN ANALYZE` で `Bitmap Index Scan on wiki_page_*_trgm_idx` が出ることを見る。
+    同じトランザクションで入れた行は pending list に残り、索引のコストが高く見積もられて seq scan が選ばれるので、掃かずに比べない
 
 ## 管理者
 
@@ -113,8 +206,9 @@ Proxy は認証処理を通さず素通しするため、各ルートハンド�
 | `/agent/devuntu_agent.py`                          | 認証不要(`public/` の静的配布)。ランナー本体。秘密情報は含まない                                                                                                                                                                                                                            |
 | `/agent/agent-setup-guide.md`                      | 認証不要(`public/` の静的配布)。セットアップ手順の雛形(MCP の `get_agent_setup_guide` が値を埋めて返す)。秘密情報は含まない                                                                                                                                                                 |
 | `/agent/agent-user.png`                            | 認証不要(`public/` の静的配布)。AIエージェント用ユーザーのアバター画像                                                                                                                                                                                                                      |
-| `/api/upload`                                      | 認証必須(セッション、またはMCPの短命トークン)。画像・ファイルのアップロード(POST。クエリ `?kind=file` でファイル)                                                                                                                                                                           |
-| `/api/upload/[filename]`                           | 認証必須(未ログインは401。MCPの `get_file` が発行したダウンロードトークンも可)。画像・ファイルの配信(GET。画像以外はダウンロードさせる)                                                                                                                                                     |
+| `/api/upload`                                      | 認証必須(セッション、またはMCPの短命トークン)。画像・ファイルのアップロード(POST。クエリ `?kind=file` でファイル)。添付先はフォームの `boardId`(書き込めるボード)か `wikiSpaceId`(editor 以上かつ未アーカイブのスペース)で、同時指定は400、権限が無ければ403                                |
+| `/api/upload/[filename]`                           | 認証必須(未ログインは401。MCPの `get_file` が発行したダウンロードトークンも可)。画像・ファイルの配信(GET。画像以外はダウンロードさせる)。添付先のボード / Wiki スペースを閲覧できない場合は404(判定は `src/lib/storage/attachment-access.ts`)                                               |
+| `/api/skills/[name]/[...path]`                     | **認証不要**。AI ツールのスキルのファイルを配信(GET)。中身は依存パッケージに同梱された公開物(markdown-design-doc は embed の `agentSkill`)。MCP の `get_skill_install_guide` の手順が取得する                                                                                               |
 | `/api/avatar/[filename]`                           | **認証不要**。`user.image` から参照中のキーだけを配信(GET)                                                                                                                                                                                                                                  |
 | `/api/slack/events`                                | 認証不要。Slack の署名検証だけが門番(POST)                                                                                                                                                                                                                                                  |
 | `/api/github/webhook/[id]`                         | 認証不要。対応付けごとのシークレットによる GitHub の署名検証だけが門番(POST)。対応付けが無ければ404                                                                                                                                                                                         |

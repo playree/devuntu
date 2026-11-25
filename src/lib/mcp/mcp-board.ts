@@ -20,6 +20,7 @@ import { MERGE_COMPLETION_SELECT, mergeCompletionOf } from '@/lib/git/git'
 import { isChannelNotifyEnabled } from '@/lib/notify/notify-board-setting'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
 import { prisma } from '@/lib/prisma'
+import { findBoardWikiSpaceIndex } from '@/lib/wiki/wiki-space'
 
 /**
  * ボードID でもボードキー(例: ABC)でも受け取れるようにする。`resolveTicketId` と同じ役割。
@@ -78,12 +79,13 @@ export const getBoardForMcp = async (auth: ResourceAuth, boardIdOrKey: string) =
     throw errInvalidOperation()
   }
 
-  const [members, tags, templates, counts, noteIndex, announcementEnabled] = await Promise.all([
+  const [members, tags, templates, counts, noteIndex, wikiIndex, announcementEnabled] = await Promise.all([
     getBoardMemberUsers(id),
     listBoardTags(id),
     listTicketTemplates(id),
     countTicketsByBoard([id]),
     findBoardNoteIndex(id),
+    findBoardWikiSpaceIndex(auth.user, id),
     // アナウンスを投稿できないエージェントには返さない
     auth.kind === 'agent' ? false : isChannelNotifyEnabled(id, 'announcement'),
   ])
@@ -99,6 +101,8 @@ export const getBoardForMcp = async (auth: ResourceAuth, boardIdOrKey: string) =
     ...(board.aiContext ? { boardContext: board.aiContext } : {}),
     /** ボードノートの索引(boardKnowledge / boardMemory)。本文は get_board_notes で読む */
     ...noteIndex,
+    /** ボードに割り当てられた Wiki スペースの索引(wikiSpaces)。ページは search_wiki / get_wiki_page で読む */
+    ...wikiIndex,
     /** マージで自動完了する provider と、その前に見る受け入れ条件の判定。自動完了が無ければ項目ごと載せない */
     ...(mergeCompletion ? { mergeCompletion } : {}),
     /** アナウンス(type=announcement のコメント)が Slack チャンネルへ投稿されるか。されないなら項目ごと載せない */

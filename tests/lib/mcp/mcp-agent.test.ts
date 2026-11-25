@@ -20,6 +20,7 @@ import { findBoardAiContext } from '@/lib/board/board-setting'
 import { listTicketCriteria } from '@/lib/board/ticket-criterion'
 import { errInvalidOperation } from '@/lib/error'
 import { resolveTicketId } from '@/lib/mcp/mcp-ticket'
+import { findBoardWikiSpaceIndex } from '@/lib/wiki/wiki-space'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { connectDevuntuMcp } from '../../helpers/mcp-client'
 import * as fakeAuth from '../../helpers/resource-auth'
@@ -62,6 +63,10 @@ vi.mock('@/lib/board/board-setting', () => ({
 
 vi.mock('@/lib/board-note/board-note', () => ({
   findBoardNoteIndex: vi.fn(),
+}))
+
+vi.mock('@/lib/wiki/wiki-space', () => ({
+  findBoardWikiSpaceIndex: vi.fn(),
 }))
 
 vi.mock('@/lib/board/ticket-criterion', () => ({
@@ -116,6 +121,7 @@ beforeEach(() => {
   vi.mocked(getTicketAccess).mockResolvedValue({ boardId: 'b1', boardRole: 'member' } as never)
   vi.mocked(findBoardAiContext).mockResolvedValue(null)
   vi.mocked(findBoardNoteIndex).mockResolvedValue({})
+  vi.mocked(findBoardWikiSpaceIndex).mockResolvedValue({})
 })
 
 describe('自動運用ツールの登録', () => {
@@ -330,6 +336,7 @@ describe('get_agent_task', () => {
       expect(await callTask()).not.toHaveProperty('boardContext')
       expect(findBoardAiContext).not.toHaveBeenCalled()
       expect(findBoardNoteIndex).not.toHaveBeenCalled()
+      expect(findBoardWikiSpaceIndex).not.toHaveBeenCalled()
     })
 
     it('ボードノートの索引を task に載せる', async () => {
@@ -337,6 +344,14 @@ describe('get_agent_task', () => {
 
       expect(await callTask()).toMatchObject({ boardMemory: ['migrate-gotcha: 失敗する件'] })
       expect(findBoardNoteIndex).toHaveBeenCalledWith('b1')
+    })
+
+    it('ボードに割り当てられた Wiki スペースの索引を task に載せる', async () => {
+      const wikiSpaces = [{ key: 'DOCS', name: '開発ドキュメント', type: 'mixed' as const, canWrite: true }]
+      vi.mocked(findBoardWikiSpaceIndex).mockResolvedValue({ wikiSpaces })
+
+      expect(await callTask()).toMatchObject({ wikiSpaces })
+      expect(findBoardWikiSpaceIndex).toHaveBeenCalledWith(agentAuth.user, 'b1')
     })
   })
 

@@ -34,6 +34,24 @@ import {
   VALIDATION_ERROR,
 } from '../error'
 import { DUPLICATED_MCP_TOKEN_NAME } from '../mcp/mcp'
+import {
+  WIKI_ANNOUNCE_INVALID_SCHEDULE,
+  WIKI_ANNOUNCE_NOT_SCHEDULED,
+  WIKI_ANNOUNCE_TOO_MANY_SCHEDULED,
+  WIKI_ANNOUNCE_UNAVAILABLE,
+} from '../wiki/wiki-announcement-notify-rule'
+import {
+  DUPLICATED_WIKI_SPACE_KEY,
+  WIKI_ANNOUNCEMENT_FLAT,
+  WIKI_PAGE_CONFLICT,
+  WIKI_PAGE_HAS_CHILDREN,
+  WIKI_PAGE_INVALID_PARENT,
+  WIKI_PAGE_TOO_DEEP,
+  WIKI_PAGE_TYPE_NOT_ALLOWED,
+  WIKI_SPACE_NO_OWNER,
+  WIKI_TREE_CHANGED,
+} from '../wiki/wiki-rule'
+import { WIKI_TEMPLATE_TOO_LONG } from '../wiki/wiki-template-rule'
 
 export type ActionErrorMessage = {
   item: LocaleItemBase
@@ -68,6 +86,20 @@ export const ACTION_ERROR_MESSAGES: Record<string, ActionErrorMessage> = {
   [COMMAND_DEF_CONFLICT]: { item: 'command_def_conflict', level: 'warn' },
   [COMMAND_DEF_NOT_EDITABLE]: { item: 'command_def_not_editable', level: 'warn' },
   [COMMAND_DEF_READ_ONLY]: { item: 'command_def_read_only', level: 'warn' },
+  [DUPLICATED_WIKI_SPACE_KEY]: { item: 'msg_duplicated_wiki_space_key', level: 'warn' },
+  [WIKI_PAGE_CONFLICT]: { item: 'msg_wiki_page_conflict', level: 'warn' },
+  [WIKI_PAGE_HAS_CHILDREN]: { item: 'msg_wiki_page_has_children', level: 'warn' },
+  [WIKI_TREE_CHANGED]: { item: 'msg_wiki_tree_changed', level: 'warn' },
+  [WIKI_PAGE_TOO_DEEP]: { item: 'msg_wiki_page_too_deep', level: 'warn' },
+  [WIKI_PAGE_INVALID_PARENT]: { item: 'msg_wiki_page_invalid_parent', level: 'warn' },
+  [WIKI_SPACE_NO_OWNER]: { item: 'msg_wiki_space_no_owner', level: 'warn' },
+  [WIKI_PAGE_TYPE_NOT_ALLOWED]: { item: 'msg_wiki_page_type_not_allowed', level: 'warn' },
+  [WIKI_ANNOUNCEMENT_FLAT]: { item: 'msg_wiki_announcement_flat', level: 'warn' },
+  [WIKI_TEMPLATE_TOO_LONG]: { item: 'msg_wiki_template_too_long', level: 'warn' },
+  [WIKI_ANNOUNCE_UNAVAILABLE]: { item: 'msg_wiki_announce_unavailable', level: 'warn' },
+  [WIKI_ANNOUNCE_NOT_SCHEDULED]: { item: 'msg_wiki_announce_not_scheduled', level: 'warn' },
+  [WIKI_ANNOUNCE_INVALID_SCHEDULE]: { item: 'msg_wiki_announce_invalid_schedule', level: 'warn' },
+  [WIKI_ANNOUNCE_TOO_MANY_SCHEDULED]: { item: 'msg_wiki_announce_too_many_scheduled', level: 'warn' },
 }
 
 export const resolveActionErrorMessage = (errorType: string): ActionErrorMessage =>

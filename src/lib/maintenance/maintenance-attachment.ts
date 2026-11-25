@@ -10,6 +10,9 @@
  * 1. 猶予 : 作成から `MAINTENANCE_ATTACHMENT_GRACE_HOURS` 経つまで対象にしない
  * 2. 二重の確認 : 集合で絞ってから、消す直前にもう一度その1件だけを引き直す
  * 3. 上限 : 1周で消す件数を頭打ちにする
+ *
+ * ボード / Wiki スペースの削除で紐付けを外した添付(`detachedAt` あり)は、削除時に実体を消し損ねた残りで、
+ * もう誰にも配信しない。別の本文に URL が残っていても抱え続ける理由が無いので、猶予と参照の確認を飛ばして消す。
  */
 
 import { HOUR_MS, msBefore } from '@/lib/day'
@@ -47,20 +50,22 @@ export const sweepOrphanAttachments = async (now: Date): Promise<number> => {
   while (!capped) {
     // ページ送りは主キー(uuidv7 = 作成順)のカーソル。使用中の添付が並んでも先へ進む
     const page = await prisma.attachment.findMany({
-      where: { createdAt: { lt: cutoff } },
-      select: { id: true, key: true, size: true },
+      where: { OR: [{ createdAt: { lt: cutoff } }, { detachedAt: { not: null } }] },
+      select: { id: true, key: true, size: true, detachedAt: true },
       orderBy: { id: 'asc' },
       take: ATTACHMENT_SCAN_BATCH,
       ...(cursor && { cursor: { id: cursor }, skip: 1 }),
     })
 
     for (const row of page) {
-      if (referenced.has(row.key)) {
-        continue
-      }
-      // 集合を作ってから今までの間に貼られた本文を取りこぼさないよう、消す直前に引き直す
-      if (await findAttachmentReference(row.key)) {
-        continue
+      if (!row.detachedAt) {
+        if (referenced.has(row.key)) {
+          continue
+        }
+        // 集合を作ってから今までの間に貼られた本文を取りこぼさないよう、消す直前に引き直す
+        if (await findAttachmentReference(row.key)) {
+          continue
+        }
       }
 
       if (mode === 'dry-run') {

@@ -1,0 +1,294 @@
+/**
+ * Wiki ページ本文の節の抽出と部分更新、front matter の判定(wiki-markdown.ts / wiki-front-matter.ts)
+ */
+
+import { VALIDATION_ERROR } from '@/lib/error'
+import {
+  designDocFrontMatter,
+  frontMatterBlock,
+  hasDesignDocFrontMatter,
+  hasFrontMatter,
+  startsWithFrontMatter,
+} from '@/lib/wiki/wiki-front-matter'
+import { applyTextEdits, extractMarkdownSection, listMarkdownHeadings } from '@/lib/wiki/wiki-markdown'
+import { describe, expect, it, vi } from 'vitest'
+import { parse } from 'yaml'
+
+const errorTypeOf = (fn: () => unknown) => {
+  try {
+    fn()
+  } catch (e) {
+    return { type: (e as { errorType?: string }).errorType, message: (e as Error).message }
+  }
+  throw new Error('not thrown')
+}
+
+const DOC = [
+  '# 概要',
+  '前書き',
+  '',
+  '## 設計',
+  '設計の本文',
+  '### API',
+  'API の本文',
+  '```sh',
+  '# コメントは見出しではない',
+  '```',
+  '## 運用 ##',
+  '運用の本文',
+  '',
+].join('\n')
+
+describe('listMarkdownHeadings', () => {
+  it('ATX 見出しを出現順に返し、コードブロック内の # は見出しにしない', () => {
+    expect(listMarkdownHeadings(DOC).map(({ level, text }) => `${level}:${text}`)).toEqual([
+      '1:概要',
+      '2:設計',
+      '3:API',
+      '2:運用',
+    ])
+  })
+
+  it('# の後に空白が無いものは見出しにしない', () => {
+    expect(listMarkdownHeadings('#hashtag\n####### 7個\n## OK')).toEqual([{ level: 2, text: 'OK', line: 2 }])
+  })
+
+  it('~~~ のフェンスは同じ記号で閉じるまで続く', () => {
+    expect(listMarkdownHeadings('~~~\n```\n# 中\n~~~\n# 外')).toEqual([{ level: 1, text: '外', line: 4 }])
+  })
+
+  describe('先頭の front matter(skipFrontMatter)', () => {
+    const DESIGN_DOC = ['---', 'type: design_doc', '# 版管理メモ', 'title: x', '---', '## 概要', '本文'].join('\n')
+    const skip = { skipFrontMatter: true }
+
+    it('中の YAML コメント行(# ...)は見出しにせず、行番号は本文全体で数える', () => {
+      expect(listMarkdownHeadings(DESIGN_DOC, skip)).toEqual([{ level: 2, text: '概要', line: 5 }])
+    })
+
+    it('section にも front matter の中の行は一致しない', () => {
+      expect(extractMarkdownSection(DESIGN_DOC, '版管理メモ', skip)).toBeNull()
+      expect(extractMarkdownSection(DESIGN_DOC, '概要', skip)).toBe('## 概要\n本文')
+    })
+
+    it('BOM と CRLF の front matter も飛ばす', () => {
+      expect(listMarkdownHeadings('\uFEFF---\r\n# メモ\r\n...\r\n# 概要\r\n', skip)).toEqual([
+        { level: 1, text: '概要', line: 3 },
+      ])
+    })
+
+    it('指定しなければ、区切り線の間の # も見出しにする', () => {
+      expect(listMarkdownHeadings(DESIGN_DOC).map(({ text }) => text)).toEqual(['版管理メモ', '概要'])
+    })
+
+    it('閉じていない・先頭にない区切り線は front matter とみなさない', () => {
+      expect(listMarkdownHeadings('---\n# 見出し\n本文', skip).map(({ text }) => text)).toEqual(['見出し'])
+      expect(listMarkdownHeadings('前書き\n---\n# 見出し\n---', skip).map(({ text }) => text)).toEqual(['見出し'])
+    })
+  })
+})
+
+describe('extractMarkdownSection', () => {
+  it('見出しから、同じか浅い次の見出しの手前までを子見出しごと返す', () => {
+    expect(extractMarkdownSection(DOC, '設計')).toBe(
+      ['## 設計', '設計の本文', '### API', 'API の本文', '```sh', '# コメントは見出しではない', '```'].join('\n'),
+    )
+  })
+
+  it('最後の節は末尾まで返し、末尾の空行は落とす', () => {
+    expect(extractMarkdownSection(DOC, '運用')).toBe('## 運用 ##\n運用の本文')
+  })
+
+  it('先頭の # や前後の空白、大文字小文字の違いは無視して探す', () => {
+    expect(extractMarkdownSection('## Setup Guide\nbody', '  ## setup guide ')).toBe('## Setup Guide\nbody')
+  })
+
+  it('見つからなければ null', () => {
+    expect(extractMarkdownSection(DOC, 'コメントは見出しではない')).toBeNull()
+  })
+})
+
+describe('applyTextEdits', () => {
+  it('順に当て、後の edit は前の edit の結果に対して探す', () => {
+    expect(
+      applyTextEdits('a-b-c', [
+        { oldText: 'b', newText: 'B' },
+        { oldText: 'a-B', newText: 'x' },
+      ]),
+    ).toBe('x-c')
+  })
+
+  it('newText が空なら削除になる', () => {
+    expect(applyTextEdits('keep drop keep2', [{ oldText: ' drop', newText: '' }])).toBe('keep keep2')
+  })
+
+  it('見つからない oldText は何番目の edit かを添えたエラー', () => {
+    const error = errorTypeOf(() =>
+      applyTextEdits('abc', [
+        { oldText: 'a', newText: 'A' },
+        { oldText: 'z', newText: 'Z' },
+      ]),
+    )
+    expect(error.type).toBe(VALIDATION_ERROR)
+    expect(error.message).toContain('edits[1].oldText was not found')
+  })
+
+  it('複数箇所に一致する oldText は、件数ではなく複数ある旨のエラー', () => {
+    const error = errorTypeOf(() => applyTextEdits('aa-aa', [{ oldText: 'aa', newText: 'b' }]))
+    expect(error.type).toBe(VALIDATION_ERROR)
+    expect(error.message).toContain('matches more than one place')
+  })
+
+  it('空の oldText はエラー', () => {
+    expect(errorTypeOf(() => applyTextEdits('abc', [{ oldText: '', newText: 'x' }])).type).toBe(VALIDATION_ERROR)
+  })
+})
+
+describe('境界のケース', () => {
+  it('CRLF の本文でも見出しを拾う', () => {
+    expect(extractMarkdownSection('## Setup\r\nbody\r\n## Next\r\n', 'setup')).toBe('## Setup\r\nbody')
+  })
+
+  it('info string を持つ行はフェンスを閉じない', () => {
+    expect(listMarkdownHeadings('````\n```js\n# 中\n````\n# 外').map(({ text }) => text)).toEqual(['外'])
+  })
+
+  it('閉じの # 列は空白で区切られたときだけ取り除く', () => {
+    expect(listMarkdownHeadings('# a #\n# b#\n# c ##  \n# #\n# C#  #').map(({ text }) => text)).toEqual([
+      'a',
+      'b#',
+      'c',
+      '',
+      'C#',
+    ])
+  })
+
+  it('空白の長い見出し行でも時間がかからない', () => {
+    const line = '# a' + ' '.repeat(99_990) + 'b'
+    const started = Date.now()
+    expect(listMarkdownHeadings(line)[0].text).toBe('a' + ' '.repeat(99_990) + 'b')
+    expect(Date.now() - started).toBeLessThan(500)
+  })
+
+  it.each(['\u2028', '\u2029', '\r'])('行の途中に %j があっても時間がかからない', (c) => {
+    const started = Date.now()
+    expect(listMarkdownHeadings('#' + ' '.repeat(99_990) + c + 'x')).toHaveLength(1)
+    expect(Date.now() - started).toBeLessThan(500)
+  })
+
+  it('重なって現れる oldText も複数として数える', () => {
+    expect(() => applyTextEdits('aaa', [{ oldText: 'aa', newText: 'b' }])).toThrow('matches more than one place')
+  })
+
+  it('重なって何度も現れる oldText は、2 件見つかった時点で探すのをやめる', () => {
+    const oldText = 'a'.repeat(10)
+    const indexOf = vi.spyOn(String.prototype, 'indexOf')
+    try {
+      expect(() => applyTextEdits('a'.repeat(1_000), [{ oldText, newText: 'b' }])).toThrow(
+        'matches more than one place',
+      )
+      expect(indexOf.mock.calls.filter(([search]) => search === oldText)).toHaveLength(2)
+    } finally {
+      indexOf.mockRestore()
+    }
+  })
+})
+
+describe('startsWithFrontMatter', () => {
+  it('1行目が開始の区切りなら、閉じの区切りが無くても真', () => {
+    expect(startsWithFrontMatter('---\ntype: design_doc')).toBe(true)
+    expect(startsWithFrontMatter('\uFEFF--- \r\nversion: 1.0\r\n---')).toBe(true)
+    expect(startsWithFrontMatter('# 概要\n---\n')).toBe(false)
+    expect(startsWithFrontMatter('')).toBe(false)
+  })
+})
+
+describe('frontMatterBlock', () => {
+  it('先頭の front matter を区切り線ごと取り出し、本文は含めない', () => {
+    expect(frontMatterBlock('---\ntype: design_doc\nversion: 1.0\n---\n\n# 概要\n本文')).toBe(
+      '---\ntype: design_doc\nversion: 1.0\n---\n',
+    )
+  })
+
+  it('BOM と CRLF をそろえる', () => {
+    expect(frontMatterBlock('\uFEFF---\r\nstatus: draft\r\n...\r\n本文')).toBe('---\nstatus: draft\n---\n')
+  })
+
+  it('front matter が無い・閉じていなければ null', () => {
+    expect(frontMatterBlock('# 本文')).toBeNull()
+    expect(frontMatterBlock('---\ntype: design_doc\n')).toBeNull()
+  })
+})
+
+describe('hasDesignDocFrontMatter', () => {
+  const fm = (...lines: string[]) => ['---', ...lines, '---', '', '# 本文'].join('\n')
+
+  it('先頭の front matter の type: design_doc を設計書とみなす(キーと値の引用符・行末コメントは問わない)', () => {
+    expect(hasDesignDocFrontMatter(fm('type: design_doc', 'title: ログイン'))).toBe(true)
+    expect(hasDesignDocFrontMatter(fm('title: ログイン', 'type: "design_doc"'))).toBe(true)
+    expect(hasDesignDocFrontMatter(fm("type: 'design_doc'"))).toBe(true)
+    expect(hasDesignDocFrontMatter(fm('type:  design_doc # 設計書'))).toBe(true)
+    expect(hasDesignDocFrontMatter(fm('"type": design_doc'))).toBe(true)
+    expect(hasDesignDocFrontMatter(fm("'type' : design_doc"))).toBe(true)
+  })
+
+  it('BOM と CRLF の本文でも判定する', () => {
+    expect(hasDesignDocFrontMatter(`\uFEFF${fm('type: design_doc')}`)).toBe(true)
+    expect(hasDesignDocFrontMatter(fm('type: design_doc').replaceAll('\n', '\r\n'))).toBe(true)
+  })
+
+  it('front matter が無い・閉じていない・先頭に無いときは設計書にしない', () => {
+    expect(hasDesignDocFrontMatter('# 本文\ntype: design_doc')).toBe(false)
+    expect(hasDesignDocFrontMatter('---\ntype: design_doc\n')).toBe(false)
+    expect(hasDesignDocFrontMatter(`\n${fm('type: design_doc')}`)).toBe(false)
+    // 本文中の区切り線に挟まれた行は front matter ではない
+    expect(hasDesignDocFrontMatter('# 見出し\n\n---\ntype: design_doc\n---\n')).toBe(false)
+  })
+
+  it('別の値・入れ子のキーは設計書にしない', () => {
+    expect(hasDesignDocFrontMatter(fm('type: design_doc_x'))).toBe(false)
+    expect(hasDesignDocFrontMatter(fm('type: "design_doc'))).toBe(false)
+    expect(hasDesignDocFrontMatter(fm('meta:', '  type: design_doc'))).toBe(false)
+    expect(hasDesignDocFrontMatter(fm('doctype: design_doc'))).toBe(false)
+    expect(hasDesignDocFrontMatter(fm('"type\': design_doc'))).toBe(false)
+    // コロンの後に空白が無ければキーではない(ビューアも設計書にしない)
+    expect(hasDesignDocFrontMatter(fm('type:design_doc'))).toBe(false)
+  })
+
+  it('YAML の終端 ... でも閉じる', () => {
+    expect(hasDesignDocFrontMatter('---\ntype: design_doc\n...\n本文')).toBe(true)
+  })
+})
+
+describe('designDocFrontMatter', () => {
+  it('設計書として判定される front matter を作り、タイトルはダブルクオートの文字列にする', () => {
+    const title = "API: 'ログイン' # 設計"
+    const header = designDocFrontMatter(`  ${title}  `)
+    expect(header).toBe(`---\ntype: design_doc\ntitle: "${title}"\n---\n\n`)
+    expect(hasDesignDocFrontMatter(`${header}# 本文`)).toBe(true)
+    expect(parse(header.split('---\n')[1])).toEqual({ type: 'design_doc', title })
+  })
+
+  it('エスケープが要るタイトルはブロックスカラーにする(ビューアはエスケープを戻さない)', () => {
+    for (const title of ['API "認証"', 'C:\\path', '"引用"で始まる']) {
+      const header = designDocFrontMatter(title)
+      expect(header).toBe(`---\ntype: design_doc\ntitle: |-\n  ${title}\n---\n\n`)
+      expect(parse(header.split('---\n')[1])).toEqual({ type: 'design_doc', title })
+    }
+  })
+
+  it('改行を含むタイトルは、ブロックスカラーの全行を字下げする', () => {
+    for (const title of ['A\nB', 'A\r\nB', 'A\rB', '一行目\n\n  三行目']) {
+      const header = designDocFrontMatter(title)
+      expect(hasDesignDocFrontMatter(`${header}# 本文`)).toBe(true)
+      expect(parse(header.split('---\n')[1])).toEqual({
+        type: 'design_doc',
+        title: title.replace(/\r\n|\r/g, '\n'),
+      })
+    }
+  })
+
+  it('hasFrontMatter は閉じた front matter の有無だけを見る', () => {
+    expect(hasFrontMatter('---\ntitle: a\n---\n')).toBe(true)
+    expect(hasFrontMatter('# a\n---\n')).toBe(false)
+  })
+})

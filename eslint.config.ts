@@ -1,8 +1,11 @@
 import nextVitals from 'eslint-config-next/core-web-vitals'
 import nextTs from 'eslint-config-next/typescript'
-import { defineConfig, globalIgnores } from 'eslint/config'
+import { defineConfig, globalIgnores, includeIgnoreFile } from 'eslint/config'
+import { fileURLToPath } from 'node:url'
 
 const eslintConfig = defineConfig([
+  // git 管理外のもの(.work の作業ファイルなど)は対象にしない
+  includeIgnoreFile(fileURLToPath(new URL('.gitignore', import.meta.url)), '.gitignore'),
   ...nextVitals,
   ...nextTs,
   // Override default ignores of eslint-config-next.

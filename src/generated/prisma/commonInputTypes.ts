@@ -959,6 +959,176 @@ export type EnumTicketActivityFieldWithAggregatesFilter<$PrismaModel = never> = 
   _max?: Prisma.NestedEnumTicketActivityFieldFilter<$PrismaModel>
 }
 
+export type EnumWikiVisibilityFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiVisibility | Prisma.EnumWikiVisibilityFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiVisibility[] | Prisma.ListEnumWikiVisibilityFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiVisibility[] | Prisma.ListEnumWikiVisibilityFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiVisibilityFilter<$PrismaModel> | $Enums.WikiVisibility
+}
+
+export type EnumWikiSpaceTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiSpaceType | Prisma.EnumWikiSpaceTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiSpaceType[] | Prisma.ListEnumWikiSpaceTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiSpaceType[] | Prisma.ListEnumWikiSpaceTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiSpaceTypeFilter<$PrismaModel> | $Enums.WikiSpaceType
+}
+
+export type EnumWikiVisibilityWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiVisibility | Prisma.EnumWikiVisibilityFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiVisibility[] | Prisma.ListEnumWikiVisibilityFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiVisibility[] | Prisma.ListEnumWikiVisibilityFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiVisibilityWithAggregatesFilter<$PrismaModel> | $Enums.WikiVisibility
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumWikiVisibilityFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumWikiVisibilityFilter<$PrismaModel>
+}
+
+export type EnumWikiSpaceTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiSpaceType | Prisma.EnumWikiSpaceTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiSpaceType[] | Prisma.ListEnumWikiSpaceTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiSpaceType[] | Prisma.ListEnumWikiSpaceTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiSpaceTypeWithAggregatesFilter<$PrismaModel> | $Enums.WikiSpaceType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumWikiSpaceTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumWikiSpaceTypeFilter<$PrismaModel>
+}
+
+export type EnumWikiSpaceRoleFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiSpaceRole | Prisma.EnumWikiSpaceRoleFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiSpaceRole[] | Prisma.ListEnumWikiSpaceRoleFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiSpaceRole[] | Prisma.ListEnumWikiSpaceRoleFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiSpaceRoleFilter<$PrismaModel> | $Enums.WikiSpaceRole
+}
+
+export type EnumWikiSpaceRoleWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiSpaceRole | Prisma.EnumWikiSpaceRoleFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiSpaceRole[] | Prisma.ListEnumWikiSpaceRoleFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiSpaceRole[] | Prisma.ListEnumWikiSpaceRoleFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiSpaceRoleWithAggregatesFilter<$PrismaModel> | $Enums.WikiSpaceRole
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumWikiSpaceRoleFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumWikiSpaceRoleFilter<$PrismaModel>
+}
+
+export type EnumWikiAssignRoleFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiAssignRole | Prisma.EnumWikiAssignRoleFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiAssignRole[] | Prisma.ListEnumWikiAssignRoleFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiAssignRole[] | Prisma.ListEnumWikiAssignRoleFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiAssignRoleFilter<$PrismaModel> | $Enums.WikiAssignRole
+}
+
+export type EnumWikiAssignRoleWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiAssignRole | Prisma.EnumWikiAssignRoleFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiAssignRole[] | Prisma.ListEnumWikiAssignRoleFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiAssignRole[] | Prisma.ListEnumWikiAssignRoleFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiAssignRoleWithAggregatesFilter<$PrismaModel> | $Enums.WikiAssignRole
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumWikiAssignRoleFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumWikiAssignRoleFilter<$PrismaModel>
+}
+
+export type EnumWikiPageTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiPageType | Prisma.EnumWikiPageTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiPageType[] | Prisma.ListEnumWikiPageTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiPageType[] | Prisma.ListEnumWikiPageTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiPageTypeFilter<$PrismaModel> | $Enums.WikiPageType
+}
+
+export type EnumWikiViaFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiVia | Prisma.EnumWikiViaFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiVia[] | Prisma.ListEnumWikiViaFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiVia[] | Prisma.ListEnumWikiViaFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiViaFilter<$PrismaModel> | $Enums.WikiVia
+}
+
+export type EnumWikiPageTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiPageType | Prisma.EnumWikiPageTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiPageType[] | Prisma.ListEnumWikiPageTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiPageType[] | Prisma.ListEnumWikiPageTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiPageTypeWithAggregatesFilter<$PrismaModel> | $Enums.WikiPageType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumWikiPageTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumWikiPageTypeFilter<$PrismaModel>
+}
+
+export type EnumWikiViaWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiVia | Prisma.EnumWikiViaFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiVia[] | Prisma.ListEnumWikiViaFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiVia[] | Prisma.ListEnumWikiViaFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiViaWithAggregatesFilter<$PrismaModel> | $Enums.WikiVia
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumWikiViaFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumWikiViaFilter<$PrismaModel>
+}
+
+export type EnumWikiPageRevisionActionFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiPageRevisionAction | Prisma.EnumWikiPageRevisionActionFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiPageRevisionAction[] | Prisma.ListEnumWikiPageRevisionActionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiPageRevisionAction[] | Prisma.ListEnumWikiPageRevisionActionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiPageRevisionActionFilter<$PrismaModel> | $Enums.WikiPageRevisionAction
+}
+
+export type EnumWikiPageRevisionActionWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiPageRevisionAction | Prisma.EnumWikiPageRevisionActionFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiPageRevisionAction[] | Prisma.ListEnumWikiPageRevisionActionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiPageRevisionAction[] | Prisma.ListEnumWikiPageRevisionActionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiPageRevisionActionWithAggregatesFilter<$PrismaModel> | $Enums.WikiPageRevisionAction
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumWikiPageRevisionActionFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumWikiPageRevisionActionFilter<$PrismaModel>
+}
+
+export type EnumWikiAnnouncementNotifyKindFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiAnnouncementNotifyKind | Prisma.EnumWikiAnnouncementNotifyKindFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiAnnouncementNotifyKind[] | Prisma.ListEnumWikiAnnouncementNotifyKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiAnnouncementNotifyKind[] | Prisma.ListEnumWikiAnnouncementNotifyKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiAnnouncementNotifyKindFilter<$PrismaModel> | $Enums.WikiAnnouncementNotifyKind
+}
+
+export type EnumWikiAnnouncementNotifyStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiAnnouncementNotifyStatus | Prisma.EnumWikiAnnouncementNotifyStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiAnnouncementNotifyStatus[] | Prisma.ListEnumWikiAnnouncementNotifyStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiAnnouncementNotifyStatus[] | Prisma.ListEnumWikiAnnouncementNotifyStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiAnnouncementNotifyStatusFilter<$PrismaModel> | $Enums.WikiAnnouncementNotifyStatus
+}
+
+export type EnumWikiAnnouncementNotifySkipReasonNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiAnnouncementNotifySkipReason | Prisma.EnumWikiAnnouncementNotifySkipReasonFieldRefInput<$PrismaModel> | null
+  in?: $Enums.WikiAnnouncementNotifySkipReason[] | Prisma.ListEnumWikiAnnouncementNotifySkipReasonFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.WikiAnnouncementNotifySkipReason[] | Prisma.ListEnumWikiAnnouncementNotifySkipReasonFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumWikiAnnouncementNotifySkipReasonNullableFilter<$PrismaModel> | $Enums.WikiAnnouncementNotifySkipReason | null
+}
+
+export type EnumWikiAnnouncementNotifyKindWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiAnnouncementNotifyKind | Prisma.EnumWikiAnnouncementNotifyKindFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiAnnouncementNotifyKind[] | Prisma.ListEnumWikiAnnouncementNotifyKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiAnnouncementNotifyKind[] | Prisma.ListEnumWikiAnnouncementNotifyKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiAnnouncementNotifyKindWithAggregatesFilter<$PrismaModel> | $Enums.WikiAnnouncementNotifyKind
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumWikiAnnouncementNotifyKindFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumWikiAnnouncementNotifyKindFilter<$PrismaModel>
+}
+
+export type EnumWikiAnnouncementNotifyStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiAnnouncementNotifyStatus | Prisma.EnumWikiAnnouncementNotifyStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiAnnouncementNotifyStatus[] | Prisma.ListEnumWikiAnnouncementNotifyStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiAnnouncementNotifyStatus[] | Prisma.ListEnumWikiAnnouncementNotifyStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiAnnouncementNotifyStatusWithAggregatesFilter<$PrismaModel> | $Enums.WikiAnnouncementNotifyStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumWikiAnnouncementNotifyStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumWikiAnnouncementNotifyStatusFilter<$PrismaModel>
+}
+
+export type EnumWikiAnnouncementNotifySkipReasonNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiAnnouncementNotifySkipReason | Prisma.EnumWikiAnnouncementNotifySkipReasonFieldRefInput<$PrismaModel> | null
+  in?: $Enums.WikiAnnouncementNotifySkipReason[] | Prisma.ListEnumWikiAnnouncementNotifySkipReasonFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.WikiAnnouncementNotifySkipReason[] | Prisma.ListEnumWikiAnnouncementNotifySkipReasonFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumWikiAnnouncementNotifySkipReasonNullableWithAggregatesFilter<$PrismaModel> | $Enums.WikiAnnouncementNotifySkipReason | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumWikiAnnouncementNotifySkipReasonNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumWikiAnnouncementNotifySkipReasonNullableFilter<$PrismaModel>
+}
+
 export type NestedStringFilter<$PrismaModel = never> = {
   equals?: string | Prisma.StringFieldRefInput<$PrismaModel>
   in?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
@@ -1861,6 +2031,176 @@ export type NestedEnumTicketActivityFieldWithAggregatesFilter<$PrismaModel = nev
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumTicketActivityFieldFilter<$PrismaModel>
   _max?: Prisma.NestedEnumTicketActivityFieldFilter<$PrismaModel>
+}
+
+export type NestedEnumWikiVisibilityFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiVisibility | Prisma.EnumWikiVisibilityFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiVisibility[] | Prisma.ListEnumWikiVisibilityFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiVisibility[] | Prisma.ListEnumWikiVisibilityFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiVisibilityFilter<$PrismaModel> | $Enums.WikiVisibility
+}
+
+export type NestedEnumWikiSpaceTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiSpaceType | Prisma.EnumWikiSpaceTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiSpaceType[] | Prisma.ListEnumWikiSpaceTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiSpaceType[] | Prisma.ListEnumWikiSpaceTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiSpaceTypeFilter<$PrismaModel> | $Enums.WikiSpaceType
+}
+
+export type NestedEnumWikiVisibilityWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiVisibility | Prisma.EnumWikiVisibilityFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiVisibility[] | Prisma.ListEnumWikiVisibilityFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiVisibility[] | Prisma.ListEnumWikiVisibilityFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiVisibilityWithAggregatesFilter<$PrismaModel> | $Enums.WikiVisibility
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumWikiVisibilityFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumWikiVisibilityFilter<$PrismaModel>
+}
+
+export type NestedEnumWikiSpaceTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiSpaceType | Prisma.EnumWikiSpaceTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiSpaceType[] | Prisma.ListEnumWikiSpaceTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiSpaceType[] | Prisma.ListEnumWikiSpaceTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiSpaceTypeWithAggregatesFilter<$PrismaModel> | $Enums.WikiSpaceType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumWikiSpaceTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumWikiSpaceTypeFilter<$PrismaModel>
+}
+
+export type NestedEnumWikiSpaceRoleFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiSpaceRole | Prisma.EnumWikiSpaceRoleFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiSpaceRole[] | Prisma.ListEnumWikiSpaceRoleFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiSpaceRole[] | Prisma.ListEnumWikiSpaceRoleFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiSpaceRoleFilter<$PrismaModel> | $Enums.WikiSpaceRole
+}
+
+export type NestedEnumWikiSpaceRoleWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiSpaceRole | Prisma.EnumWikiSpaceRoleFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiSpaceRole[] | Prisma.ListEnumWikiSpaceRoleFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiSpaceRole[] | Prisma.ListEnumWikiSpaceRoleFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiSpaceRoleWithAggregatesFilter<$PrismaModel> | $Enums.WikiSpaceRole
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumWikiSpaceRoleFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumWikiSpaceRoleFilter<$PrismaModel>
+}
+
+export type NestedEnumWikiAssignRoleFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiAssignRole | Prisma.EnumWikiAssignRoleFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiAssignRole[] | Prisma.ListEnumWikiAssignRoleFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiAssignRole[] | Prisma.ListEnumWikiAssignRoleFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiAssignRoleFilter<$PrismaModel> | $Enums.WikiAssignRole
+}
+
+export type NestedEnumWikiAssignRoleWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiAssignRole | Prisma.EnumWikiAssignRoleFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiAssignRole[] | Prisma.ListEnumWikiAssignRoleFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiAssignRole[] | Prisma.ListEnumWikiAssignRoleFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiAssignRoleWithAggregatesFilter<$PrismaModel> | $Enums.WikiAssignRole
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumWikiAssignRoleFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumWikiAssignRoleFilter<$PrismaModel>
+}
+
+export type NestedEnumWikiPageTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiPageType | Prisma.EnumWikiPageTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiPageType[] | Prisma.ListEnumWikiPageTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiPageType[] | Prisma.ListEnumWikiPageTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiPageTypeFilter<$PrismaModel> | $Enums.WikiPageType
+}
+
+export type NestedEnumWikiViaFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiVia | Prisma.EnumWikiViaFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiVia[] | Prisma.ListEnumWikiViaFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiVia[] | Prisma.ListEnumWikiViaFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiViaFilter<$PrismaModel> | $Enums.WikiVia
+}
+
+export type NestedEnumWikiPageTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiPageType | Prisma.EnumWikiPageTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiPageType[] | Prisma.ListEnumWikiPageTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiPageType[] | Prisma.ListEnumWikiPageTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiPageTypeWithAggregatesFilter<$PrismaModel> | $Enums.WikiPageType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumWikiPageTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumWikiPageTypeFilter<$PrismaModel>
+}
+
+export type NestedEnumWikiViaWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiVia | Prisma.EnumWikiViaFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiVia[] | Prisma.ListEnumWikiViaFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiVia[] | Prisma.ListEnumWikiViaFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiViaWithAggregatesFilter<$PrismaModel> | $Enums.WikiVia
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumWikiViaFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumWikiViaFilter<$PrismaModel>
+}
+
+export type NestedEnumWikiPageRevisionActionFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiPageRevisionAction | Prisma.EnumWikiPageRevisionActionFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiPageRevisionAction[] | Prisma.ListEnumWikiPageRevisionActionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiPageRevisionAction[] | Prisma.ListEnumWikiPageRevisionActionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiPageRevisionActionFilter<$PrismaModel> | $Enums.WikiPageRevisionAction
+}
+
+export type NestedEnumWikiPageRevisionActionWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiPageRevisionAction | Prisma.EnumWikiPageRevisionActionFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiPageRevisionAction[] | Prisma.ListEnumWikiPageRevisionActionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiPageRevisionAction[] | Prisma.ListEnumWikiPageRevisionActionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiPageRevisionActionWithAggregatesFilter<$PrismaModel> | $Enums.WikiPageRevisionAction
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumWikiPageRevisionActionFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumWikiPageRevisionActionFilter<$PrismaModel>
+}
+
+export type NestedEnumWikiAnnouncementNotifyKindFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiAnnouncementNotifyKind | Prisma.EnumWikiAnnouncementNotifyKindFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiAnnouncementNotifyKind[] | Prisma.ListEnumWikiAnnouncementNotifyKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiAnnouncementNotifyKind[] | Prisma.ListEnumWikiAnnouncementNotifyKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiAnnouncementNotifyKindFilter<$PrismaModel> | $Enums.WikiAnnouncementNotifyKind
+}
+
+export type NestedEnumWikiAnnouncementNotifyStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiAnnouncementNotifyStatus | Prisma.EnumWikiAnnouncementNotifyStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiAnnouncementNotifyStatus[] | Prisma.ListEnumWikiAnnouncementNotifyStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiAnnouncementNotifyStatus[] | Prisma.ListEnumWikiAnnouncementNotifyStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiAnnouncementNotifyStatusFilter<$PrismaModel> | $Enums.WikiAnnouncementNotifyStatus
+}
+
+export type NestedEnumWikiAnnouncementNotifySkipReasonNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiAnnouncementNotifySkipReason | Prisma.EnumWikiAnnouncementNotifySkipReasonFieldRefInput<$PrismaModel> | null
+  in?: $Enums.WikiAnnouncementNotifySkipReason[] | Prisma.ListEnumWikiAnnouncementNotifySkipReasonFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.WikiAnnouncementNotifySkipReason[] | Prisma.ListEnumWikiAnnouncementNotifySkipReasonFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumWikiAnnouncementNotifySkipReasonNullableFilter<$PrismaModel> | $Enums.WikiAnnouncementNotifySkipReason | null
+}
+
+export type NestedEnumWikiAnnouncementNotifyKindWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiAnnouncementNotifyKind | Prisma.EnumWikiAnnouncementNotifyKindFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiAnnouncementNotifyKind[] | Prisma.ListEnumWikiAnnouncementNotifyKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiAnnouncementNotifyKind[] | Prisma.ListEnumWikiAnnouncementNotifyKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiAnnouncementNotifyKindWithAggregatesFilter<$PrismaModel> | $Enums.WikiAnnouncementNotifyKind
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumWikiAnnouncementNotifyKindFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumWikiAnnouncementNotifyKindFilter<$PrismaModel>
+}
+
+export type NestedEnumWikiAnnouncementNotifyStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiAnnouncementNotifyStatus | Prisma.EnumWikiAnnouncementNotifyStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.WikiAnnouncementNotifyStatus[] | Prisma.ListEnumWikiAnnouncementNotifyStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.WikiAnnouncementNotifyStatus[] | Prisma.ListEnumWikiAnnouncementNotifyStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumWikiAnnouncementNotifyStatusWithAggregatesFilter<$PrismaModel> | $Enums.WikiAnnouncementNotifyStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumWikiAnnouncementNotifyStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumWikiAnnouncementNotifyStatusFilter<$PrismaModel>
+}
+
+export type NestedEnumWikiAnnouncementNotifySkipReasonNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.WikiAnnouncementNotifySkipReason | Prisma.EnumWikiAnnouncementNotifySkipReasonFieldRefInput<$PrismaModel> | null
+  in?: $Enums.WikiAnnouncementNotifySkipReason[] | Prisma.ListEnumWikiAnnouncementNotifySkipReasonFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.WikiAnnouncementNotifySkipReason[] | Prisma.ListEnumWikiAnnouncementNotifySkipReasonFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumWikiAnnouncementNotifySkipReasonNullableWithAggregatesFilter<$PrismaModel> | $Enums.WikiAnnouncementNotifySkipReason | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumWikiAnnouncementNotifySkipReasonNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumWikiAnnouncementNotifySkipReasonNullableFilter<$PrismaModel>
 }
 
 

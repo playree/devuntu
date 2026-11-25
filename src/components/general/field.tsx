@@ -2,6 +2,7 @@
 
 import { cn, ErrorMessage, Label } from '@heroui/react'
 import { FC, MouseEvent, PointerEvent, ReactNode } from 'react'
+import { HelpTip } from './help-tip'
 import { XCircleIcon } from './icons'
 import { useGeneralUiText } from './ui-text'
 
@@ -18,18 +19,33 @@ export type FieldBaseProps = {
   isSmartForm?: boolean
 }
 
-/** フォーム部品のラベル。isCompact で他のコンパクト表示と同じ体裁に揃える */
+/**
+ * フォーム部品のラベル。isCompact で他のコンパクト表示と同じ体裁に揃える。
+ * help を渡すとラベルの横に説明を出す「?」を置く。読み上げ名に混ざらないよう Label の外に並べる
+ */
 export const FieldLabel: FC<{
   isCompact?: boolean
   isHidden?: boolean
   isRequired?: boolean
+  help?: ReactNode
   className?: string
   children: ReactNode
-}> = ({ isCompact, isHidden, isRequired, className, children }) => (
-  <Label className={cn(isCompact && 'text-xs font-light', isHidden && 'sr-only', className)} isRequired={isRequired}>
-    {children}
-  </Label>
-)
+}> = ({ isCompact, isHidden, isRequired, help, className, children }) => {
+  const label = (
+    <Label className={cn(isCompact && 'text-xs font-light', isHidden && 'sr-only', className)} isRequired={isRequired}>
+      {children}
+    </Label>
+  )
+  if (!help || isHidden) {
+    return label
+  }
+  return (
+    <div className='flex items-center gap-1'>
+      {label}
+      <HelpTip label={typeof children === 'string' ? children : ''}>{help}</HelpTip>
+    </div>
+  )
+}
 
 /** フォーム部品のエラーメッセージ。hasErrorArea ではエラーが無くても1行分の高さを確保し、出たときに下が動かないようにする */
 export const FieldError: FC<{ hasErrorArea?: boolean; className?: string; children?: ReactNode }> = ({

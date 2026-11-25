@@ -1,0 +1,298 @@
+/**
+ * Wiki(スペース / ページ / 割り当て)の入力スキーマ
+ */
+
+import { WikiAnnouncementNotifyKind } from '@/generated/prisma/enums'
+import { el } from '@/locale'
+import { z } from 'zod'
+import { MAX_TAG_NAME } from '../board/tag-rule'
+import { MAX_TEMPLATE_NAME } from '../board/ticket-template-rule'
+import { SLACK_CHANNEL_ID_PATTERN } from '../slack/slack'
+import { MAX_WIKI_ANNOUNCE_MESSAGE } from '../wiki/wiki-announcement-notify-rule'
+import {
+  MAX_WIKI_ANNOUNCEMENT_PAGE_SIZE,
+  WIKI_ANNOUNCEMENT_MONTH_PATTERN,
+  WIKI_ANNOUNCEMENT_YEAR_PATTERN,
+} from '../wiki/wiki-announcement-rule'
+import {
+  MAX_WIKI_CONTENT,
+  MAX_WIKI_PAGE_TAGS,
+  MAX_WIKI_REVISION_MESSAGE,
+  MAX_WIKI_SEARCH_KEYWORD,
+  MAX_WIKI_SEARCH_LIMIT,
+  MAX_WIKI_SPACE_DESCRIPTION,
+  MAX_WIKI_SPACE_KEY,
+  MAX_WIKI_SPACE_NAME,
+  MAX_WIKI_TITLE,
+  WIKI_SPACE_KEY_PATTERN,
+} from '../wiki/wiki-rule'
+import { zTagColor, zTagName, zTagOrder } from './schema-ticket'
+
+/** スペースキー。形式はボードキーと同じなので、エラー文言も共有する */
+export const zWikiSpaceKey = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .max(MAX_WIKI_SPACE_KEY, el('@invalid_board_key'))
+  .regex(WIKI_SPACE_KEY_PATTERN, el('@invalid_board_key'))
+
+const zWikiSpaceName = z
+  .string()
+  .trim()
+  .min(1, el('@invalid_wiki_space_name'))
+  .max(MAX_WIKI_SPACE_NAME, el('@invalid_wiki_space_name'))
+const zWikiSpaceDescription = z
+  .string()
+  .max(MAX_WIKI_SPACE_DESCRIPTION, el('@invalid_wiki_space_description'))
+  .optional()
+/** Prisma の WikiVisibility と一致させる */
+export const zWikiVisibility = z.enum(['restricted', 'everyone'])
+/** Prisma の WikiSpaceRole と一致させる */
+export const zWikiSpaceRole = z.enum(['viewer', 'editor', 'owner'])
+/** Prisma の WikiAssignRole と一致させる */
+export const zWikiAssignRole = z.enum(['viewer', 'editor'])
+/** Prisma の WikiSpaceType と一致させる */
+export const zWikiSpaceType = z.enum(['mixed', 'design_doc', 'announcement'])
+/** Prisma の WikiPageType と一致させる */
+export const zWikiPageType = z.enum(['page', 'design_doc'])
+
+const zWikiTitle = z.string().trim().min(1, el('@invalid_wiki_title')).max(MAX_WIKI_TITLE, el('@invalid_wiki_title'))
+
+export const scCreateWikiSpace = z.object({
+  key: zWikiSpaceKey,
+  name: zWikiSpaceName,
+  description: zWikiSpaceDescription,
+  visibility: zWikiVisibility,
+  type: zWikiSpaceType,
+})
+export type CreateWikiSpace = z.infer<typeof scCreateWikiSpace>
+
+/**
+ * キーは作成後に変えない(共有済みの `KEY/番号` が別のページを指さないように)。
+ * 区分も作成後に変えない(作れるページの種類・ページの置き方が区分で決まるため)
+ */
+export const scUpdateWikiSpace = z.object({
+  id: z.uuidv7(),
+  name: zWikiSpaceName,
+  description: zWikiSpaceDescription,
+  visibility: zWikiVisibility,
+})
+export type UpdateWikiSpace = z.infer<typeof scUpdateWikiSpace>
+
+export const scSetWikiSpaceArchived = z.object({
+  id: z.uuidv7(),
+  archived: z.boolean(),
+})
+
+export const scWikiSpaceKey = z.object({ key: zWikiSpaceKey })
+
+export const scGetWikiSpaces = z.object({ includeArchived: z.boolean() })
+
+export const scGetWikiPage = z.object({
+  key: zWikiSpaceKey,
+  number: z.number().int().positive(),
+})
+
+/** `spaceId` 直下(parentId が null)か、親ページの下の末尾に作る */
+export const scCreateWikiPage = z.object({
+  spaceId: z.uuidv7(),
+  parentId: z.uuidv7().nullable(),
+  title: zWikiTitle,
+  type: zWikiPageType,
+  /** 本文と種類をこのテンプレートから作る(同じスペースのものに限る) */
+  templateId: z.uuidv7().optional(),
+})
+export type CreateWikiPage = z.infer<typeof scCreateWikiPage>
+
+/** `expectedUpdatedAt` は読み込んだときの updatedAt(ISO)。他の人が先に保存していれば競合にする */
+export const scUpdateWikiPage = z.object({
+  id: z.uuidv7(),
+  title: zWikiTitle,
+  content: z.string().max(MAX_WIKI_CONTENT, el('@invalid_content')),
+  type: zWikiPageType,
+  tagIds: z.array(z.uuidv7()).max(MAX_WIKI_PAGE_TAGS, el('@invalid_tag')),
+  expectedUpdatedAt: z.iso.datetime(),
+  /** コミットメッセージ(任意) */
+  message: z.string().max(MAX_WIKI_REVISION_MESSAGE).optional(),
+})
+export type UpdateWikiPage = z.infer<typeof scUpdateWikiPage>
+
+/** 移動モーダルでの移動。afterId は直後に置く兄弟で、null なら先頭、省略すると末尾。同じ親の中での並べ替えも parentId を変えずに表す */
+export const scMoveWikiPage = z.object({
+  id: z.uuidv7(),
+  parentId: z.uuidv7().nullable(),
+  afterId: z.uuidv7().nullable().optional(),
+})
+export type MoveWikiPage = z.infer<typeof scMoveWikiPage>
+
+/**
+ * 画面のツリーでの上下の並べ替え。parentId / siblingIds は画面で見ていた親と兄弟の並び(自分を含む)で、
+ * 今と違えば弾く。position は 0 始まり
+ */
+export const scReorderWikiPage = z.object({
+  id: z.uuidv7(),
+  parentId: z.uuidv7().nullable(),
+  siblingIds: z.array(z.uuidv7()).min(1),
+  position: z.number().int().min(0),
+})
+
+/**
+ * 削除済みのページの復元。`id` はページ ID。
+ * descendantIds は確認で見せた、一緒に戻す削除済みの配下。今の配下と違えば戻さずに弾く(1件以上なら配下ごと戻す)
+ */
+export const scRestoreDeletedWikiPage = z.object({
+  id: z.uuidv7(),
+  descendantIds: z.array(z.uuidv7()),
+})
+
+/** descendantIds は確認で見せた配下のページ。今の配下と違えば消さずに弾く(1件以上なら配下ごと消す) */
+export const scDeleteWikiPage = z.object({
+  id: z.uuidv7(),
+  descendantIds: z.array(z.uuidv7()),
+})
+
+/** 版の内容(印刷用ページ)。版がそのページのものかも確かめる */
+export const scGetWikiPageRevisionSnapshot = z.object({
+  pageId: z.uuidv7(),
+  revisionId: z.uuidv7(),
+})
+
+/** ユーザーの直接割り当て。`id` はスペース ID */
+export const scUpsertWikiSpaceMember = z.object({
+  id: z.uuidv7(),
+  userId: z.uuidv7(),
+  role: zWikiSpaceRole,
+})
+
+export const scRemoveWikiSpaceMember = z.object({
+  id: z.uuidv7(),
+  userId: z.uuidv7(),
+})
+
+/** グループ / ボードの割り当て。`id` はスペース ID、`targetId` はグループ ID またはボード ID */
+export const scUpsertWikiSpaceTarget = z.object({
+  id: z.uuidv7(),
+  targetId: z.uuidv7(),
+  role: zWikiAssignRole,
+})
+
+export const scRemoveWikiSpaceTarget = z.object({
+  id: z.uuidv7(),
+  targetId: z.uuidv7(),
+})
+
+/** タグはスペースに属する。order を省略すると末尾へ採番する */
+export const scCreateWikiTag = z.object({
+  spaceId: z.uuidv7(),
+  name: zTagName,
+  color: zTagColor.default('gray'),
+  order: zTagOrder.optional(),
+})
+
+export const scUpdateWikiTag = z.object({
+  id: z.uuidv7(),
+  name: zTagName,
+  color: zTagColor,
+  order: zTagOrder,
+})
+
+/** テンプレートの名前はチケットテンプレートと同じ長さ・文言にする */
+export const zWikiTemplateName = z
+  .string()
+  .trim()
+  .min(1, el('@required_field'))
+  .max(MAX_TEMPLATE_NAME, el('@invalid_template_name'))
+
+/** テンプレートの編集フォーム。タイトルの雛形は空でもよい(作成時の入力のまま) */
+export const scWikiTemplateFields = z.object({
+  name: zWikiTemplateName,
+  title: z.string().trim().max(MAX_WIKI_TITLE, el('@invalid_wiki_title')).default(''),
+  content: z.string().max(MAX_WIKI_CONTENT, el('@invalid_content')).default(''),
+  type: zWikiPageType,
+})
+export type WikiTemplateFields = z.infer<typeof scWikiTemplateFields>
+export type WikiTemplateFieldsIn = z.input<typeof scWikiTemplateFields>
+
+export const scCreateWikiTemplate = scWikiTemplateFields.extend({ spaceId: z.uuidv7() })
+export type CreateWikiTemplate = z.infer<typeof scCreateWikiTemplate>
+
+export const scUpdateWikiTemplate = scWikiTemplateFields.extend({ id: z.uuidv7() })
+export type UpdateWikiTemplate = z.infer<typeof scUpdateWikiTemplate>
+
+/** 表示順で隣のテンプレートと入れ替える */
+export const scMoveWikiTemplate = z.object({
+  id: z.uuidv7(),
+  direction: z.enum(['up', 'down']),
+})
+
+/** アナウンスの一覧。`id` はスペース ID。月を指定すれば年より優先する */
+export const scWikiAnnouncementQuery = z.object({
+  id: z.uuidv7(),
+  month: z.string().regex(WIKI_ANNOUNCEMENT_MONTH_PATTERN).optional(),
+  year: z.string().regex(WIKI_ANNOUNCEMENT_YEAR_PATTERN).optional(),
+  tagId: z.uuidv7().optional(),
+  page: z.number().int().min(1),
+  rowsPerPage: z.number().int().min(1).max(MAX_WIKI_ANNOUNCEMENT_PAGE_SIZE),
+})
+
+/** アナウンスのバックナンバー。`id` はスペース ID。タグを渡すとそのタグを持つものだけを数える */
+export const scWikiAnnouncementArchive = z.object({ id: z.uuidv7(), tagId: z.uuidv7().optional() })
+
+/** アナウンスの通知先に選べる Slack チャンネルの一覧。`id` はスペース ID。`force` はキャッシュを捨てて取り直す */
+export const scGetWikiSlackChannels = z.object({
+  id: z.uuidv7(),
+  force: z.boolean().optional(),
+})
+
+/** アナウンスの通知先チャンネル。空文字で解除する */
+export const scSetWikiAnnounceChannel = z.object({
+  id: z.uuidv7(),
+  slackChannelId: z.union([z.literal(''), z.string().regex(SLACK_CHANNEL_ID_PATTERN, el('@invalid_slack_channel'))]),
+})
+export type SetWikiAnnounceChannel = z.infer<typeof scSetWikiAnnounceChannel>
+
+const zWikiAnnounceMessage = z
+  .string()
+  .trim()
+  .max(MAX_WIKI_ANNOUNCE_MESSAGE, el('@invalid_wiki_announce_message'))
+  .default('')
+
+/** 今すぐ通知する。`id` はページ ID */
+export const scWikiAnnounceNow = z.object({
+  id: z.uuidv7(),
+  kind: z.enum(WikiAnnouncementNotifyKind),
+  message: zWikiAnnounceMessage,
+})
+
+/** 予約する(`id` はページ ID)・予約を変える(`id` は通知の ID)。日時は画面で利用者のタイムゾーンから絶対時刻にしてある */
+export const scWikiAnnounceSchedule = scWikiAnnounceNow.extend({
+  scheduledAt: z.iso.datetime({ offset: true }),
+})
+
+/**
+ * 通知モーダルの入力。予約の日付・時刻(0:00 からの分)は利用者のタイムゾーンで持ち、送る前に絶対時刻へ直す
+ */
+export const scWikiAnnounceForm = z
+  .object({
+    kind: z.enum(WikiAnnouncementNotifyKind),
+    message: zWikiAnnounceMessage,
+    timing: z.enum(['now', 'schedule']),
+    date: z.string().default(''),
+    minutes: z
+      .number()
+      .int()
+      .min(0)
+      .max(24 * 60 - 1),
+  })
+  .refine((value) => value.timing === 'now' || value.date !== '', { path: ['date'], message: el('@required_field') })
+export type WikiAnnounceForm = z.infer<typeof scWikiAnnounceForm>
+export type WikiAnnounceFormIn = z.input<typeof scWikiAnnounceForm>
+
+/** `space` を省略すると、閲覧できる全スペース(アーカイブ済みを除く)を探す */
+export const scWikiSearch = z.object({
+  keyword: z.string().trim().max(MAX_WIKI_SEARCH_KEYWORD).default(''),
+  space: zWikiSpaceKey.optional(),
+  tags: z.array(z.string().trim().max(MAX_TAG_NAME)).max(MAX_WIKI_PAGE_TAGS).default([]),
+  limit: z.number().int().min(1).max(MAX_WIKI_SEARCH_LIMIT).optional(),
+})
+export type WikiSearch = z.input<typeof scWikiSearch>

@@ -2,6 +2,7 @@
 
 import { codeMirrorDark } from '@/components/code/codemirror-dark'
 import { notify } from '@/components/notify'
+import { PUBLIC_ATTACHMENT_OWNER, type AttachmentOwner } from '@/lib/storage/attachment-owner'
 import { uploadFile, uploadImage } from '@/lib/storage/upload'
 import { useResolvedTheme } from '@/lib/use-resolved-theme'
 import { useLocale } from '@/locale/client'
@@ -115,10 +116,10 @@ export type MdxEditorCoreProps = {
   /** ポップアップの描画先。HeroUI Modal 内では Modal.Dialog を渡す */
   overlayContainer?: HTMLElement | null
   /**
-   * 挿入した画像の添付先ボード。配信時の可視判定に使われる。
-   * 省略すると全ログインユーザーが参照できる添付になるので、ボードに属する本文では必ず渡すこと
+   * 挿入した画像・ファイルの持ち主(ボード / Wiki スペース)。配信時の可視判定に使われる。
+   * 省略すると全ログインユーザーが参照できる添付(public)になるので、ボード・スペースに属する本文では必ず渡すこと
    */
-  uploadBoardId?: string | null
+  uploadOwner?: AttachmentOwner
   /**
    * true で画像とファイルを挿入できるようにする(既定 false)。false の間はツールバーの画像・ファイルのボタンを出さず、
    * 貼り付け / ドロップでもアップロードしない。既存の画像記法の表示は残る。マウント時の値で固定される。
@@ -148,7 +149,7 @@ const MdxEditorInner: FC<MdxEditorCoreProps & { isDark: boolean }> = ({
   onChange,
   onBlur,
   overlayContainer,
-  uploadBoardId,
+  uploadOwner = PUBLIC_ATTACHMENT_OWNER,
   allowImages = false,
   mentionCandidates,
   placeholder,
@@ -161,14 +162,14 @@ const MdxEditorInner: FC<MdxEditorCoreProps & { isDark: boolean }> = ({
   const [allowImagesAtMount] = useState(allowImages)
 
   /**
-   * 添付先ボードは編集中に変わりうる(新規チケットモーダルのボード選択)。
+   * 添付の持ち主は編集中に変わりうる(新規チケットモーダルのボード選択)。
    * plugins を作り直すと編集中の内容が失われるため、ハンドラの参照は固定したまま
    * ref 越しに最新値を読む。
    */
-  const boardIdRef = useRef(uploadBoardId)
+  const ownerRef = useRef(uploadOwner)
   useEffect(() => {
-    boardIdRef.current = uploadBoardId
-  }, [uploadBoardId])
+    ownerRef.current = uploadOwner
+  }, [uploadOwner])
 
   /**
    * 失敗通知の文言。`t` はロケール切替で参照が変わるため、ハンドラの参照を固定したまま
@@ -183,7 +184,7 @@ const MdxEditorInner: FC<MdxEditorCoreProps & { isDark: boolean }> = ({
   // useState の遅延初期化で初回マウント時の関数を固定する(ref を render 中に読まないため)
   const [uploadHandler] = useState(() => async (file: File) => {
     try {
-      return await uploadImage(file, boardIdRef.current)
+      return await uploadImage(file, ownerRef.current)
     } catch (e) {
       /**
        * imagePlugin はツールバー / 貼り付け / ドラッグ&ドロップ / 差し替えのどの経路でも
@@ -196,7 +197,7 @@ const MdxEditorInner: FC<MdxEditorCoreProps & { isDark: boolean }> = ({
   })
 
   // ファイルの失敗通知はダイアログ側(mdx-file-dialog.tsx)が出す
-  const [fileUploadHandler] = useState(() => (file: File) => uploadFile(file, boardIdRef.current))
+  const [fileUploadHandler] = useState(() => (file: File) => uploadFile(file, ownerRef.current))
 
   const plugins = useMemo(() => {
     // source モードとコードブロックの CodeMirror は basicLight がハードコードされているため、

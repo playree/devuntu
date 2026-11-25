@@ -1,71 +1,82 @@
 {
-  "version": 1,
+  "version": 2,
   "skills": {
     "prisma-cli": {
       "source": "prisma/skills",
+      "commit": "a6f192959cf43b08aa330fe1ffca090267215812",
       "sourceType": "github",
       "skillPath": "prisma-cli/SKILL.md",
-      "computedHash": "aaec1e0169bb8ae74b0e3c4b39a4ed00cef79741df42fb9c93771736fccf378f"
+      "computedHash": "5867232acad55272d7278be9144b2cb8dcadd500d5a60a89260a2332bf70bd62"
     },
     "prisma-client-api": {
       "source": "prisma/skills",
+      "commit": "a6f192959cf43b08aa330fe1ffca090267215812",
       "sourceType": "github",
       "skillPath": "prisma-client-api/SKILL.md",
-      "computedHash": "cbbabff961c8e16b2d59f8c1ffb4e7e20be52154e778ab95121e0211d6d09969"
+      "computedHash": "a4810158b4b436a69e782e6fab95a0ed5e5e0b2786c2ed00322051d29c4c2b64"
     },
     "prisma-compute": {
       "source": "prisma/skills",
+      "commit": "a6f192959cf43b08aa330fe1ffca090267215812",
       "sourceType": "github",
       "skillPath": "prisma-compute/SKILL.md",
-      "computedHash": "cabeeb82b7e1287f34eaceb36e5a33aef09519e7958d77998e736774704c978b"
+      "computedHash": "c5bc4413f1e30e464e20b23a12548c7136beb1aa0fbf51fd688342de3f838e88"
     },
     "prisma-database-setup": {
       "source": "prisma/skills",
+      "commit": "a6f192959cf43b08aa330fe1ffca090267215812",
       "sourceType": "github",
       "skillPath": "prisma-database-setup/SKILL.md",
-      "computedHash": "0e11bb75ddfba8c6ee3dd776742699f7fe993d530497273232f1ffac80025e15"
+      "computedHash": "79848d903a92d69c3ee173fe26e565381b7b8a2ca66f82da156093e981087ce5"
     },
     "prisma-driver-adapter-implementation": {
       "source": "prisma/skills",
+      "commit": "a6f192959cf43b08aa330fe1ffca090267215812",
       "sourceType": "github",
       "skillPath": "prisma-driver-adapter-implementation/SKILL.md",
-      "computedHash": "cc487f1bf36f616ddb3a9478b3527d288dd706d77a9e5dbee9af52dca1eee8e4"
+      "computedHash": "6786760df68cf983505e8ea085c2ffa5253a0aa70c7b9ed72031d5f106d7d44f"
     },
     "prisma-mongodb-upgrade": {
       "source": "prisma/skills",
+      "commit": "a6f192959cf43b08aa330fe1ffca090267215812",
       "sourceType": "github",
       "skillPath": "prisma-mongodb-upgrade/SKILL.md",
-      "computedHash": "7496b8a66a2ed10cf5a530c838edeadf299f1ba16baa7513910bdc7264b4648f"
+      "computedHash": "fbe1fb6c9acd7c50aa8cff222bde8da99dbe74016ecf7c7baecc116c6ed02b24"
     },
     "prisma-orm-setup": {
       "source": "prisma/skills",
+      "commit": "a6f192959cf43b08aa330fe1ffca090267215812",
       "sourceType": "github",
       "skillPath": "prisma-orm-setup/SKILL.md",
-      "computedHash": "643210c92e79d080e8edb7fb7c13d939faa016f346c52bb54ee41796894d5e9e"
+      "computedHash": "04fe23d99323d5f97675b5038d7d42cec0b5d0ff5871929bd73412afb7941218"
     },
     "prisma-postgres": {
       "source": "prisma/skills",
+      "commit": "a6f192959cf43b08aa330fe1ffca090267215812",
       "sourceType": "github",
       "skillPath": "prisma-postgres/SKILL.md",
-      "computedHash": "d1622693b450df943ad90194efd2e95637d73aec0edf7e03b1ad17648d29c93b"
+      "computedHash": "bc15ea262db09a5372b2308d08d553d1437398b8eaf282d6c811db9b22524d85"
     },
     "prisma-postgres-setup": {
       "source": "prisma/skills",
+      "commit": "a6f192959cf43b08aa330fe1ffca090267215812",
       "sourceType": "github",
       "skillPath": "prisma-postgres-setup/SKILL.md",
-      "computedHash": "4adedf139eb72d6b5b3667024c50a10e1815cda4b6a6e475e3c5633bdf2694f1"
+      "computedHash": "0cb1de49d7d9a73dde137522ba8359a56f154630ff228e9c058655457abeece0"
     },
     "prisma-postgres-upgrade": {
       "source": "prisma/skills",
+      "commit": "a6f192959cf43b08aa330fe1ffca090267215812",
       "sourceType": "github",
       "skillPath": "prisma-postgres-upgrade/SKILL.md",
-      "computedHash": "c96f63fb78ee8580c041543ec37e78043a942d6d6f1a28627326faaab3c11ed3"
+      "computedHash": "bfe9cb9f1eb53df56d5c7ad758ad080054979de865cb26adc3a6564c9d2a1d2f"
     },
     "prisma-upgrade-v7": {
       "source": "prisma/skills",
+      "commit": "a6f192959cf43b08aa330fe1ffca090267215812",
       "sourceType": "github",
       "skillPath": "prisma-upgrade-v7/SKILL.md",
-      "computedHash": "9a65f02d4ae2f3d1e81efb6be888f33a083b1c06d866ff5f762cc30786e4c8ce"
+      "computedHash": "f6e8519788f89e6ee404091eba28236af67551e450f100c9595b208d840770d9"
     }
   }
 }

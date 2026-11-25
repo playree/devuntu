@@ -1,10 +1,10 @@
 /**
- * チケットの表示色(ステータス / 優先度 / タグ)を当てるクラス
+ * チケットの表示色(ステータス / 優先度)を当てるクラス
  *
  * Chip の表示色(HeroUI のセマンティック名)は `ticket-options.ts` の map にある。
  */
 
-import type { TagColor, TicketPriority, TicketStatus } from '@/generated/prisma/enums'
+import type { TicketPriority, TicketStatus } from '@/generated/prisma/enums'
 import { tv } from 'tailwind-variants'
 
 /**
@@ -15,7 +15,7 @@ import { tv } from 'tailwind-variants'
  * (Tailwind v4 が color-mix(in oklab, var(--color-accent) 10%, transparent) に展開する)。
  * 実体の CSS 変数がテーマごとに切り替わるため dark: は要らない(priorityStyles との違い)。
  * 半透明なので単色の背景クラスとは併用できない(priorityBgClass と同じ制約)。
- * クラス名は purge 対策で必ず完全なリテラルで書くこと(tagStyles と同じ規約)。
+ * クラス名は purge 対策で必ず完全なリテラルで書くこと。
  */
 const statusStyles = tv({
   variants: {
@@ -34,7 +34,7 @@ export const statusBgClass = (status: TicketStatus, className?: string) => statu
 /**
  * 優先度の配色。水平線(bar)・カード枠線(border)・カード背景(bg)を 1 箇所に集約する。
  * bar は 1px の線で面積が小さいため透過させず、bg は同系色を 10% で敷いて下地を透かす。
- * クラス名は purge 対策で必ず完全なリテラルで書くこと(tagStyles と同じ規約)。
+ * クラス名は purge 対策で必ず完全なリテラルで書くこと。
  */
 const priorityStyles = tv({
   slots: {
@@ -98,32 +98,3 @@ export const priorityBgClass = (priority: TicketPriority) => priorityStyles({ pr
  * 背景色の指定同士が打ち消し合わないよう、priorityBgClass とは別の要素に当てること。
  */
 export const CARD_BACKDROP_CLASS = 'bg-white dark:bg-black'
-
-/**
- * タグの表示色。HeroUI Chip は色を 5 種しか持たないため Tailwind の utility で上書きする。
- *
- * ビルド出力でレイヤーの初出順が properties < theme < base < components < utilities であることを
- * 確認済み。HeroUI の .chip は @layer components にあるので `!` なしで後勝ちする
- * (崩れた場合は bg-red-200! のように `!` を付ける。globals.css に前例あり)。
- *
- * クラス名は purge 対策で必ず完全なリテラルで書くこと(bg-${color}-200 のような合成は不可)。
- */
-const tagStyles = tv({
-  variants: {
-    color: {
-      gray: 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100',
-      red: 'bg-red-200 text-red-900 dark:bg-red-900 dark:text-red-100',
-      orange: 'bg-orange-200 text-orange-900 dark:bg-orange-900 dark:text-orange-100',
-      amber: 'bg-amber-200 text-amber-900 dark:bg-amber-900 dark:text-amber-100',
-      green: 'bg-green-200 text-green-900 dark:bg-green-900 dark:text-green-100',
-      teal: 'bg-teal-200 text-teal-900 dark:bg-teal-900 dark:text-teal-100',
-      blue: 'bg-blue-200 text-blue-900 dark:bg-blue-900 dark:text-blue-100',
-      indigo: 'bg-indigo-200 text-indigo-900 dark:bg-indigo-900 dark:text-indigo-100',
-      violet: 'bg-violet-200 text-violet-900 dark:bg-violet-900 dark:text-violet-100',
-      pink: 'bg-pink-200 text-pink-900 dark:bg-pink-900 dark:text-pink-100',
-    } satisfies Record<TagColor, string>,
-  },
-})
-
-/** タグ色のクラス。className を渡すと tailwind-merge でマージされる */
-export const tagColorClass = (color: TagColor, className?: string) => tagStyles({ color, className })

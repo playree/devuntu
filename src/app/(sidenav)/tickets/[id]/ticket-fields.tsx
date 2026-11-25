@@ -8,8 +8,9 @@ import { InputField } from '@/components/general/input'
 import { NoticePanel, Panel } from '@/components/general/panel'
 import { SingleSelectField } from '@/components/general/select'
 import { TrashIcon } from '@/components/icon'
-import { TagIdSelectField } from '@/components/ticket/tag-id-select'
-import { AgentProgressChip, PriorityChip, StatusChip, TagChips } from '@/components/ticket/ticket-chip'
+import { TagChips } from '@/components/tag/tag-chip'
+import { TagIdSelectField } from '@/components/tag/tag-id-select'
+import { AgentProgressChip, PriorityChip, StatusChip } from '@/components/ticket/ticket-chip'
 import { TicketExportMenu } from '@/components/ticket/ticket-export-menu'
 import {
   AGENT_MODE_NONE,
@@ -303,7 +304,11 @@ export const TicketFieldPanel: FC<{
           </span>
         )}
         <div className='ml-auto flex gap-1'>
-          <TicketExportMenu ticketId={ticket.id} variant='ghost' />
+          <TicketExportMenu // チケットを移ったら作り直す(作っている途中の HTML 出力を打ち切り、移った先で保存しない)
+            key={ticket.id}
+            ticketId={ticket.id}
+            variant='ghost'
+          />
           {ticket.canDelete && (
             <MultiButton
               isIconOnly

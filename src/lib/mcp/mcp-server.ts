@@ -11,7 +11,9 @@ import {
   AGENT_ANNOUNCEMENT_GUIDE,
   ANNOUNCEMENT_GUIDE,
   mcpInstructions,
+  PLAN_REPORT_FORMAT_GUIDE,
 } from '@/lib/mcp/mcp-instructions'
+import { registerSkillTools } from '@/lib/mcp/mcp-skill'
 import {
   addTicketCommentForMcp,
   createTicketForMcp,
@@ -29,6 +31,7 @@ import {
   updateTicketForMcp,
 } from '@/lib/mcp/mcp-ticket'
 import { guardMcpToolErrors } from '@/lib/mcp/mcp-tool-error'
+import { registerWikiTools } from '@/lib/mcp/mcp-wiki'
 import type { ResourceAuth } from '@/lib/oauth/oauth-resource'
 import {
   MAX_TICKET_CRITERIA,
@@ -213,6 +216,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
       description:
         'Returns board details (members, tags, ticket counts per status, and boardContext / templates / mergeCompletion / announcementEnabled if set). ' +
         'boardKnowledge / boardMemory (only when set) index shared notes: read the relevant ones with get_board_notes. ' +
+        "wikiSpaces (only when set) lists the board's Wiki spaces: find related documents with search_wiki. " +
         'Use the IDs returned here for assigneeId and tagIds in create_ticket / update_ticket. ' +
         'When a template fits the ticket, pass it as templateId in create_ticket',
       inputSchema: z.strictObject({ boardId: z.string().min(1).describe('Board ID or board key (e.g. ABC)') }),
@@ -230,6 +234,7 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
         'parent/children, related tickets, and recent change history (activities, newest first). ' +
         'boardContext (only when set) holds premises shared by every ticket on the board, such as the target repository and conventions: read it before working. ' +
         'boardKnowledge / boardMemory (only when set) index shared notes: read the relevant ones with get_board_notes. ' +
+        "wikiSpaces (only when set) lists the board's Wiki spaces: find related documents with search_wiki. " +
         'mergeCompletion (only when set) lists the git providers whose merges complete the ticket; ' +
         'with criteriaCheck checked / checkedOrReported, unmet acceptance criteria hold it back (none does not check them). ' +
         "announcementEnabled (only when set) means type=announcement comments are also sent to the board's Slack channel. " +
@@ -297,11 +302,12 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
         'Adds a comment to a ticket. Post with type=plan once you have a plan and type=report when you finish ' +
         '(record acceptance criteria results with report_acceptance_criteria, not in the report); ' +
         'these are shown collapsed on the detail screen, distinct from regular comments. ' +
+        `${PLAN_REPORT_FORMAT_GUIDE} ` +
         (auth.kind === 'agent' ? AGENT_ANNOUNCEMENT_GUIDE : ANNOUNCEMENT_GUIDE) +
         '. Reply to an existing comment with parentId (one level only)',
       inputSchema: z.strictObject({
         ticketId: z.string().min(1),
-        content: zCommentContent,
+        content: zCommentContent.describe('Comment body (Markdown)'),
         type: zCommentType.describe(
           'plan=work plan, report=work report, announcement=announcement for all board members. Omit for a regular comment',
         ),
@@ -327,7 +333,10 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
       title: 'Update comment',
       annotations: TOOL_ANNOTATIONS.destructiveIdempotent,
       description: 'Edits a comment you posted',
-      inputSchema: z.strictObject({ commentId: z.uuidv7(), content: zCommentContent }),
+      inputSchema: z.strictObject({
+        commentId: z.uuidv7(),
+        content: zCommentContent.describe('Comment body (Markdown)'),
+      }),
     },
     async ({ commentId, content }) => jsonResult(await updateTicketCommentForMcp(auth, commentId, content)),
   )
@@ -413,12 +422,18 @@ export const createDevuntuMcpServer = (auth: ResourceAuth) => {
   // ボードノートも両方の経路で使う(ナレッジの変更可否は経路で判定する)
   registerBoardNoteTools(server, auth)
 
+  // Wiki は人の経路もエージェントも読み書きできる(権限はスペースの割り当てで決まる)
+  registerWikiTools(server, auth)
+
   // セットアップ手順は人が読むものなので接続の種類を問わない
   registerAgentSetupTool(server)
 
   if (auth.kind === 'agent') {
     registerAgentTools(server, auth)
   } else {
+    // スキルを入れる場所は利用者に確かめさせるので、利用者のいないエージェントには出さない
+    registerSkillTools(server)
+
     // エージェントは finish_agent_task の criteria で申告するので、人の経路にだけ出す
     server.registerTool(
       'report_acceptance_criteria',

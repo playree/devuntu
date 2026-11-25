@@ -5,36 +5,37 @@
  * ストレージとDBはモックし、添付先ボードの決め方・入力の正規化・認可の落とし方を検証する。
  */
 
-import { assertBoardAccess, assertTicketAccess, canViewAttachment } from '@/lib/board/board-access'
+import { assertBoardAccess, assertTicketAccess } from '@/lib/board/board-access'
 import { errInvalidOperation } from '@/lib/error'
 import { registerImageTools } from '@/lib/mcp/mcp-image'
 import { resolveTicketId } from '@/lib/mcp/mcp-ticket'
-import { prisma } from '@/lib/prisma'
 import { saveContentImage } from '@/lib/storage/attachment'
+import { findViewableAttachment } from '@/lib/storage/attachment-access'
 import { resizeWebp } from '@/lib/storage/image'
 import { getObject } from '@/lib/storage/storage'
+import { resolveWikiPageRef } from '@/lib/wiki/wiki-page-ref'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { connectMcpServer, jsonOf } from '../../helpers/mcp-client'
 import { oauthAuth } from '../../helpers/resource-auth'
 
-vi.mock('@/lib/prisma', async () =>
-  (await import('../../helpers/prisma')).mockPrisma({ attachment: ['findUnique'] }, { stubOthers: true }),
-)
+vi.mock('@/lib/prisma', async () => (await import('../../helpers/prisma')).mockPrisma({}, { stubOthers: true }))
 
 vi.mock('@/lib/board/board-access', () => ({
   assertBoardAccess: vi.fn(),
   assertTicketAccess: vi.fn(),
-  canViewAttachment: vi.fn(),
 }))
 
 vi.mock('@/lib/mcp/mcp-ticket', () => ({ resolveTicketId: vi.fn() }))
+vi.mock('@/lib/wiki/wiki-page-ref', () => ({ resolveWikiPageRef: vi.fn() }))
 vi.mock('@/lib/storage/attachment', () => ({ saveContentImage: vi.fn() }))
+vi.mock('@/lib/storage/attachment-access', () => ({ findViewableAttachment: vi.fn() }))
 vi.mock('@/lib/storage/storage', () => ({ getObject: vi.fn() }))
 vi.mock('@/lib/storage/image', () => ({ resizeWebp: vi.fn(), WEBP_MIME: 'image/webp' }))
 
 const BOARD_ID = '019eef64-6cc1-78f1-8f50-1ef869860002'
 const TICKET_BOARD_ID = '019eef64-6cc1-78f1-8f50-1ef869860003'
+const SPACE_ID = '019eef64-6cc1-78f1-8f50-1ef869860004'
 const KEY = '019eef64-6cc1-78f1-8f50-1ef86986289a.webp'
 
 const auth = oauthAuth()
@@ -45,7 +46,8 @@ const connectClient = () => {
   return connectMcpServer(server)
 }
 
-const findAttachment = vi.mocked(prisma.attachment.findUnique)
+/** 配信してよい添付を引く(可否の判定は attachment-access のテストで確かめる) */
+const findAttachment = vi.mocked(findViewableAttachment)
 
 const pngBase64 = Buffer.from('dummy-png-bytes').toString('base64')
 
@@ -54,7 +56,6 @@ beforeEach(() => {
   vi.mocked(assertBoardAccess).mockResolvedValue({ boardId: BOARD_ID, archived: false } as never)
   vi.mocked(assertTicketAccess).mockResolvedValue({ boardId: TICKET_BOARD_ID } as never)
   vi.mocked(resolveTicketId).mockResolvedValue('ticket-1')
-  vi.mocked(canViewAttachment).mockResolvedValue(true)
   vi.mocked(saveContentImage).mockResolvedValue({ url: `/api/upload/${KEY}`, key: KEY, size: 100 })
   vi.mocked(resizeWebp).mockResolvedValue(Buffer.from('resized'))
   findAttachment.mockResolvedValue({
@@ -115,6 +116,38 @@ describe('create_image_upload_token', () => {
     expect(result.isError).toBe(true)
   })
 
+  it('wikiPage 指定ではスペースの書き込み権限を通し、添付先を Wiki スペースにする', async () => {
+    vi.mocked(resolveWikiPageRef).mockResolvedValue({
+      access: { spaceId: SPACE_ID },
+      ref: 'DOCS/12',
+      page: { id: 'p1' },
+    } as never)
+
+    const result = await (
+      await connectClient()
+    ).callTool({ name: 'create_image_upload_token', arguments: { wikiPage: 'DOCS/12' } })
+
+    expect(resolveWikiPageRef).toHaveBeenCalledWith(auth.user, 'DOCS/12', 'write', 'wikiPage')
+    const json = jsonOf(result)
+    expect(json.wikiSpaceId).toBe(SPACE_ID)
+    expect(json).not.toHaveProperty('boardId')
+    expect(assertBoardAccess).not.toHaveBeenCalled()
+  })
+
+  it('存在しない Wiki ページへの添付を拒否する', async () => {
+    vi.mocked(resolveWikiPageRef).mockResolvedValue({
+      access: { spaceId: SPACE_ID },
+      ref: 'DOCS/99',
+      page: null,
+    } as never)
+
+    const result = await (
+      await connectClient()
+    ).callTool({ name: 'create_image_upload_token', arguments: { wikiPage: 'DOCS/99' } })
+
+    expect(result.isError).toBe(true)
+  })
+
   it('boardId と ticketId の同時指定・両方省略を拒否する', async () => {
     const client = await connectClient()
 
@@ -123,9 +156,14 @@ describe('create_image_upload_token', () => {
       arguments: { boardId: BOARD_ID, ticketId: 'ABC-42' },
     })
     const neither = await client.callTool({ name: 'create_image_upload_token', arguments: {} })
+    const withWiki = await client.callTool({
+      name: 'create_image_upload_token',
+      arguments: { boardId: BOARD_ID, wikiPage: 'DOCS/12' },
+    })
 
     expect(both.isError).toBe(true)
     expect(neither.isError).toBe(true)
+    expect(withWiki.isError).toBe(true)
   })
 })
 
@@ -138,10 +176,30 @@ describe('upload_image', () => {
     ).callTool({ name: 'upload_image', arguments: { ...args, data: pngBase64 } })
 
     const [file, target] = vi.mocked(saveContentImage).mock.calls[0] ?? []
-    expect(target).toEqual({ boardId: BOARD_ID, userId: 'u1' })
+    expect(target).toEqual({ owner: { kind: 'board', boardId: BOARD_ID }, userId: 'u1' })
     expect(file?.name).toBe('shot.png')
     expect(await file?.text()).toBe('dummy-png-bytes')
     expect(jsonOf(result)).toEqual({ url: `/api/upload/${KEY}`, markdown: `![shot.png](/api/upload/${KEY})` })
+  })
+
+  it('Wiki ページを添付先にすると、Wiki スペースの添付として保存する', async () => {
+    vi.mocked(resolveWikiPageRef).mockResolvedValue({
+      access: { spaceId: SPACE_ID },
+      ref: 'DOCS/12',
+      page: { id: 'p1' },
+    } as never)
+
+    await (
+      await connectClient()
+    ).callTool({
+      name: 'upload_image',
+      arguments: { wikiPage: 'DOCS/12', filename: 'shot.png', mimeType: 'image/png', data: pngBase64 },
+    })
+
+    expect(vi.mocked(saveContentImage).mock.calls[0]?.[1]).toEqual({
+      owner: { kind: 'wikiSpace', wikiSpaceId: SPACE_ID },
+      userId: 'u1',
+    })
   })
 
   it('data URL 形式の接頭辞を取り除く', async () => {
@@ -179,8 +237,8 @@ describe('get_image', () => {
     const byUrl = await client.callTool({ name: 'get_image', arguments: { image: `/api/upload/${KEY}` } })
     const byKey = await client.callTool({ name: 'get_image', arguments: { image: KEY } })
 
-    expect(findAttachment).toHaveBeenNthCalledWith(1, expect.objectContaining({ where: { key: KEY } }))
-    expect(findAttachment).toHaveBeenNthCalledWith(2, expect.objectContaining({ where: { key: KEY } }))
+    expect(findAttachment).toHaveBeenNthCalledWith(1, expect.anything(), KEY)
+    expect(findAttachment).toHaveBeenNthCalledWith(2, expect.anything(), KEY)
     expect(byUrl.content).toEqual(byKey.content)
   })
 
@@ -232,7 +290,7 @@ describe('get_image', () => {
 
   it('閲覧できない添付は未存在と同じエラーにする', async () => {
     const client = await connectClient()
-    vi.mocked(canViewAttachment).mockResolvedValue(false)
+    findAttachment.mockResolvedValue(null)
     const denied = await client.callTool({ name: 'get_image', arguments: { image: KEY } })
 
     findAttachment.mockResolvedValue(null)
@@ -242,20 +300,10 @@ describe('get_image', () => {
     expect(denied.content).toEqual(missing.content)
   })
 
-  it('閲覧の可否は配信APIと同じ判定(キーと添付先ボード)に委ねる', async () => {
-    findAttachment.mockResolvedValue({
-      boardId: null,
-      originalName: 'icon.png',
-      size: 10,
-      mimeType: 'image/webp',
-    } as never)
-
+  it('閲覧の可否は配信APIと同じ判定(findViewableAttachment)に委ねる', async () => {
     const result = await (await connectClient()).callTool({ name: 'get_image', arguments: { image: KEY } })
 
-    expect(canViewAttachment).toHaveBeenCalledWith(expect.objectContaining({ id: expect.any(String) }), {
-      key: KEY,
-      boardId: null,
-    })
+    expect(findAttachment).toHaveBeenCalledWith(expect.objectContaining({ id: expect.any(String) }), KEY)
     expect(result.isError).toBeFalsy()
   })
 })

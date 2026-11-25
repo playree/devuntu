@@ -1,7 +1,7 @@
 'use client'
 
 import { cn, Input, InputProps, SearchField, SearchFieldProps, TextField } from '@heroui/react'
-import { ChangeEvent } from 'react'
+import { ChangeEvent, ReactNode } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
 import { z } from 'zod'
 import { MultiButton } from './button'
@@ -11,7 +11,12 @@ import { MagnifyingGlassIcon } from './icons'
 import { useIsSmart, useSmart } from './smart'
 import { useGeneralUiText } from './ui-text'
 
-type InputFieldProps = InputProps & FieldBaseProps & { className?: string }
+type InputFieldProps = InputProps &
+  FieldBaseProps & {
+    className?: string
+    /** ラベル横の「?」で出す説明 */
+    help?: ReactNode
+  }
 
 /**
  * react-hook-form に依存しない Input 本体。
@@ -22,6 +27,7 @@ export const InputField = ({
   type = 'text',
   label,
   isLabelHidden,
+  help,
   isRequired,
   isDisabled,
   isReadOnly,
@@ -45,7 +51,7 @@ export const InputField = ({
        */
       validationBehavior='aria'
     >
-      <FieldLabel isCompact={isCompact} isHidden={isLabelHidden} isRequired={isRequired}>
+      <FieldLabel isCompact={isCompact} isHidden={isLabelHidden} isRequired={isRequired} help={help}>
         {label}
       </FieldLabel>
       <Input

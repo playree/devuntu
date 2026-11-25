@@ -13,6 +13,7 @@ import { DAY_MS, msBefore, nowDate } from '../day'
 import { envu } from '../env-util'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
+import { wikiRevisionCutoff } from '../wiki/wiki-revision'
 import {
   DUE_REMINDER_RETENTION_MS,
   GIT_CHECK_SUITE_RETENTION_MS,
@@ -184,6 +185,67 @@ export const sweepBoardNoteRevisions = async (now: Date): Promise<number> =>
     })
   ).count
 
+/**
+ * 削除済み(ゴミ箱)の Wiki ページのうち、削除から保持期間(`WIKI_REVISION_RETENTION_DAYS`)を過ぎたものを物理削除する。
+ * 版・タグの紐づけ・アナウンスの通知は Cascade で一緒に消える。配下ごと削除したページは同じ削除日時なので、親と同じ周で消える
+ * (生きているページの親は常に生きているので、Cascade が生きているページへ及ぶことはない)。
+ * 本文に貼っていた添付は参照が無くなり、添付の掃除が回収する
+ */
+export const sweepDeletedWikiPages = async (now: Date): Promise<number> => {
+  const cutoff = wikiRevisionCutoff(now)
+  // 外側でも削除日時を確かめる。候補を選んだ後に復元されたページは、行ロックを待った後の再評価で外れる
+  return prisma.$executeRaw`
+    DELETE FROM "wiki_page" WHERE "id" IN (
+      SELECT "id" FROM "wiki_page"
+      WHERE "deletedAt" < ${cutoff}
+      ORDER BY "deletedAt", "id"
+      LIMIT ${MAINTENANCE_DELETE_BATCH}
+    ) AND "deletedAt" < ${cutoff}
+  `
+}
+
+/**
+ * Wiki ページの版。最後の保存(updatedAt)が保持期間(`WIKI_REVISION_RETENTION_DAYS`)より古いものを消す。
+ * 版は変更後の全文なので、一律に消すと、しばらく編集していないページを編集した直後に編集前へ戻せなくなる。そのため
+ * ページ(削除済みを含む)ごとに、最新の版(カレント)と直近の `WIKI_REVISION_KEEP_RECENT` 版は期限より古くても残し、
+ * あわせて期限より古い版のうち最新の1版を基準版として残す(保持期間より前の時点へ常に戻せる)。
+ * 残す期限切れの版の数は `max(1, 1 + keepRecent - 期限内の版の数)` で、期限より古い版の新しい順にその数だけ残す。
+ * 削除済みのページの版は、ページの物理削除(`sweepDeletedWikiPages`)で一緒に消える
+ *
+ * 期限内の版を数えるのは、期限より古い版が2版以上あるページだけ(1版だけならどのみち残す)。
+ * 残す版の判定は DB 側で行い、消す版だけを古い順に `MAINTENANCE_DELETE_BATCH` 件まで選んで同じ文で消す。
+ * 期限より古い版を件数で絞って読んでから判定すると、残す版だけで上限が埋まったときに、それより古い消すべき版へ届かなくなるため。
+ *
+ * 残す版のうち期限より古いものは、書き込み側の連続保存のまとめ(最新の版の上書き)の対象にしない(`shouldMergeWikiRevision` の `retentionCutoff`)
+ */
+export const sweepWikiPageRevisions = async (now: Date): Promise<number> => {
+  const cutoff = wikiRevisionCutoff(now)
+  const keepRecent = envu.server.WIKI_REVISION_KEEP_RECENT
+  return prisma.$executeRaw`
+    WITH expired AS (
+      SELECT r."id", r."pageId", r."updatedAt",
+        ROW_NUMBER() OVER (PARTITION BY r."pageId" ORDER BY r."updatedAt" DESC, r."id" DESC) AS "rank"
+      FROM "wiki_page_revision" AS r
+      WHERE r."updatedAt" < ${cutoff}
+    ),
+    recent AS (
+      SELECT "pageId", COUNT(*)::int AS "count"
+      FROM "wiki_page_revision"
+      WHERE "updatedAt" >= ${cutoff} AND "pageId" IN (SELECT "pageId" FROM expired WHERE "rank" > 1)
+      GROUP BY "pageId"
+    ),
+    doomed AS (
+      SELECT e."id"
+      FROM expired AS e
+      LEFT JOIN recent AS c ON c."pageId" = e."pageId"
+      WHERE e."rank" > GREATEST(1, 1 + ${keepRecent}::int - COALESCE(c."count", 0))
+      ORDER BY e."updatedAt", e."id"
+      LIMIT ${MAINTENANCE_DELETE_BATCH}
+    )
+    DELETE FROM "wiki_page_revision" WHERE "id" IN (SELECT "id" FROM doomed)
+  `
+}
+
 /** 更新が止まった CI の状態(GitHub の Check Suite / GitLab のパイプライン)。消えた後に表示される CI の結果は「無し」になる */
 export const sweepGitCheckSuites = async (now: Date): Promise<number> =>
   (await prisma.gitCheckSuite.deleteMany({ where: { updatedAt: { lt: msBefore(now, GIT_CHECK_SUITE_RETENTION_MS) } } }))
@@ -219,6 +281,9 @@ export const runMaintenanceSweep = async (now: Date = nowDate()): Promise<SweepC
   await runStep(counts, 'commandRun', () => sweepCommandRuns(now))
   await runStep(counts, 'ticketActivity', () => sweepTicketActivities(now))
   await runStep(counts, 'boardNoteRevision', () => sweepBoardNoteRevisions(now))
+  // 削除済みのページを先に消し、その版を版の掃除で読まないようにする
+  await runStep(counts, 'wikiPage', () => sweepDeletedWikiPages(now))
+  await runStep(counts, 'wikiPageRevision', () => sweepWikiPageRevisions(now))
   await runStep(counts, 'gitCheckSuite', () => sweepGitCheckSuites(now))
   await runStep(counts, 'dueReminder', () => sweepDueReminders(now))
   await runStep(counts, 'attachment', () => sweepOrphanAttachments(now))

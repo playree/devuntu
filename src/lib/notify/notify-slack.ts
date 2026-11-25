@@ -5,10 +5,9 @@
  * 同じ投稿処理で扱う。宛先の絞り込みは展開時(`notify-fanout.ts`)に済んでいる。
  */
 
-import { t } from '@/locale/server'
 import { logger } from '../logger'
 import { prisma } from '../prisma'
-import { buildTicketMessage, SLACK_PROVIDER_ID } from '../slack/slack'
+import { buildLinkMessage, SLACK_PROVIDER_ID } from '../slack/slack'
 import { postSlackMessage } from '../slack/slack-server'
 import type { NotifyContent } from './notify-content'
 import type { DeliveryOutcome } from './notify-outcome'
@@ -36,9 +35,8 @@ export const deliverSlack = async (param: {
   userId: string | null
   slackChannelId: string | null
   content: NotifyContent
-  locale: string | null
 }): Promise<DeliveryOutcome> => {
-  const { userId, slackChannelId, content, locale } = param
+  const { userId, slackChannelId, content } = param
 
   const channel = slackChannelId ?? (userId ? await slackAccountId(userId) : null)
   if (!channel) {
@@ -46,15 +44,6 @@ export const deliverSlack = async (param: {
     return 'unlinked'
   }
 
-  const { subject, url, body, excerpt } = content
-  return postSlackMessage(
-    channel,
-    buildTicketMessage({
-      subject,
-      url,
-      body,
-      excerpt,
-      openLabel: t(locale, 'slack_msg_open_ticket'),
-    }),
-  )
+  const { subject, url, body, excerpt, openLabel } = content
+  return postSlackMessage(channel, buildLinkMessage({ subject, url, body, excerpt, openLabel }))
 }

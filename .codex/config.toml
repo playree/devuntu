@@ -1,0 +1,4 @@
+[mcp_servers.playwright]
+command = "pnpm"
+args = ["exec", "playwright-mcp", "--config", "scripts/playwright-mcp.config.json", "--user-data-dir", ".work/playwright/profiles/codex"]
+tool_timeout_sec = 150

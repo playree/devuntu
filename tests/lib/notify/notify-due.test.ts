@@ -7,6 +7,7 @@
 
 import { DUE_REMIND_BATCH } from '@/lib/notify/notify'
 import { dueRemindKind, runDueRemind } from '@/lib/notify/notify-due'
+import type { NotifyPayload } from '@/lib/notify/notify-payload'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/notify/notify-enqueue', () => ({ enqueueNotify: vi.fn(async () => true) }))
@@ -91,7 +92,7 @@ describe('runDueRemind', () => {
   const remindable = (...userIds: string[]) =>
     findSettings.mockResolvedValue(userIds.map((userId) => ({ userId })) as never)
 
-  const payloads = () => enqueue.mock.calls.map(([param]) => param.payload)
+  const payloads = () => enqueue.mock.calls.map(([param]) => param.payload as NotifyPayload<'ticket_due'>)
 
   beforeEach(() => {
     vi.clearAllMocks()

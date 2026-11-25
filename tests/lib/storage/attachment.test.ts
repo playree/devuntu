@@ -2,6 +2,8 @@
 
 import { prisma } from '@/lib/prisma'
 import {
+  detachAttachmentsOf,
+  listAttachmentKeysOf,
   listContentAttachments,
   OCTET_STREAM_MIME,
   removeOwnedImageAttachment,
@@ -13,7 +15,9 @@ import { toUploadUrl } from '@/lib/storage/upload'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/prisma', async () =>
-  (await import('../../helpers/prisma')).mockPrisma({ attachment: ['count', 'deleteMany', 'create', 'findMany'] }),
+  (await import('../../helpers/prisma')).mockPrisma({
+    attachment: ['count', 'deleteMany', 'create', 'findMany', 'updateMany'],
+  }),
 )
 vi.mock('@/lib/storage/storage', () => ({ deleteObject: vi.fn(), putObject: vi.fn() }))
 vi.mock('@/lib/logger', () => ({
@@ -32,11 +36,13 @@ describe('removeOwnedImageAttachment', () => {
 
     await removeOwnedImageAttachment(toUploadUrl(KEY), 'u1')
 
-    expect(prisma.attachment.count).toHaveBeenCalledWith({ where: { key: KEY, createdById: 'u1', boardId: null } })
+    expect(prisma.attachment.count).toHaveBeenCalledWith({
+      where: { key: KEY, createdById: 'u1', boardId: null, wikiSpaceId: null, detachedAt: null },
+    })
     expect(deleteObject).toHaveBeenCalledWith(KEY)
   })
 
-  it('他人の添付やボードの添付は消さない', async () => {
+  it('他人の添付やボード・Wiki スペースの添付は消さない', async () => {
     vi.mocked(prisma.attachment.count).mockResolvedValue(0)
 
     await removeOwnedImageAttachment(toUploadUrl(KEY), 'u1')
@@ -94,7 +100,7 @@ describe('saveContentFile', () => {
     )
     const file = new File(['<p>hi</p>'], 'page.HTML', { type: 'text/html' })
 
-    const saved = await saveContentFile(file, { boardId: 'b1', userId: 'u1' })
+    const saved = await saveContentFile(file, { owner: { kind: 'board', boardId: 'b1' }, userId: 'u1' })
 
     expect(saved.key).toMatch(/\.html$/)
     expect(saved.url).toBe(toUploadUrl(saved.key))
@@ -104,13 +110,40 @@ describe('saveContentFile', () => {
     })
   })
 
+  it('Wiki スペースを添付先にすると wikiSpaceId を記録し、ボードには紐付けない', async () => {
+    vi.mocked(prisma.attachment.create).mockImplementation(
+      (async ({ data }: { data: { key: string; size: number } }) => data) as never,
+    )
+
+    await saveContentFile(new File(['x'], 'spec.pdf'), {
+      owner: { kind: 'wikiSpace', wikiSpaceId: 's1' },
+      userId: 'u1',
+    })
+
+    expect(prisma.attachment.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ boardId: null, wikiSpaceId: 's1', createdById: 'u1' }),
+    })
+  })
+
+  it('添付先を指定しなければ wikiSpaceId は null', async () => {
+    vi.mocked(prisma.attachment.create).mockImplementation(
+      (async ({ data }: { data: { key: string; size: number } }) => data) as never,
+    )
+
+    await saveContentFile(new File(['x'], 'a.txt'), { owner: { kind: 'board', boardId: 'b1' }, userId: 'u1' })
+
+    expect(prisma.attachment.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ boardId: 'b1', wikiSpaceId: null }),
+    })
+  })
+
   it('長すぎるファイル名は拡張子の側を残して切る', async () => {
     vi.mocked(prisma.attachment.create).mockImplementation(
       (async ({ data }: { data: { key: string; size: number } }) => data) as never,
     )
     const name = `${'あ'.repeat(300)}.txt`
 
-    await saveContentFile(new File(['x'], name), { boardId: null, userId: 'u1' })
+    await saveContentFile(new File(['x'], name), { owner: { kind: 'public' }, userId: 'u1' })
 
     const { data } = vi.mocked(prisma.attachment.create).mock.calls[0]?.[0] as { data: { originalName: string } }
     expect([...data.originalName]).toHaveLength(200)
@@ -121,7 +154,9 @@ describe('saveContentFile', () => {
     vi.mocked(prisma.attachment.create).mockRejectedValue(new Error('db down'))
     vi.mocked(deleteObject).mockResolvedValue(undefined as never)
 
-    await expect(saveContentFile(new File(['x'], 'a.txt'), { boardId: null, userId: 'u1' })).rejects.toThrow('db down')
+    await expect(
+      saveContentFile(new File(['x'], 'a.txt'), { owner: { kind: 'public' }, userId: 'u1' }),
+    ).rejects.toThrow('db down')
     expect(deleteObject).toHaveBeenCalledWith(expect.stringMatching(/\.txt$/))
   })
 })
@@ -129,7 +164,7 @@ describe('saveContentFile', () => {
 describe('listContentAttachments', () => {
   const row = (key: string) => ({ key, originalName: key, size: 1, mimeType: 'text/plain', createdAt: new Date() })
 
-  it('本文での登場順に並べ、見つからないキーは除く', async () => {
+  it('本文での登場順に並べ、見つからないキーは除く(他ボード・Wiki スペースの添付は条件で除く)', async () => {
     vi.mocked(prisma.attachment.findMany).mockResolvedValue([row('b'), row('a')] as never)
 
     const list = await listContentAttachments(['a', 'x', 'b'], 'board1')
@@ -137,13 +172,44 @@ describe('listContentAttachments', () => {
     expect(list.map((item) => item.key)).toEqual(['a', 'b'])
     expect(prisma.attachment.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { key: { in: ['a', 'x', 'b'] }, OR: [{ boardId: 'board1' }, { boardId: null }] },
+        where: {
+          key: { in: ['a', 'x', 'b'] },
+          OR: [{ boardId: 'board1' }, { boardId: null, wikiSpaceId: null, detachedAt: null }],
+        },
       }),
     )
   })
 
   it('キーが無ければ DB を引かない', async () => {
     expect(await listContentAttachments([], 'board1')).toEqual([])
+    expect(prisma.attachment.findMany).not.toHaveBeenCalled()
+  })
+})
+
+describe('listAttachmentKeysOf / detachAttachmentsOf', () => {
+  it('ボード / Wiki スペースに属する添付のキーを引く', async () => {
+    vi.mocked(prisma.attachment.findMany).mockResolvedValue([{ key: 'k1' }, { key: 'k2' }] as never)
+
+    expect(await listAttachmentKeysOf(prisma, { kind: 'wikiSpace', wikiSpaceId: 's1' })).toEqual(['k1', 'k2'])
+    expect(prisma.attachment.findMany).toHaveBeenCalledWith({ where: { wikiSpaceId: 's1' }, select: { key: true } })
+  })
+
+  it.each([
+    [{ kind: 'board', boardId: 'b1' } as const, { boardId: 'b1' }],
+    [{ kind: 'wikiSpace', wikiSpaceId: 's1' } as const, { wikiSpaceId: 's1' }],
+  ])('添付先 %o の紐付けを外し、削除待ちの印を付ける', async (target, where) => {
+    const now = new Date('2026-11-22T10:00:00.000Z')
+    await detachAttachmentsOf(prisma, target, now)
+    expect(prisma.attachment.updateMany).toHaveBeenCalledWith({
+      where,
+      data: { boardId: null, wikiSpaceId: null, detachedAt: now },
+    })
+  })
+
+  it('添付先の ID が空なら、全添付を対象にしないよう例外にする', async () => {
+    await expect(detachAttachmentsOf(prisma, { kind: 'wikiSpace', wikiSpaceId: '' })).rejects.toThrow()
+    await expect(listAttachmentKeysOf(prisma, { kind: 'board', boardId: undefined } as never)).rejects.toThrow()
+    expect(prisma.attachment.updateMany).not.toHaveBeenCalled()
     expect(prisma.attachment.findMany).not.toHaveBeenCalled()
   })
 })

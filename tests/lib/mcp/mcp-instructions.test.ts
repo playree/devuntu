@@ -67,9 +67,9 @@ describe('mcpInstructions', () => {
     expect(mcpInstructions('agent')).not.toContain('these default steps')
   })
 
-  it('エージェントにも、チケット > boardContext > ナレッジ > メモリの順とコメントの種別を伝える', () => {
+  it('エージェントにも、チケット > boardContext > ナレッジ > メモリの順とプラン・報告書の書式を伝える', () => {
     expect(mcpInstructions('agent')).toContain('the ticket > boardContext > boardKnowledge > boardMemory')
-    expect(mcpInstructions('agent')).toContain('type=plan / type=report')
+    expect(mcpInstructions('agent')).toContain('Write type=plan and type=report bodies in Markdown')
   })
 
   it('エージェントにはアナウンスを投稿させず、報告で提案させる', () => {
@@ -86,7 +86,7 @@ describe('mcpInstructions', () => {
     expect(doc).toContain(`\n${mcpInstructions('agent')}\n`)
   })
 
-  it('クライアントに切り詰められないよう短く保つ', () => {
-    expect(mcpInstructions('oauth').length).toBeLessThan(2000)
+  it.each(['oauth', 'pat', 'agent'] as const)('クライアントに切り詰められないよう短く保つ (%s)', (kind) => {
+    expect(mcpInstructions(kind).length).toBeLessThan(2000)
   })
 })

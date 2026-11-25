@@ -1,0 +1,648 @@
+/**
+ * Wiki の MCP ツール(サーバー専用)
+ *
+ * ツールの定義はセッションごとに読まれるので6本に絞る(作成と更新・移動は save_wiki_page にまとめる)。
+ * ページは `KEY/番号`(ref)で指定する。改名や移動で変わらないので、チケットの本文などに書いておける。
+ * 本文はトークンを食うので、読むときは section で節だけ、書くときは edits で差分だけを渡せるようにする。
+ *
+ * 権限は画面と同じ関数(getWikiSpaceByKey と wiki-page.ts の書き込み)に委ねる。
+ * スペースの作成・設定・割り当て、版の復元は画面で行う。
+ */
+
+import type { WikiPageType } from '@/generated/prisma/enums'
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
+import { z } from 'zod'
+import { MAX_TAG_NAME } from '../board/tag-rule'
+import { MAX_TEMPLATE_NAME } from '../board/ticket-template-rule'
+import { ClientError, errValidation } from '../error'
+import type { ResourceAuth } from '../oauth/oauth-resource'
+import { zWikiPageType } from '../schema/schema-wiki'
+import { makeUrl } from '../server-utils'
+import { extractUploadKeys } from '../storage/upload'
+import { type WikiSpaceAccess } from '../wiki/wiki-access'
+import { listRecentWikiAnnouncements } from '../wiki/wiki-announcement'
+import { MAX_WIKI_ANNOUNCEMENT_TREE } from '../wiki/wiki-announcement-rule'
+import { applyTextEdits, extractMarkdownSection, listMarkdownHeadings, type TextEdit } from '../wiki/wiki-markdown'
+import {
+  createWikiPage,
+  deleteWikiPage,
+  findWikiPageByNumber,
+  getWikiPage,
+  saveWikiPage,
+  type WikiPagePatch,
+} from '../wiki/wiki-page'
+import { resolveWikiPageRef } from '../wiki/wiki-page-ref'
+import { getWikiTree } from '../wiki/wiki-page-tree'
+import type { WikiPageWriteResult } from '../wiki/wiki-page-write'
+import {
+  DEFAULT_WIKI_SEARCH_LIMIT,
+  MAX_WIKI_CONTENT,
+  MAX_WIKI_DEPTH,
+  MAX_WIKI_PAGE_TAGS,
+  MAX_WIKI_REVISION_MESSAGE,
+  MAX_WIKI_SEARCH_KEYWORD,
+  MAX_WIKI_SEARCH_LIMIT,
+  MAX_WIKI_SPACE_KEY,
+  MAX_WIKI_TITLE,
+  parseWikiPageRef,
+  WIKI_PAGE_HAS_CHILDREN,
+  wikiPagePath,
+  wikiPageRef,
+  wikiSpaceTypeSpec,
+  type WikiWriter,
+} from '../wiki/wiki-rule'
+import { searchWikiPages } from '../wiki/wiki-search'
+import { getWikiSpaceByKey, listWikiSpaces } from '../wiki/wiki-space'
+import { listWikiTags, resolveWikiTagIdsByName } from '../wiki/wiki-tag'
+import { applyWikiTemplateToPage, listWikiTemplateNames, renderWikiTemplate } from '../wiki/wiki-template'
+import { nestWikiTree } from '../wiki/wiki-tree'
+import { jsonResult, TOOL_ANNOTATIONS } from './mcp'
+import { resolveTicketId } from './mcp-ticket'
+
+const WRITER: WikiWriter = { via: 'mcp' }
+
+/** 部分更新の件数の上限 */
+const MAX_WIKI_EDITS = 50
+/** section に渡せる見出しの長さ。本文の見出しには上限が無いので、タイトルより長めに取る */
+const MAX_SECTION_HEADING = 1000
+/** 見出しが見つからないときにエラーへ並べる見出しの数 */
+const MAX_LISTED_HEADINGS = 50
+
+const pageUrl = (ref: { key: string; number: number }) => makeUrl(wikiPagePath(ref)).toString()
+
+const parseRef = (ref: string, field = 'ref') => {
+  const parsed = parseWikiPageRef(ref)
+  if (!parsed) {
+    throw errValidation(`${field} must be KEY/number (e.g. DOCS/12), got ${ref}`)
+  }
+  return parsed
+}
+
+const errNoPage = (ref: string) => errValidation(`No page ${ref} exists. Find pages with search_wiki or get_wiki_tree`)
+
+/** スペースキーから権限を引く。無い・権限が無いは区別しない */
+const resolveSpace = async (auth: ResourceAuth, key: string, need: 'view' | 'write') =>
+  (await getWikiSpaceByKey(auth.user, key, need)).access
+
+/** 親に指定された ref を、同じスペースのページの id にする */
+const resolveParentId = async (access: WikiSpaceAccess, parent: string): Promise<string> => {
+  const parsed = parseRef(parent, 'parent')
+  if (parsed.key !== access.key) {
+    throw errValidation(`parent must be a page in the same space (${access.key})`)
+  }
+  const page = await findWikiPageByNumber(access.spaceId, parsed.number)
+  if (!page) {
+    throw errNoPage(parent)
+  }
+  return page.id
+}
+
+/** MCP の position は 1 始まり(チケットの childOrder にそろえる) */
+const toPosition = (position: number | undefined) => (position === undefined ? undefined : position - 1)
+
+export const listWikiSpacesForMcp = async (auth: ResourceAuth, input: { includeArchived?: boolean }) => {
+  const spaces = await listWikiSpaces(auth.user, { includeArchived: input.includeArchived })
+  return spaces.map((space) => ({
+    key: space.key,
+    name: space.name,
+    ...(space.description ? { description: space.description } : {}),
+    visibility: space.visibility,
+    type: space.type,
+    role: space.role,
+    canWrite: space.canWrite,
+    ...(space.archived ? { archived: true } : {}),
+  }))
+}
+
+/** アナウンス用スペースは平らなので、作成日時の新しい順の一覧で返す(depth は意味を持たず、root は指定できない) */
+const getAnnouncementTreeForMcp = async (
+  auth: ResourceAuth,
+  { space, access }: { space: { id: string; key: string; name: string }; access: { canWrite: boolean } },
+  input: { root?: string },
+) => {
+  if (input.root) {
+    throw errValidation(`${space.key} is an announcement space: its pages are flat, so root cannot be specified`)
+  }
+  const [{ items: rows, total }, tags, templates] = await Promise.all([
+    listRecentWikiAnnouncements(auth.user, space.id),
+    listWikiTags(space.id),
+    access.canWrite ? listWikiTemplateNames(space.id) : [],
+  ])
+  const tagName = new Map(tags.map(({ id, name }) => [id, name]))
+  return {
+    space: { key: space.key, name: space.name, type: 'announcement' as const },
+    pages: rows.map(({ number, title, createdAt, tagIds }) => {
+      const names = tagIds.map((id) => tagName.get(id)).filter((name) => name !== undefined)
+      return {
+        ref: wikiPageRef({ key: space.key, number }),
+        title,
+        ...(names.length > 0 ? { tags: names } : {}),
+        createdAt,
+      }
+    }),
+    totalPages: total,
+    /** 新しいものから上限まで返したときは、古いアナウンスがほかにもある(search_wiki で探す) */
+    ...(rows.length < total ? { limitReached: true } : {}),
+    ...(templates.length > 0 ? { templates: templates.map(({ name, type }) => ({ name, type })) } : {}),
+  }
+}
+
+export const getWikiTreeForMcp = async (
+  auth: ResourceAuth,
+  input: { space: string; root?: string; depth?: number },
+) => {
+  const { space, access } = await getWikiSpaceByKey(auth.user, input.space)
+  if (wikiSpaceTypeSpec(space.type).flat) {
+    return getAnnouncementTreeForMcp(auth, { space, access }, input)
+  }
+  const [rows, tags, templates] = await Promise.all([
+    getWikiTree(auth.user, space.id),
+    listWikiTags(space.id),
+    // テンプレートはページの作成にしか使えないので、書ける人にだけ返す
+    access.canWrite ? listWikiTemplateNames(space.id) : [],
+  ])
+  const tagName = new Map(tags.map(({ id, name }) => [id, name]))
+
+  let root: (typeof rows)[number] | undefined
+  if (input.root) {
+    const parsed = parseRef(input.root, 'root')
+    if (parsed.key !== space.key) {
+      throw errValidation(`root must be a page in the space ${space.key}`)
+    }
+    root = rows.find(({ number }) => number === parsed.number)
+    if (!root) {
+      throw errNoPage(input.root)
+    }
+  }
+
+  const pages = nestWikiTree(
+    rows,
+    ({ number, title, tagIds }) => {
+      const names = tagIds.map((id) => tagName.get(id)).filter((name) => name !== undefined)
+      return { ref: wikiPageRef({ key: space.key, number }), title, ...(names.length > 0 ? { tags: names } : {}) }
+    },
+    { rootId: root?.id ?? null, depth: input.depth },
+  )
+  return {
+    space: { key: space.key, name: space.name },
+    ...(root ? { root: { ref: wikiPageRef({ key: space.key, number: root.number }), title: root.title } } : {}),
+    pages,
+    totalPages: rows.length,
+    ...(templates.length > 0 ? { templates: templates.map(({ name, type }) => ({ name, type })) } : {}),
+  }
+}
+
+export const searchWikiForMcp = async (
+  auth: ResourceAuth,
+  input: { keyword?: string; space?: string; tags?: string[]; limit?: number },
+) => {
+  const keyword = input.keyword?.trim() ?? ''
+  if (keyword === '' && (input.tags ?? []).length === 0) {
+    throw errValidation('Specify keyword or tags')
+  }
+  const hits = await searchWikiPages(auth.user, {
+    keyword,
+    space: input.space,
+    tags: input.tags,
+    limit: input.limit,
+  })
+  const limit = input.limit ?? DEFAULT_WIKI_SEARCH_LIMIT
+  return {
+    pages: hits.map((hit) => ({
+      ref: hit.ref,
+      title: hit.title,
+      space: hit.space.key,
+      ...(hit.breadcrumbs.length > 0 ? { breadcrumbs: hit.breadcrumbs } : {}),
+      ...(hit.tags.length > 0 ? { tags: hit.tags.map(({ name }) => name) } : {}),
+      snippet: hit.snippet,
+      updatedAt: hit.updatedAt,
+    })),
+    /** 上限まで返したときは、ほかにも一致するページがありうる */
+    ...(hits.length >= limit ? { limitReached: true } : {}),
+  }
+}
+
+export const getWikiPageForMcp = async (auth: ResourceAuth, input: { ref: string; section?: string }) => {
+  const parsed = parseRef(input.ref)
+  const { space, access, page, ancestors, children } = await getWikiPage(auth.user, parsed.key, parsed.number)
+  const refOf = (number: number) => wikiPageRef({ key: space.key, number })
+
+  let body: { content: string } | { section: string; content: string } = { content: page.content }
+  if (input.section !== undefined) {
+    const headingOpts = { skipFrontMatter: page.type === 'design_doc' }
+    const section = extractMarkdownSection(page.content, input.section, headingOpts)
+    if (section === null) {
+      const headings = listMarkdownHeadings(page.content, headingOpts)
+        .slice(0, MAX_LISTED_HEADINGS)
+        .map(({ level, text }) => `${'#'.repeat(level)} ${text}`)
+      throw errValidation(
+        `No heading "${input.section}" in ${refOf(page.number)}. ` +
+          (headings.length > 0 ? `Headings: ${headings.join(' | ')}` : 'The page has no headings'),
+      )
+    }
+    body = { section: input.section, content: section }
+  }
+  const attachmentKeys = extractUploadKeys(body.content)
+
+  return {
+    ref: refOf(page.number),
+    url: pageUrl({ key: space.key, number: page.number }),
+    space: { key: space.key, name: space.name },
+    title: page.title,
+    type: page.type,
+    ...(ancestors.length > 0
+      ? { breadcrumbs: ancestors.map(({ number, title }) => ({ ref: refOf(number), title })) }
+      : {}),
+    ...(page.tags.length > 0 ? { tags: page.tags.map(({ tag }) => tag.name) } : {}),
+    ...body,
+    ...(attachmentKeys.length > 0 ? { attachmentKeys } : {}),
+    ...(children.length > 0 ? { children: children.map(({ number, title }) => ({ ref: refOf(number), title })) } : {}),
+    /** 更新するときに expectedUpdatedAt へ渡せば、他の人の更新を上書きせずに済む */
+    updatedAt: page.updatedAt,
+    updatedByName: page.updatedBy?.name ?? '',
+    canEdit: access.canWrite,
+  }
+}
+
+export type McpSaveWikiPageInput = {
+  ref?: string
+  space?: string
+  title?: string
+  content?: string
+  type?: WikiPageType
+  template?: string
+  edits?: TextEdit[]
+  parent?: string | null
+  position?: number
+  tags?: string[]
+  expectedUpdatedAt?: string
+  ticketId?: string
+  message?: string
+}
+
+const writeResult = (result: string, written: WikiPageWriteResult, key: string) => ({
+  result,
+  ref: written.ref,
+  url: pageUrl({ key, number: written.number }),
+  updatedAt: written.updatedAt,
+})
+
+const createWikiPageForMcp = async (auth: ResourceAuth, input: McpSaveWikiPageInput, ticketId: string | null) => {
+  if (!input.space || (input.title === undefined && input.template === undefined)) {
+    throw errValidation(
+      'space and title (or template) are required to create a page. Pass ref to update an existing page',
+    )
+  }
+  if (input.edits || input.expectedUpdatedAt) {
+    throw errValidation('edits and expectedUpdatedAt are only for updating an existing page (pass ref)')
+  }
+  // 親やタグ・テンプレートの有無で他のスペースの中身を探れないよう、先に権限を確かめる
+  const access = await resolveSpace(auth, input.space, 'write')
+  const template = input.template ? await renderWikiTemplate(auth.user, access.spaceId, { name: input.template }) : null
+  const { title, content, type } = applyWikiTemplateToPage(input, template)
+  if (title.trim() === '') {
+    throw errValidation(
+      input.template ? `title is required: the template ${input.template} has no title` : 'title is required',
+    )
+  }
+  const parentId = input.parent ? await resolveParentId(access, input.parent) : null
+  const tagIds = input.tags ? await resolveWikiTagIdsByName(access.spaceId, input.tags) : []
+  const created = await createWikiPage(
+    auth.user,
+    WRITER,
+    access.spaceId,
+    {
+      title,
+      content,
+      type,
+      parentId,
+      position: toPosition(input.position),
+      tagIds,
+    },
+    { ticketId, message: input.message },
+  )
+  return writeResult(created.result, created, access.key)
+}
+
+const updateWikiPageForMcp = async (
+  auth: ResourceAuth,
+  ref: string,
+  input: McpSaveWikiPageInput,
+  ticketId: string | null,
+) => {
+  if (input.space) {
+    throw errValidation('space is only for creating a page. Pages cannot be moved to another space')
+  }
+  if (input.template) {
+    throw errValidation('template is only for creating a page (omit ref)')
+  }
+  if (input.content !== undefined && input.edits) {
+    throw errValidation('Pass either content or edits, not both')
+  }
+  const { access, page, ref: pageRef } = await resolveWikiPageRef(auth.user, ref, 'write')
+  if (!page) {
+    throw errNoPage(pageRef)
+  }
+
+  const edits = input.edits
+  // edits は読んだ本文に当てるので、ロックを取った後の今の本文から組み立てる
+  const content: WikiPagePatch['content'] = edits ? (current) => applyTextEdits(current, edits) : input.content
+  const tagIds = input.tags ? await resolveWikiTagIdsByName(access.spaceId, input.tags) : undefined
+  // 親は書き込む前に解決する(無い親を渡されたら何も書かない)。undefined は今の親のまま
+  const parentId =
+    input.parent === undefined ? undefined : input.parent === null ? null : await resolveParentId(access, input.parent)
+  const wantsUpdate =
+    input.title !== undefined || content !== undefined || input.type !== undefined || tagIds !== undefined
+  // 位置を省いた移動は末尾へ送るので、今と同じ親を位置なしで渡されたときは動かさない
+  const wantsMove = input.position !== undefined || (parentId !== undefined && parentId !== page.parentId)
+  if (!wantsUpdate && !wantsMove) {
+    if (input.parent !== undefined) {
+      return writeResult(
+        'unchanged',
+        { result: 'unchanged', id: page.id, ref: pageRef, number: page.number, updatedAt: page.updatedAt },
+        access.key,
+      )
+    }
+    throw errValidation('Nothing to save. Pass title, content, edits, type, tags, parent or position')
+  }
+
+  // 内容の更新と移動は 1 つのトランザクションで行う(移動に失敗すれば内容も保存しない)
+  const { written, changes } = await saveWikiPage(
+    auth.user,
+    WRITER,
+    page.id,
+    {
+      patch: wantsUpdate ? { title: input.title, content, type: input.type, tagIds } : undefined,
+      move: wantsMove ? { parentId, position: toPosition(input.position) } : undefined,
+    },
+    // edits は読んだ本文に当てたものなので、指定が無くても読んだ時点の版で楽観ロックをかける
+    {
+      expectedUpdatedAt: input.expectedUpdatedAt ?? (edits ? page.updatedAt.toISOString() : undefined),
+      ticketId,
+      message: input.message,
+    },
+  )
+  return writeResult(changes.length > 0 ? changes.join('+') : 'unchanged', written, access.key)
+}
+
+/** ref が無ければ作成し、あれば渡した項目だけを更新・移動する */
+export const saveWikiPageForMcp = async (auth: ResourceAuth, input: McpSaveWikiPageInput) => {
+  const ticketId = input.ticketId ? await resolveTicketId(auth, input.ticketId) : null
+  return input.ref
+    ? updateWikiPageForMcp(auth, input.ref, input, ticketId)
+    : createWikiPageForMcp(auth, input, ticketId)
+}
+
+/** エージェントのトークンからの配下ごとの削除。MCP だけの制限なので画面のエラー文言(action-error)には載せない */
+export const WIKI_AGENT_RECURSIVE_DELETE_DENIED = 'WIKI_AGENT_RECURSIVE_DELETE_DENIED'
+
+/**
+ * 同じ入力で繰り返しても結果が変わらないよう、無いページは deleted: 0 で返す。
+ *
+ * エージェントには配下ごとの削除をさせない。プロンプトインジェクションを受けうるうえ、確認する相手がいないので
+ * description の「消す前に利用者に確かめる」が効かず、利用者が気づいて画面から戻すまで失われたままになるため
+ * (ボードのナレッジをエージェントに変えさせないのと同じ考え)
+ */
+export const deleteWikiPageForMcp = async (
+  auth: ResourceAuth,
+  input: { ref: string; recursive?: boolean; ticketId?: string },
+) => {
+  if (auth.kind === 'agent' && input.recursive) {
+    throw new ClientError(
+      WIKI_AGENT_RECURSIVE_DELETE_DENIED,
+      'Agents cannot delete a page together with its descendants. Propose the deletion to the user in your report',
+    )
+  }
+  const { page } = await resolveWikiPageRef(auth.user, input.ref, 'write')
+  if (!page) {
+    return { deleted: 0 }
+  }
+  const ticketId = input.ticketId ? await resolveTicketId(auth, input.ticketId) : null
+  try {
+    return await deleteWikiPage(auth.user, WRITER, page.id, { recursive: input.recursive, ticketId })
+  } catch (error) {
+    // 共通の文言は recursive=true を勧めるので、使えないエージェントには別の道を示す
+    if (auth.kind === 'agent' && error instanceof ClientError && error.errorType === WIKI_PAGE_HAS_CHILDREN) {
+      throw new ClientError(
+        WIKI_PAGE_HAS_CHILDREN,
+        'The page has descendant pages, and agents cannot delete them together. Propose the deletion to the user in your report',
+      )
+    }
+    throw error
+  }
+}
+
+export const zWikiPageRef = z.string().trim().min(1).max(30)
+
+const zSpaceKey = z.string().trim().min(1).max(MAX_WIKI_SPACE_KEY)
+
+const zWikiTicketId = z
+  .string()
+  .min(1)
+  .optional()
+  .describe('Ticket you are working on (display ID allowed). Recorded in the page history')
+
+const deleteDescendantsNote = (auth: ResourceAuth) =>
+  auth.kind === 'agent'
+    ? 'Agent connections cannot use recursive=true: propose deleting pages with descendants in your report. '
+    : 'A page with child pages is deleted only with recursive=true, together with all its descendants; ' +
+      'confirm with the user before deleting descendants. '
+
+/**
+ * 設計書を書くスキルの案内。スキルを入れるのは利用者のマシンへの変更なので、人の経路でだけ入れ方のツールを勧める
+ * (エージェントには `get_skill_install_guide` を登録していない)
+ */
+const designDocSkillNote = (auth: ResourceAuth) =>
+  auth.kind === 'agent'
+    ? 'write it with the markdown-design-doc skill if you have it'
+    : 'write it with the markdown-design-doc skill; if you do not have it, offer the user to install it with get_skill_install_guide'
+
+export const registerWikiTools = (server: McpServer, auth: ResourceAuth) => {
+  server.registerTool(
+    'list_wiki_spaces',
+    {
+      title: 'List wiki spaces',
+      annotations: TOOL_ANNOTATIONS.readOnly,
+      description:
+        'Returns the Wiki spaces you can read, with your role and whether you can write. ' +
+        'type design_doc means a design doc space: all its pages are design docs (type=design_doc). ' +
+        'type announcement means an announcement space: its pages are flat normal pages listed newest first (no parent / position). ' +
+        'Spaces assigned to a board are also listed as wikiSpaces in get_ticket / get_board',
+      inputSchema: z.strictObject({
+        includeArchived: z.boolean().optional().describe('Include archived (read-only) spaces. Excluded by default'),
+      }),
+    },
+    async (input) => jsonResult(await listWikiSpacesForMcp(auth, input)),
+  )
+
+  server.registerTool(
+    'get_wiki_tree',
+    {
+      title: 'Get wiki tree',
+      annotations: TOOL_ANNOTATIONS.readOnly,
+      description:
+        'Returns the page hierarchy of a Wiki space (ref, title and tags only, no content). ' +
+        'Pass root to get only the pages under it, and depth to limit the levels (deeper pages are summarized as childCount). ' +
+        'If you can write to the space, templates lists the page templates (name, type) you can pass to save_wiki_page. ' +
+        `For an announcement space, pages is a flat list of up to ${MAX_WIKI_ANNOUNCEMENT_TREE} announcements newest first with createdAt ` +
+        '(limitReached means older ones exist: find them with search_wiki). depth is ignored and root is an error there',
+      inputSchema: z.strictObject({
+        space: zSpaceKey.describe('Space key (e.g. DOCS)'),
+        root: zWikiPageRef.optional().describe('ref of the page whose descendants to return'),
+        depth: z.number().int().min(1).max(MAX_WIKI_DEPTH).optional().describe('Levels to return. All by default'),
+      }),
+    },
+    async (input) => jsonResult(await getWikiTreeForMcp(auth, input)),
+  )
+
+  server.registerTool(
+    'search_wiki',
+    {
+      title: 'Search wiki',
+      annotations: TOOL_ANNOTATIONS.readOnly,
+      description:
+        'Searches Wiki pages you can read. Every word of keyword must match the title, content or a tag name. ' +
+        'Results are ordered by title matches, then by most recently updated, with a snippet around the first match. ' +
+        'Read a hit with get_wiki_page',
+      inputSchema: z.strictObject({
+        keyword: z
+          .string()
+          .max(MAX_WIKI_SEARCH_KEYWORD)
+          .optional()
+          .describe('Space-separated words (all must match). Words of 3+ characters search faster'),
+        space: zSpaceKey.optional().describe('Space key to search in. All readable spaces by default'),
+        tags: z
+          .array(z.string().min(1).max(MAX_TAG_NAME))
+          .max(MAX_WIKI_PAGE_TAGS)
+          .optional()
+          .describe('Tag names (case-insensitive): only pages with any of them'),
+        limit: z
+          .number()
+          .int()
+          .min(1)
+          .max(MAX_WIKI_SEARCH_LIMIT)
+          .optional()
+          .describe(
+            `Defaults to ${DEFAULT_WIKI_SEARCH_LIMIT}. limitReached in the response means more pages may match`,
+          ),
+      }),
+    },
+    async (input) => jsonResult(await searchWikiForMcp(auth, input)),
+  )
+
+  server.registerTool(
+    'get_wiki_page',
+    {
+      title: 'Get wiki page',
+      annotations: TOOL_ANNOTATIONS.readOnly,
+      description:
+        'Reads a Wiki page (Markdown) by ref, with its type (page / design_doc), breadcrumbs, child pages, tags and updatedAt. ' +
+        'Pass section with a heading to read only that section (including its subsections) and save tokens; ' +
+        'an unknown heading returns the list of headings. Images and files in the content can be read with get_image / get_file',
+      inputSchema: z.strictObject({
+        ref: zWikiPageRef.describe('Page ref KEY/number (e.g. DOCS/12)'),
+        section: z.string().min(1).max(MAX_SECTION_HEADING).optional().describe('Heading text, without the leading #'),
+      }),
+    },
+    async (input) => jsonResult(await getWikiPageForMcp(auth, input)),
+  )
+
+  server.registerTool(
+    'save_wiki_page',
+    {
+      title: 'Save wiki page',
+      annotations: TOOL_ANNOTATIONS.destructive,
+      description:
+        'Creates a Wiki page when ref is omitted (space and title, or a template with a title, required), or updates the page with ref: only the fields you pass change. ' +
+        'When creating, template (a name from templates in get_wiki_tree) fills the title, type and content you omit; ' +
+        '{{date}}, {{month}} and {{user}} in it are replaced with the creation date and your name. ' +
+        'Before updating, read the page with get_wiki_page and pass its updatedAt as expectedUpdatedAt so you do not overwrite changes by others. ' +
+        'For partial changes use edits instead of sending the whole content: each oldText must match exactly one place, and edits are checked against the content as you read it. ' +
+        'parent / position move the page within the space; a move and other changes are saved together or not at all. ' +
+        'tags replace all tags of the page and must be existing tag names of the space. ' +
+        `type design_doc makes the page a design document in the Markdown Design Doc Viewer format (${designDocSkillNote(auth)}); ` +
+        'when creating without type, a content whose front matter has type: design_doc becomes one. Omit type when updating to keep it. ' +
+        'A design doc without front matter (created with empty content, or changed to type design_doc without passing content) gets a minimal front matter with its title. ' +
+        'In a design doc space (type design_doc in list_wiki_spaces), pages are always design docs: type page is an error, and creating without type makes a design doc. ' +
+        'In an announcement space (type announcement), pages are flat normal pages ordered by creation date: parent, position and type design_doc are errors. ' +
+        'Write only what the user asked for or agreed to; every change is kept in the page history, from which users can restore it',
+      inputSchema: z.strictObject({
+        ref: zWikiPageRef.optional().describe('Page ref KEY/number to update. Omit to create a page'),
+        space: zSpaceKey.optional().describe('Space key to create the page in. Only when creating'),
+        title: z
+          .string()
+          .min(1)
+          .max(MAX_WIKI_TITLE)
+          .optional()
+          .describe('Required when creating, unless the template has a title'),
+        content: z.string().max(MAX_WIKI_CONTENT).optional().describe('Markdown body. Replaces the whole content'),
+        type: zWikiPageType
+          .optional()
+          .describe('page (Markdown) or design_doc (Markdown Design Doc Viewer design document)'),
+        template: z
+          .string()
+          .min(1)
+          .max(MAX_TEMPLATE_NAME)
+          .optional()
+          .describe(
+            'Name of a page template of the space. Only when creating. title / content / type you pass take precedence',
+          ),
+        edits: z
+          .array(
+            z.strictObject({
+              oldText: z.string().min(1).max(MAX_WIKI_CONTENT).describe('Exact text to replace'),
+              newText: z.string().max(MAX_WIKI_CONTENT).describe('Replacement (empty to delete)'),
+            }),
+          )
+          .min(1)
+          .max(MAX_WIKI_EDITS)
+          .optional()
+          .describe('Partial changes applied in order. Mutually exclusive with content'),
+        parent: zWikiPageRef
+          .nullable()
+          .optional()
+          .describe('ref of the parent page in the same space. null for the top level'),
+        position: z
+          .number()
+          .int()
+          .min(1)
+          .max(10000)
+          .optional()
+          .describe('Position among the siblings (1-based). Defaults to the end when the parent changes'),
+        tags: z.array(z.string().min(1).max(MAX_TAG_NAME)).max(MAX_WIKI_PAGE_TAGS).optional().describe('Tag names'),
+        expectedUpdatedAt: z.iso
+          .datetime()
+          .optional()
+          .describe('updatedAt from get_wiki_page. The save fails if someone updated the page after you read it'),
+        ticketId: zWikiTicketId,
+        message: z
+          .string()
+          .max(MAX_WIKI_REVISION_MESSAGE)
+          .optional()
+          .describe(
+            'Commit message: a short summary of why you changed the page, shown in the page history. ' +
+              'Kept only when the title / content / edits / type / tags change (not for a move alone)',
+          ),
+      }),
+    },
+    async (input) => jsonResult(await saveWikiPageForMcp(auth, input)),
+  )
+
+  server.registerTool(
+    'delete_wiki_page',
+    {
+      title: 'Delete wiki page',
+      annotations: TOOL_ANNOTATIONS.destructiveIdempotent,
+      description:
+        'Deletes a Wiki page. ' +
+        deleteDescendantsNote(auth) +
+        'Users can restore deleted pages from the deleted pages list of the space for a limited period',
+      inputSchema: z.strictObject({
+        ref: zWikiPageRef.describe('Page ref KEY/number'),
+        recursive: z.boolean().optional().describe('Also delete all descendant pages'),
+        ticketId: zWikiTicketId,
+      }),
+    },
+    async (input) => jsonResult(await deleteWikiPageForMcp(auth, input)),
+  )
+}

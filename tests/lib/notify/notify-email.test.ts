@@ -21,6 +21,8 @@ const content = (index: number, excerpt?: string): NotifyContent => ({
   subject: `[ABC-${index}] チケット${index}`,
   body: `検証さんがあなたをメンションしました(${index})`,
   url: `https://devuntu.example.com/t/ABC-${index}`,
+  openLabel: 'チケットを開く',
+  tag: `t-${index}`,
   ...(excerpt && { excerpt }),
 })
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { Accordion } from '@heroui/react'
+import { Accordion, cn } from '@heroui/react'
 import { ComponentProps, FC, ReactNode } from 'react'
 import { tv } from 'tailwind-variants'
 
@@ -19,6 +19,8 @@ export const AccordionSection: FC<
     icon?: ReactNode
     /** 見出しテキスト */
     title: ReactNode
+    /** 見出しの className(パディングの調整用) */
+    triggerClassName?: string
     /** 中身の className(パディングやレイアウトの調整用) */
     bodyClassName?: string
     /**
@@ -34,12 +36,12 @@ export const AccordionSection: FC<
     isLazyBody?: boolean
     children?: ReactNode
   }
-> = ({ icon, title, bodyClassName, isLazyBody, children, ...props }) => (
+> = ({ icon, title, triggerClassName, bodyClassName, isLazyBody, children, ...props }) => (
   <Accordion.Item {...props}>
     {({ isExpanded }) => (
       <>
         <Accordion.Heading>
-          <Accordion.Trigger className='gap-1'>
+          <Accordion.Trigger className={cn('gap-1', triggerClassName)}>
             {icon}
             {title}
             <Accordion.Indicator />

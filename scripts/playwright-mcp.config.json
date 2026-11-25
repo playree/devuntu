@@ -1,0 +1,22 @@
+{
+  "browser": {
+    "browserName": "chromium",
+    "launchOptions": {
+      "headless": true
+    },
+    "contextOptions": {
+      "viewport": {
+        "width": 1600,
+        "height": 1000
+      }
+    }
+  },
+  "outputDir": ".work/playwright",
+  "timeouts": {
+    "action": 10000,
+    "navigation": 120000
+  },
+  "console": {
+    "level": "error"
+  }
+}

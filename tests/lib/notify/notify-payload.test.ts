@@ -107,3 +107,26 @@ describe('parseNotifyPayload: announcement', () => {
     expect(() => parseNotifyPayload('announcement', { ...payload, commentId: undefined })).toThrow(ClientError)
   })
 })
+
+describe('parseNotifyPayload: wiki_announcement', () => {
+  const payload = {
+    spaceId: 'space-1',
+    spaceKey: 'NEWS',
+    pageId: 'page-1',
+    pageNumber: 12,
+    pageTitle: '年末年始の休業について',
+    kind: 'updated',
+    fromName: 'テストユーザー',
+    excerpt: '12/29〜1/3 は休業です\n• 窓口も休み',
+  }
+
+  it('チケットの参照を持たずに通る(抜粋は任意)', () => {
+    expect(parseNotifyPayload('wiki_announcement', payload)).toMatchObject(payload)
+    expect(parseNotifyPayload('wiki_announcement', { ...payload, excerpt: undefined }).excerpt).toBeUndefined()
+  })
+
+  it('未知の種類・番号の無い行は弾く', () => {
+    expect(() => parseNotifyPayload('wiki_announcement', { ...payload, kind: 'reminded' })).toThrow(ClientError)
+    expect(() => parseNotifyPayload('wiki_announcement', { ...payload, pageNumber: undefined })).toThrow(ClientError)
+  })
+})

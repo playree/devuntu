@@ -456,7 +456,18 @@ export const ModelName = {
   TicketActivity: 'TicketActivity',
   User: 'User',
   Group: 'Group',
-  UserGroup: 'UserGroup'
+  UserGroup: 'UserGroup',
+  WikiSpace: 'WikiSpace',
+  WikiSpaceKeyHistory: 'WikiSpaceKeyHistory',
+  WikiSpaceMember: 'WikiSpaceMember',
+  WikiSpaceGroup: 'WikiSpaceGroup',
+  WikiSpaceBoard: 'WikiSpaceBoard',
+  WikiPage: 'WikiPage',
+  WikiTag: 'WikiTag',
+  WikiPageTag: 'WikiPageTag',
+  WikiPageRevision: 'WikiPageRevision',
+  WikiTemplate: 'WikiTemplate',
+  WikiAnnouncementNotify: 'WikiAnnouncementNotify'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -472,7 +483,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "agentToken" | "mcpToken" | "agentRunner" | "agentRun" | "agentAutoReviseTrigger" | "agentUsage" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "boardNote" | "boardNoteRevision" | "board" | "boardKeyHistory" | "ticketTemplate" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "calendarShare" | "calendarBusyTime" | "commandTargetMember" | "commandTargetGroup" | "commandRun" | "commandRunChunk" | "ticketLink" | "boardRepository" | "boardGitSetting" | "gitCheckSuite" | "userNotifySetting" | "webPushSubscription" | "boardNotifySetting" | "notifyOutbox" | "notifyDelivery" | "ticketDueReminder" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "uploadNonce" | "keyValueStore" | "appVersion" | "ticket" | "ticketComment" | "ticketCriterion" | "ticketRelation" | "ticketActivity" | "user" | "group" | "userGroup"
+    modelProps: "agentToken" | "mcpToken" | "agentRunner" | "agentRun" | "agentAutoReviseTrigger" | "agentUsage" | "agentApprover" | "agentApproverGroup" | "session" | "account" | "verification" | "twoFactor" | "passkey" | "jwks" | "boardNote" | "boardNoteRevision" | "board" | "boardKeyHistory" | "ticketTemplate" | "tag" | "ticketTag" | "boardMember" | "boardGroup" | "calendarShare" | "calendarBusyTime" | "commandTargetMember" | "commandTargetGroup" | "commandRun" | "commandRunChunk" | "ticketLink" | "boardRepository" | "boardGitSetting" | "gitCheckSuite" | "userNotifySetting" | "webPushSubscription" | "boardNotifySetting" | "notifyOutbox" | "notifyDelivery" | "ticketDueReminder" | "oauthClient" | "oauthRefreshToken" | "oauthAccessToken" | "oauthConsent" | "oauthResource" | "oauthClientResource" | "oauthClientAssertion" | "dashboard" | "linkWidget" | "attachment" | "uploadNonce" | "keyValueStore" | "appVersion" | "ticket" | "ticketComment" | "ticketCriterion" | "ticketRelation" | "ticketActivity" | "user" | "group" | "userGroup" | "wikiSpace" | "wikiSpaceKeyHistory" | "wikiSpaceMember" | "wikiSpaceGroup" | "wikiSpaceBoard" | "wikiPage" | "wikiTag" | "wikiPageTag" | "wikiPageRevision" | "wikiTemplate" | "wikiAnnouncementNotify"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -4916,6 +4927,820 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    WikiSpace: {
+      payload: Prisma.$WikiSpacePayload<ExtArgs>
+      fields: Prisma.WikiSpaceFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.WikiSpaceFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpacePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.WikiSpaceFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpacePayload>
+        }
+        findFirst: {
+          args: Prisma.WikiSpaceFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpacePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.WikiSpaceFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpacePayload>
+        }
+        findMany: {
+          args: Prisma.WikiSpaceFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpacePayload>[]
+        }
+        create: {
+          args: Prisma.WikiSpaceCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpacePayload>
+        }
+        createMany: {
+          args: Prisma.WikiSpaceCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.WikiSpaceCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpacePayload>[]
+        }
+        delete: {
+          args: Prisma.WikiSpaceDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpacePayload>
+        }
+        update: {
+          args: Prisma.WikiSpaceUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpacePayload>
+        }
+        deleteMany: {
+          args: Prisma.WikiSpaceDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.WikiSpaceUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.WikiSpaceUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpacePayload>[]
+        }
+        upsert: {
+          args: Prisma.WikiSpaceUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpacePayload>
+        }
+        aggregate: {
+          args: Prisma.WikiSpaceAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateWikiSpace>
+        }
+        groupBy: {
+          args: Prisma.WikiSpaceGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WikiSpaceGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.WikiSpaceCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WikiSpaceCountAggregateOutputType> | number
+        }
+      }
+    }
+    WikiSpaceKeyHistory: {
+      payload: Prisma.$WikiSpaceKeyHistoryPayload<ExtArgs>
+      fields: Prisma.WikiSpaceKeyHistoryFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.WikiSpaceKeyHistoryFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceKeyHistoryPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.WikiSpaceKeyHistoryFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceKeyHistoryPayload>
+        }
+        findFirst: {
+          args: Prisma.WikiSpaceKeyHistoryFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceKeyHistoryPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.WikiSpaceKeyHistoryFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceKeyHistoryPayload>
+        }
+        findMany: {
+          args: Prisma.WikiSpaceKeyHistoryFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceKeyHistoryPayload>[]
+        }
+        create: {
+          args: Prisma.WikiSpaceKeyHistoryCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceKeyHistoryPayload>
+        }
+        createMany: {
+          args: Prisma.WikiSpaceKeyHistoryCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.WikiSpaceKeyHistoryCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceKeyHistoryPayload>[]
+        }
+        delete: {
+          args: Prisma.WikiSpaceKeyHistoryDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceKeyHistoryPayload>
+        }
+        update: {
+          args: Prisma.WikiSpaceKeyHistoryUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceKeyHistoryPayload>
+        }
+        deleteMany: {
+          args: Prisma.WikiSpaceKeyHistoryDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.WikiSpaceKeyHistoryUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.WikiSpaceKeyHistoryUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceKeyHistoryPayload>[]
+        }
+        upsert: {
+          args: Prisma.WikiSpaceKeyHistoryUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceKeyHistoryPayload>
+        }
+        aggregate: {
+          args: Prisma.WikiSpaceKeyHistoryAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateWikiSpaceKeyHistory>
+        }
+        groupBy: {
+          args: Prisma.WikiSpaceKeyHistoryGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WikiSpaceKeyHistoryGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.WikiSpaceKeyHistoryCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WikiSpaceKeyHistoryCountAggregateOutputType> | number
+        }
+      }
+    }
+    WikiSpaceMember: {
+      payload: Prisma.$WikiSpaceMemberPayload<ExtArgs>
+      fields: Prisma.WikiSpaceMemberFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.WikiSpaceMemberFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceMemberPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.WikiSpaceMemberFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceMemberPayload>
+        }
+        findFirst: {
+          args: Prisma.WikiSpaceMemberFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceMemberPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.WikiSpaceMemberFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceMemberPayload>
+        }
+        findMany: {
+          args: Prisma.WikiSpaceMemberFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceMemberPayload>[]
+        }
+        create: {
+          args: Prisma.WikiSpaceMemberCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceMemberPayload>
+        }
+        createMany: {
+          args: Prisma.WikiSpaceMemberCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.WikiSpaceMemberCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceMemberPayload>[]
+        }
+        delete: {
+          args: Prisma.WikiSpaceMemberDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceMemberPayload>
+        }
+        update: {
+          args: Prisma.WikiSpaceMemberUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceMemberPayload>
+        }
+        deleteMany: {
+          args: Prisma.WikiSpaceMemberDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.WikiSpaceMemberUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.WikiSpaceMemberUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceMemberPayload>[]
+        }
+        upsert: {
+          args: Prisma.WikiSpaceMemberUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceMemberPayload>
+        }
+        aggregate: {
+          args: Prisma.WikiSpaceMemberAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateWikiSpaceMember>
+        }
+        groupBy: {
+          args: Prisma.WikiSpaceMemberGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WikiSpaceMemberGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.WikiSpaceMemberCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WikiSpaceMemberCountAggregateOutputType> | number
+        }
+      }
+    }
+    WikiSpaceGroup: {
+      payload: Prisma.$WikiSpaceGroupPayload<ExtArgs>
+      fields: Prisma.WikiSpaceGroupFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.WikiSpaceGroupFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceGroupPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.WikiSpaceGroupFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceGroupPayload>
+        }
+        findFirst: {
+          args: Prisma.WikiSpaceGroupFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceGroupPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.WikiSpaceGroupFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceGroupPayload>
+        }
+        findMany: {
+          args: Prisma.WikiSpaceGroupFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceGroupPayload>[]
+        }
+        create: {
+          args: Prisma.WikiSpaceGroupCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceGroupPayload>
+        }
+        createMany: {
+          args: Prisma.WikiSpaceGroupCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.WikiSpaceGroupCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceGroupPayload>[]
+        }
+        delete: {
+          args: Prisma.WikiSpaceGroupDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceGroupPayload>
+        }
+        update: {
+          args: Prisma.WikiSpaceGroupUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceGroupPayload>
+        }
+        deleteMany: {
+          args: Prisma.WikiSpaceGroupDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.WikiSpaceGroupUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.WikiSpaceGroupUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceGroupPayload>[]
+        }
+        upsert: {
+          args: Prisma.WikiSpaceGroupUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceGroupPayload>
+        }
+        aggregate: {
+          args: Prisma.WikiSpaceGroupAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateWikiSpaceGroup>
+        }
+        groupBy: {
+          args: Prisma.WikiSpaceGroupGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WikiSpaceGroupGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.WikiSpaceGroupCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WikiSpaceGroupCountAggregateOutputType> | number
+        }
+      }
+    }
+    WikiSpaceBoard: {
+      payload: Prisma.$WikiSpaceBoardPayload<ExtArgs>
+      fields: Prisma.WikiSpaceBoardFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.WikiSpaceBoardFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceBoardPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.WikiSpaceBoardFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceBoardPayload>
+        }
+        findFirst: {
+          args: Prisma.WikiSpaceBoardFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceBoardPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.WikiSpaceBoardFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceBoardPayload>
+        }
+        findMany: {
+          args: Prisma.WikiSpaceBoardFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceBoardPayload>[]
+        }
+        create: {
+          args: Prisma.WikiSpaceBoardCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceBoardPayload>
+        }
+        createMany: {
+          args: Prisma.WikiSpaceBoardCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.WikiSpaceBoardCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceBoardPayload>[]
+        }
+        delete: {
+          args: Prisma.WikiSpaceBoardDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceBoardPayload>
+        }
+        update: {
+          args: Prisma.WikiSpaceBoardUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceBoardPayload>
+        }
+        deleteMany: {
+          args: Prisma.WikiSpaceBoardDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.WikiSpaceBoardUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.WikiSpaceBoardUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceBoardPayload>[]
+        }
+        upsert: {
+          args: Prisma.WikiSpaceBoardUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiSpaceBoardPayload>
+        }
+        aggregate: {
+          args: Prisma.WikiSpaceBoardAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateWikiSpaceBoard>
+        }
+        groupBy: {
+          args: Prisma.WikiSpaceBoardGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WikiSpaceBoardGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.WikiSpaceBoardCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WikiSpaceBoardCountAggregateOutputType> | number
+        }
+      }
+    }
+    WikiPage: {
+      payload: Prisma.$WikiPagePayload<ExtArgs>
+      fields: Prisma.WikiPageFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.WikiPageFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPagePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.WikiPageFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPagePayload>
+        }
+        findFirst: {
+          args: Prisma.WikiPageFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPagePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.WikiPageFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPagePayload>
+        }
+        findMany: {
+          args: Prisma.WikiPageFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPagePayload>[]
+        }
+        create: {
+          args: Prisma.WikiPageCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPagePayload>
+        }
+        createMany: {
+          args: Prisma.WikiPageCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.WikiPageCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPagePayload>[]
+        }
+        delete: {
+          args: Prisma.WikiPageDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPagePayload>
+        }
+        update: {
+          args: Prisma.WikiPageUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPagePayload>
+        }
+        deleteMany: {
+          args: Prisma.WikiPageDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.WikiPageUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.WikiPageUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPagePayload>[]
+        }
+        upsert: {
+          args: Prisma.WikiPageUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPagePayload>
+        }
+        aggregate: {
+          args: Prisma.WikiPageAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateWikiPage>
+        }
+        groupBy: {
+          args: Prisma.WikiPageGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WikiPageGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.WikiPageCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WikiPageCountAggregateOutputType> | number
+        }
+      }
+    }
+    WikiTag: {
+      payload: Prisma.$WikiTagPayload<ExtArgs>
+      fields: Prisma.WikiTagFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.WikiTagFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTagPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.WikiTagFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTagPayload>
+        }
+        findFirst: {
+          args: Prisma.WikiTagFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTagPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.WikiTagFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTagPayload>
+        }
+        findMany: {
+          args: Prisma.WikiTagFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTagPayload>[]
+        }
+        create: {
+          args: Prisma.WikiTagCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTagPayload>
+        }
+        createMany: {
+          args: Prisma.WikiTagCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.WikiTagCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTagPayload>[]
+        }
+        delete: {
+          args: Prisma.WikiTagDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTagPayload>
+        }
+        update: {
+          args: Prisma.WikiTagUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTagPayload>
+        }
+        deleteMany: {
+          args: Prisma.WikiTagDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.WikiTagUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.WikiTagUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTagPayload>[]
+        }
+        upsert: {
+          args: Prisma.WikiTagUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTagPayload>
+        }
+        aggregate: {
+          args: Prisma.WikiTagAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateWikiTag>
+        }
+        groupBy: {
+          args: Prisma.WikiTagGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WikiTagGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.WikiTagCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WikiTagCountAggregateOutputType> | number
+        }
+      }
+    }
+    WikiPageTag: {
+      payload: Prisma.$WikiPageTagPayload<ExtArgs>
+      fields: Prisma.WikiPageTagFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.WikiPageTagFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPageTagPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.WikiPageTagFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPageTagPayload>
+        }
+        findFirst: {
+          args: Prisma.WikiPageTagFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPageTagPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.WikiPageTagFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPageTagPayload>
+        }
+        findMany: {
+          args: Prisma.WikiPageTagFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPageTagPayload>[]
+        }
+        create: {
+          args: Prisma.WikiPageTagCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPageTagPayload>
+        }
+        createMany: {
+          args: Prisma.WikiPageTagCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.WikiPageTagCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPageTagPayload>[]
+        }
+        delete: {
+          args: Prisma.WikiPageTagDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPageTagPayload>
+        }
+        update: {
+          args: Prisma.WikiPageTagUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPageTagPayload>
+        }
+        deleteMany: {
+          args: Prisma.WikiPageTagDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.WikiPageTagUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.WikiPageTagUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPageTagPayload>[]
+        }
+        upsert: {
+          args: Prisma.WikiPageTagUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPageTagPayload>
+        }
+        aggregate: {
+          args: Prisma.WikiPageTagAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateWikiPageTag>
+        }
+        groupBy: {
+          args: Prisma.WikiPageTagGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WikiPageTagGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.WikiPageTagCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WikiPageTagCountAggregateOutputType> | number
+        }
+      }
+    }
+    WikiPageRevision: {
+      payload: Prisma.$WikiPageRevisionPayload<ExtArgs>
+      fields: Prisma.WikiPageRevisionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.WikiPageRevisionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPageRevisionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.WikiPageRevisionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPageRevisionPayload>
+        }
+        findFirst: {
+          args: Prisma.WikiPageRevisionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPageRevisionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.WikiPageRevisionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPageRevisionPayload>
+        }
+        findMany: {
+          args: Prisma.WikiPageRevisionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPageRevisionPayload>[]
+        }
+        create: {
+          args: Prisma.WikiPageRevisionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPageRevisionPayload>
+        }
+        createMany: {
+          args: Prisma.WikiPageRevisionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.WikiPageRevisionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPageRevisionPayload>[]
+        }
+        delete: {
+          args: Prisma.WikiPageRevisionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPageRevisionPayload>
+        }
+        update: {
+          args: Prisma.WikiPageRevisionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPageRevisionPayload>
+        }
+        deleteMany: {
+          args: Prisma.WikiPageRevisionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.WikiPageRevisionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.WikiPageRevisionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPageRevisionPayload>[]
+        }
+        upsert: {
+          args: Prisma.WikiPageRevisionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiPageRevisionPayload>
+        }
+        aggregate: {
+          args: Prisma.WikiPageRevisionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateWikiPageRevision>
+        }
+        groupBy: {
+          args: Prisma.WikiPageRevisionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WikiPageRevisionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.WikiPageRevisionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WikiPageRevisionCountAggregateOutputType> | number
+        }
+      }
+    }
+    WikiTemplate: {
+      payload: Prisma.$WikiTemplatePayload<ExtArgs>
+      fields: Prisma.WikiTemplateFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.WikiTemplateFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTemplatePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.WikiTemplateFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTemplatePayload>
+        }
+        findFirst: {
+          args: Prisma.WikiTemplateFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTemplatePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.WikiTemplateFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTemplatePayload>
+        }
+        findMany: {
+          args: Prisma.WikiTemplateFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTemplatePayload>[]
+        }
+        create: {
+          args: Prisma.WikiTemplateCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTemplatePayload>
+        }
+        createMany: {
+          args: Prisma.WikiTemplateCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.WikiTemplateCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTemplatePayload>[]
+        }
+        delete: {
+          args: Prisma.WikiTemplateDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTemplatePayload>
+        }
+        update: {
+          args: Prisma.WikiTemplateUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTemplatePayload>
+        }
+        deleteMany: {
+          args: Prisma.WikiTemplateDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.WikiTemplateUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.WikiTemplateUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTemplatePayload>[]
+        }
+        upsert: {
+          args: Prisma.WikiTemplateUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiTemplatePayload>
+        }
+        aggregate: {
+          args: Prisma.WikiTemplateAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateWikiTemplate>
+        }
+        groupBy: {
+          args: Prisma.WikiTemplateGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WikiTemplateGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.WikiTemplateCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WikiTemplateCountAggregateOutputType> | number
+        }
+      }
+    }
+    WikiAnnouncementNotify: {
+      payload: Prisma.$WikiAnnouncementNotifyPayload<ExtArgs>
+      fields: Prisma.WikiAnnouncementNotifyFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.WikiAnnouncementNotifyFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiAnnouncementNotifyPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.WikiAnnouncementNotifyFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiAnnouncementNotifyPayload>
+        }
+        findFirst: {
+          args: Prisma.WikiAnnouncementNotifyFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiAnnouncementNotifyPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.WikiAnnouncementNotifyFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiAnnouncementNotifyPayload>
+        }
+        findMany: {
+          args: Prisma.WikiAnnouncementNotifyFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiAnnouncementNotifyPayload>[]
+        }
+        create: {
+          args: Prisma.WikiAnnouncementNotifyCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiAnnouncementNotifyPayload>
+        }
+        createMany: {
+          args: Prisma.WikiAnnouncementNotifyCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.WikiAnnouncementNotifyCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiAnnouncementNotifyPayload>[]
+        }
+        delete: {
+          args: Prisma.WikiAnnouncementNotifyDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiAnnouncementNotifyPayload>
+        }
+        update: {
+          args: Prisma.WikiAnnouncementNotifyUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiAnnouncementNotifyPayload>
+        }
+        deleteMany: {
+          args: Prisma.WikiAnnouncementNotifyDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.WikiAnnouncementNotifyUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.WikiAnnouncementNotifyUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiAnnouncementNotifyPayload>[]
+        }
+        upsert: {
+          args: Prisma.WikiAnnouncementNotifyUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WikiAnnouncementNotifyPayload>
+        }
+        aggregate: {
+          args: Prisma.WikiAnnouncementNotifyAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateWikiAnnouncementNotify>
+        }
+        groupBy: {
+          args: Prisma.WikiAnnouncementNotifyGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WikiAnnouncementNotifyGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.WikiAnnouncementNotifyCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WikiAnnouncementNotifyCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -5718,6 +6543,8 @@ export const AttachmentScalarFieldEnum = {
   size: 'size',
   originalName: 'originalName',
   boardId: 'boardId',
+  wikiSpaceId: 'wikiSpaceId',
+  detachedAt: 'detachedAt',
   createdById: 'createdById',
   createdAt: 'createdAt'
 } as const
@@ -5886,6 +6713,167 @@ export const UserGroupScalarFieldEnum = {
 } as const
 
 export type UserGroupScalarFieldEnum = (typeof UserGroupScalarFieldEnum)[keyof typeof UserGroupScalarFieldEnum]
+
+
+export const WikiSpaceScalarFieldEnum = {
+  id: 'id',
+  key: 'key',
+  name: 'name',
+  description: 'description',
+  visibility: 'visibility',
+  type: 'type',
+  pageSeq: 'pageSeq',
+  archived: 'archived',
+  announceSlackChannelId: 'announceSlackChannelId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WikiSpaceScalarFieldEnum = (typeof WikiSpaceScalarFieldEnum)[keyof typeof WikiSpaceScalarFieldEnum]
+
+
+export const WikiSpaceKeyHistoryScalarFieldEnum = {
+  key: 'key',
+  createdAt: 'createdAt'
+} as const
+
+export type WikiSpaceKeyHistoryScalarFieldEnum = (typeof WikiSpaceKeyHistoryScalarFieldEnum)[keyof typeof WikiSpaceKeyHistoryScalarFieldEnum]
+
+
+export const WikiSpaceMemberScalarFieldEnum = {
+  id: 'id',
+  spaceId: 'spaceId',
+  userId: 'userId',
+  role: 'role',
+  createdAt: 'createdAt'
+} as const
+
+export type WikiSpaceMemberScalarFieldEnum = (typeof WikiSpaceMemberScalarFieldEnum)[keyof typeof WikiSpaceMemberScalarFieldEnum]
+
+
+export const WikiSpaceGroupScalarFieldEnum = {
+  id: 'id',
+  spaceId: 'spaceId',
+  groupId: 'groupId',
+  role: 'role',
+  createdAt: 'createdAt'
+} as const
+
+export type WikiSpaceGroupScalarFieldEnum = (typeof WikiSpaceGroupScalarFieldEnum)[keyof typeof WikiSpaceGroupScalarFieldEnum]
+
+
+export const WikiSpaceBoardScalarFieldEnum = {
+  id: 'id',
+  spaceId: 'spaceId',
+  boardId: 'boardId',
+  role: 'role',
+  createdAt: 'createdAt'
+} as const
+
+export type WikiSpaceBoardScalarFieldEnum = (typeof WikiSpaceBoardScalarFieldEnum)[keyof typeof WikiSpaceBoardScalarFieldEnum]
+
+
+export const WikiPageScalarFieldEnum = {
+  id: 'id',
+  spaceId: 'spaceId',
+  parentId: 'parentId',
+  number: 'number',
+  title: 'title',
+  content: 'content',
+  type: 'type',
+  order: 'order',
+  createdById: 'createdById',
+  updatedById: 'updatedById',
+  updatedVia: 'updatedVia',
+  deletedAt: 'deletedAt',
+  deletedById: 'deletedById',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WikiPageScalarFieldEnum = (typeof WikiPageScalarFieldEnum)[keyof typeof WikiPageScalarFieldEnum]
+
+
+export const WikiTagScalarFieldEnum = {
+  id: 'id',
+  spaceId: 'spaceId',
+  name: 'name',
+  color: 'color',
+  order: 'order',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WikiTagScalarFieldEnum = (typeof WikiTagScalarFieldEnum)[keyof typeof WikiTagScalarFieldEnum]
+
+
+export const WikiPageTagScalarFieldEnum = {
+  id: 'id',
+  pageId: 'pageId',
+  tagId: 'tagId',
+  createdAt: 'createdAt'
+} as const
+
+export type WikiPageTagScalarFieldEnum = (typeof WikiPageTagScalarFieldEnum)[keyof typeof WikiPageTagScalarFieldEnum]
+
+
+export const WikiPageRevisionScalarFieldEnum = {
+  id: 'id',
+  spaceId: 'spaceId',
+  pageId: 'pageId',
+  number: 'number',
+  action: 'action',
+  parentId: 'parentId',
+  order: 'order',
+  title: 'title',
+  content: 'content',
+  type: 'type',
+  tags: 'tags',
+  actorId: 'actorId',
+  via: 'via',
+  ticketId: 'ticketId',
+  restoredFromId: 'restoredFromId',
+  message: 'message',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WikiPageRevisionScalarFieldEnum = (typeof WikiPageRevisionScalarFieldEnum)[keyof typeof WikiPageRevisionScalarFieldEnum]
+
+
+export const WikiTemplateScalarFieldEnum = {
+  id: 'id',
+  spaceId: 'spaceId',
+  name: 'name',
+  title: 'title',
+  content: 'content',
+  type: 'type',
+  order: 'order',
+  createdById: 'createdById',
+  updatedById: 'updatedById',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WikiTemplateScalarFieldEnum = (typeof WikiTemplateScalarFieldEnum)[keyof typeof WikiTemplateScalarFieldEnum]
+
+
+export const WikiAnnouncementNotifyScalarFieldEnum = {
+  id: 'id',
+  spaceId: 'spaceId',
+  pageId: 'pageId',
+  kind: 'kind',
+  message: 'message',
+  scheduledAt: 'scheduledAt',
+  status: 'status',
+  sentAt: 'sentAt',
+  skipReason: 'skipReason',
+  senderId: 'senderId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WikiAnnouncementNotifyScalarFieldEnum = (typeof WikiAnnouncementNotifyScalarFieldEnum)[keyof typeof WikiAnnouncementNotifyScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -6482,6 +7470,146 @@ export type ListEnumTicketActivityFieldFieldRefInput<$PrismaModel> = FieldRefInp
 
 
 /**
+ * Reference to a field of type 'WikiVisibility'
+ */
+export type EnumWikiVisibilityFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiVisibility'>
+    
+
+
+/**
+ * Reference to a field of type 'WikiVisibility[]'
+ */
+export type ListEnumWikiVisibilityFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiVisibility[]'>
+    
+
+
+/**
+ * Reference to a field of type 'WikiSpaceType'
+ */
+export type EnumWikiSpaceTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiSpaceType'>
+    
+
+
+/**
+ * Reference to a field of type 'WikiSpaceType[]'
+ */
+export type ListEnumWikiSpaceTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiSpaceType[]'>
+    
+
+
+/**
+ * Reference to a field of type 'WikiSpaceRole'
+ */
+export type EnumWikiSpaceRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiSpaceRole'>
+    
+
+
+/**
+ * Reference to a field of type 'WikiSpaceRole[]'
+ */
+export type ListEnumWikiSpaceRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiSpaceRole[]'>
+    
+
+
+/**
+ * Reference to a field of type 'WikiAssignRole'
+ */
+export type EnumWikiAssignRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiAssignRole'>
+    
+
+
+/**
+ * Reference to a field of type 'WikiAssignRole[]'
+ */
+export type ListEnumWikiAssignRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiAssignRole[]'>
+    
+
+
+/**
+ * Reference to a field of type 'WikiPageType'
+ */
+export type EnumWikiPageTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiPageType'>
+    
+
+
+/**
+ * Reference to a field of type 'WikiPageType[]'
+ */
+export type ListEnumWikiPageTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiPageType[]'>
+    
+
+
+/**
+ * Reference to a field of type 'WikiVia'
+ */
+export type EnumWikiViaFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiVia'>
+    
+
+
+/**
+ * Reference to a field of type 'WikiVia[]'
+ */
+export type ListEnumWikiViaFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiVia[]'>
+    
+
+
+/**
+ * Reference to a field of type 'WikiPageRevisionAction'
+ */
+export type EnumWikiPageRevisionActionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiPageRevisionAction'>
+    
+
+
+/**
+ * Reference to a field of type 'WikiPageRevisionAction[]'
+ */
+export type ListEnumWikiPageRevisionActionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiPageRevisionAction[]'>
+    
+
+
+/**
+ * Reference to a field of type 'WikiAnnouncementNotifyKind'
+ */
+export type EnumWikiAnnouncementNotifyKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiAnnouncementNotifyKind'>
+    
+
+
+/**
+ * Reference to a field of type 'WikiAnnouncementNotifyKind[]'
+ */
+export type ListEnumWikiAnnouncementNotifyKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiAnnouncementNotifyKind[]'>
+    
+
+
+/**
+ * Reference to a field of type 'WikiAnnouncementNotifyStatus'
+ */
+export type EnumWikiAnnouncementNotifyStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiAnnouncementNotifyStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'WikiAnnouncementNotifyStatus[]'
+ */
+export type ListEnumWikiAnnouncementNotifyStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiAnnouncementNotifyStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'WikiAnnouncementNotifySkipReason'
+ */
+export type EnumWikiAnnouncementNotifySkipReasonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiAnnouncementNotifySkipReason'>
+    
+
+
+/**
+ * Reference to a field of type 'WikiAnnouncementNotifySkipReason[]'
+ */
+export type ListEnumWikiAnnouncementNotifySkipReasonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WikiAnnouncementNotifySkipReason[]'>
+    
+
+
+/**
  * Reference to a field of type 'Float'
  */
 export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
@@ -6705,6 +7833,17 @@ export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   group?: Prisma.GroupOmit
   userGroup?: Prisma.UserGroupOmit
+  wikiSpace?: Prisma.WikiSpaceOmit
+  wikiSpaceKeyHistory?: Prisma.WikiSpaceKeyHistoryOmit
+  wikiSpaceMember?: Prisma.WikiSpaceMemberOmit
+  wikiSpaceGroup?: Prisma.WikiSpaceGroupOmit
+  wikiSpaceBoard?: Prisma.WikiSpaceBoardOmit
+  wikiPage?: Prisma.WikiPageOmit
+  wikiTag?: Prisma.WikiTagOmit
+  wikiPageTag?: Prisma.WikiPageTagOmit
+  wikiPageRevision?: Prisma.WikiPageRevisionOmit
+  wikiTemplate?: Prisma.WikiTemplateOmit
+  wikiAnnouncementNotify?: Prisma.WikiAnnouncementNotifyOmit
 }
 
 /* Types for Logging */

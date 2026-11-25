@@ -1,12 +1,13 @@
 'use client'
 
 import { ActionErrorNotifier } from '@/components/action-error-notifier'
+import { LeaveGuardProvider } from '@/components/general/leave-guard'
 import { ConfirmModalProvider } from '@/components/general/modal'
 import { GeneralUiText, GeneralUiTextProvider } from '@/components/general/ui-text'
 import { LocaleProvider } from '@/components/locale/client'
 import { NotifyProvider } from '@/components/notify'
 import { DefaultTimezoneContext } from '@/lib/auth/use-timezone'
-import { PRINT_PATH_PREFIX } from '@/lib/board/ticket-print'
+import { PRINT_PATH_PREFIX } from '@/lib/print-export'
 import { useLocale } from '@/locale/client'
 import { localeConfig } from '@/locale/config'
 import { RouterProvider } from '@heroui/react'
@@ -73,6 +74,10 @@ const MyGeneralUiTextProvider: FC<{ children: ReactNode }> = ({ children }) => {
       tableEmpty: t('table_empty'),
       resultRange: (start, end, total) => t('results_range', { start, end, total }),
       waitSeconds: (sec) => t('wait_seconds', { sec }),
+      sideNavResize: t('side_nav_resize'),
+      treeExpand: (label) => t('tree_expand', { label }),
+      treeCollapse: (label) => t('tree_collapse', { label }),
+      fieldHelp: (label) => t('field_help', { label }),
     }),
     [t],
   )
@@ -103,7 +108,9 @@ export const Providers: FC<ProvidersProps> = ({
           <MyGeneralUiTextProvider>
             <ConfirmModalProvider>
               <ActionErrorNotifier />
-              <MyRouterProvider>{children}</MyRouterProvider>
+              <LeaveGuardProvider>
+                <MyRouterProvider>{children}</MyRouterProvider>
+              </LeaveGuardProvider>
             </ConfirmModalProvider>
           </MyGeneralUiTextProvider>
         </DefaultTimezoneContext>

@@ -1,6 +1,6 @@
 {
   "name": "devuntu",
-  "version": "1.1.8",
+  "version": "1.2.0",
   "description": "Self-hosted project management tool centered on Kanban boards and tickets, with calendar, notifications, MCP server and AI agent integration.",
   "private": true,
   "license": "MIT",
@@ -73,6 +73,7 @@
     "framer-motion": "^14.9.0",
     "jose": "^6.2.15",
     "lexical": "0.48.0",
+    "markdown-design-doc-viewer-embed": "^1.5.7",
     "mdast-util-gfm-footnote": "^2.1.0",
     "mermaid": "^12.3.0",
     "micromark-extension-gfm-footnote": "^2.1.0",

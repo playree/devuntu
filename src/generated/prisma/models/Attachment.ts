@@ -42,6 +42,8 @@ export type AttachmentMinAggregateOutputType = {
   size: number | null
   originalName: string | null
   boardId: string | null
+  wikiSpaceId: string | null
+  detachedAt: Date | null
   createdById: string | null
   createdAt: Date | null
 }
@@ -53,6 +55,8 @@ export type AttachmentMaxAggregateOutputType = {
   size: number | null
   originalName: string | null
   boardId: string | null
+  wikiSpaceId: string | null
+  detachedAt: Date | null
   createdById: string | null
   createdAt: Date | null
 }
@@ -64,6 +68,8 @@ export type AttachmentCountAggregateOutputType = {
   size: number
   originalName: number
   boardId: number
+  wikiSpaceId: number
+  detachedAt: number
   createdById: number
   createdAt: number
   _all: number
@@ -85,6 +91,8 @@ export type AttachmentMinAggregateInputType = {
   size?: true
   originalName?: true
   boardId?: true
+  wikiSpaceId?: true
+  detachedAt?: true
   createdById?: true
   createdAt?: true
 }
@@ -96,6 +104,8 @@ export type AttachmentMaxAggregateInputType = {
   size?: true
   originalName?: true
   boardId?: true
+  wikiSpaceId?: true
+  detachedAt?: true
   createdById?: true
   createdAt?: true
 }
@@ -107,6 +117,8 @@ export type AttachmentCountAggregateInputType = {
   size?: true
   originalName?: true
   boardId?: true
+  wikiSpaceId?: true
+  detachedAt?: true
   createdById?: true
   createdAt?: true
   _all?: true
@@ -205,6 +217,8 @@ export type AttachmentGroupByOutputType = {
   size: number
   originalName: string
   boardId: string | null
+  wikiSpaceId: string | null
+  detachedAt: Date | null
   createdById: string | null
   createdAt: Date
   _count: AttachmentCountAggregateOutputType | null
@@ -239,9 +253,12 @@ export type AttachmentWhereInput = {
   size?: Prisma.IntFilter<"Attachment"> | number
   originalName?: Prisma.StringFilter<"Attachment"> | string
   boardId?: Prisma.StringNullableFilter<"Attachment"> | string | null
+  wikiSpaceId?: Prisma.StringNullableFilter<"Attachment"> | string | null
+  detachedAt?: Prisma.DateTimeNullableFilter<"Attachment"> | Date | string | null
   createdById?: Prisma.StringNullableFilter<"Attachment"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Attachment"> | Date | string
   board?: Prisma.XOR<Prisma.BoardNullableScalarRelationFilter, Prisma.BoardWhereInput> | null
+  wikiSpace?: Prisma.XOR<Prisma.WikiSpaceNullableScalarRelationFilter, Prisma.WikiSpaceWhereInput> | null
   createdBy?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
 }
 
@@ -252,9 +269,12 @@ export type AttachmentOrderByWithRelationInput = {
   size?: Prisma.SortOrder
   originalName?: Prisma.SortOrder
   boardId?: Prisma.SortOrderInput | Prisma.SortOrder
+  wikiSpaceId?: Prisma.SortOrderInput | Prisma.SortOrder
+  detachedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdById?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   board?: Prisma.BoardOrderByWithRelationInput
+  wikiSpace?: Prisma.WikiSpaceOrderByWithRelationInput
   createdBy?: Prisma.UserOrderByWithRelationInput
 }
 
@@ -268,9 +288,12 @@ export type AttachmentWhereUniqueInput = Prisma.AtLeast<{
   size?: Prisma.IntFilter<"Attachment"> | number
   originalName?: Prisma.StringFilter<"Attachment"> | string
   boardId?: Prisma.StringNullableFilter<"Attachment"> | string | null
+  wikiSpaceId?: Prisma.StringNullableFilter<"Attachment"> | string | null
+  detachedAt?: Prisma.DateTimeNullableFilter<"Attachment"> | Date | string | null
   createdById?: Prisma.StringNullableFilter<"Attachment"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Attachment"> | Date | string
   board?: Prisma.XOR<Prisma.BoardNullableScalarRelationFilter, Prisma.BoardWhereInput> | null
+  wikiSpace?: Prisma.XOR<Prisma.WikiSpaceNullableScalarRelationFilter, Prisma.WikiSpaceWhereInput> | null
   createdBy?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
 }, "id" | "key">
 
@@ -281,6 +304,8 @@ export type AttachmentOrderByWithAggregationInput = {
   size?: Prisma.SortOrder
   originalName?: Prisma.SortOrder
   boardId?: Prisma.SortOrderInput | Prisma.SortOrder
+  wikiSpaceId?: Prisma.SortOrderInput | Prisma.SortOrder
+  detachedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdById?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.AttachmentCountOrderByAggregateInput
@@ -300,6 +325,8 @@ export type AttachmentScalarWhereWithAggregatesInput = {
   size?: Prisma.IntWithAggregatesFilter<"Attachment"> | number
   originalName?: Prisma.StringWithAggregatesFilter<"Attachment"> | string
   boardId?: Prisma.StringNullableWithAggregatesFilter<"Attachment"> | string | null
+  wikiSpaceId?: Prisma.StringNullableWithAggregatesFilter<"Attachment"> | string | null
+  detachedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Attachment"> | Date | string | null
   createdById?: Prisma.StringNullableWithAggregatesFilter<"Attachment"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Attachment"> | Date | string
 }
@@ -310,8 +337,10 @@ export type AttachmentCreateInput = {
   mimeType: string
   size: number
   originalName: string
+  detachedAt?: Date | string | null
   createdAt?: Date | string
   board?: Prisma.BoardCreateNestedOneWithoutAttachmentsInput
+  wikiSpace?: Prisma.WikiSpaceCreateNestedOneWithoutAttachmentsInput
   createdBy?: Prisma.UserCreateNestedOneWithoutAttachmentsInput
 }
 
@@ -322,6 +351,8 @@ export type AttachmentUncheckedCreateInput = {
   size: number
   originalName: string
   boardId?: string | null
+  wikiSpaceId?: string | null
+  detachedAt?: Date | string | null
   createdById?: string | null
   createdAt?: Date | string
 }
@@ -332,8 +363,10 @@ export type AttachmentUpdateInput = {
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   size?: Prisma.IntFieldUpdateOperationsInput | number
   originalName?: Prisma.StringFieldUpdateOperationsInput | string
+  detachedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   board?: Prisma.BoardUpdateOneWithoutAttachmentsNestedInput
+  wikiSpace?: Prisma.WikiSpaceUpdateOneWithoutAttachmentsNestedInput
   createdBy?: Prisma.UserUpdateOneWithoutAttachmentsNestedInput
 }
 
@@ -344,6 +377,8 @@ export type AttachmentUncheckedUpdateInput = {
   size?: Prisma.IntFieldUpdateOperationsInput | number
   originalName?: Prisma.StringFieldUpdateOperationsInput | string
   boardId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  wikiSpaceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  detachedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -355,6 +390,8 @@ export type AttachmentCreateManyInput = {
   size: number
   originalName: string
   boardId?: string | null
+  wikiSpaceId?: string | null
+  detachedAt?: Date | string | null
   createdById?: string | null
   createdAt?: Date | string
 }
@@ -365,6 +402,7 @@ export type AttachmentUpdateManyMutationInput = {
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   size?: Prisma.IntFieldUpdateOperationsInput | number
   originalName?: Prisma.StringFieldUpdateOperationsInput | string
+  detachedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -375,6 +413,8 @@ export type AttachmentUncheckedUpdateManyInput = {
   size?: Prisma.IntFieldUpdateOperationsInput | number
   originalName?: Prisma.StringFieldUpdateOperationsInput | string
   boardId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  wikiSpaceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  detachedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -396,6 +436,8 @@ export type AttachmentCountOrderByAggregateInput = {
   size?: Prisma.SortOrder
   originalName?: Prisma.SortOrder
   boardId?: Prisma.SortOrder
+  wikiSpaceId?: Prisma.SortOrder
+  detachedAt?: Prisma.SortOrder
   createdById?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
@@ -411,6 +453,8 @@ export type AttachmentMaxOrderByAggregateInput = {
   size?: Prisma.SortOrder
   originalName?: Prisma.SortOrder
   boardId?: Prisma.SortOrder
+  wikiSpaceId?: Prisma.SortOrder
+  detachedAt?: Prisma.SortOrder
   createdById?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
@@ -422,6 +466,8 @@ export type AttachmentMinOrderByAggregateInput = {
   size?: Prisma.SortOrder
   originalName?: Prisma.SortOrder
   boardId?: Prisma.SortOrder
+  wikiSpaceId?: Prisma.SortOrder
+  detachedAt?: Prisma.SortOrder
   createdById?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
@@ -514,13 +560,57 @@ export type AttachmentUncheckedUpdateManyWithoutCreatedByNestedInput = {
   deleteMany?: Prisma.AttachmentScalarWhereInput | Prisma.AttachmentScalarWhereInput[]
 }
 
+export type AttachmentCreateNestedManyWithoutWikiSpaceInput = {
+  create?: Prisma.XOR<Prisma.AttachmentCreateWithoutWikiSpaceInput, Prisma.AttachmentUncheckedCreateWithoutWikiSpaceInput> | Prisma.AttachmentCreateWithoutWikiSpaceInput[] | Prisma.AttachmentUncheckedCreateWithoutWikiSpaceInput[]
+  connectOrCreate?: Prisma.AttachmentCreateOrConnectWithoutWikiSpaceInput | Prisma.AttachmentCreateOrConnectWithoutWikiSpaceInput[]
+  createMany?: Prisma.AttachmentCreateManyWikiSpaceInputEnvelope
+  connect?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
+}
+
+export type AttachmentUncheckedCreateNestedManyWithoutWikiSpaceInput = {
+  create?: Prisma.XOR<Prisma.AttachmentCreateWithoutWikiSpaceInput, Prisma.AttachmentUncheckedCreateWithoutWikiSpaceInput> | Prisma.AttachmentCreateWithoutWikiSpaceInput[] | Prisma.AttachmentUncheckedCreateWithoutWikiSpaceInput[]
+  connectOrCreate?: Prisma.AttachmentCreateOrConnectWithoutWikiSpaceInput | Prisma.AttachmentCreateOrConnectWithoutWikiSpaceInput[]
+  createMany?: Prisma.AttachmentCreateManyWikiSpaceInputEnvelope
+  connect?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
+}
+
+export type AttachmentUpdateManyWithoutWikiSpaceNestedInput = {
+  create?: Prisma.XOR<Prisma.AttachmentCreateWithoutWikiSpaceInput, Prisma.AttachmentUncheckedCreateWithoutWikiSpaceInput> | Prisma.AttachmentCreateWithoutWikiSpaceInput[] | Prisma.AttachmentUncheckedCreateWithoutWikiSpaceInput[]
+  connectOrCreate?: Prisma.AttachmentCreateOrConnectWithoutWikiSpaceInput | Prisma.AttachmentCreateOrConnectWithoutWikiSpaceInput[]
+  upsert?: Prisma.AttachmentUpsertWithWhereUniqueWithoutWikiSpaceInput | Prisma.AttachmentUpsertWithWhereUniqueWithoutWikiSpaceInput[]
+  createMany?: Prisma.AttachmentCreateManyWikiSpaceInputEnvelope
+  set?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
+  disconnect?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
+  delete?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
+  connect?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
+  update?: Prisma.AttachmentUpdateWithWhereUniqueWithoutWikiSpaceInput | Prisma.AttachmentUpdateWithWhereUniqueWithoutWikiSpaceInput[]
+  updateMany?: Prisma.AttachmentUpdateManyWithWhereWithoutWikiSpaceInput | Prisma.AttachmentUpdateManyWithWhereWithoutWikiSpaceInput[]
+  deleteMany?: Prisma.AttachmentScalarWhereInput | Prisma.AttachmentScalarWhereInput[]
+}
+
+export type AttachmentUncheckedUpdateManyWithoutWikiSpaceNestedInput = {
+  create?: Prisma.XOR<Prisma.AttachmentCreateWithoutWikiSpaceInput, Prisma.AttachmentUncheckedCreateWithoutWikiSpaceInput> | Prisma.AttachmentCreateWithoutWikiSpaceInput[] | Prisma.AttachmentUncheckedCreateWithoutWikiSpaceInput[]
+  connectOrCreate?: Prisma.AttachmentCreateOrConnectWithoutWikiSpaceInput | Prisma.AttachmentCreateOrConnectWithoutWikiSpaceInput[]
+  upsert?: Prisma.AttachmentUpsertWithWhereUniqueWithoutWikiSpaceInput | Prisma.AttachmentUpsertWithWhereUniqueWithoutWikiSpaceInput[]
+  createMany?: Prisma.AttachmentCreateManyWikiSpaceInputEnvelope
+  set?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
+  disconnect?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
+  delete?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
+  connect?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
+  update?: Prisma.AttachmentUpdateWithWhereUniqueWithoutWikiSpaceInput | Prisma.AttachmentUpdateWithWhereUniqueWithoutWikiSpaceInput[]
+  updateMany?: Prisma.AttachmentUpdateManyWithWhereWithoutWikiSpaceInput | Prisma.AttachmentUpdateManyWithWhereWithoutWikiSpaceInput[]
+  deleteMany?: Prisma.AttachmentScalarWhereInput | Prisma.AttachmentScalarWhereInput[]
+}
+
 export type AttachmentCreateWithoutBoardInput = {
   id?: string
   key: string
   mimeType: string
   size: number
   originalName: string
+  detachedAt?: Date | string | null
   createdAt?: Date | string
+  wikiSpace?: Prisma.WikiSpaceCreateNestedOneWithoutAttachmentsInput
   createdBy?: Prisma.UserCreateNestedOneWithoutAttachmentsInput
 }
 
@@ -530,6 +620,8 @@ export type AttachmentUncheckedCreateWithoutBoardInput = {
   mimeType: string
   size: number
   originalName: string
+  wikiSpaceId?: string | null
+  detachedAt?: Date | string | null
   createdById?: string | null
   createdAt?: Date | string
 }
@@ -570,6 +662,8 @@ export type AttachmentScalarWhereInput = {
   size?: Prisma.IntFilter<"Attachment"> | number
   originalName?: Prisma.StringFilter<"Attachment"> | string
   boardId?: Prisma.StringNullableFilter<"Attachment"> | string | null
+  wikiSpaceId?: Prisma.StringNullableFilter<"Attachment"> | string | null
+  detachedAt?: Prisma.DateTimeNullableFilter<"Attachment"> | Date | string | null
   createdById?: Prisma.StringNullableFilter<"Attachment"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Attachment"> | Date | string
 }
@@ -580,8 +674,10 @@ export type AttachmentCreateWithoutCreatedByInput = {
   mimeType: string
   size: number
   originalName: string
+  detachedAt?: Date | string | null
   createdAt?: Date | string
   board?: Prisma.BoardCreateNestedOneWithoutAttachmentsInput
+  wikiSpace?: Prisma.WikiSpaceCreateNestedOneWithoutAttachmentsInput
 }
 
 export type AttachmentUncheckedCreateWithoutCreatedByInput = {
@@ -591,6 +687,8 @@ export type AttachmentUncheckedCreateWithoutCreatedByInput = {
   size: number
   originalName: string
   boardId?: string | null
+  wikiSpaceId?: string | null
+  detachedAt?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -620,12 +718,64 @@ export type AttachmentUpdateManyWithWhereWithoutCreatedByInput = {
   data: Prisma.XOR<Prisma.AttachmentUpdateManyMutationInput, Prisma.AttachmentUncheckedUpdateManyWithoutCreatedByInput>
 }
 
+export type AttachmentCreateWithoutWikiSpaceInput = {
+  id?: string
+  key: string
+  mimeType: string
+  size: number
+  originalName: string
+  detachedAt?: Date | string | null
+  createdAt?: Date | string
+  board?: Prisma.BoardCreateNestedOneWithoutAttachmentsInput
+  createdBy?: Prisma.UserCreateNestedOneWithoutAttachmentsInput
+}
+
+export type AttachmentUncheckedCreateWithoutWikiSpaceInput = {
+  id?: string
+  key: string
+  mimeType: string
+  size: number
+  originalName: string
+  boardId?: string | null
+  detachedAt?: Date | string | null
+  createdById?: string | null
+  createdAt?: Date | string
+}
+
+export type AttachmentCreateOrConnectWithoutWikiSpaceInput = {
+  where: Prisma.AttachmentWhereUniqueInput
+  create: Prisma.XOR<Prisma.AttachmentCreateWithoutWikiSpaceInput, Prisma.AttachmentUncheckedCreateWithoutWikiSpaceInput>
+}
+
+export type AttachmentCreateManyWikiSpaceInputEnvelope = {
+  data: Prisma.AttachmentCreateManyWikiSpaceInput | Prisma.AttachmentCreateManyWikiSpaceInput[]
+  skipDuplicates?: boolean
+}
+
+export type AttachmentUpsertWithWhereUniqueWithoutWikiSpaceInput = {
+  where: Prisma.AttachmentWhereUniqueInput
+  update: Prisma.XOR<Prisma.AttachmentUpdateWithoutWikiSpaceInput, Prisma.AttachmentUncheckedUpdateWithoutWikiSpaceInput>
+  create: Prisma.XOR<Prisma.AttachmentCreateWithoutWikiSpaceInput, Prisma.AttachmentUncheckedCreateWithoutWikiSpaceInput>
+}
+
+export type AttachmentUpdateWithWhereUniqueWithoutWikiSpaceInput = {
+  where: Prisma.AttachmentWhereUniqueInput
+  data: Prisma.XOR<Prisma.AttachmentUpdateWithoutWikiSpaceInput, Prisma.AttachmentUncheckedUpdateWithoutWikiSpaceInput>
+}
+
+export type AttachmentUpdateManyWithWhereWithoutWikiSpaceInput = {
+  where: Prisma.AttachmentScalarWhereInput
+  data: Prisma.XOR<Prisma.AttachmentUpdateManyMutationInput, Prisma.AttachmentUncheckedUpdateManyWithoutWikiSpaceInput>
+}
+
 export type AttachmentCreateManyBoardInput = {
   id?: string
   key: string
   mimeType: string
   size: number
   originalName: string
+  wikiSpaceId?: string | null
+  detachedAt?: Date | string | null
   createdById?: string | null
   createdAt?: Date | string
 }
@@ -636,7 +786,9 @@ export type AttachmentUpdateWithoutBoardInput = {
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   size?: Prisma.IntFieldUpdateOperationsInput | number
   originalName?: Prisma.StringFieldUpdateOperationsInput | string
+  detachedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  wikiSpace?: Prisma.WikiSpaceUpdateOneWithoutAttachmentsNestedInput
   createdBy?: Prisma.UserUpdateOneWithoutAttachmentsNestedInput
 }
 
@@ -646,6 +798,8 @@ export type AttachmentUncheckedUpdateWithoutBoardInput = {
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   size?: Prisma.IntFieldUpdateOperationsInput | number
   originalName?: Prisma.StringFieldUpdateOperationsInput | string
+  wikiSpaceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  detachedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -656,6 +810,8 @@ export type AttachmentUncheckedUpdateManyWithoutBoardInput = {
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   size?: Prisma.IntFieldUpdateOperationsInput | number
   originalName?: Prisma.StringFieldUpdateOperationsInput | string
+  wikiSpaceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  detachedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -667,6 +823,8 @@ export type AttachmentCreateManyCreatedByInput = {
   size: number
   originalName: string
   boardId?: string | null
+  wikiSpaceId?: string | null
+  detachedAt?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -676,8 +834,10 @@ export type AttachmentUpdateWithoutCreatedByInput = {
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   size?: Prisma.IntFieldUpdateOperationsInput | number
   originalName?: Prisma.StringFieldUpdateOperationsInput | string
+  detachedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   board?: Prisma.BoardUpdateOneWithoutAttachmentsNestedInput
+  wikiSpace?: Prisma.WikiSpaceUpdateOneWithoutAttachmentsNestedInput
 }
 
 export type AttachmentUncheckedUpdateWithoutCreatedByInput = {
@@ -687,6 +847,8 @@ export type AttachmentUncheckedUpdateWithoutCreatedByInput = {
   size?: Prisma.IntFieldUpdateOperationsInput | number
   originalName?: Prisma.StringFieldUpdateOperationsInput | string
   boardId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  wikiSpaceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  detachedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -697,6 +859,56 @@ export type AttachmentUncheckedUpdateManyWithoutCreatedByInput = {
   size?: Prisma.IntFieldUpdateOperationsInput | number
   originalName?: Prisma.StringFieldUpdateOperationsInput | string
   boardId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  wikiSpaceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  detachedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type AttachmentCreateManyWikiSpaceInput = {
+  id?: string
+  key: string
+  mimeType: string
+  size: number
+  originalName: string
+  boardId?: string | null
+  detachedAt?: Date | string | null
+  createdById?: string | null
+  createdAt?: Date | string
+}
+
+export type AttachmentUpdateWithoutWikiSpaceInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  mimeType?: Prisma.StringFieldUpdateOperationsInput | string
+  size?: Prisma.IntFieldUpdateOperationsInput | number
+  originalName?: Prisma.StringFieldUpdateOperationsInput | string
+  detachedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  board?: Prisma.BoardUpdateOneWithoutAttachmentsNestedInput
+  createdBy?: Prisma.UserUpdateOneWithoutAttachmentsNestedInput
+}
+
+export type AttachmentUncheckedUpdateWithoutWikiSpaceInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  mimeType?: Prisma.StringFieldUpdateOperationsInput | string
+  size?: Prisma.IntFieldUpdateOperationsInput | number
+  originalName?: Prisma.StringFieldUpdateOperationsInput | string
+  boardId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  detachedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type AttachmentUncheckedUpdateManyWithoutWikiSpaceInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  key?: Prisma.StringFieldUpdateOperationsInput | string
+  mimeType?: Prisma.StringFieldUpdateOperationsInput | string
+  size?: Prisma.IntFieldUpdateOperationsInput | number
+  originalName?: Prisma.StringFieldUpdateOperationsInput | string
+  boardId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  detachedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -709,9 +921,12 @@ export type AttachmentSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   size?: boolean
   originalName?: boolean
   boardId?: boolean
+  wikiSpaceId?: boolean
+  detachedAt?: boolean
   createdById?: boolean
   createdAt?: boolean
   board?: boolean | Prisma.Attachment$boardArgs<ExtArgs>
+  wikiSpace?: boolean | Prisma.Attachment$wikiSpaceArgs<ExtArgs>
   createdBy?: boolean | Prisma.Attachment$createdByArgs<ExtArgs>
 }, ExtArgs["result"]["attachment"]>
 
@@ -722,9 +937,12 @@ export type AttachmentSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   size?: boolean
   originalName?: boolean
   boardId?: boolean
+  wikiSpaceId?: boolean
+  detachedAt?: boolean
   createdById?: boolean
   createdAt?: boolean
   board?: boolean | Prisma.Attachment$boardArgs<ExtArgs>
+  wikiSpace?: boolean | Prisma.Attachment$wikiSpaceArgs<ExtArgs>
   createdBy?: boolean | Prisma.Attachment$createdByArgs<ExtArgs>
 }, ExtArgs["result"]["attachment"]>
 
@@ -735,9 +953,12 @@ export type AttachmentSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   size?: boolean
   originalName?: boolean
   boardId?: boolean
+  wikiSpaceId?: boolean
+  detachedAt?: boolean
   createdById?: boolean
   createdAt?: boolean
   board?: boolean | Prisma.Attachment$boardArgs<ExtArgs>
+  wikiSpace?: boolean | Prisma.Attachment$wikiSpaceArgs<ExtArgs>
   createdBy?: boolean | Prisma.Attachment$createdByArgs<ExtArgs>
 }, ExtArgs["result"]["attachment"]>
 
@@ -748,21 +969,26 @@ export type AttachmentSelectScalar = {
   size?: boolean
   originalName?: boolean
   boardId?: boolean
+  wikiSpaceId?: boolean
+  detachedAt?: boolean
   createdById?: boolean
   createdAt?: boolean
 }
 
-export type AttachmentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "key" | "mimeType" | "size" | "originalName" | "boardId" | "createdById" | "createdAt", ExtArgs["result"]["attachment"]>
+export type AttachmentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "key" | "mimeType" | "size" | "originalName" | "boardId" | "wikiSpaceId" | "detachedAt" | "createdById" | "createdAt", ExtArgs["result"]["attachment"]>
 export type AttachmentInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   board?: boolean | Prisma.Attachment$boardArgs<ExtArgs>
+  wikiSpace?: boolean | Prisma.Attachment$wikiSpaceArgs<ExtArgs>
   createdBy?: boolean | Prisma.Attachment$createdByArgs<ExtArgs>
 }
 export type AttachmentIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   board?: boolean | Prisma.Attachment$boardArgs<ExtArgs>
+  wikiSpace?: boolean | Prisma.Attachment$wikiSpaceArgs<ExtArgs>
   createdBy?: boolean | Prisma.Attachment$createdByArgs<ExtArgs>
 }
 export type AttachmentIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   board?: boolean | Prisma.Attachment$boardArgs<ExtArgs>
+  wikiSpace?: boolean | Prisma.Attachment$wikiSpaceArgs<ExtArgs>
   createdBy?: boolean | Prisma.Attachment$createdByArgs<ExtArgs>
 }
 
@@ -770,6 +996,7 @@ export type $AttachmentPayload<ExtArgs extends runtime.Types.Extensions.Internal
   name: "Attachment"
   objects: {
     board: Prisma.$BoardPayload<ExtArgs> | null
+    wikiSpace: Prisma.$WikiSpacePayload<ExtArgs> | null
     createdBy: Prisma.$UserPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
@@ -792,10 +1019,21 @@ export type $AttachmentPayload<ExtArgs extends runtime.Types.Extensions.Internal
     originalName: string
     /**
      * 添付先のボード。値がある場合は配信時にそのボードの可視判定を通す。
-     * null は全ログインユーザーへ配信してよいもの(お知らせ / リンクウィジェットのアイコン)。
-     * ボード削除で紐付けを外した添付も、掃除が回収するまでの間だけこの状態を通る
+     * boardId / wikiSpaceId がともに null のものは全ログインユーザーへ配信してよいもの(お知らせ / リンクウィジェットのアイコン)。
+     * ボード / Wiki スペースの削除で紐付けを外した添付は detachedAt で区別し、配信しない
      */
     boardId: string | null
+    /**
+     * 添付先の Wiki スペース。値がある場合は配信時にそのスペースの閲覧判定を通す。
+     * boardId とは同時に持たない(CHECK 制約。マイグレーションで張る)
+     */
+    wikiSpaceId: string | null
+    /**
+     * ボード / Wiki スペースの削除で紐付けを外した日時(削除待ち)。値があるときは boardId / wikiSpaceId を持たない(CHECK 制約)。
+     * 値があれば誰にも配信せず、
+     * 実体の削除に失敗して残った分は掃除が猶予・参照を問わず回収する
+     */
+    detachedAt: Date | null
     /**
      * アップロードしたユーザー。ユーザー削除時は SetNull でファイルの記録だけ残す
      */
@@ -1196,6 +1434,7 @@ readonly fields: AttachmentFieldRefs;
 export interface Prisma__AttachmentClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   board<T extends Prisma.Attachment$boardArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Attachment$boardArgs<ExtArgs>>): Prisma.Prisma__BoardClient<runtime.Types.Result.GetResult<Prisma.$BoardPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  wikiSpace<T extends Prisma.Attachment$wikiSpaceArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Attachment$wikiSpaceArgs<ExtArgs>>): Prisma.Prisma__WikiSpaceClient<runtime.Types.Result.GetResult<Prisma.$WikiSpacePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   createdBy<T extends Prisma.Attachment$createdByArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Attachment$createdByArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -1232,6 +1471,8 @@ export interface AttachmentFieldRefs {
   readonly size: Prisma.FieldRef<"Attachment", 'Int'>
   readonly originalName: Prisma.FieldRef<"Attachment", 'String'>
   readonly boardId: Prisma.FieldRef<"Attachment", 'String'>
+  readonly wikiSpaceId: Prisma.FieldRef<"Attachment", 'String'>
+  readonly detachedAt: Prisma.FieldRef<"Attachment", 'DateTime'>
   readonly createdById: Prisma.FieldRef<"Attachment", 'String'>
   readonly createdAt: Prisma.FieldRef<"Attachment", 'DateTime'>
 }
@@ -1651,6 +1892,25 @@ export type Attachment$boardArgs<ExtArgs extends runtime.Types.Extensions.Intern
    */
   include?: Prisma.BoardInclude<ExtArgs> | null
   where?: Prisma.BoardWhereInput
+}
+
+/**
+ * Attachment.wikiSpace
+ */
+export type Attachment$wikiSpaceArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the WikiSpace
+   */
+  select?: Prisma.WikiSpaceSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the WikiSpace
+   */
+  omit?: Prisma.WikiSpaceOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.WikiSpaceInclude<ExtArgs> | null
+  where?: Prisma.WikiSpaceWhereInput
 }
 
 /**

@@ -29,6 +29,7 @@ import { listTicketCriteria } from '../board/ticket-criterion'
 import { errInvalidOperation } from '../error'
 import type { ResourceAuth } from '../oauth/oauth-resource'
 import { zChildProposal, zCommentContent, zCriterionReports } from '../schema/schema-ticket'
+import { findBoardWikiSpaceIndex } from '../wiki/wiki-space'
 import { jsonResult, TOOL_ANNOTATIONS } from './mcp'
 import { resolveTicketId } from './mcp-ticket'
 
@@ -50,20 +51,27 @@ const loadContext = async (auth: ResourceAuth) => {
   return { runner, activity: await evaluateRunnerActivity(runner) }
 }
 
-/** ボードの AI 向けコンテキストとボードノートの索引。get_ticket と同じく、ボードのメンバーでなければ返さない */
+/**
+ * ボードの AI 向けコンテキスト、ボードノートと Wiki スペースの索引。get_ticket と同じく、ボードのメンバーでなければ返さない
+ */
 const findMemberBoardContext = async (
   auth: ResourceAuth,
   ticketId: string,
-): Promise<{ boardContext: string | null; noteIndex: BoardNoteIndex }> => {
+): Promise<{
+  boardContext: string | null
+  noteIndex: BoardNoteIndex
+  wikiIndex: Awaited<ReturnType<typeof findBoardWikiSpaceIndex>>
+}> => {
   const access = await getTicketAccess(auth.user, ticketId)
   if (!access?.boardRole) {
-    return { boardContext: null, noteIndex: {} }
+    return { boardContext: null, noteIndex: {}, wikiIndex: {} }
   }
-  const [boardContext, noteIndex] = await Promise.all([
+  const [boardContext, noteIndex, wikiIndex] = await Promise.all([
     findBoardAiContext(access.boardId),
     findBoardNoteIndex(access.boardId),
+    findBoardWikiSpaceIndex(auth.user, access.boardId),
   ])
-  return { boardContext, noteIndex }
+  return { boardContext, noteIndex, wikiIndex }
 }
 
 /**
@@ -108,6 +116,7 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
         'the action to perform, and the rule instructions. Follow the rule throughout the whole run. ' +
         'When a ticketId is given, task.boardContext (only when set) holds premises shared by every ticket on its board: read it before working. ' +
         'task.boardKnowledge / task.boardMemory (only when set) index shared notes: read the relevant ones with get_board_notes. ' +
+        "task.wikiSpaces (only when set) lists the board's Wiki spaces: find related documents with search_wiki. " +
         'On revise, task.autoRevise lists CI failures and pull request reviews that sent the ticket back automatically: ' +
         'read the details from the pull request, address them, and report what you changed (or why no change is needed). ' +
         'task.acceptanceCriteria holds the completion conditions. If it is empty, set them with update_ticket acceptanceCriteria ' +
@@ -150,7 +159,7 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
         })
       }
 
-      const [criteria, decision, autoRevise, runId, { boardContext, noteIndex }] = await Promise.all([
+      const [criteria, decision, autoRevise, runId, { boardContext, noteIndex, wikiIndex }] = await Promise.all([
         listTicketCriteria(id),
         task.action === 'revise' ? findLatestAgentDecision(id, auth.user.id) : null,
         task.action === 'revise' ? listRunAutoRevise(runner.id, id) : [],
@@ -177,6 +186,8 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
           ...(boardContext ? { boardContext } : {}),
           /** ボードノートの索引(boardKnowledge / boardMemory)。本文は get_board_notes で読む */
           ...noteIndex,
+          /** ボードに割り当てられた Wiki スペースの索引(wikiSpaces)。ページは search_wiki / get_wiki_page で読む */
+          ...wikiIndex,
         },
         note: task.action === 'plan' ? PLAN_NOTE : null,
       })
@@ -242,7 +253,9 @@ export const registerAgentTools = (server: McpServer, auth: ResourceAuth) => {
         'If it is rejected, revise the proposal and post it again with this tool',
       inputSchema: z.strictObject({
         ticketId: z.string().min(1),
-        content: zCommentContent.describe('Plan body (Markdown): why and how the work is split'),
+        content: zCommentContent.describe(
+          'Plan body in Markdown with real line breaks and one list item per line. Explain why and how the work is split using headings and lists',
+        ),
         ...zChildProposal.shape,
       }),
     },

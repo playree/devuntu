@@ -1,0 +1,461 @@
+/// Wiki スペースの公開範囲
+enum WikiVisibility {
+  /// 割り当てられたユーザー(直接・グループ・ボード経由)だけが閲覧できる
+  restricted
+  /// ログインできる全ユーザーが閲覧できる。編集は割り当てられた editor 以上
+  everyone
+}
+
+/// Wiki スペースでのユーザーの権限。宣言順に強くなる
+enum WikiSpaceRole {
+  /// 閲覧のみ
+  viewer
+  /// ページの作成・編集・移動・削除
+  editor
+  /// スペースの設定(公開範囲・割り当て・アーカイブ)
+  owner
+}
+
+/// グループ・ボード経由の割り当ての権限。owner はユーザーの直接割り当てに限る
+enum WikiAssignRole {
+  viewer
+  editor
+}
+
+/// Wiki を書いた経路
+enum WikiVia {
+  /// 画面
+  web
+  /// MCP(人の経路・エージェントの両方)
+  mcp
+}
+
+/// Wiki スペースの区分。作れるページの種類と、トップの一覧が変わる
+enum WikiSpaceType {
+  /// 通常ページと設計書を混在できる
+  mixed
+  /// 設計書だけを置く。トップに設計書一覧を出す
+  design_doc
+  /// アナウンス用。通常ページだけを平らに置き(親子・並べ替えなし)、作成日時の新しい順に並べる。
+  /// トップに新しい順の一覧と年月のバックナンバーを出す
+  announcement
+}
+
+/// Wiki ページの種類。表示と編集のしかたが変わる
+enum WikiPageType {
+  /// 通常の Markdown(リッチエディタで編集する)
+  page
+  /// 設計書(Markdown Design Doc Viewer の形式。ソースで編集し、mddv のビューアで表示する)
+  design_doc
+}
+
+/// Wiki ページの版の操作
+enum WikiPageRevisionAction {
+  created
+  updated
+  moved
+  deleted
+  restored
+}
+
+/// 階層構造の文書を置く単位。権限はスペース単位で持つ。
+/// ページは `<key>/<number>` で指定する(改名・移動で変わらない)
+model WikiSpace {
+  id String @id @default(uuid(7))
+
+  /// ページ指定(`KEY/番号`)と URL に使う。大文字英数(WIKI_SPACE_KEY_PATTERN)で一意。
+  /// 共有済みの指定が別のページを指さないよう、作成後は変更しない。削除後も WikiSpaceKeyHistory で予約したままにする
+  key String @unique
+
+  /// スペース名
+  name String
+
+  /// スペースの説明
+  description String?
+
+  /// 公開範囲
+  visibility WikiVisibility @default(restricted)
+
+  /// 区分。作成時に決め、後から変えない
+  type WikiSpaceType @default(mixed)
+
+  /// 採番済みページ番号の最大値。UPDATE の行ロックで採番を直列化する
+  pageSeq Int @default(0)
+
+  /// アーカイブ済み。閲覧のみになる
+  archived Boolean @default(false)
+
+  /// アナウンスの通知先の Slack チャンネル ID。区分が announcement のときだけ使う
+  announceSlackChannelId String?
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members     WikiSpaceMember[]
+  groups      WikiSpaceGroup[]
+  boards      WikiSpaceBoard[]
+  pages       WikiPage[]
+  tags        WikiTag[]
+  revisions   WikiPageRevision[]
+  attachments Attachment[]
+  templates   WikiTemplate[]
+  notifies    WikiAnnouncementNotify[]
+
+  @@map("wiki_space")
+}
+
+/// 過去に使われた Wiki スペースのキー。スペースを消しても行を残し、同じキーを別のスペースへ渡さない
+/// (共有済みの `KEY/番号` やページの URL が、別のスペースの同じ番号のページを指さないようにする)
+model WikiSpaceKeyHistory {
+  key String @id
+
+  // メタデータ
+  createdAt DateTime @default(now())
+
+  @@map("wiki_space_key_history")
+}
+
+/// Wiki スペースへのユーザーの直接割り当て
+model WikiSpaceMember {
+  id String @id @default(uuid(7))
+
+  spaceId String
+  space   WikiSpace @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  role WikiSpaceRole @default(editor)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+
+  // @@unique が (spaceId, ...) の先頭索引を兼ねる
+  @@unique([spaceId, userId])
+  @@index([userId])
+  @@map("wiki_space_member")
+}
+
+/// Wiki スペースへのグループ割り当て。グループの所属ユーザーがこの権限を持つ
+model WikiSpaceGroup {
+  id String @id @default(uuid(7))
+
+  spaceId String
+  space   WikiSpace @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  groupId String
+  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  role WikiAssignRole @default(viewer)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+
+  @@unique([spaceId, groupId])
+  @@index([groupId])
+  @@map("wiki_space_group")
+}
+
+/// Wiki スペースへのボード割り当て。ボードのメンバー(直接・グループ経由)がこの権限を持つ
+model WikiSpaceBoard {
+  id String @id @default(uuid(7))
+
+  spaceId String
+  space   WikiSpace @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  boardId String
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  role WikiAssignRole @default(viewer)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+
+  @@unique([spaceId, boardId])
+  @@index([boardId])
+  @@map("wiki_space_board")
+}
+
+/// Wiki のページ。parentId で階層を持つ(深さの上限は MAX_WIKI_DEPTH)
+model WikiPage {
+  id String @id @default(uuid(7))
+
+  spaceId String
+  space   WikiSpace @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  /// 親ページ。null はスペース直下。生きているページの親は常に生きている(削除は配下ごと、復元は親が削除済みならスペース直下へ)。
+  /// 削除済みのページを保持期間の後に物理削除するとき、配下の削除済みのページも一緒に消えるよう Cascade にする
+  parentId String?
+  parent   WikiPage?  @relation("WikiPageTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children WikiPage[] @relation("WikiPageTree")
+
+  /// スペース内の連番。`KEY/番号` の番号
+  number Int
+
+  /// タイトル
+  title String
+
+  /// 本文(Markdown)
+  content String @default("")
+
+  /// 種類
+  type WikiPageType @default(page)
+
+  /// 兄弟内の表示順。昇順。同値は number 昇順で安定させる
+  order Int @default(0)
+
+  createdById String?
+  createdBy   User?   @relation("WikiPageCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedById String?
+  updatedBy   User?   @relation("WikiPageUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  /// 最後に書いた経路
+  updatedVia WikiVia @default(web)
+
+  /// 削除(ゴミ箱へ移した)日時。値があるページは一覧・検索・参照に出さず、保持期間を過ぎると自動メンテナンスで物理削除する。
+  /// 配下ごとの削除は同じ値を立てる
+  deletedAt   DateTime?
+  deletedById String?
+  deletedBy   User?     @relation("WikiPageDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tags      WikiPageTag[]
+  revisions WikiPageRevision[]
+  notifies  WikiAnnouncementNotify[]
+
+  // 番号は pageSeq で採番し再利用しないので、削除済みのページとも衝突しない
+  @@unique([spaceId, number])
+  // 削除済みのページの一覧と、保持期間を過ぎたものの掃除
+  @@index([spaceId, deletedAt])
+  @@index([deletedAt])
+  @@index([spaceId, parentId, order])
+  @@index([parentId])
+  // アナウンス用スペースの新しい順の一覧と年月の集計
+  @@index([spaceId, createdAt])
+  // 部分一致検索(ILIKE)を pg_trgm の GIN 索引で引く。拡張はマイグレーションで作る
+  @@index([title(ops: raw("gin_trgm_ops"))], type: Gin, map: "wiki_page_title_trgm_idx")
+  @@index([content(ops: raw("gin_trgm_ops"))], type: Gin, map: "wiki_page_content_trgm_idx")
+  @@map("wiki_page")
+}
+
+/// Wiki スペース内で使うページのタグ
+model WikiTag {
+  id String @id @default(uuid(7))
+
+  spaceId String
+  space   WikiSpace @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  /// タグ名。スペース内で一意
+  name String
+
+  /// 表示色
+  color TagColor @default(gray)
+
+  /// スペース内の表示順。昇順。同値は name 昇順で安定させる
+  order Int @default(0)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  pages WikiPageTag[]
+
+  // @@unique が (spaceId, ...) の先頭索引を兼ねる
+  @@unique([spaceId, name])
+  @@map("wiki_tag")
+}
+
+/// Wiki ページとタグの紐づけ
+model WikiPageTag {
+  id String @id @default(uuid(7))
+
+  pageId String
+  page   WikiPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  tagId String
+  tag   WikiTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+
+  @@unique([pageId, tagId])
+  @@index([tagId])
+  @@map("wiki_page_tag")
+}
+
+/// Wiki ページの版。変更後(deleted は削除時点)の全文を持つ。
+/// ページの物理削除(削除済みの保持期間の後・スペースの削除)で一緒に消える。
+/// 同じ人が続けて保存した分は WIKI_REVISION_MERGE_MINUTES 以内なら最新の版へまとめ(updatedAt を進める)、
+/// 1ページあたり WIKI_REVISION_MAX_PER_PAGE を超えた分は書き込み時に消す
+model WikiPageRevision {
+  id String @id @default(uuid(7))
+
+  /// 対象ページのスペース(権限の判定に使う。ページのスペースは変わらない)
+  spaceId String
+  space   WikiSpace @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  pageId String
+  page   WikiPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  /// ページ内の版の通し番号(1 始まり)。まとめても変わらず、古い版が消えても振り直さない
+  number Int
+
+  action WikiPageRevisionAction
+
+  // スナップショット
+  parentId String?
+  order    Int
+  title    String
+  content  String
+  type     WikiPageType @default(page)
+  /// 書いたときのタグ `[{ id, name }]`。今のタグへは id で引き当て(改名しても外れない)、名前は削除済みのタグを差分に出すときに使う
+  tags     Json         @default("[]")
+
+  /// 変更者。退会しても変更の事実は残すので SetNull
+  actorId String?
+  actor   User?   @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  via WikiVia
+
+  /// 書いたときに対応していたチケット(MCP で指定されたとき)
+  ticketId String?
+  ticket   Ticket? @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+
+  /// action=restored のときの戻し元の版。削除済みのページを戻したときは null
+  restoredFromId String?
+
+  /// 保存時に付けたコミットメッセージ(任意)。付いた版は連続保存のまとめの対象にしない
+  message String?
+
+  /// 版の始まり。連続保存のまとめはここから数える
+  createdAt DateTime @default(now())
+  /// 最後に保存した時刻。まとめると進む。表示と保持期間の判定に使う
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([pageId, number])
+  @@index([pageId, createdAt])
+  @@index([spaceId, createdAt])
+  // 保持期間の掃除で古い順に引く
+  @@index([updatedAt])
+  @@index([ticketId])
+  @@map("wiki_page_revision")
+}
+
+/// ページ作成時にタイトル・種類・本文を埋めるスペースごとの雛形。
+/// 作成時に写すだけで、作成したページとの紐付けは持たない。種類はスペースの区分で作れるもの(isWikiPageTypeAllowed)に限る
+model WikiTemplate {
+  id String @id @default(uuid(7))
+
+  spaceId String
+  space   WikiSpace @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  /// テンプレート名。スペース内で一意(MCP の save_wiki_page でも名前で指定する)
+  name String
+
+  /// タイトルの雛形。空なら作成時の入力のまま
+  title String @default("")
+
+  /// 本文の雛形(Markdown)
+  content String @default("")
+
+  /// 作るページの種類
+  type WikiPageType @default(page)
+
+  /// スペース内の表示順。昇順。同値は name 昇順で安定させる
+  order Int @default(0)
+
+  createdById String?
+  createdBy   User?   @relation("WikiTemplateCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedById String?
+  updatedBy   User?   @relation("WikiTemplateUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // @@unique が (spaceId, ...) の先頭索引を兼ねる
+  @@unique([spaceId, name])
+  @@map("wiki_template")
+}
+
+/// アナウンスの通知の種類。Slack の文面が変わる
+enum WikiAnnouncementNotifyKind {
+  /// 初回のお知らせ
+  published
+  /// 修正後の更新のお知らせ
+  updated
+}
+
+/// アナウンスの通知の状態
+enum WikiAnnouncementNotifyStatus {
+  /// 予約中。scheduledAt を過ぎるとワーカーが送る。この間だけ変更・取り消しできる
+  scheduled
+  /// 送信済み(通知キューへ投入した)
+  sent
+  /// 予約を取り消した
+  canceled
+  /// 送る時点で条件を満たさず見送った(理由は skipReason)
+  skipped
+}
+
+/// 予約の通知を見送った理由
+enum WikiAnnouncementNotifySkipReason {
+  /// スペースがアーカイブされた
+  archived
+  /// 通知先のチャンネルが未設定になった
+  channel_unset
+  /// Slack 連携が無効になった
+  slack_disabled
+  /// 送信者が編集権限を失った(退会を含む)
+  no_permission
+  /// ページが削除された
+  page_deleted
+}
+
+/// アナウンスのページの Slack 通知。予約と履歴を兼ねる。
+/// ページを削除(ゴミ箱へ移す)しても履歴は残り、物理削除で一緒に消える。
+/// status と sentAt / skipReason の整合は CHECK 制約(マイグレーション)で保つ
+model WikiAnnouncementNotify {
+  id String @id @default(uuid(7))
+
+  spaceId String
+  space   WikiSpace @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  pageId String
+  page   WikiPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  kind WikiAnnouncementNotifyKind
+
+  /// 一言。空なら送信時に本文の先頭を抜粋する
+  message String?
+
+  /// 送る予定の日時。今すぐ送ったものは送った日時
+  scheduledAt DateTime
+
+  status WikiAnnouncementNotifyStatus
+
+  /// 送った日時。status=sent のときだけ値を持つ
+  sentAt DateTime?
+
+  /// 見送った理由。status=skipped のときだけ値を持つ
+  skipReason WikiAnnouncementNotifySkipReason?
+
+  /// 送信者。予約を変更した人に置き換わる。送る時点の編集権限はこの人で確かめる
+  senderId String?
+  sender   User?   @relation("WikiAnnouncementNotifySender", fields: [senderId], references: [id], onDelete: SetNull)
+
+  // メタデータ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ワーカーが期限の来た予約を引く
+  @@index([status, scheduledAt])
+  @@index([pageId, createdAt])
+  @@index([spaceId])
+  @@index([senderId])
+  @@map("wiki_announcement_notify")
+}

@@ -2,7 +2,8 @@
 
 import { CheckBadgeIcon, XCircleIcon } from '@/components/icon'
 import type { MentionCandidate } from '@/components/markdown/mention-menu'
-import { PriorityChip, StatusChip, TagChips, TicketIdText } from '@/components/ticket/ticket-chip'
+import { TagChips } from '@/components/tag/tag-chip'
+import { PriorityChip, StatusChip, TicketIdText } from '@/components/ticket/ticket-chip'
 import { CiStatusChip, PullRequestStateChip } from '@/components/ticket/ticket-link-chip'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { dayformat } from '@/lib/day'

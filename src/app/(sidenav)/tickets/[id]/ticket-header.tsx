@@ -68,9 +68,10 @@ export const TicketHeader: FC<{ ticket: Ticket; onClose?: () => void }> = ({ tic
             title={ticket.title}
           />
           <CopyableField // 表示IDを見せつつ、チャットや議事録へそのまま貼れるURLをコピーさせる
-            // 幅を固定しないと input の既定幅で狭い画面のパンくずを潰してしまう
-            className='w-36 shrink-0'
+            // 表示IDの文字数に合わせる(input の既定幅のままだと狭い画面のパンくずを潰してしまう)
+            className='shrink-0'
             isSmart
+            isFitContent
             text={ticket.displayId}
             copyText={ticket.shortUrl}
             aria-label={t('id')}

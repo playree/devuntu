@@ -8,6 +8,7 @@ import { SingleSelectCtrl, SingleSelectField } from '@/components/general/select
 import { PlusIcon } from '@/components/icon'
 import { MarkdownCtrl } from '@/components/markdown/markdown-editor'
 import { notify } from '@/components/notify'
+import { TagSelectCtrl } from '@/components/tag/tag-id-select'
 import {
   CriteriaRowsField,
   type CriterionDraftRow,
@@ -15,7 +16,6 @@ import {
   isValidCriterionRows,
   toCriterionDraftRows,
 } from '@/components/ticket/criteria-rows-field'
-import { TagSelectCtrl } from '@/components/ticket/tag-id-select'
 import { TicketIdText } from '@/components/ticket/ticket-chip'
 import { useBoardName, useTicketOptions } from '@/components/ticket/ticket-options'
 import { UserSelectCtrl } from '@/components/user-select'
@@ -163,8 +163,8 @@ export const AddModal: FC<
           <div className='w-full sm:w-56'>
             <SingleSelectField
               groupOptions={templateOptions}
-              label={t('ticket_template')}
-              placeholder={t('ticket_template')}
+              label={t('template_label')}
+              placeholder={t('template_label')}
               value={templateId}
               onChange={applyTemplate}
               isLabelHidden
@@ -235,7 +235,7 @@ export const AddModal: FC<
             name='content'
             constraintSchema={scCreateTicket}
             errorMessage={fet(errors.content)}
-            uploadBoardId={boardId}
+            uploadOwner={{ kind: 'board', boardId }}
             // メンション候補は担当者候補と同じボードメンバー(取得を 1 本にまとめている)
             mentionCandidates={boardAssignees}
           />

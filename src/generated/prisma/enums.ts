@@ -202,7 +202,8 @@ export const NotifyEvent = {
   ticket_completed: 'ticket_completed',
   ticket_merge_held: 'ticket_merge_held',
   ticket_due: 'ticket_due',
-  announcement: 'announcement'
+  announcement: 'announcement',
+  wiki_announcement: 'wiki_announcement'
 } as const
 
 export type NotifyEvent = (typeof NotifyEvent)[keyof typeof NotifyEvent]
@@ -310,3 +311,93 @@ export const TicketActivitySource = {
 } as const
 
 export type TicketActivitySource = (typeof TicketActivitySource)[keyof typeof TicketActivitySource]
+
+
+export const WikiVisibility = {
+  restricted: 'restricted',
+  everyone: 'everyone'
+} as const
+
+export type WikiVisibility = (typeof WikiVisibility)[keyof typeof WikiVisibility]
+
+
+export const WikiSpaceRole = {
+  viewer: 'viewer',
+  editor: 'editor',
+  owner: 'owner'
+} as const
+
+export type WikiSpaceRole = (typeof WikiSpaceRole)[keyof typeof WikiSpaceRole]
+
+
+export const WikiAssignRole = {
+  viewer: 'viewer',
+  editor: 'editor'
+} as const
+
+export type WikiAssignRole = (typeof WikiAssignRole)[keyof typeof WikiAssignRole]
+
+
+export const WikiVia = {
+  web: 'web',
+  mcp: 'mcp'
+} as const
+
+export type WikiVia = (typeof WikiVia)[keyof typeof WikiVia]
+
+
+export const WikiSpaceType = {
+  mixed: 'mixed',
+  design_doc: 'design_doc',
+  announcement: 'announcement'
+} as const
+
+export type WikiSpaceType = (typeof WikiSpaceType)[keyof typeof WikiSpaceType]
+
+
+export const WikiPageType = {
+  page: 'page',
+  design_doc: 'design_doc'
+} as const
+
+export type WikiPageType = (typeof WikiPageType)[keyof typeof WikiPageType]
+
+
+export const WikiPageRevisionAction = {
+  created: 'created',
+  updated: 'updated',
+  moved: 'moved',
+  deleted: 'deleted',
+  restored: 'restored'
+} as const
+
+export type WikiPageRevisionAction = (typeof WikiPageRevisionAction)[keyof typeof WikiPageRevisionAction]
+
+
+export const WikiAnnouncementNotifyKind = {
+  published: 'published',
+  updated: 'updated'
+} as const
+
+export type WikiAnnouncementNotifyKind = (typeof WikiAnnouncementNotifyKind)[keyof typeof WikiAnnouncementNotifyKind]
+
+
+export const WikiAnnouncementNotifyStatus = {
+  scheduled: 'scheduled',
+  sent: 'sent',
+  canceled: 'canceled',
+  skipped: 'skipped'
+} as const
+
+export type WikiAnnouncementNotifyStatus = (typeof WikiAnnouncementNotifyStatus)[keyof typeof WikiAnnouncementNotifyStatus]
+
+
+export const WikiAnnouncementNotifySkipReason = {
+  archived: 'archived',
+  channel_unset: 'channel_unset',
+  slack_disabled: 'slack_disabled',
+  no_permission: 'no_permission',
+  page_deleted: 'page_deleted'
+} as const
+
+export type WikiAnnouncementNotifySkipReason = (typeof WikiAnnouncementNotifySkipReason)[keyof typeof WikiAnnouncementNotifySkipReason]

@@ -27,7 +27,7 @@ export type TagOption = {
 }
 
 /** タグ管理画面用。使用中のチケット件数を含む */
-export type TagManageItem = TagOption & { ticketCount: number }
+export type TagManageItem = TagOption & { usageCount: number }
 
 /** {@link TagOption} を返す select。チケットのタグ表示やタグ管理でも使う */
 export const TAG_SELECT = { id: true, boardId: true, name: true, color: true, order: true } as const
@@ -54,7 +54,7 @@ export const listBoardTagsForManage = async (boardId: string, tx: Db = prisma): 
     select: { ...TAG_SELECT, _count: { select: { tickets: true } } },
     orderBy: [...TAG_ORDER_BY],
   })
-  return tags.map(({ _count, ...tag }) => ({ ...tag, ticketCount: _count.tickets }))
+  return tags.map(({ _count, ...tag }) => ({ ...tag, usageCount: _count.tickets }))
 }
 
 /**

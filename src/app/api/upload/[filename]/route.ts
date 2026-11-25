@@ -1,7 +1,6 @@
 import { getActiveSession } from '@/lib/auth/auth'
-import { canViewAttachment } from '@/lib/board/board-access'
-import { prisma } from '@/lib/prisma'
 import { ACCEPTED_IMAGE_TYPES } from '@/lib/schema/schema'
+import { findViewableAttachment } from '@/lib/storage/attachment-access'
 import { getObject } from '@/lib/storage/storage'
 import { isValidUploadKey } from '@/lib/storage/upload'
 import { resolveDownloadToken } from '@/lib/storage/upload-token'
@@ -28,7 +27,8 @@ const fileHeaders = (originalName: string) => ({
  * (承認者の扱いは `canViewAttachment`)。
  * ログイン済みなら誰でも読めると、プライベートボードのチケットに貼った画像が
  * URL さえ知られれば他ユーザーから読めてしまうため。
- * boardId が null のものはボードに属さない本文(お知らせ / リンクウィジェットのアイコン)なので
+ * Wiki スペースの添付(Attachment.wikiSpaceId)は、そのスペースの閲覧権限で判定する。
+ * どちらも null のものはボードに属さない本文(お知らせ / リンクウィジェットのアイコン)なので
  * 全ログインユーザーへ配信してよい。
  *
  * MCP クライアントは `get_file` が発行した短命トークンの Bearer で入る(対象のキーに紐づく)。
@@ -45,17 +45,9 @@ export const GET = async (req: Request, { params }: { params: Promise<{ filename
     return new Response(null, { status: 401 })
   }
 
-  // 存在しないキーはストレージを叩かずに返す
-  const attachment = await prisma.attachment.findUnique({
-    where: { key: filename },
-    select: { mimeType: true, boardId: true, originalName: true },
-  })
+  // 存在しないキーはストレージを叩かずに返す。アクセス不可は未存在と区別せず 404 にして、キーの当たり判定を返さない
+  const attachment = await findViewableAttachment(user, filename)
   if (!attachment) {
-    return new Response(null, { status: 404 })
-  }
-
-  // アクセス不可は未存在と区別せず 404 にして、キーの当たり判定を返さない
-  if (!(await canViewAttachment(user, { key: filename, boardId: attachment.boardId }))) {
     return new Response(null, { status: 404 })
   }
 

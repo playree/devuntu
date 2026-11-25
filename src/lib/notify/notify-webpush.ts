@@ -35,13 +35,8 @@ import { isDeliveryAborting, isDeliverySettled, type DeliveryOutcome } from './n
  *
  * 失効した購読は `sendWebPush()` が行ごと消すので、次の通知では宛先から消えている。
  */
-export const deliverWebPush = async (param: {
-  userId: string
-  content: NotifyContent
-  /** 同じチケットの通知を積み上げないためのまとめキー */
-  tag?: string
-}): Promise<DeliveryOutcome> => {
-  const { userId, content, tag } = param
+export const deliverWebPush = async (param: { userId: string; content: NotifyContent }): Promise<DeliveryOutcome> => {
+  const { userId, content } = param
 
   const subscriptions = await findWebPushSubscriptions(userId)
   if (subscriptions.length === 0) {
@@ -54,7 +49,8 @@ export const deliverWebPush = async (param: {
     // 抜粋があれば通知本文に続けて出す(開かなくても内容が分かるようにする)
     body: content.excerpt ? `${content.body}\n${content.excerpt}` : content.body,
     url: content.url,
-    ...(tag && { tag }),
+    // 同じ対象(チケット・Wiki のページ)の通知を端末上で積み上げない
+    tag: content.tag,
   }
 
   // 全端末の結果を見てから構成障害かを判断するため、先に送り切って結果を集める

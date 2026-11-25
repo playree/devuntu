@@ -268,10 +268,7 @@ describe('runNotifyDispatch: Slack', () => {
 
     await runNotifyDispatch(now)
 
-    expect(vi.mocked(deliverSlack).mock.calls.map(([arg]) => [arg.locale, arg.content.subject])).toEqual([
-      ['ja', 'ja:dm'],
-      [null, 'null:channel'],
-    ])
+    expect(vi.mocked(deliverSlack).mock.calls.map(([arg]) => arg.content.subject)).toEqual(['ja:dm', 'null:channel'])
     expect(prisma.user.findUnique).toHaveBeenCalledTimes(1)
     expect(settled()).toEqual([
       ['dm', 'ok'],
@@ -379,7 +376,7 @@ describe('runNotifyDispatch: メール', () => {
 })
 
 describe('runNotifyDispatch: Web プッシュ', () => {
-  it('同じチケットの通知を畳むため、チケットIDをタグにして送る', async () => {
+  it('宛先のロケールで組んだ文面を送る(まとめキーは文面の tag)', async () => {
     claimed.webpush = [delivery({ id: 'w1', channel: 'webpush', payload: { ticketId: 't9' } })]
 
     await runNotifyDispatch(now)
@@ -387,7 +384,6 @@ describe('runNotifyDispatch: Web プッシュ', () => {
     expect(deliverWebPush).toHaveBeenCalledWith({
       userId: 'u1',
       content: expect.objectContaining({ subject: 'ja:dm' }),
-      tag: 't9',
     })
     expect(settled()).toEqual([['w1', 'ok']])
   })

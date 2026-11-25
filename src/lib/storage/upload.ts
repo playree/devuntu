@@ -1,4 +1,5 @@
 import { uuidv7 } from 'uuidv7'
+import { PUBLIC_ATTACHMENT_OWNER, type AttachmentOwner } from './attachment-owner'
 
 /**
  * アップロードファイルのキーとURLの相互変換。
@@ -58,6 +59,16 @@ export const isUploadUrl = (url: string) => url.startsWith(`${UPLOAD_URL_PREFIX}
 /** 保存キーの形式検証(ホワイトリスト方式のため別途のパストラバーサル対策は不要) */
 export const isValidUploadKey = (key: string) => UPLOAD_KEY_REGEX.test(key)
 
+// 括弧・空白・引用符・`<`・`=` の直後(Markdown の画像やリンク、参照形式の定義、HTML の属性)にあるアップロードの相対 URL
+const UPLOAD_URL_PATTERN = new RegExp(`(^|[\\s("'<=])${UPLOAD_URL_PREFIX}/`, 'g')
+
+/**
+ * 本文(Markdown)のアップロード画像・添付の相対 URL(`/api/upload/...`)を絶対 URL にする。保存した .md を別の場所で開いても辿れるように。
+ * 描画済みの HTML のリンク全般は `html-export.ts` の `absolutizeRootLinks`(`<a href>` だけを見る)
+ */
+export const absolutizeUploadUrls = (markdown: string, origin: string): string =>
+  markdown.replace(UPLOAD_URL_PATTERN, (_, before: string) => `${before}${origin}${UPLOAD_URL_PREFIX}/`)
+
 /**
  * 本文(Markdown)に含まれる `/api/upload/<キー>` から保存キーを重複なく取り出す。
  *
@@ -104,6 +115,9 @@ export const newUploadKey = (ext: string) => `${uuidv7()}.${ext}`
 /** アップロード時に添付先ボードを伝えるフォームフィールド名。配信時の可視判定に使う */
 export const UPLOAD_BOARD_ID_FIELD = 'boardId'
 
+/** アップロード時に添付先の Wiki スペースを伝えるフォームフィールド名。{@link UPLOAD_BOARD_ID_FIELD} とは同時に送らない */
+export const UPLOAD_WIKI_SPACE_ID_FIELD = 'wikiSpaceId'
+
 /**
  * アップロードの種類を伝えるクエリパラメータ名(`?kind=file`)。省略時は画像として扱う。
  * サーバーがボディを読む前に上限を決められるよう、フォームではなくクエリで渡す
@@ -112,12 +126,19 @@ export const UPLOAD_KIND_PARAM = 'kind'
 
 export type UploadKind = 'image' | 'file'
 
-const upload = async (file: File, kind: UploadKind, boardId?: string | null) => {
+/** 添付の持ち主をフォームの項目にする。public は何も送らない(全ログインユーザーが参照できる添付になる) */
+const appendOwnerFields = (form: FormData, owner: AttachmentOwner) => {
+  if (owner.kind === 'board') {
+    form.append(UPLOAD_BOARD_ID_FIELD, owner.boardId)
+  } else if (owner.kind === 'wikiSpace') {
+    form.append(UPLOAD_WIKI_SPACE_ID_FIELD, owner.wikiSpaceId)
+  }
+}
+
+const upload = async (file: File, kind: UploadKind, owner: AttachmentOwner = PUBLIC_ATTACHMENT_OWNER) => {
   const form = new FormData()
   form.append('file', file)
-  if (boardId) {
-    form.append(UPLOAD_BOARD_ID_FIELD, boardId)
-  }
+  appendOwnerFields(form, owner)
   const url = kind === 'file' ? `${UPLOAD_URL_PREFIX}?${UPLOAD_KIND_PARAM}=file` : UPLOAD_URL_PREFIX
   const res = await fetch(url, { method: 'POST', body: form })
   if (!res.ok) {
@@ -131,10 +152,10 @@ const upload = async (file: File, kind: UploadKind, boardId?: string | null) => 
  * 画像をアップロードして公開URLを返す(MDXEditor の imageUploadHandler 用)。
  * 失敗時は throw して MDXEditor 側にエラーを表示させる。
  *
- * `boardId` を渡すとその添付はボードのメンバーにしか配信されない。
- * 省略した場合は全ログインユーザーが参照できる(お知らせなどボードに属さない本文向け)。
+ * 持ち主がボードならその添付はボードのメンバーに、Wiki スペースならそのスペースを閲覧できる人にしか配信されない。
+ * 省略(public)した場合は全ログインユーザーが参照できる(お知らせなどボードに属さない本文向け)。
  */
-export const uploadImage = (file: File, boardId?: string | null) => upload(file, 'image', boardId)
+export const uploadImage = (file: File, owner?: AttachmentOwner) => upload(file, 'image', owner)
 
-/** ファイルを変換せずにアップロードして公開URLを返す。`boardId` の扱いは {@link uploadImage} と同じ */
-export const uploadFile = (file: File, boardId?: string | null) => upload(file, 'file', boardId)
+/** ファイルを変換せずにアップロードして公開URLを返す。添付先の扱いは {@link uploadImage} と同じ */
+export const uploadFile = (file: File, owner?: AttachmentOwner) => upload(file, 'file', owner)

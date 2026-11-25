@@ -1,11 +1,13 @@
 ---
 name: markdown-design-doc
 description: Write, edit, review and export design documents in the Markdown format of Markdown Design Doc Viewer, where a mermaid sequence diagram, flowchart, ER diagram or state diagram marked with %% @link-headings is linked arrow by arrow (node by node) to the step headings after it, and a wireframe of a screen written in HTML is linked part by part to its item table and headings, with type design_doc front matter. Use when writing or editing a design document or specification in Markdown (設計書, 基本設計, 詳細設計, 仕様書, シーケンス図, フローチャート, ER 図, 状態遷移図, 処理概要, 処理フロー, 画面設計書, ワイヤーフレーム) or a table of the items of a message, a file or a screen (電文定義, 項目定義, インターフェース定義, ファイルレイアウト, 画面項目定義), when a Markdown file has type design_doc front matter or %% @link-headings, or when exporting design documents to HTML (HTML エクスポート, HTML 出力) with the markdown-design-doc-viewer or md-design-doc command line.
+metadata:
+  revision: "1"
 ---
 
 # Markdown design documents
 
-Write the document, and reply to the user, in the user's language: a request in Japanese gets a document with Japanese headings, arrow labels and text. Only the syntax stays as written below: the mermaid keywords, `%% @link-headings`, `%% @ref`, `<!-- link-headings:end -->`, `<details>` / `<summary>`, the front matter keys and `type: design_doc`, `<!-- table: level=… merge=… item=… -->` (the column names in it are the headers of the table, in the user's language: `<!-- table: level=階層 merge=項目名,物理名 -->`), and `<!-- wireframe: … -->` with the `data-item` / `data-ref` attributes of a wireframe.
+Write the document, and reply to the user, in the user's language: a request in Japanese gets a document with Japanese headings, arrow labels and text. Only the syntax stays as written below: the mermaid keywords, `%% @link-headings`, `%% @ref`, `%% @anchor` / `%% @goto` (the label after them may be in the user's language) and the circled letters `Ⓐ`–`Ⓩ` of the labels of notes, `<!-- link-headings:end -->`, `<details>` / `<summary>`, the front matter keys and `type: design_doc`, `<!-- table: level=… merge=… item=… -->` (the column names in it are the headers of the table, in the user's language: `<!-- table: level=階層 merge=項目名,物理名 -->`), and `<!-- wireframe: … -->` with the `data-item` / `data-ref` attributes of a wireframe.
 
 Follow these rules when you write a design document in Markdown. The document is previewed with the VS Code extension "Markdown Design Doc Viewer". The preview shows a mermaid sequence diagram (or flowchart, ER diagram or state diagram) on the left and the step descriptions after it on the right. Each arrow of the diagram (each node of a flowchart, entity of an ER diagram or state of a state diagram) is linked to the heading with the same text. The goal is that every arrow (node, entity or state) is linked to a heading and every step heading is linked to one of them. A screen design can also show a wireframe of the screen (an HTML file) beside the descriptions of its numbered parts. Edge, relationship and transition labels are not linked, so do not write headings for them.
 
@@ -51,19 +53,19 @@ sequenceDiagram
 
 ## Steps
 
-### 1. Authenticate user
+### Authenticate user
 
 What happens, inputs, validation, errors.
 
-### 2. Fetch user
+### Fetch user
 
 The query and the conditions under which authentication fails.
 
-### 3. User record
+### User record
 
 The columns returned.
 
-### 4. Issue token
+### Issue token
 
 The token's claims. It expires after 1 hour[^expiry].
 
@@ -80,8 +82,15 @@ The token's claims. It expires after 1 hour[^expiry].
 - Put `%% @link-headings` on a line of its own inside the block. Without it, the diagram is not shown side by side and nothing is linked.
 - Put the diagram at the top level of the document, not inside a list or blockquote.
 - Keep each arrow label (the text after `:`) short and unique within the diagram. It becomes the step heading.
-- `autonumber` may be used. The preview then shows the arrow's number next to its heading (unless `mdDesignDoc.headingNumbers` is off).
+- To number the steps, use `autonumber`. The preview then shows the arrow's number next to its heading (unless `mdDesignDoc.headingNumbers` is off), so do not write the numbers in the headings.
 - Other mermaid diagrams (class diagrams, Gantt charts, diagrams without `%% @link-headings`…) are rendered normally. Do not put `%% @ref` in them.
+- When a step continues in another place of the diagram (for example an error found early that is answered in the error branch of an `alt` block), label that place with a circled letter and point to it from a note: `Note over S: Ⓒ` as the first line of the branch (or the letter at the start of its condition, `else Ⓒ Error`), and `Note over S: HNY90000 → 503 → Ⓒ Error response` where the processing leaves. Use `Ⓐ`–`Ⓩ`, and label only one place of a diagram with each letter (any number of notes may jump to it). For a label that is not a circled letter, write `%% @anchor <label>` on the line before the note or the branch (which needs a condition: not a bare `else`), and `%% @goto <label>` on the line before the note that jumps. A note is a label or a jump, not both. Notes are not steps: do not write headings for them.
+- When a sequence is too long to read as one diagram (more than about 15–20 arrows), or has stages that can be read on their own (order, payment, shipping), split it into several diagrams. Give each part a section heading of its own (`## (2) Payment`), with its diagram, its `%% @link-headings`, its step headings and its `<!-- link-headings:end -->`. The step headings of a part are linked only to the arrows of its own diagram, so the same arrow label may be used in two parts. `autonumber` starts again from 1 in each part; to continue the numbers of the part before, start it with the next number (`autonumber 9`).
+- Connect the parts with notes that jump between the diagrams. A label the diagram does not have is looked for in the other sequence diagrams of the document that have `%% @link-headings` (at the top level), so name such a label with `%% @anchor <label>` and give it a name that only one diagram of the document has (not a circled letter). Labels are not arrow labels or headings: a label may have the same text as one of them.
+  - To continue in the next part, write a note that jumps where the flow leaves the diagram (at its end, or at the end of a branch): `%% @goto Payment` on the line before `Note over API: → (2) Payment`. Start the next diagram with its label: `%% @anchor Payment` on the line before `Note over API: ← from (1) Order`.
+  - To join another part in the middle (for example, a declined payment that ends with the error display of the order), put a note (`Note over FE: ← from (2) Payment`) just before the arrow where the flow joins, with `%% @anchor <label>` on the line before the note, and jump to it from the part that joins. To join at the start of a branch, make that note (after its `%% @anchor` line) the first in the branch. Join at a place that holds for the joining flow: when it is in a branch whose condition does not hold for it, write the condition so that it does (`else Out of stock or payment declined`). Any number of notes, in any of the diagrams, may jump to the same label.
+  - Prefer such a note to labeling the branch itself, with `%% @anchor <label>` on the line just above its `alt` / `else` line: that labels the whole branch, but shows no note telling where the flow comes from.
+  - Keep the text of these notes short: where the flow goes in a note that jumps (`→ (1) Show error`), and where it comes from in a note with `%% @anchor` (`← from (2) Payment`, naming every part that jumps to it), which is shown as a badge. Put them over the participant where the flow is. Their text is what a reader of the plain mermaid diagram (on GitHub, for instance) sees.
 
 ## Flowchart
 
@@ -134,7 +143,8 @@ A screen design can show the wireframe of the screen beside the description of i
 - Write the descriptions **after** the diagram, as headings in the order of the arrows, one heading per arrow.
 - Use the same heading level for all steps, usually one level below the heading of the section that holds the diagram.
 - Make the heading text equal to the arrow label. Whitespace is trimmed and collapsed before comparing, and `<br/>` in a label counts as a space.
-- A heading may start with a step number: `### 3. Fetch user` links to the arrow `Fetch user`. If you number the headings, use the arrow numbers given by `autonumber`.
+- Long arrow labels are broken into lines by the viewer, so do not add `<br/>` to them only to keep the diagram narrow.
+- Do not start the step headings with a number (`### 3. Fetch user`). Such a heading still links to the arrow `Fetch user`, but its number drifts from the arrow's when arrows are added or removed or when several arrows are linked to it, which the diagnostics report. Number the steps with `autonumber` instead, which shows the arrow numbers on the headings. When you edit a document whose step headings are numbered, remove the numbers that differ from their arrows'.
 - When the heading has to differ from the arrow label, write `%% @ref <heading text>` on the line just before the arrow, inside the diagram. Several arrows (for example a request and its response) may be linked to the same heading this way.
 - Do not add headings at the step level that no arrow links to. They are marked "no arrow" ("no node" for a flowchart, "no entity" for an ER diagram, "no state" for a state diagram). Write extra notes as paragraphs, as lower-level headings, or after the end marker.
 - Headings inside lists or blockquotes are not steps.
@@ -187,7 +197,7 @@ For tables of the items of a message, a file or a screen (item name, physical na
 
 ## Check
 
-When the file is open in VS Code, the extension reports link problems as diagnostics with the source `Markdown Design Doc`: arrows (nodes) without a heading, step headings without an arrow (node), `@ref` targets that do not exist, `%% @link-headings` markers that have no effect, table options that cannot be applied, and the parts of a wireframe without a row or heading (and rows and headings without a part). After writing or editing the document, read the diagnostics of the file and fix the document until none of them remain.
+When the file is open in VS Code, the extension reports link problems as diagnostics with the source `Markdown Design Doc`: arrows (nodes) without a heading, step headings without an arrow (node), `@ref` targets that do not exist, labels of notes defined twice, not found by `@goto` or found by it in more than one other diagram, `%% @link-headings` markers that have no effect, table options that cannot be applied, and the parts of a wireframe without a row or heading (and rows and headings without a part). After writing or editing the document, read the diagnostics of the file and fix the document until none of them remain.
 
 ## Check without VS Code
 
@@ -195,9 +205,11 @@ When the diagnostics of VS Code cannot be read, check the document yourself afte
 
 - Every arrow (node) of a diagram with `%% @link-headings` has a step heading with the same text after the diagram, or a `%% @ref` on the line just before it that names one of those headings.
 - Every heading at the step level, between the diagram and `<!-- link-headings:end -->`, is linked to an arrow (node).
+- The step headings of a sequence diagram do not start with a number of their own (`### 3. Fetch user`); `autonumber` numbers them.
+- In a sequence diagram, every label of a note (a circled letter alone in a note or at the start of the condition of a branch, or the name of an `%% @anchor`) is defined at one place only (any number of notes may jump to it), and every note that jumps names a label of the same diagram (with a circled letter in its text, or after an `%% @goto`) or, after an `%% @goto`, a label that exactly one other sequence diagram of the document (with `%% @link-headings`) has. An `%% @anchor` is on the line just before a note or a branch with a condition, an `%% @goto` on the line just before a note, and no note has both.
 - Every column named in a `<!-- table: … -->` comment is a header of the table right after it, and the level column has an integer in every row.
 - Every part (`data-item`) of a wireframe with `link-headings` has a row with its number in the `item=` column of an item table, a heading numbered like it, or the heading its `data-ref` names, after the wireframe; and every such row and heading has a part.
-- If the command line can run (see [Export to HTML](#export-to-html)), export the document with `--strict`. It fails on `@ref` targets that do not exist, markers that have no effect and table options that cannot be applied, but it does not report arrows and headings that are only not linked.
+- If the command line can run (see [Export to HTML](#export-to-html)), export the document with `--strict`. It fails on `@ref` targets that do not exist, labels of notes defined twice, not found by a jump or found by it in more than one other diagram, markers that have no effect, table options that cannot be applied and selectors of the parts of a wireframe that match nothing, but it does not report arrows and headings that are only not linked.
 
 ## Export to HTML
 
