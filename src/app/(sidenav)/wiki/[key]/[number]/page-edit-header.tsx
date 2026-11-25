@@ -7,7 +7,7 @@ import { TagIdSelectField } from '@/components/ticket/tag-id-select'
 import { useWikiPageTypeOptions } from '@/components/wiki-chip'
 import type { WikiPageType } from '@/generated/prisma/enums'
 import { parseAction } from '@/lib/action/action-client'
-import { MAX_WIKI_TITLE } from '@/lib/wiki/wiki-rule'
+import { canChooseWikiPageType, MAX_WIKI_TITLE } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { cn } from '@heroui/react'
 import { FC } from 'react'
@@ -29,7 +29,7 @@ export const WikiPageEditHeader: FC<{
   const { space, tags: spaceTags, reloadSpace } = useWikiSpace()
   const typeOptions = useWikiPageTypeOptions()
   // 設計書スペースのページは設計書だけなので選ばせない
-  const canChangeType = space.type === 'mixed'
+  const canChangeType = canChooseWikiPageType(space.type)
 
   return (
     <Grid isSmart className='items-start'>

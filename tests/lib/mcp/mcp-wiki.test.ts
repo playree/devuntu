@@ -14,23 +14,9 @@ import {
   WIKI_AGENT_RECURSIVE_DELETE_DENIED,
 } from '@/lib/mcp/mcp-wiki'
 import { listRecentWikiAnnouncements } from '@/lib/wiki/wiki-announcement'
-import {
-  createWikiPage,
-  deleteWikiPage,
-  findWikiPageByNumber,
-  getWikiPage,
-  getWikiTree,
-  moveWikiPage,
-  readWikiPageContent,
-  updateWikiPage,
-} from '@/lib/wiki/wiki-page'
-import {
-  MAX_WIKI_CONTENT,
-  MAX_WIKI_TITLE,
-  WIKI_ANNOUNCEMENT_FLAT,
-  WIKI_PAGE_CONFLICT,
-  WIKI_PAGE_TOO_DEEP,
-} from '@/lib/wiki/wiki-rule'
+import { createWikiPage, deleteWikiPage, findWikiPageByNumber, getWikiPage, saveWikiPage } from '@/lib/wiki/wiki-page'
+import { getWikiTree } from '@/lib/wiki/wiki-page-tree'
+import { MAX_WIKI_CONTENT, MAX_WIKI_TITLE, WIKI_PAGE_TOO_DEEP } from '@/lib/wiki/wiki-rule'
 import { searchWikiPages } from '@/lib/wiki/wiki-search'
 import { getWikiSpaceByKey, listWikiSpaces } from '@/lib/wiki/wiki-space'
 import { listWikiTags, resolveWikiTagIdsByName } from '@/lib/wiki/wiki-tag'
@@ -43,19 +29,14 @@ import { agentAuth, oauthAuth } from '../../helpers/resource-auth'
 
 vi.mock('@/lib/prisma', async () => (await import('../../helpers/prisma')).mockPrisma({}))
 vi.mock('@/lib/mcp/mcp-ticket', () => ({ resolveTicketId: vi.fn() }))
-vi.mock('@/lib/wiki/wiki-page', async (importOriginal) => ({
-  assertWikiPageNotConflicted: (await importOriginal<typeof import('@/lib/wiki/wiki-page')>())
-    .assertWikiPageNotConflicted,
-  errWikiAnnouncementFlat: (await importOriginal<typeof import('@/lib/wiki/wiki-page')>()).errWikiAnnouncementFlat,
+vi.mock('@/lib/wiki/wiki-page', () => ({
   createWikiPage: vi.fn(),
   deleteWikiPage: vi.fn(),
   findWikiPageByNumber: vi.fn(),
   getWikiPage: vi.fn(),
-  getWikiTree: vi.fn(),
-  moveWikiPage: vi.fn(),
-  readWikiPageContent: vi.fn(),
-  updateWikiPage: vi.fn(),
+  saveWikiPage: vi.fn(),
 }))
+vi.mock('@/lib/wiki/wiki-page-tree', () => ({ getWikiTree: vi.fn() }))
 vi.mock('@/lib/wiki/wiki-space', () => ({
   getWikiSpaceByKey: vi.fn(),
   listWikiSpaces: vi.fn(),
@@ -64,7 +45,7 @@ vi.mock('@/lib/wiki/wiki-tag', () => ({ listWikiTags: vi.fn(), resolveWikiTagIds
 vi.mock('@/lib/wiki/wiki-search', () => ({ searchWikiPages: vi.fn() }))
 vi.mock('@/lib/wiki/wiki-announcement', () => ({ listRecentWikiAnnouncements: vi.fn() }))
 vi.mock('@/lib/wiki/wiki-template', async (importOriginal) => ({
-  assertWikiTemplateFits: (await importOriginal<typeof import('@/lib/wiki/wiki-template')>()).assertWikiTemplateFits,
+  applyWikiTemplateToPage: (await importOriginal<typeof import('@/lib/wiki/wiki-template')>()).applyWikiTemplateToPage,
   listWikiTemplateNames: vi.fn(),
   renderWikiTemplate: vi.fn(),
 }))
@@ -108,12 +89,13 @@ beforeEach(() => {
           ? { id: 'page-1', parentId: null, updatedAt: READ_AT }
           : null,
   )
-  vi.mocked(readWikiPageContent).mockResolvedValue({ content: '# 手順\n古い手順\n', updatedAt: READ_AT })
   vi.mocked(resolveWikiTagIdsByName).mockResolvedValue(['tag-1'])
   vi.mocked(resolveTicketId).mockResolvedValue('ticket-1')
   vi.mocked(createWikiPage).mockResolvedValue(writeResult('created'))
-  vi.mocked(updateWikiPage).mockResolvedValue(writeResult('updated'))
-  vi.mocked(moveWikiPage).mockResolvedValue(writeResult('moved', MOVED_AT))
+  vi.mocked(saveWikiPage).mockImplementation(async (_actor, _writer, _pageId, change) => ({
+    written: change.move ? writeResult('moved', MOVED_AT) : writeResult('updated'),
+    changes: [...(change.patch ? ['updated' as const] : []), ...(change.move ? ['moved' as const] : [])],
+  }))
   vi.mocked(deleteWikiPage).mockResolvedValue({ deleted: 1 })
   vi.mocked(listWikiTemplateNames).mockResolvedValue([])
 })
@@ -207,7 +189,7 @@ describe('saveWikiPageForMcp: テンプレートからの作成', () => {
       VALIDATION_ERROR,
     )
     expect(renderWikiTemplate).not.toHaveBeenCalled()
-    expect(updateWikiPage).not.toHaveBeenCalled()
+    expect(saveWikiPage).not.toHaveBeenCalled()
   })
 
   it('書けないスペースではテンプレートを引かない', async () => {
@@ -300,6 +282,10 @@ describe('saveWikiPageForMcp: 作成', () => {
 })
 
 describe('saveWikiPageForMcp: 更新', () => {
+  /** saveWikiPage に渡した変更 */
+  const changeOf = (call = 0) => vi.mocked(saveWikiPage).mock.calls[call][3]
+  const optsOf = (call = 0) => vi.mocked(saveWikiPage).mock.calls[call][4]
+
   it('渡した項目だけを更新し、expectedUpdatedAt をそのまま渡す', async () => {
     await saveWikiPageForMcp(human, {
       ref: 'DOCS/12',
@@ -308,76 +294,39 @@ describe('saveWikiPageForMcp: 更新', () => {
       message: '名前を揃える',
     })
 
-    expect(updateWikiPage).toHaveBeenCalledWith(
+    expect(saveWikiPage).toHaveBeenCalledWith(
       human.user,
       { via: 'mcp' },
       PAGE_ID,
-      { title: '改名', content: undefined, tagIds: undefined },
+      { patch: { title: '改名', content: undefined, tagIds: undefined }, move: undefined },
       { expectedUpdatedAt: READ_AT.toISOString(), ticketId: null, message: '名前を揃える' },
     )
-    expect(moveWikiPage).not.toHaveBeenCalled()
   })
 
   it('type は渡したときだけ変え、type だけでも保存する(本文の front matter からは推定しない)', async () => {
     await saveWikiPageForMcp(human, { ref: 'DOCS/12', type: 'design_doc' })
-    expect(vi.mocked(updateWikiPage).mock.calls[0][3]).toEqual({
-      title: undefined,
-      content: undefined,
-      type: 'design_doc',
-      tagIds: undefined,
-    })
+    expect(changeOf(0).patch).toEqual({ title: undefined, content: undefined, type: 'design_doc', tagIds: undefined })
 
     await saveWikiPageForMcp(human, { ref: 'DOCS/12', content: '---\ntype: design_doc\n---\n' })
-    expect(vi.mocked(updateWikiPage).mock.calls[1][3].type).toBeUndefined()
+    expect(changeOf(1).patch?.type).toBeUndefined()
   })
 
-  it('edits は読んだ本文に当て、指定が無くても読んだ時点の updatedAt で楽観ロックをかける', async () => {
+  it('edits はロックの後に読む今の本文へ当てる関数で渡し、指定が無くても読んだ時点の updatedAt で楽観ロックをかける', async () => {
     await saveWikiPageForMcp(human, { ref: 'DOCS/12', edits: [{ oldText: '古い手順', newText: '新しい手順' }] })
 
-    expect(updateWikiPage).toHaveBeenCalledWith(
-      human.user,
-      { via: 'mcp' },
-      PAGE_ID,
-      { title: undefined, content: '# 手順\n新しい手順\n', tagIds: undefined },
-      { expectedUpdatedAt: READ_AT.toISOString(), ticketId: null },
-    )
+    const content = changeOf().patch?.content
+    expect(typeof content).toBe('function')
+    expect((content as (current: string) => string)('# 手順\n古い手順\n')).toBe('# 手順\n新しい手順\n')
+    expect(optsOf()).toEqual({ expectedUpdatedAt: READ_AT.toISOString(), ticketId: null })
   })
 
-  it('edits で、読んだ後に更新されていれば WIKI_PAGE_CONFLICT', async () => {
-    const error = await errorOf(
-      saveWikiPageForMcp(human, {
-        ref: 'DOCS/12',
-        edits: [{ oldText: '古い手順', newText: 'x' }],
-        expectedUpdatedAt: '2026-10-01T00:00:00.000Z',
-      }),
-    )
-    expect(error.errorType).toBe(WIKI_PAGE_CONFLICT)
-    expect(updateWikiPage).not.toHaveBeenCalled()
-  })
-
-  it('edits で、読んだ時点の updatedAt と一致すれば保存する', async () => {
+  it('edits でも、渡した expectedUpdatedAt を優先する', async () => {
     await saveWikiPageForMcp(human, {
       ref: 'DOCS/12',
       edits: [{ oldText: '古い手順', newText: '新しい手順' }],
-      expectedUpdatedAt: READ_AT.toISOString(),
+      expectedUpdatedAt: '2026-10-01T00:00:00.000Z',
     })
-    expect(vi.mocked(updateWikiPage).mock.calls[0][4]).toEqual({
-      expectedUpdatedAt: READ_AT.toISOString(),
-      ticketId: null,
-    })
-  })
-
-  it('edits で、日時として読めない expectedUpdatedAt は競合ではなく入力不正(読み直しても解消しないため)', async () => {
-    const error = await errorOf(
-      saveWikiPageForMcp(human, {
-        ref: 'DOCS/12',
-        edits: [{ oldText: '古い手順', newText: 'x' }],
-        expectedUpdatedAt: 'yesterday',
-      }),
-    )
-    expect(error.errorType).toBe(VALIDATION_ERROR)
-    expect(error.message).toContain('expectedUpdatedAt must be an ISO 8601 date-time')
-    expect(updateWikiPage).not.toHaveBeenCalled()
+    expect(optsOf()?.expectedUpdatedAt).toBe('2026-10-01T00:00:00.000Z')
   })
 
   it('content と edits の同時指定・space の指定・何も無い保存はエラー', async () => {
@@ -389,7 +338,7 @@ describe('saveWikiPageForMcp: 更新', () => {
     for (const input of cases) {
       expect((await errorOf(saveWikiPageForMcp(human, input))).errorType).toBe(VALIDATION_ERROR)
     }
-    expect(updateWikiPage).not.toHaveBeenCalled()
+    expect(saveWikiPage).not.toHaveBeenCalled()
   })
 
   it('無いページはエラーにし、ref の形式違いも入力エラーにする', async () => {
@@ -402,70 +351,56 @@ describe('saveWikiPageForMcp: 更新', () => {
   it('position だけなら、親を渡さず(今の親のまま)0 始まりの位置へ移す', async () => {
     const result = await saveWikiPageForMcp(human, { ref: 'DOCS/12', position: 1 })
 
-    expect(updateWikiPage).not.toHaveBeenCalled()
-    expect(moveWikiPage).toHaveBeenCalledWith(
-      human.user,
-      { via: 'mcp' },
-      PAGE_ID,
-      { parentId: undefined, position: 0 },
-      { expectedUpdatedAt: undefined, ticketId: null },
-    )
+    expect(changeOf()).toEqual({ patch: undefined, move: { parentId: undefined, position: 0 } })
+    expect(optsOf()).toEqual({ expectedUpdatedAt: undefined, ticketId: null })
     expect(result.result).toBe('moved')
   })
 
   it('今と同じ親を位置なしで渡しても動かさない(末尾へ送らない)', async () => {
     const result = await saveWikiPageForMcp(human, { ref: 'DOCS/12', title: '改名', parent: 'DOCS/1' })
 
-    expect(moveWikiPage).not.toHaveBeenCalled()
+    expect(changeOf().move).toBeUndefined()
     expect(result.result).toBe('updated')
     expect((await saveWikiPageForMcp(human, { ref: 'DOCS/12', parent: 'DOCS/1' })).result).toBe('unchanged')
-    expect(updateWikiPage).toHaveBeenCalledTimes(1)
+    expect(saveWikiPage).toHaveBeenCalledTimes(1)
   })
 
-  it('無い親は、内容を書く前にエラーにする', async () => {
+  it('無い親は、何も書く前にエラーにする', async () => {
     const error = await errorOf(saveWikiPageForMcp(human, { ref: 'DOCS/12', title: '改名', parent: 'DOCS/99' }))
 
     expect(error.message).toContain('No page DOCS/99')
-    expect(updateWikiPage).not.toHaveBeenCalled()
+    expect(saveWikiPage).not.toHaveBeenCalled()
   })
 
   it('parent: null はスペース直下への移動', async () => {
     await saveWikiPageForMcp(human, { ref: 'DOCS/12', parent: null })
 
-    expect(vi.mocked(moveWikiPage).mock.calls[0][3]).toEqual({ parentId: null, position: undefined })
+    expect(changeOf().move).toEqual({ parentId: null, position: undefined })
   })
 
-  it('アナウンス用スペースで内容と移動を一度に渡すと、内容も書かずに WIKI_ANNOUNCEMENT_FLAT', async () => {
-    vi.mocked(getWikiSpaceByKey).mockResolvedValue({
-      space: { id: SPACE_ID, key: 'DOCS', name: 'お知らせ', type: 'announcement' },
-      access: { spaceId: SPACE_ID, key: 'DOCS', canWrite: true, type: 'announcement' },
-    } as never)
-
-    const error = await errorOf(saveWikiPageForMcp(human, { ref: 'DOCS/12', content: '新しい本文', position: 1 }))
-
-    expect(error.errorType).toBe(WIKI_ANNOUNCEMENT_FLAT)
-    expect(updateWikiPage).not.toHaveBeenCalled()
-    expect(moveWikiPage).not.toHaveBeenCalled()
-  })
-
-  it('内容と移動を一度に渡すと、更新の後に、更新後の updatedAt で移動する', async () => {
+  it('内容と移動を一度に渡すと、1 回の saveWikiPage にまとめ、結果を updated+moved で返す', async () => {
     const result = await saveWikiPageForMcp(human, { ref: 'DOCS/12', title: '改名', parent: 'DOCS/3' })
 
-    expect(vi.mocked(moveWikiPage).mock.calls[0][3]).toEqual({ parentId: 'page-3', position: undefined })
-    expect(vi.mocked(moveWikiPage).mock.calls[0][4]).toEqual({
-      expectedUpdatedAt: SAVED_AT.toISOString(),
-      ticketId: null,
+    expect(saveWikiPage).toHaveBeenCalledTimes(1)
+    expect(changeOf()).toEqual({
+      patch: { title: '改名', content: undefined, type: undefined, tagIds: undefined },
+      move: { parentId: 'page-3', position: undefined },
     })
     expect(result).toMatchObject({ result: 'updated+moved', updatedAt: MOVED_AT })
   })
 
-  it('更新の後に移動が失敗したら、内容は保存済みであることをエラーで伝える', async () => {
-    vi.mocked(moveWikiPage).mockRejectedValue(new ClientError(WIKI_PAGE_TOO_DEEP, 'too deep'))
+  it('保存のエラー(移動の失敗を含む)はそのまま返す', async () => {
+    vi.mocked(saveWikiPage).mockRejectedValue(new ClientError(WIKI_PAGE_TOO_DEEP, 'too deep'))
 
     const error = await errorOf(saveWikiPageForMcp(human, { ref: 'DOCS/12', title: '改名', parent: 'DOCS/3' }))
     expect(error.errorType).toBe(WIKI_PAGE_TOO_DEEP)
-    expect(error.message).toContain('were saved')
-    expect(error.message).toContain('too deep')
+    expect(error.message).toBe('too deep')
+  })
+
+  it('何も変わらなければ unchanged', async () => {
+    vi.mocked(saveWikiPage).mockResolvedValue({ written: writeResult('unchanged', READ_AT), changes: [] })
+
+    expect((await saveWikiPageForMcp(human, { ref: 'DOCS/12', title: '同じ' })).result).toBe('unchanged')
   })
 })
 
@@ -627,7 +562,7 @@ describe('listWikiSpacesForMcp', () => {
 describe('getWikiTreeForMcp', () => {
   beforeEach(() => {
     vi.mocked(getWikiSpaceByKey).mockResolvedValue({
-      space: { id: SPACE_ID, key: 'DOCS', name: '開発ドキュメント' },
+      space: { id: SPACE_ID, key: 'DOCS', name: '開発ドキュメント', type: 'mixed' },
       access: { canWrite: true },
     } as never)
     vi.mocked(listWikiTags).mockResolvedValue([{ id: 't1', name: '設計', color: 'red', order: 1 }])
@@ -669,7 +604,7 @@ describe('getWikiTreeForMcp', () => {
 
   it('書けないスペースではテンプレートを引かず、templates を省く', async () => {
     vi.mocked(getWikiSpaceByKey).mockResolvedValue({
-      space: { id: SPACE_ID, key: 'DOCS', name: '開発ドキュメント' },
+      space: { id: SPACE_ID, key: 'DOCS', name: '開発ドキュメント', type: 'mixed' },
       access: { canWrite: false },
     } as never)
     expect(await getWikiTreeForMcp(human, { space: 'DOCS' })).not.toHaveProperty('templates')
@@ -824,7 +759,6 @@ describe('registerWikiTools', () => {
 
     expect(unknown.isError).toBe(true)
     expect(position.isError).toBe(true)
-    expect(updateWikiPage).not.toHaveBeenCalled()
-    expect(moveWikiPage).not.toHaveBeenCalled()
+    expect(saveWikiPage).not.toHaveBeenCalled()
   })
 })

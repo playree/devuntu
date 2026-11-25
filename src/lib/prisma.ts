@@ -13,3 +13,13 @@ export type Db = Prisma.TransactionClient | typeof prisma
 /** 一意制約違反(P2002)。重複をクライアント向けのエラーへ変換する箇所で使う */
 export const isUniqueViolation = (e: unknown): boolean =>
   typeof e === 'object' && e !== null && 'code' in e && (e as { code?: string }).code === 'P2002'
+
+/** `.catch` に渡す。一意制約違反なら `toError()` に置き換え、それ以外はそのまま投げ直す */
+export const rethrowUniqueViolation =
+  (toError: () => Error) =>
+  (e: unknown): never => {
+    if (isUniqueViolation(e)) {
+      throw toError()
+    }
+    throw e
+  }

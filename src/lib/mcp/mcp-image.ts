@@ -28,10 +28,11 @@ import { resizeWebp, WEBP_MIME } from '../storage/image'
 import { getObject } from '../storage/storage'
 import { isValidUploadKey, toUploadKey, UPLOAD_URL_PREFIX } from '../storage/upload'
 import { signUploadToken, UPLOAD_TOKEN_TTL_SECONDS } from '../storage/upload-token'
+import { resolveWikiPageRef } from '../wiki/wiki-page-ref'
 import { jsonResult, TOOL_ANNOTATIONS } from './mcp'
 import { resolveBoardId } from './mcp-board'
 import { resolveTicketId } from './mcp-ticket'
-import { resolveWikiPageRef, zWikiPageRef } from './mcp-wiki'
+import { zWikiPageRef } from './mcp-wiki'
 
 /**
  * base64 で受け取れる文字列長の上限。
@@ -95,7 +96,7 @@ const resolveUploadTarget = async (
   }
   if (wikiPage) {
     // 'write' は editor 以上 かつ 未アーカイブ。添付はスペースに属する(ページ単位では持たない)
-    const { access, page, ref } = await resolveWikiPageRef(auth, wikiPage, 'write')
+    const { access, page, ref } = await resolveWikiPageRef(auth.user, wikiPage, 'write', 'wikiPage')
     if (!page) {
       throw errValidation(`No page ${ref} exists`)
     }

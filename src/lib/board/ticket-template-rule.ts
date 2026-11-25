@@ -5,6 +5,7 @@
  */
 
 import type { TicketPriority } from '@/generated/prisma/enums'
+import { errClient } from '../error'
 
 /** 1 ボードあたりのテンプレート数の上限(作成画面の選択肢が破綻しない範囲) */
 export const MAX_TEMPLATES_PER_BOARD = 20
@@ -12,8 +13,11 @@ export const MAX_TEMPLATES_PER_BOARD = 20
 /** テンプレート名の最大長 */
 export const MAX_TEMPLATE_NAME = 40
 
-/** 同じボード内でのテンプレート名の重複(DB の @@unique([boardId, name]) 違反) */
+/** 同じボード(Wiki はスペース)内でのテンプレート名の重複(DB の @@unique 違反) */
 export const DUPLICATED_TEMPLATE_NAME = 'DUPLICATED_TEMPLATE_NAME'
+
+/** テンプレート名の重複のエラー。保存の `.catch(rethrowUniqueViolation(errDuplicatedTemplateName))` で使う */
+export const errDuplicatedTemplateName = () => errClient(DUPLICATED_TEMPLATE_NAME)
 
 /** チケットへ写す項目 */
 export type TicketTemplateValues = {

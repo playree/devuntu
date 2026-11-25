@@ -10,8 +10,8 @@ import type { WikiSpaceType, WikiVisibility } from '@/generated/prisma/enums'
 import { isAdminActor, type Actor } from '../board/board-access'
 import { ClientError, errInvalidOperation, errValidation } from '../error'
 import { logger } from '../logger'
-import { isUniqueViolation, prisma } from '../prisma'
-import { listSlackChannels } from '../slack/slack-server'
+import { isUniqueViolation, prisma, type Db } from '../prisma'
+import { assertSlackChannelExists } from '../slack/slack-server'
 import { detachAttachmentsOf, listAttachmentKeysOf, removeAttachmentByKey } from '../storage/attachment'
 import {
   assertWikiSpaceAccess,
@@ -20,6 +20,8 @@ import {
   wikiRoleSelect,
   wikiSpaceListWhere,
 } from './wiki-access'
+import { assertWikiAnnouncementSpace } from './wiki-announcement'
+import { lockWikiSpace, lockWikiSpaceForDelete } from './wiki-lock'
 import {
   DUPLICATED_WIKI_SPACE_KEY,
   evaluateWikiAccess,
@@ -113,7 +115,7 @@ export const updateWikiSpace = async (
   }
   assertDescription(patch.description)
   const space = await prisma.$transaction(async (tx) => {
-    await tx.$queryRaw`SELECT "id" FROM "wiki_space" WHERE "id" = ${spaceId} FOR NO KEY UPDATE`
+    await lockWikiSpace(tx, spaceId)
     await assertWikiSpaceAccess(actor, spaceId, 'manage', tx)
     return tx.wikiSpace.update({
       where: { id: spaceId },
@@ -132,7 +134,7 @@ export const updateWikiSpace = async (
 /** アーカイブの切り替え。アーカイブ済みは閲覧のみになる */
 export const setWikiSpaceArchived = async (actor: Actor, spaceId: string, archived: boolean) => {
   await prisma.$transaction(async (tx) => {
-    await tx.$queryRaw`SELECT "id" FROM "wiki_space" WHERE "id" = ${spaceId} FOR NO KEY UPDATE`
+    await lockWikiSpace(tx, spaceId)
     await assertWikiSpaceAccess(actor, spaceId, 'manage', tx)
     await tx.wikiSpace.update({ where: { id: spaceId }, data: { archived }, select: { id: true } })
   })
@@ -148,7 +150,7 @@ export const setWikiSpaceArchived = async (actor: Actor, spaceId: string, archiv
  */
 export const deleteWikiSpace = async (actor: Actor, spaceId: string) => {
   const keys = await prisma.$transaction(async (tx) => {
-    await tx.$queryRaw`SELECT "id" FROM "wiki_space" WHERE "id" = ${spaceId} FOR UPDATE`
+    await lockWikiSpaceForDelete(tx, spaceId)
     await assertWikiSpaceAccess(actor, spaceId, 'manage', tx)
     // 紐付けを外すとスペースから辿れなくなるので、キーはここで控える
     const keys = await listAttachmentKeysOf(tx, { wikiSpaceId: spaceId })
@@ -173,20 +175,21 @@ export const deleteWikiSpace = async (actor: Actor, spaceId: string) => {
  * Slack のチャンネル一覧はプライベートチャンネル名を含むので、一覧を返す前にこれで権限を確定させる
  */
 export const assertWikiAnnounceChannelManageable = async (actor: Actor, spaceId: string) => {
-  const access = await assertWikiSpaceAccess(actor, spaceId, 'manage')
-  if (access.type !== 'announcement') {
-    throw errInvalidOperation()
-  }
+  await assertWikiAnnouncementSpace(actor, spaceId, 'manage')
 }
+
+/**
+ * アナウンスの通知先チャンネル(権限は見ない)。未設定・スペースが無ければ null。
+ * アナウンス用スペースだけが持つ(区分は作成後に変わらない)
+ */
+export const findWikiAnnounceChannelId = async (spaceId: string, tx: Db = prisma): Promise<string | null> =>
+  (await tx.wikiSpace.findUnique({ where: { id: spaceId }, select: { announceSlackChannelId: true } }))
+    ?.announceSlackChannelId ?? null
 
 /** アナウンスの通知先チャンネルの現在値(owner または管理者)。未設定は null */
 export const getWikiAnnounceChannel = async (actor: Actor, spaceId: string) => {
   await assertWikiAnnounceChannelManageable(actor, spaceId)
-  const space = await prisma.wikiSpace.findUniqueOrThrow({
-    where: { id: spaceId },
-    select: { announceSlackChannelId: true },
-  })
-  return { slackChannelId: space.announceSlackChannelId }
+  return { slackChannelId: await findWikiAnnounceChannelId(spaceId) }
 }
 
 /**
@@ -197,17 +200,11 @@ export const getWikiAnnounceChannel = async (actor: Actor, spaceId: string) => {
 export const setWikiAnnounceChannel = async (actor: Actor, spaceId: string, slackChannelId: string | null) => {
   await assertWikiAnnounceChannelManageable(actor, spaceId)
   if (slackChannelId) {
-    const channels = await listSlackChannels()
-    if (!channels?.some((channel) => channel.id === slackChannelId)) {
-      throw errValidation('slackChannelId')
-    }
+    await assertSlackChannelExists(slackChannelId)
   }
   await prisma.$transaction(async (tx) => {
-    await tx.$queryRaw`SELECT "id" FROM "wiki_space" WHERE "id" = ${spaceId} FOR NO KEY UPDATE`
-    const access = await assertWikiSpaceAccess(actor, spaceId, 'manage', tx)
-    if (access.type !== 'announcement') {
-      throw errInvalidOperation()
-    }
+    await lockWikiSpace(tx, spaceId)
+    await assertWikiAnnouncementSpace(actor, spaceId, 'manage', tx)
     await tx.wikiSpace.update({
       where: { id: spaceId },
       data: { announceSlackChannelId: slackChannelId },

@@ -6,9 +6,13 @@
  */
 
 import { dropCached } from '@/lib/cache'
+import { VALIDATION_ERROR } from '@/lib/error'
+import { assertRateLimit } from '@/lib/rate-limit'
 import {
+  assertSlackChannelExists,
   getSlackBotInfo,
   listSlackChannels,
+  listSlackChannelsWithRefreshLimit,
   postSlackMessage,
   slackUserInfo,
   unfurlSlackLinks,
@@ -21,6 +25,7 @@ vi.mock('@/lib/cache', () => ({
   dropCached: vi.fn(),
 }))
 vi.mock('@/lib/sleep', () => ({ sleep: vi.fn(async () => undefined) }))
+vi.mock('@/lib/rate-limit', () => ({ assertRateLimit: vi.fn() }))
 
 const fetchMock = vi.fn<typeof fetch>()
 
@@ -186,6 +191,31 @@ describe('getSlackBotInfo', () => {
     fetchMock.mockResolvedValue(json(body))
 
     expect(await getSlackBotInfo()).toBeNull()
+  })
+})
+
+describe('assertSlackChannelExists / listSlackChannelsWithRefreshLimit', () => {
+  const channels = { ok: true, channels: [{ id: 'C0000000A', name: 'general' }] }
+
+  it('参加しているチャンネルなら通し、無い・一覧が取れないなら入力エラー', async () => {
+    fetchMock.mockImplementation(async () => json(channels))
+    await expect(assertSlackChannelExists('C0000000A')).resolves.toBeUndefined()
+    await expect(assertSlackChannelExists('C0000000B')).rejects.toMatchObject({ errorType: VALIDATION_ERROR })
+
+    fetchMock.mockImplementation(async () => json({ ok: false, error: 'invalid_auth' }))
+    await expect(assertSlackChannelExists('C0000000A')).rejects.toMatchObject({ errorType: VALIDATION_ERROR })
+  })
+
+  it('取り直し(force)だけ利用者ごとの回数制限をかけ、キャッシュを捨てる', async () => {
+    fetchMock.mockImplementation(async () => json(channels))
+
+    await listSlackChannelsWithRefreshLimit('u1')
+    expect(assertRateLimit).not.toHaveBeenCalled()
+    expect(dropCached).not.toHaveBeenCalled()
+
+    await listSlackChannelsWithRefreshLimit('u1', { force: true })
+    expect(assertRateLimit).toHaveBeenCalledWith('slack-channels-refresh:u1', { limit: 10, windowMs: 60_000 })
+    expect(dropCached).toHaveBeenCalled()
   })
 })
 

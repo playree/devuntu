@@ -1,7 +1,6 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action/action-server'
-import { assertRateLimit } from '@/lib/rate-limit'
 import { scUUID } from '@/lib/schema/schema'
 import {
   scCreateWikiTemplate,
@@ -17,7 +16,7 @@ import {
   scUpsertWikiSpaceMember,
   scUpsertWikiSpaceTarget,
 } from '@/lib/schema/schema-wiki'
-import { listSlackChannels } from '@/lib/slack/slack-server'
+import { listSlackChannelsWithRefreshLimit } from '@/lib/slack/slack-server'
 import {
   getWikiSpaceAssignments as getWikiSpaceAssignmentsCore,
   getWikiSpaceAssignOptions as getWikiSpaceAssignOptionsCore,
@@ -194,9 +193,6 @@ export const moveWikiTemplate = safeAuthAction
     return { id }
   })
 
-/** Slack のチャンネル一覧の取り直しの上限(ボード設定と同じ) */
-const CHANNELS_REFRESH_RATE_LIMIT = { limit: 10, windowMs: 60 * 1000 }
-
 /**
  * アナウンスの通知先に選べる Slack チャンネルの一覧(owner または管理者)。取得できない場合は null。
  * `force` はキャッシュを捨てて取り直す(Bot を招待した直後に選べるようにするため)
@@ -206,10 +202,7 @@ export const getWikiSlackChannels = safeAuthAction
   .inputSchema(scGetWikiSlackChannels)
   .action(async ({ ctx: { user }, parsedInput: { id, force } }) => {
     await assertWikiAnnounceChannelManageable(user, id)
-    if (force) {
-      assertRateLimit(`slack-channels-refresh:${user.id}`, CHANNELS_REFRESH_RATE_LIMIT)
-    }
-    return listSlackChannels({ force })
+    return listSlackChannelsWithRefreshLimit(user.id, { force })
   })
 export type GetWikiSlackChannelsReturnType = Awaited<ReturnType<typeof getWikiSlackChannels>>['data']
 

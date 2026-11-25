@@ -23,7 +23,7 @@ type MockPrismaOptions = {
    * `@/lib/auth` の初期化(oauth-provider のシード)が引くモデルを気にせず済ませたいときに付ける
    */
   stubOthers?: boolean
-  /** `prisma` / `isUniqueViolation` 以外の export を足す、または上書きする */
+  /** `prisma` / `isUniqueViolation` / `rethrowUniqueViolation` 以外の export を足す、または上書きする */
   exports?: Record<string, unknown>
 }
 
@@ -60,8 +60,17 @@ export const mockPrisma = (models: Models = {}, options: MockPrismaOptions = {})
     ? new Proxy(client, { get: (target, prop: string) => (prop in target ? target[prop] : stubModel()) })
     : client
 
-  return { isUniqueViolation, ...options.exports, prisma }
+  return { isUniqueViolation, rethrowUniqueViolation, ...options.exports, prisma }
 }
 
 /** 本物と同じく Prisma の一意制約違反(P2002)だけを true にする */
 const isUniqueViolation = (e: unknown): boolean => (e as { code?: string } | null)?.code === 'P2002'
+
+const rethrowUniqueViolation =
+  (toError: () => Error) =>
+  (e: unknown): never => {
+    if (isUniqueViolation(e)) {
+      throw toError()
+    }
+    throw e
+  }

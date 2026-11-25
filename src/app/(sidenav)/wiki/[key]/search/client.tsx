@@ -8,7 +8,7 @@ import { ContentHeader } from '@/components/header'
 import { ArrowLeftCircleIcon, MagnifyingGlassIcon } from '@/components/icon'
 import { TagNameSelectField } from '@/components/ticket/tag-name-select'
 import { useActionData } from '@/lib/action/action-client'
-import { MAX_WIKI_PAGE_TAGS, MAX_WIKI_SEARCH_KEYWORD, wikiSearchHref } from '@/lib/wiki/wiki-rule'
+import { MAX_WIKI_PAGE_TAGS, MAX_WIKI_SEARCH_KEYWORD, wikiSearchHref, wikiSpacePath } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
@@ -43,7 +43,7 @@ export const WikiSpaceSearchClient: FC<{ keyword: string; tags: string[] }> = ({
           isIconOnly
           tooltip={t('back')}
           icon={<ArrowLeftCircleIcon />}
-          onPress={() => router.push(`/wiki/${space.key}`)}
+          onPress={() => router.push(wikiSpacePath(space.key))}
         />
       </ContentHeader>
 

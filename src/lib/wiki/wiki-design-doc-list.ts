@@ -4,6 +4,7 @@
 
 import type { DesignDocListDocument } from 'markdown-design-doc-viewer-embed/react'
 import type { WikiDesignDocIndexItem } from './wiki-design-doc-index'
+import { wikiPagePath } from './wiki-rule'
 
 /** フォルダ名の1階層。embed は `/` を階層の区切りとして扱うので、タイトルの `/` は全角にする */
 const folderSegment = (title: string) => title.replaceAll('/', '／')
@@ -35,7 +36,7 @@ export const toDesignDocListDocuments = (
     for (const doc of childrenOf.get(parentId) ?? []) {
       list.push({
         markdown: doc.frontMatter,
-        href: `/wiki/${spaceKey}/${doc.number}`,
+        href: wikiPagePath({ key: spaceKey, number: doc.number }),
         folder,
         file: `#${doc.number}`,
         title: doc.title,

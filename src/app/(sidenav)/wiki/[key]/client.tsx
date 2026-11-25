@@ -9,6 +9,7 @@ import { BookOpenIcon, Cog6ToothIcon, DocumentPlusIcon, TrashIcon } from '@/comp
 import { ReloadButton } from '@/components/reload-button'
 import { WikiRoleChip, WikiSpaceTypeChip, WikiVisibilityChip } from '@/components/wiki-chip'
 import { type WikiAnnouncementFilter } from '@/lib/wiki/wiki-announcement-rule'
+import { wikiSettingsPath, wikiSpaceTypeSpec } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { ButtonGroup } from '@heroui/react'
 import { useRouter } from 'next/navigation'
@@ -25,6 +26,7 @@ export const WikiSpaceTopClient: FC<{ announcementFilter: WikiAnnouncementFilter
   const { t } = useLocale()
   const router = useRouter()
   const { space, access, tree, reloadSpace } = useWikiSpace()
+  const spec = wikiSpaceTypeSpec(space.type)
   const createModalState = useModalState()
   const deletedModalState = useModalState()
 
@@ -34,7 +36,7 @@ export const WikiSpaceTopClient: FC<{ announcementFilter: WikiAnnouncementFilter
         {access.canWrite && (
           <MultiButton
             isIconOnly
-            tooltip={space.type === 'announcement' ? t('wiki_new_announcement') : t('wiki_add_page')}
+            tooltip={spec.announce ? t('wiki_new_announcement') : t('wiki_add_page')}
             icon={<DocumentPlusIcon />}
             onPress={() => createModalState.open()}
           />
@@ -54,7 +56,7 @@ export const WikiSpaceTopClient: FC<{ announcementFilter: WikiAnnouncementFilter
             isIconOnly
             tooltip={t('wiki_space_settings')}
             icon={<Cog6ToothIcon />}
-            onPress={() => router.push(`/wiki/${space.key}/settings`)}
+            onPress={() => router.push(wikiSettingsPath(space.key))}
           >
             {access.canView && <ButtonGroup.Separator />}
           </MultiButton>
@@ -74,9 +76,9 @@ export const WikiSpaceTopClient: FC<{ announcementFilter: WikiAnnouncementFilter
 
       {!access.canView ? (
         <NoticePanel>{t('msg_wiki_manage_only')}</NoticePanel>
-      ) : space.type === 'design_doc' ? (
+      ) : spec.index === 'design_doc' ? (
         <WikiDesignDocIndex />
-      ) : space.type === 'announcement' ? (
+      ) : spec.index === 'announcement' ? (
         <>
           {access.canWrite && (
             <MultiButton

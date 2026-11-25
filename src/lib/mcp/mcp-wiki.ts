@@ -22,29 +22,20 @@ import { extractUploadKeys } from '../storage/upload'
 import { type WikiSpaceAccess } from '../wiki/wiki-access'
 import { listRecentWikiAnnouncements } from '../wiki/wiki-announcement'
 import { MAX_WIKI_ANNOUNCEMENT_TREE } from '../wiki/wiki-announcement-rule'
+import { applyTextEdits, extractMarkdownSection, listMarkdownHeadings, type TextEdit } from '../wiki/wiki-markdown'
 import {
-  applyTextEdits,
-  extractMarkdownSection,
-  hasDesignDocFrontMatter,
-  listMarkdownHeadings,
-  type TextEdit,
-} from '../wiki/wiki-markdown'
-import {
-  assertWikiPageNotConflicted,
   createWikiPage,
   deleteWikiPage,
-  errWikiAnnouncementFlat,
   findWikiPageByNumber,
   getWikiPage,
-  getWikiTree,
-  moveWikiPage,
-  readWikiPageContent,
-  updateWikiPage,
-  type WikiPageWriteResult,
+  saveWikiPage,
+  type WikiPagePatch,
 } from '../wiki/wiki-page'
+import { resolveWikiPageRef } from '../wiki/wiki-page-ref'
+import { getWikiTree } from '../wiki/wiki-page-tree'
+import type { WikiPageWriteResult } from '../wiki/wiki-page-write'
 import {
   DEFAULT_WIKI_SEARCH_LIMIT,
-  isFlatWikiSpace,
   MAX_WIKI_CONTENT,
   MAX_WIKI_DEPTH,
   MAX_WIKI_PAGE_TAGS,
@@ -57,12 +48,13 @@ import {
   WIKI_PAGE_HAS_CHILDREN,
   wikiPagePath,
   wikiPageRef,
+  wikiSpaceTypeSpec,
   type WikiWriter,
 } from '../wiki/wiki-rule'
 import { searchWikiPages } from '../wiki/wiki-search'
 import { getWikiSpaceByKey, listWikiSpaces } from '../wiki/wiki-space'
 import { listWikiTags, resolveWikiTagIdsByName } from '../wiki/wiki-tag'
-import { assertWikiTemplateFits, listWikiTemplateNames, renderWikiTemplate } from '../wiki/wiki-template'
+import { applyWikiTemplateToPage, listWikiTemplateNames, renderWikiTemplate } from '../wiki/wiki-template'
 import { nestWikiTree } from '../wiki/wiki-tree'
 import { jsonResult, TOOL_ANNOTATIONS } from './mcp'
 import { resolveTicketId } from './mcp-ticket'
@@ -91,18 +83,6 @@ const errNoPage = (ref: string) => errValidation(`No page ${ref} exists. Find pa
 /** スペースキーから権限を引く。無い・権限が無いは区別しない */
 const resolveSpace = async (auth: ResourceAuth, key: string, need: 'view' | 'write') =>
   (await getWikiSpaceByKey(auth.user, key, need)).access
-
-/**
- * ref のページを引く。スペースの権限を先に確かめてからページの有無を見る(他のスペースのページの有無を探らせない)。
- * ページが無ければ page は null
- */
-export const resolveWikiPageRef = async (auth: ResourceAuth, ref: string, need: 'view' | 'write') => {
-  const parsed = parseRef(ref)
-  const access = await resolveSpace(auth, parsed.key, need)
-  const found = await findWikiPageByNumber(access.spaceId, parsed.number)
-  const page = found && { ...found, number: parsed.number }
-  return { access, ref: wikiPageRef({ key: access.key, number: parsed.number }), page }
-}
 
 /** 親に指定された ref を、同じスペースのページの id にする */
 const resolveParentId = async (access: WikiSpaceAccess, parent: string): Promise<string> => {
@@ -172,7 +152,7 @@ export const getWikiTreeForMcp = async (
   input: { space: string; root?: string; depth?: number },
 ) => {
   const { space, access } = await getWikiSpaceByKey(auth.user, input.space)
-  if (space.type === 'announcement') {
+  if (wikiSpaceTypeSpec(space.type).flat) {
     return getAnnouncementTreeForMcp(auth, { space, access }, input)
   }
   const [rows, tags, templates] = await Promise.all([
@@ -318,21 +298,12 @@ const createWikiPageForMcp = async (auth: ResourceAuth, input: McpSaveWikiPageIn
   }
   // 親やタグ・テンプレートの有無で他のスペースの中身を探れないよう、先に権限を確かめる
   const access = await resolveSpace(auth, input.space, 'write')
-  // 明示した title / content / type を優先し、無い項目だけをテンプレートで埋める(明示した値は置き換えない。画面のタイトルと同じ)
   const template = input.template ? await renderWikiTemplate(auth.user, access.spaceId, { name: input.template }) : null
-  const title = input.title ?? template?.title ?? ''
+  const { title, content, type } = applyWikiTemplateToPage(input, template)
   if (title.trim() === '') {
     throw errValidation(
       input.template ? `title is required: the template ${input.template} has no title` : 'title is required',
     )
-  }
-  const content = input.content ?? template?.content
-  if (template) {
-    // テンプレートから採った項目だけを確かめる(明示した title / content をテンプレートの長さで拒まない)
-    assertWikiTemplateFits(template.name, {
-      title: input.title === undefined ? template.title : undefined,
-      content: input.content === undefined ? template.content : undefined,
-    })
   }
   const parentId = input.parent ? await resolveParentId(access, input.parent) : null
   const tagIds = input.tags ? await resolveWikiTagIdsByName(access.spaceId, input.tags) : []
@@ -343,12 +314,7 @@ const createWikiPageForMcp = async (auth: ResourceAuth, input: McpSaveWikiPageIn
     {
       title,
       content,
-      // 省略時は本文の front matter から設計書と分かればそうし(markdown-design-doc スキルが書く設計書は
-      // type: design_doc を持つ)、それ以外はスペースの区分から決めさせる(ロックを取ってから区分を読むため)
-      type:
-        input.type ??
-        (input.content && hasDesignDocFrontMatter(input.content) ? 'design_doc' : undefined) ??
-        template?.type,
+      type,
       parentId,
       position: toPosition(input.position),
       tagIds,
@@ -373,35 +339,22 @@ const updateWikiPageForMcp = async (
   if (input.content !== undefined && input.edits) {
     throw errValidation('Pass either content or edits, not both')
   }
-  const { access, page, ref: pageRef } = await resolveWikiPageRef(auth, ref, 'write')
+  const { access, page, ref: pageRef } = await resolveWikiPageRef(auth.user, ref, 'write')
   if (!page) {
     throw errNoPage(pageRef)
   }
 
-  let content = input.content
-  let expectedUpdatedAt = input.expectedUpdatedAt
-  if (input.edits) {
-    const current = await readWikiPageContent(page.id)
-    if (!current) {
-      throw errNoPage(pageRef)
-    }
-    assertWikiPageNotConflicted(expectedUpdatedAt, current.updatedAt)
-    content = applyTextEdits(current.content, input.edits)
-    // edits は読んだ本文に当てたものなので、指定が無くても読んだ時点の版で楽観ロックをかける
-    expectedUpdatedAt = current.updatedAt.toISOString()
-  }
+  const edits = input.edits
+  // edits は読んだ本文に当てるので、ロックを取った後の今の本文から組み立てる
+  const content: WikiPagePatch['content'] = edits ? (current) => applyTextEdits(current, edits) : input.content
   const tagIds = input.tags ? await resolveWikiTagIdsByName(access.spaceId, input.tags) : undefined
-  // 親は書き込む前に解決する(無い親で内容だけ保存されないように)。undefined は今の親のまま
+  // 親は書き込む前に解決する(無い親を渡されたら何も書かない)。undefined は今の親のまま
   const parentId =
     input.parent === undefined ? undefined : input.parent === null ? null : await resolveParentId(access, input.parent)
   const wantsUpdate =
     input.title !== undefined || content !== undefined || input.type !== undefined || tagIds !== undefined
   // 位置を省いた移動は末尾へ送るので、今と同じ親を位置なしで渡されたときは動かさない
   const wantsMove = input.position !== undefined || (parentId !== undefined && parentId !== page.parentId)
-  // アナウンス用スペースでは移動できないので、内容だけを保存してから移動で失敗する、という途中までの書き込みを残さない
-  if (wantsMove && isFlatWikiSpace(access.type)) {
-    throw errWikiAnnouncementFlat()
-  }
   if (!wantsUpdate && !wantsMove) {
     if (input.parent !== undefined) {
       return writeResult(
@@ -413,39 +366,23 @@ const updateWikiPageForMcp = async (
     throw errValidation('Nothing to save. Pass title, content, edits, type, tags, parent or position')
   }
 
-  const updated = wantsUpdate
-    ? await updateWikiPage(
-        auth.user,
-        WRITER,
-        page.id,
-        { title: input.title, content, type: input.type, tagIds },
-        { expectedUpdatedAt, ticketId, message: input.message },
-      )
-    : undefined
-  if (!wantsMove) {
-    return writeResult(updated!.result, updated!, access.key)
-  }
-
-  try {
-    const moved = await moveWikiPage(
-      auth.user,
-      WRITER,
-      page.id,
-      { parentId, position: toPosition(input.position) },
-      { expectedUpdatedAt: updated ? updated.updatedAt.toISOString() : expectedUpdatedAt, ticketId },
-    )
-    const changed = [updated?.result, moved.result].filter((result) => result && result !== 'unchanged')
-    return writeResult(changed.length > 0 ? changed.join('+') : 'unchanged', moved, access.key)
-  } catch (error) {
-    // 内容は保存済みなので、移動だけをやり直せばよいと分かるようにする
-    if (updated?.result === 'updated' && error instanceof ClientError) {
-      throw new ClientError(
-        error.errorType,
-        `The title / content / type / tags were saved (updatedAt: ${updated.updatedAt.toISOString()}), but moving the page failed: ${error.message}`,
-      )
-    }
-    throw error
-  }
+  // 内容の更新と移動は 1 つのトランザクションで行う(移動に失敗すれば内容も保存しない)
+  const { written, changes } = await saveWikiPage(
+    auth.user,
+    WRITER,
+    page.id,
+    {
+      patch: wantsUpdate ? { title: input.title, content, type: input.type, tagIds } : undefined,
+      move: wantsMove ? { parentId, position: toPosition(input.position) } : undefined,
+    },
+    // edits は読んだ本文に当てたものなので、指定が無くても読んだ時点の版で楽観ロックをかける
+    {
+      expectedUpdatedAt: input.expectedUpdatedAt ?? (edits ? page.updatedAt.toISOString() : undefined),
+      ticketId,
+      message: input.message,
+    },
+  )
+  return writeResult(changes.length > 0 ? changes.join('+') : 'unchanged', written, access.key)
 }
 
 /** ref が無ければ作成し、あれば渡した項目だけを更新・移動する */
@@ -476,7 +413,7 @@ export const deleteWikiPageForMcp = async (
       'Agents cannot delete a page together with its descendants. Propose the deletion to the user in your report',
     )
   }
-  const { page } = await resolveWikiPageRef(auth, input.ref, 'write')
+  const { page } = await resolveWikiPageRef(auth.user, input.ref, 'write')
   if (!page) {
     return { deleted: 0 }
   }
@@ -621,9 +558,11 @@ export const registerWikiTools = (server: McpServer, auth: ResourceAuth) => {
         '{{date}}, {{month}} and {{user}} in it are replaced with the creation date and your name. ' +
         'Before updating, read the page with get_wiki_page and pass its updatedAt as expectedUpdatedAt so you do not overwrite changes by others. ' +
         'For partial changes use edits instead of sending the whole content: each oldText must match exactly one place, and edits are checked against the content as you read it. ' +
-        'parent / position move the page within the space. tags replace all tags of the page and must be existing tag names of the space. ' +
+        'parent / position move the page within the space; a move and other changes are saved together or not at all. ' +
+        'tags replace all tags of the page and must be existing tag names of the space. ' +
         `type design_doc makes the page a design document in the Markdown Design Doc Viewer format (${designDocSkillNote(auth)}); ` +
         'when creating without type, a content whose front matter has type: design_doc becomes one. Omit type when updating to keep it. ' +
+        'A design doc without front matter (created with empty content, or changed to type design_doc without passing content) gets a minimal front matter with its title. ' +
         'In a design doc space (type design_doc in list_wiki_spaces), pages are always design docs: type page is an error, and creating without type makes a design doc. ' +
         'In an announcement space (type announcement), pages are flat normal pages ordered by creation date: parent, position and type design_doc are errors. ' +
         'Write only what the user asked for or agreed to; every change is kept in the page history, from which users can restore it',

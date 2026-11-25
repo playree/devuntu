@@ -5,12 +5,14 @@
  * ページ作成で使うときの権限と置き換えを、prisma を差し替えて確かめる。
  */
 
+import type { WikiSpaceType } from '@/generated/prisma/enums'
 import { DUPLICATED_TEMPLATE_NAME } from '@/lib/board/ticket-template-rule'
 import { INVALID_OPERATION, VALIDATION_ERROR } from '@/lib/error'
 import { prisma } from '@/lib/prisma'
 import { assertWikiSpaceAccess } from '@/lib/wiki/wiki-access'
 import { MAX_WIKI_CONTENT, MAX_WIKI_TITLE, WIKI_PAGE_TYPE_NOT_ALLOWED } from '@/lib/wiki/wiki-rule'
 import {
+  applyWikiTemplateToPage,
   assertWikiTemplateFits,
   createWikiTemplate,
   deleteWikiTemplate,
@@ -44,7 +46,7 @@ const errorTypeOf = async (promise: Promise<unknown>) => {
   throw new Error('not rejected')
 }
 
-const mockAccess = (access: { type?: 'mixed' | 'design_doc'; archived?: boolean } = {}) =>
+const mockAccess = (access: { type?: WikiSpaceType; archived?: boolean } = {}) =>
   vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ type: 'mixed', archived: false, ...access } as never)
 
 beforeEach(() => {
@@ -89,6 +91,17 @@ describe('createWikiTemplate', () => {
 
     await createWikiTemplate(actor, { spaceId: SPACE_ID, ...fields, type: 'design_doc' })
     expect(prisma.wikiTemplate.create).toHaveBeenCalled()
+  })
+
+  it('アナウンス用スペースには種類 design_doc のテンプレートを作れず、文言はアナウンス用スペースの決まりを伝える', async () => {
+    mockAccess({ type: 'announcement' })
+    await expect(createWikiTemplate(actor, { spaceId: SPACE_ID, ...fields, type: 'design_doc' })).rejects.toMatchObject(
+      {
+        errorType: WIKI_PAGE_TYPE_NOT_ALLOWED,
+        message: 'This space is an announcement space: its templates must be normal pages (type=page)',
+      },
+    )
+    expect(prisma.wikiTemplate.create).not.toHaveBeenCalled()
   })
 
   it('上限に達していれば作れない', async () => {
@@ -226,6 +239,43 @@ describe('assertWikiTemplateFits', () => {
   it('渡さない(明示した値で置き換えて使わない)項目の長さは見ない', () => {
     expect(() => assertWikiTemplateFits('議事録', {})).not.toThrow()
     expect(() => assertWikiTemplateFits('議事録', { title: '短い', content: '本文' })).not.toThrow()
+  })
+})
+
+describe('applyWikiTemplateToPage', () => {
+  const template = { name: '議事録', title: '11/25 定例', content: '# 議題', type: 'design_doc' as const }
+  const designDoc = '---\ntype: design_doc\ntitle: ログイン\n---\n\n# 概要'
+
+  it('省いた項目だけをテンプレートで埋める(画面・MCP 共通)', () => {
+    expect(applyWikiTemplateToPage({}, template)).toEqual({
+      title: '11/25 定例',
+      content: '# 議題',
+      type: 'design_doc',
+    })
+    expect(applyWikiTemplateToPage({ title: '臨時', type: 'page' }, template)).toEqual({
+      title: '臨時',
+      content: '# 議題',
+      type: 'page',
+    })
+  })
+
+  it('種類は 明示 > 本文の front matter > テンプレート の順。どれも無ければ undefined(区分の既定に任せる)', () => {
+    expect(applyWikiTemplateToPage({ title: 't', content: designDoc }, null).type).toBe('design_doc')
+    expect(applyWikiTemplateToPage({ title: 't', content: designDoc, type: 'page' }, null).type).toBe('page')
+    expect(applyWikiTemplateToPage({ title: 't', content: '# 概要' }, { ...template, type: 'page' }).type).toBe('page')
+    expect(applyWikiTemplateToPage({ title: 't', content: '# 概要' }, null)).toEqual({
+      title: 't',
+      content: '# 概要',
+      type: undefined,
+    })
+  })
+
+  it('テンプレートから採る項目だけを長さで確かめる', () => {
+    const long = { ...template, content: 'c'.repeat(MAX_WIKI_CONTENT + 1) }
+    expect(() => applyWikiTemplateToPage({ title: 't' }, long)).toThrow(
+      expect.objectContaining({ errorType: WIKI_TEMPLATE_TOO_LONG }),
+    )
+    expect(() => applyWikiTemplateToPage({ title: 't', content: '本文' }, long)).not.toThrow()
   })
 })
 

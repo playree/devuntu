@@ -17,6 +17,7 @@ import type { NotifyEvent } from '@/generated/prisma/enums'
 import { type Actor, getTicketAccess } from '../board/board-access'
 import { utcToDateOnly } from '../day'
 import { prisma } from '../prisma'
+import { findWikiAnnounceChannelId } from '../wiki/wiki-space'
 import { getBoardNotifyChannels } from './notify-board-setting'
 import type { NotifyPayload } from './notify-payload'
 
@@ -97,11 +98,8 @@ const boardChannels = async (boardId: string | undefined, event: NotifyEvent): P
  * 配信時点の設定を引くので、投入後にチャンネルを外したスペースには送らない。
  */
 const wikiSpaceChannels = async (spaceId: string): Promise<string[]> => {
-  const space = await prisma.wikiSpace.findUnique({
-    where: { id: spaceId },
-    select: { announceSlackChannelId: true },
-  })
-  return space?.announceSlackChannelId ? [space.announceSlackChannelId] : []
+  const channelId = await findWikiAnnounceChannelId(spaceId)
+  return channelId ? [channelId] : []
 }
 
 type Resolver<E extends NotifyEvent> = (

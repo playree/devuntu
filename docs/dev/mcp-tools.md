@@ -245,27 +245,28 @@ everyone は全員に公開する文書として作るものなので、エー�
   `limit` の件数(既定20、最大50)まで返したときは `limitReached: true` を付ける
 - `save_wiki_page`
   - 作成は `space` と `title` が必須。`parent`(同じスペースのページの ref)・`position`・`tags` も同じトランザクションで反映する
-  - 作成で `template`(`get_wiki_tree` の `templates` の名前)を渡すと、省いた `title` / `content` / `type` をテンプレートで埋める(渡したものが優先)。
+  - 作成で `template`(`get_wiki_tree` の `templates` の名前)を渡すと、省いた `title` / `content` / `type` をテンプレートで埋める(渡したものが優先。画面と共通の `applyWikiTemplateToPage`)。
     テンプレートの `{{date}}` / `{{month}}` / `{{user}}` は画面と同じく作成者の設定で置き換える(明示した `title` / `content` は置き換えない)。テンプレートにタイトルが無ければ `title` が要る。
     テンプレートから採った項目が置き換えた結果で最大長を超えたら `WIKI_TEMPLATE_TOO_LONG`(明示した `title` / `content` で置き換える項目の長さは見ない)。
     無い名前は既存のテンプレート名を添えたエラーにする。更新(`ref` あり)では受け付けない
   - 更新で `content` を渡すと本文を丸ごと置き換え、`edits`(`[{ oldText, newText }]`、50件まで)を渡すと順に置き換える。
     `oldText` は本文にちょうど1回だけ現れなければならず、0回・複数回なら何番目の edit かを書いたエラーにする(2件見つかった時点で数えるのをやめ、件数は書かない)。`content` と同時には渡せない
-  - `edits` を渡したときは、`expectedUpdatedAt` が無くても、edits を当てた本文を読んだ時点の `updatedAt` で楽観ロックをかける
+  - `edits` はロックを取った後に読んだ今の本文へ当てる。`expectedUpdatedAt` が無くても、ページを引いた時点の `updatedAt` で楽観ロックをかける
     (読んでから書くまでの他の人の更新を消さない)。`expectedUpdatedAt` が日時として読めなければ、`content` のときと同じく競合ではなく入力不正にする
   - `updatedAt` が進むのはタイトル・本文・種類・タグの保存と復元だけで、移動・並べ替えでは進まない(移動した後も、移動前に読んだ `updatedAt` で保存できる)
   - `parent`(`null` でスペース直下)・`position`(兄弟の中の位置、1始まり)で移動する。別のスペースへは移せない。
     `position` だけなら今の親のまま並べ替え、親を変えて `position` を省くと末尾へ置く。今と同じ親を `position` なしで渡しても動かさない。
-    内容と移動を一度に渡すと、内容の更新の後で移動する(別のトランザクション)。移動だけが失敗したときは、内容は保存済みである旨をエラーに書く
+    内容と移動を一度に渡すと、1 つのトランザクションで内容を更新してから移動する(`saveWikiPage`)。移動が失敗すれば内容も保存しない
   - `type` はページの種類(`page` / `design_doc`)。作成で省くと、`content` の先頭の front matter に `type: design_doc` があれば `design_doc`、
     無ければ `page` にする(markdown-design-doc スキルが書いた設計書をそのまま保存できるように)。更新で省くと種類は変えない。
-    更新では本文から種類を推定しない(画面で通常に戻したページを、AI の本文の書き換えで設計書へ戻さないため)
+    更新では本文から種類を推定しない(画面で通常に戻したページを、AI の本文の書き換えで設計書へ戻さないため)。
+    本文を空で設計書を作ったとき・更新で本文を渡さずに種類だけを設計書へ変えて本文に front matter が無いときは、最小の front matter(`type: design_doc` とタイトル)を先頭に入れる(本文を渡したときはそのまま使う)
   - description で、markdown-design-doc スキルで書くよう促す。人の経路では、スキルが無ければ `get_skill_install_guide` で入れられることを利用者に提案させる
   - 設計書スペース(区分 `type` が `design_doc`)では、作成で `type` を省くと本文によらず `design_doc` にする。
     `type: page` での作成・更新は `WIKI_PAGE_TYPE_NOT_ALLOWED` のエラーにする(区分は作成後に変わらない)
   - アナウンス用スペース(区分 `type` が `announcement`)はページが平らで、並びは作成日時で決まる。
     作成での `parent`(null 以外)・`position` と、更新での `parent` / `position`(移動)は `WIKI_ANNOUNCEMENT_FLAT`、`type: design_doc` は `WIKI_PAGE_TYPE_NOT_ALLOWED` のエラーにする。
-    内容と移動を一度に渡したときも、内容を書く前に弾く(内容だけが保存された状態を残さない)
+    内容と移動を一度に渡したときも、同じトランザクションで弾くので内容だけが保存された状態は残らない
   - `tags` はページのタグを丸ごと置き換える。スペースに既にあるタグの**名前**で渡し、無い名前は作らずに既存のタグ名を添えたエラーにする
     (AI に表記ゆれのタグを増やさせない)
   - 応答は `result`(`created` / `updated` / `moved` / `updated+moved` / `unchanged`)・`ref`・`url`・`updatedAt`

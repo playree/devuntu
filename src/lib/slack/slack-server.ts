@@ -12,7 +12,9 @@
 
 import { cached, dropCached } from '../cache'
 import { envu } from '../env-util'
+import { errValidation } from '../error'
 import { logger } from '../logger'
+import { assertRateLimit } from '../rate-limit'
 import { sleep } from '../sleep'
 import { classifySlackError, type SlackSendOutcome } from './slack'
 
@@ -317,6 +319,39 @@ export const listSlackChannels = async ({ force = false }: { force?: boolean } =
   } catch (error) {
     logger.warn({ error }, 'slack users.conversations failed')
     return null
+  }
+}
+
+/**
+ * チャンネル一覧の強制再取得の連打防止。
+ * キャッシュは Slack を叩く回数を抑えるための仕組みなので、迂回する経路には歯止めを置く
+ * (1 回の取得で最大 CHANNELS_MAX_PAGES 回 Slack を呼ぶ)。
+ */
+const CHANNELS_REFRESH_RATE_LIMIT = { limit: 10, windowMs: 60 * 1000 }
+
+/**
+ * 設定画面(ボードのチャネル通知・Wiki のアナウンス)のチャンネル一覧。`force` の取り直しは利用者ごとに回数を抑える。
+ * 一覧はプライベートチャンネル名を含むので、呼ぶ前に設定の権限を確定させること
+ */
+export const listSlackChannelsWithRefreshLimit = async (
+  userId: string,
+  { force = false }: { force?: boolean } = {},
+) => {
+  if (force) {
+    assertRateLimit(`slack-channels-refresh:${userId}`, CHANNELS_REFRESH_RATE_LIMIT)
+  }
+  return listSlackChannels({ force })
+}
+
+/**
+ * 保存しようとする通知先を、Bot が参加しているチャンネルの一覧と突き合わせる。無ければ errValidation('slackChannelId')。
+ * 参加していないチャンネルを保存すると通知だけ届かなくなるため。
+ * 突き合わせの成否はチャンネルの実在を教えてしまうので、呼ぶ前に設定の権限を確定させること
+ */
+export const assertSlackChannelExists = async (channelId: string): Promise<void> => {
+  const channels = await listSlackChannels()
+  if (!channels?.some((channel) => channel.id === channelId)) {
+    throw errValidation('slackChannelId')
   }
 }
 

@@ -15,6 +15,7 @@ import type {
 import { z } from 'zod'
 import { MAX_TAG_NAME, MAX_TICKET_TAGS } from '../board/tag-rule'
 import { BOARD_KEY_PATTERN, MAX_BOARD_KEY } from '../board/ticket-id'
+import { isSameSet } from '../list-compare'
 
 /** スペースキーの形式。ボードキーと同じ(大文字英字始まりの大文字英数 2〜8 字) */
 export const WIKI_SPACE_KEY_PATTERN = BOARD_KEY_PATTERN
@@ -50,7 +51,7 @@ export const WIKI_PAGE_TOO_DEEP = 'WIKI_PAGE_TOO_DEEP'
 export const WIKI_PAGE_INVALID_PARENT = 'WIKI_PAGE_INVALID_PARENT'
 /** 直接割り当ての owner が 0 人になる変更(管理者は除く) */
 export const WIKI_SPACE_NO_OWNER = 'WIKI_SPACE_NO_OWNER'
-/** スペースの区分で作れない種類のページ(設計書スペースの通常ページ) */
+/** スペースの区分で作れない種類のページ・テンプレート(設計書スペースの通常ページ、アナウンス用スペースの設計書) */
 export const WIKI_PAGE_TYPE_NOT_ALLOWED = 'WIKI_PAGE_TYPE_NOT_ALLOWED'
 
 /** アナウンス用スペースで、親の指定・位置の指定・移動・並べ替えをしようとした(ページは平らに置き、作成日時の順に並べる) */
@@ -62,16 +63,65 @@ export const WIKI_ANNOUNCEMENT_FLAT = 'WIKI_ANNOUNCEMENT_FLAT'
  */
 export const WIKI_PAGE_ALIVE = { deletedAt: null } as const
 
+export type WikiSpaceTypeSpec = {
+  /** 置けるページ・テンプレートの種類。先頭が種類を指定しないときの既定 */
+  pageTypes: readonly [WikiPageType, ...WikiPageType[]]
+  /** ページを平らに置き、親子・並べ替えを使わない(作成日時の順に並べる) */
+  flat: boolean
+  /** アナウンス用(新規作成の文言・Slack への通知) */
+  announce: boolean
+  /** スペースのトップに出す一覧 */
+  index: 'tree' | 'design_doc' | 'announcement'
+  /** 種類のエラーに入れる区分の呼び名(MCP からも返すので英語) */
+  label: string
+}
+
+/** スペースの区分ごとの仕様。区分による分岐はここから引く(区分は作成後に変わらない) */
+export const WIKI_SPACE_TYPE_SPEC = {
+  mixed: { pageTypes: ['page', 'design_doc'], flat: false, announce: false, index: 'tree', label: 'a mixed space' },
+  design_doc: {
+    pageTypes: ['design_doc'],
+    flat: false,
+    announce: false,
+    index: 'design_doc',
+    label: 'a design doc space',
+  },
+  announcement: {
+    pageTypes: ['page'],
+    flat: true,
+    announce: true,
+    index: 'announcement',
+    label: 'an announcement space',
+  },
+} as const satisfies Record<WikiSpaceType, WikiSpaceTypeSpec>
+
+export const wikiSpaceTypeSpec = (spaceType: WikiSpaceType): WikiSpaceTypeSpec => WIKI_SPACE_TYPE_SPEC[spaceType]
+
 /** スペースの区分で作れるページの種類か(設計書スペースは設計書だけ、アナウンス用スペースは通常ページだけ) */
 export const isWikiPageTypeAllowed = (spaceType: WikiSpaceType, pageType: WikiPageType): boolean =>
-  spaceType === 'design_doc' ? pageType === 'design_doc' : spaceType === 'announcement' ? pageType === 'page' : true
+  wikiSpaceTypeSpec(spaceType).pageTypes.includes(pageType)
 
 /** 種類を指定せずに作るページの種類 */
-export const defaultWikiPageType = (spaceType: WikiSpaceType): WikiPageType =>
-  spaceType === 'design_doc' ? 'design_doc' : 'page'
+export const defaultWikiPageType = (spaceType: WikiSpaceType): WikiPageType => wikiSpaceTypeSpec(spaceType).pageTypes[0]
 
 /** ページを平らに置き、親子・並べ替えを使わない区分か */
-export const isFlatWikiSpace = (spaceType: WikiSpaceType): boolean => spaceType === 'announcement'
+export const isFlatWikiSpace = (spaceType: WikiSpaceType): boolean => wikiSpaceTypeSpec(spaceType).flat
+
+/** 作成・編集で種類を選べる区分か */
+export const canChooseWikiPageType = (spaceType: WikiSpaceType): boolean =>
+  wikiSpaceTypeSpec(spaceType).pageTypes.length > 1
+
+const PAGE_TYPE_LABEL: Record<WikiPageType, string> = {
+  page: 'normal pages (type=page)',
+  design_doc: 'design docs (type=design_doc)',
+}
+
+/** 区分で作れない種類のエラー文(MCP からも返す)。`target` はページかテンプレートか */
+export const wikiPageTypeRuleMessage = (spaceType: WikiSpaceType, target: 'pages' | 'templates'): string => {
+  const spec = wikiSpaceTypeSpec(spaceType)
+  const allowed = spec.pageTypes.map((type) => PAGE_TYPE_LABEL[type]).join(' or ')
+  return `This space is ${spec.label}: its ${target} must be ${allowed}`
+}
 
 export type WikiRole = WikiSpaceRole
 
@@ -134,6 +184,21 @@ export type WikiWriter = { via: WikiVia }
 
 /** 版に残すタグ。今のタグへは ID で引き当て、名前は削除済みのタグを差分に出すときに使う */
 export type WikiRevisionTag = { id: string; name: string }
+
+/** 保存する項目(タイトル・本文・種類・タグ)。編集中の下書きとも比べる */
+export type WikiPageFields = {
+  title: string
+  content: string
+  type: WikiPageType
+  tagIds: readonly string[]
+}
+
+/** 保存する項目が変わったか。タグは並びを問わず集合で比べる */
+export const isWikiPageChanged = (before: WikiPageFields, after: WikiPageFields): boolean =>
+  before.title !== after.title ||
+  before.content !== after.content ||
+  before.type !== after.type ||
+  !isSameSet(before.tagIds, after.tagIds)
 
 /** 版として残す項目 */
 export type WikiPageSnapshot = {
@@ -221,8 +286,18 @@ export const wikiRevisionTagLabels = (
 /** ページの指定(`KEY/番号`) */
 export const wikiPageRef = ({ key, number }: { key: string; number: number }): string => `${key}/${number}`
 
+/** Wiki のトップ(スペースの一覧)のパス */
+export const WIKI_TOP_PATH = '/wiki'
+
+/** スペースのトップのパス */
+export const wikiSpacePath = (key: string): string => `${WIKI_TOP_PATH}/${key}`
+
+/** スペースの設定画面のパス */
+export const wikiSettingsPath = (key: string): string => `${wikiSpacePath(key)}/settings`
+
 /** ページの画面のパス */
-export const wikiPagePath = ({ key, number }: { key: string; number: number }): string => `/wiki/${key}/${number}`
+export const wikiPagePath = ({ key, number }: { key: string; number: number }): string =>
+  `${wikiSpacePath(key)}/${number}`
 
 // キー部分は WIKI_SPACE_KEY_PATTERN を大文字小文字を問わない形にしたもの。番号は Int に収めるため 9 桁まで
 const PAGE_REF_PATTERN = new RegExp(`^(${WIKI_SPACE_KEY_PATTERN.source.slice(1, -1)})/([1-9][0-9]{0,8})$`, 'i')
@@ -243,7 +318,7 @@ export const wikiSearchHref = ({ spaceKey, q, tags }: { spaceKey?: string; q?: s
     params.append('tags', tag)
   }
   const query = params.toString()
-  const path = spaceKey ? `/wiki/${spaceKey}/search` : '/wiki'
+  const path = spaceKey ? `${wikiSpacePath(spaceKey)}/search` : WIKI_TOP_PATH
   return query ? `${path}?${query}` : path
 }
 

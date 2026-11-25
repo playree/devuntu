@@ -26,6 +26,7 @@ import { TagEditor } from '@/components/ticket/tag-editor'
 import { useWikiAssignRoleOptions, useWikiRoleOptions, WikiRoleChip } from '@/components/wiki-chip'
 import type { WikiAssignRole, WikiSpaceRole } from '@/generated/prisma/enums'
 import { parseAction, useActionData } from '@/lib/action/action-client'
+import { wikiSpacePath, wikiSpaceTypeSpec } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { Accordion } from '@heroui/react'
 import { useRouter } from 'next/navigation'
@@ -93,7 +94,9 @@ export const WikiSpaceSettingsClient: FC = () => {
   })
 
   if (!canManage) {
-    return <NoAccessView icon={<Cog6ToothIcon />} title={t('wiki_space_settings')} backHref={`/wiki/${space.key}`} />
+    return (
+      <NoAccessView icon={<Cog6ToothIcon />} title={t('wiki_space_settings')} backHref={wikiSpacePath(space.key)} />
+    )
   }
 
   // 割り当てが変わると自分の権限(owner を外した等)も変わりうるので、スペースも取り直す
@@ -120,7 +123,7 @@ export const WikiSpaceSettingsClient: FC = () => {
           isIconOnly
           tooltip={t('back')}
           icon={<ArrowLeftCircleIcon />}
-          onPress={() => router.push(`/wiki/${space.key}`)}
+          onPress={() => router.push(wikiSpacePath(space.key))}
         />
       </ContentHeader>
 
@@ -218,7 +221,7 @@ export const WikiSpaceSettingsClient: FC = () => {
           <WikiSpaceTemplates space={space} />
         </AccordionSection>
 
-        {space.type === 'announcement' ? (
+        {wikiSpaceTypeSpec(space.type).announce ? (
           <AccordionSection id='wiki_announce_channel' icon={<BellIcon />} title={t('wiki_announce_channel')}>
             <WikiSpaceSlackNotify space={space} />
           </AccordionSection>

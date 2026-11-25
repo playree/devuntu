@@ -5,7 +5,7 @@
  */
 import type { WikiPageType } from '@/generated/prisma/enums'
 import { exportFileName, PRINT_PATH_PREFIX, setPrintFormatParam, withQuery, type PrintFormat } from '../print-export'
-import { UPLOAD_URL_PREFIX } from '../storage/upload'
+import { absolutizeUploadUrls } from '../storage/upload'
 
 /** 印刷用ページのクエリで版を指すキー */
 export const WIKI_PRINT_REVISION_PARAM = 'rev'
@@ -42,13 +42,6 @@ export const wikiExportTitle = ({
 
 /** 出力の保存ファイル名 */
 export const wikiExportFileName = (title: string, ext: 'html' | 'md'): string => exportFileName(title, ext, 'wiki')
-
-// 括弧・空白・引用符・`<`・`=` の直後(Markdown の画像やリンク、参照形式の定義、HTML の属性)にあるアップロードの相対 URL
-const UPLOAD_URL_PATTERN = new RegExp(`(^|[\\s("'<=])${UPLOAD_URL_PREFIX}/`, 'g')
-
-/** 本文のアップロード画像・添付の相対 URL(`/api/upload/...`)を絶対 URL にする。保存した .md を別の場所で開いても辿れるように */
-export const absolutizeUploadUrls = (markdown: string, origin: string): string =>
-  markdown.replace(UPLOAD_URL_PATTERN, (_, before: string) => `${before}${origin}${UPLOAD_URL_PREFIX}/`)
 
 /**
  * Markdown 出力の内容。通常のページは先頭にタイトルの見出しを付ける(過去の版は版数も付ける)。

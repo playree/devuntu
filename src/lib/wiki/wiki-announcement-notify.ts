@@ -19,7 +19,8 @@ import { enqueueNotify } from '../notify/notify-enqueue'
 import type { NotifyPayload } from '../notify/notify-payload'
 import { prisma, type Db } from '../prisma'
 import { assertRateLimit } from '../rate-limit'
-import { assertWikiSpaceAccess, getWikiSpaceAccess } from './wiki-access'
+import { getWikiSpaceAccess } from './wiki-access'
+import { assertWikiAnnouncementSpace } from './wiki-announcement'
 import {
   canSeeWikiAnnounce,
   isValidWikiAnnounceSchedule,
@@ -32,6 +33,7 @@ import {
   WIKI_ANNOUNCE_TOO_MANY_SCHEDULED,
   WIKI_ANNOUNCE_UNAVAILABLE,
 } from './wiki-announcement-notify-rule'
+import { lockWikiPages, shareLockWikiSpace } from './wiki-lock'
 import { WIKI_PAGE_ALIVE } from './wiki-rule'
 
 export type WikiAnnounceInput = {
@@ -135,11 +137,8 @@ const lockWritableAnnouncement = async (actor: Actor, pageId: string, tx: Db) =>
   if (!found) {
     throw errInvalidOperation()
   }
-  await tx.$queryRaw`SELECT "id" FROM "wiki_space" WHERE "id" = ${found.spaceId} FOR SHARE`
-  const access = await assertWikiSpaceAccess(actor, found.spaceId, 'write', tx)
-  if (access.type !== 'announcement') {
-    throw errInvalidOperation()
-  }
+  await shareLockWikiSpace(tx, found.spaceId)
+  await assertWikiAnnouncementSpace(actor, found.spaceId, 'write', tx)
   // ロックを待つ間に消えていないか
   const page = await tx.wikiPage.findUnique({ where: { id: pageId, ...WIKI_PAGE_ALIVE }, select: PAYLOAD_PAGE_SELECT })
   if (!page) {
@@ -148,10 +147,33 @@ const lockWritableAnnouncement = async (actor: Actor, pageId: string, tx: Db) =>
   return page
 }
 
-/** 送れる状態か(通知先のチャンネルが設定済みで、Slack 連携が有効) */
+export type WikiAnnounceReadiness =
+  | { ready: true; channelId: string }
+  | { ready: false; reason: Extract<WikiAnnouncementNotifySkipReason, 'archived' | 'channel_unset' | 'slack_disabled'> }
+
+/**
+ * スペースのアナウンスを送れる状態か(アーカイブされておらず、通知先のチャンネルが設定済みで、Slack 連携が有効)。
+ * 今すぐ送る・予約する・画面の表示・予約の送信で同じ判定を使う。権限と区分は呼び出し側で確かめる
+ */
+export const wikiAnnounceReadiness = async (spaceId: string, tx: Db = prisma): Promise<WikiAnnounceReadiness> => {
+  const space = await tx.wikiSpace.findUniqueOrThrow({
+    where: { id: spaceId },
+    select: { archived: true, announceSlackChannelId: true },
+  })
+  if (space.archived) {
+    return { ready: false, reason: 'archived' }
+  }
+  if (!space.announceSlackChannelId) {
+    return { ready: false, reason: 'channel_unset' }
+  }
+  if (!(await isSlackChannelPostEnabled())) {
+    return { ready: false, reason: 'slack_disabled' }
+  }
+  return { ready: true, channelId: space.announceSlackChannelId }
+}
+
 const assertChannelReady = async (spaceId: string, tx: Db) => {
-  const space = await tx.wikiSpace.findUnique({ where: { id: spaceId }, select: { announceSlackChannelId: true } })
-  if (!space?.announceSlackChannelId || !(await isSlackChannelPostEnabled())) {
+  if (!(await wikiAnnounceReadiness(spaceId, tx)).ready) {
     throw errUnavailable()
   }
 }
@@ -197,7 +219,7 @@ export const scheduleWikiAnnouncement = async (actor: Actor, pageId: string, inp
     const page = await lockWritableAnnouncement(actor, pageId, tx)
     await assertChannelReady(page.spaceId, tx)
     // 同じページへの予約を直列にして、上限の数え漏れを防ぐ(スペース行の共有ロック同士は競合しない)
-    await tx.$queryRaw`SELECT "id" FROM "wiki_page" WHERE "id" = ${pageId} FOR NO KEY UPDATE`
+    await lockWikiPages(tx, [pageId])
     const scheduled = await tx.wikiAnnouncementNotify.count({ where: { pageId, status: 'scheduled' } })
     if (scheduled >= MAX_WIKI_ANNOUNCE_SCHEDULED_PER_PAGE) {
       throw errTooManyScheduled()
@@ -281,24 +303,23 @@ export const getWikiAnnouncementNotifies = async (actor: Actor, pageId: string) 
   if (!page) {
     throw errInvalidOperation()
   }
-  const access = await assertWikiSpaceAccess(actor, page.spaceId, 'view')
-  if (access.type !== 'announcement' || !canSeeWikiAnnounce(access.role)) {
+  const access = await assertWikiAnnouncementSpace(actor, page.spaceId, 'view')
+  if (!canSeeWikiAnnounce(access.role)) {
     throw errInvalidOperation()
   }
-  const [items, space, slackEnabled] = await Promise.all([
+  const [items, readiness] = await Promise.all([
     prisma.wikiAnnouncementNotify.findMany({
       where: { pageId },
       select: NOTIFY_SELECT,
       orderBy: [{ scheduledAt: 'desc' }, { id: 'desc' }],
       take: MAX_HISTORY,
     }),
-    prisma.wikiSpace.findUnique({ where: { id: page.spaceId }, select: { announceSlackChannelId: true } }),
-    isSlackChannelPostEnabled(),
+    wikiAnnounceReadiness(page.spaceId),
   ])
   return {
     items: items.map(({ sender, ...item }) => ({ ...item, senderName: sender?.name ?? '' })),
-    /** 通知先のチャンネルが設定済みで、Slack 連携が有効 */
-    available: !!space?.announceSlackChannelId && slackEnabled,
+    /** 送れる状態か(`wikiAnnounceReadiness`) */
+    available: readiness.ready,
     canWrite: access.canWrite,
   }
 }
@@ -326,7 +347,7 @@ const sendScheduled = async (
 ): Promise<ScheduledOutcome> => {
   // 利用者の操作と同じく、先にスペース行を共有ロックして、アーカイブ・ページの削除・通知先の変更と直列にする
   // (予約行を先に取ると、スペース行の後に予約行を待つページの削除とデッドロックする)
-  await tx.$queryRaw`SELECT "id" FROM "wiki_space" WHERE "id" = ${spaceId} FOR SHARE`
+  await shareLockWikiSpace(tx, spaceId)
   // 期限が来ていて、まだ予約中の行だけを取る。他の周・利用者の変更が持っている行は飛ばす
   const locked = await tx.$queryRaw<{ id: string }[]>`
     SELECT "id" FROM "wiki_announcement_notify"
@@ -365,18 +386,9 @@ const sendScheduled = async (
     return skip('page_deleted')
   }
   // 区分は作成後に変わらないので、予約を作れた(アナウンス用)スペースのままである
-  const space = await tx.wikiSpace.findUniqueOrThrow({
-    where: { id: row.spaceId },
-    select: { archived: true, announceSlackChannelId: true },
-  })
-  if (space.archived) {
-    return skip('archived')
-  }
-  if (!space.announceSlackChannelId) {
-    return skip('channel_unset')
-  }
-  if (!(await isSlackChannelPostEnabled())) {
-    return skip('slack_disabled')
+  const readiness = await wikiAnnounceReadiness(row.spaceId, tx)
+  if (!readiness.ready) {
+    return skip(readiness.reason)
   }
   const sender = row.sender
   if (!sender || sender.banned || !(await getWikiSpaceAccess(sender, row.spaceId, tx))?.canWrite) {
@@ -425,8 +437,6 @@ const dueAfter = (now: Date, cursor: DueCursor | null, throttled: ReadonlySet<st
 /** 周をまたいで持つワーカーの状態。上限で打ち切った周の続きから次の周を始める */
 export type WikiAnnounceScheduleState = { resumeFrom: DueCursor | null }
 
-const defaultScheduleState: WikiAnnounceScheduleState = { resumeFrom: null }
-
 /**
  * 期限の来た予約を送る(ワーカーの 1 周)。戻り値は送った件数。
  *
@@ -438,8 +448,8 @@ const defaultScheduleState: WikiAnnounceScheduleState = { resumeFrom: null }
  * 失敗し続ける予約が読む上限を超えて溜まっても、後ろの予約はいずれ読まれる
  */
 export const runWikiAnnouncementSchedule = async (
+  state: WikiAnnounceScheduleState,
   now: Date = nowDate(),
-  state: WikiAnnounceScheduleState = defaultScheduleState,
 ): Promise<number> => {
   const throttled = new Set<string>()
   let cursor = state.resumeFrom
@@ -479,4 +489,10 @@ export const runWikiAnnouncementSchedule = async (
     logger.info({ sent, scanned }, 'wiki announcement schedule sent')
   }
   return sent
+}
+
+/** ワーカーの 1 周を作る。周をまたぐ状態はこのクロージャが持つ(モジュールの変数にしない) */
+export const createWikiAnnouncementScheduleRunner = () => {
+  const state: WikiAnnounceScheduleState = { resumeFrom: null }
+  return () => runWikiAnnouncementSchedule(state)
 }

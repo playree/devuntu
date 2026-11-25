@@ -15,15 +15,11 @@ import { listGroupOptions } from '../group'
 import { logger } from '../logger'
 import { prisma, type Db } from '../prisma'
 import { assertWikiSpaceAccess } from './wiki-access'
+import { lockWikiSpace } from './wiki-lock'
 import { WIKI_SPACE_NO_OWNER } from './wiki-rule'
 
 const errNoOwner = () =>
   new ClientError(WIKI_SPACE_NO_OWNER, 'A wiki space needs at least one owner. Assign another owner first')
-
-/** 割り当ての数え上げから更新までを、同じスペースへの他の割り当て変更と直列にする */
-const lockSpaceRow = async (tx: Db, spaceId: string) => {
-  await tx.$queryRaw`SELECT "id" FROM "wiki_space" WHERE "id" = ${spaceId} FOR NO KEY UPDATE`
-}
 
 /**
  * 割り当てられるボード。チームボードのうち、操作者が見えるもの(管理者はすべて)。
@@ -102,7 +98,7 @@ export const upsertWikiSpaceMember = async (
   { spaceId, userId, role }: { spaceId: string; userId: string; role: WikiSpaceRole },
 ) => {
   await prisma.$transaction(async (tx) => {
-    await lockSpaceRow(tx, spaceId)
+    await lockWikiSpace(tx, spaceId)
     await assertWikiSpaceAccess(actor, spaceId, 'manage', tx)
     const user = await tx.user.findUnique({ where: { id: userId }, select: { id: true } })
     if (!user) {
@@ -121,7 +117,7 @@ export const upsertWikiSpaceMember = async (
 /** ユーザーの直接割り当てを外す */
 export const removeWikiSpaceMember = async (actor: Actor, { spaceId, userId }: { spaceId: string; userId: string }) => {
   await prisma.$transaction(async (tx) => {
-    await lockSpaceRow(tx, spaceId)
+    await lockWikiSpace(tx, spaceId)
     await assertWikiSpaceAccess(actor, spaceId, 'manage', tx)
     const member = await tx.wikiSpaceMember.findUnique({
       where: { spaceId_userId: { spaceId, userId } },

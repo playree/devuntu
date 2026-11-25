@@ -15,6 +15,7 @@ import { errInvalidOperation, errValidation } from '../error'
 import { logger } from '../logger'
 import { prisma, type Db } from '../prisma'
 import { assertWikiSpaceAccess, getWikiSpaceAccess } from './wiki-access'
+import { lockWikiSpace } from './wiki-lock'
 import { MAX_WIKI_PAGE_TAGS, WIKI_PAGE_ALIVE } from './wiki-rule'
 
 export type WikiTagOption = { id: string; name: string; color: TagColor; order: number }
@@ -137,7 +138,7 @@ export const createWikiTag = async (
 ): Promise<WikiTagOption> => {
   const tag = await prisma
     .$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT "id" FROM "wiki_space" WHERE "id" = ${spaceId} FOR NO KEY UPDATE`
+      await lockWikiSpace(tx, spaceId)
       await assertWikiSpaceAccess(actor, spaceId, 'write', tx)
       const tags = await tx.wikiTag.findMany({ where: { spaceId }, select: { order: true } })
       if (tags.length >= MAX_TAGS_PER_SCOPE) {

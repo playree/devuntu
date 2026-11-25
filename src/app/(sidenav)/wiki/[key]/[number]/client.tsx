@@ -11,7 +11,14 @@ import { NoAccessView } from '@/components/no-access-view'
 import { ReloadButton } from '@/components/reload-button'
 import { useActionData } from '@/lib/action/action-client'
 import { canSeeWikiAnnounce } from '@/lib/wiki/wiki-announcement-notify-rule'
-import { canDeleteWikiRevision, isFlatWikiSpace, wikiPageRef } from '@/lib/wiki/wiki-rule'
+import {
+  canDeleteWikiRevision,
+  isFlatWikiSpace,
+  wikiPagePath,
+  wikiPageRef,
+  wikiSpacePath,
+  wikiSpaceTypeSpec,
+} from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { Breadcrumbs, ButtonGroup } from '@heroui/react'
 import { FC } from 'react'
@@ -48,7 +55,7 @@ const WikiBreadcrumbs: FC<{ detail: PageDetail }> = ({ detail: { space, ancestor
   <Breadcrumbs // 縮めきっても収まらないときは、現在のページ側を残して先頭(スペース側)を切る
     className='min-w-0 justify-end overflow-hidden'
   >
-    <Breadcrumbs.Item href={`/wiki/${space.key}`} className={crumbItem({ kind: 'space' })}>
+    <Breadcrumbs.Item href={wikiSpacePath(space.key)} className={crumbItem({ kind: 'space' })}>
       <span className='flex min-w-0 items-center gap-1'>
         <BookOpenIcon width={16} className='shrink-0' />
         <span className='max-w-32 truncate sm:max-w-48'>{space.name}</span>
@@ -57,14 +64,14 @@ const WikiBreadcrumbs: FC<{ detail: PageDetail }> = ({ detail: { space, ancestor
     {ancestors.map((ancestor, index) => (
       <Breadcrumbs.Item
         key={ancestor.number}
-        href={`/wiki/${space.key}/${ancestor.number}`}
+        href={wikiPagePath({ key: space.key, number: ancestor.number })}
         className={crumbItem({ kind: 'ancestor', isMiddle: index < ancestors.length - 1 })}
       >
         <span className='block max-w-24 truncate sm:max-w-40'>{ancestor.title}</span>
       </Breadcrumbs.Item>
     ))}
     <Breadcrumbs.Item
-      href={`/wiki/${space.key}/${page.number}`}
+      href={wikiPagePath({ key: space.key, number: page.number })}
       className={crumbItem({ kind: 'current' })}
       isDisabled={false} // react-aria は最後の項目を現在地として無効化するため、明示的に打ち消してリンクにする
     >
@@ -88,7 +95,7 @@ export const WikiPageClient: FC<{ spaceKey: string; number: number }> = ({ space
   })
   // アナウンスの Slack 通知の履歴。送る側(editor 以上)にだけ出す
   const pageId = data?.page.id
-  const canSeeAnnounce = !!data && data.space.type === 'announcement' && canSeeWikiAnnounce(data.access.role)
+  const canSeeAnnounce = !!data && wikiSpaceTypeSpec(data.space.type).announce && canSeeWikiAnnounce(data.access.role)
   const { data: announce, refresh: refreshAnnounce } = useActionData(
     () => getWikiAnnouncementNotifies({ id: pageId ?? '' }),
     { skip: !canSeeAnnounce, key: pageId },
@@ -98,13 +105,14 @@ export const WikiPageClient: FC<{ spaceKey: string; number: number }> = ({ space
     return <PanelSkeleton />
   }
   if (!data) {
-    return <NoAccessView icon={<BookOpenIcon />} title={t('wiki')} backHref={`/wiki/${spaceKey}`} />
+    return <NoAccessView icon={<BookOpenIcon />} title={t('wiki')} backHref={wikiSpacePath(spaceKey)} />
   }
 
   const { space, access, page, ancestors } = data
   // アナウンス用スペースは平らで、並びは作成日時で決まるので、子ページの作成と移動を出さない
   const isFlat = isFlatWikiSpace(space.type)
-  const parentHref = ancestors.length > 0 ? `/wiki/${space.key}/${ancestors.at(-1)?.number}` : `/wiki/${space.key}`
+  const parent = ancestors.at(-1)
+  const parentHref = parent ? wikiPagePath({ key: space.key, number: parent.number }) : wikiSpacePath(space.key)
   // 本文の保存・移動・作成の後は、ツリー(タイトル・並び)も取り直す
   const reloadAll = async () => {
     await Promise.all([refresh(), reloadSpace(), ...(canSeeAnnounce ? [refreshAnnounce()] : [])])

@@ -5,6 +5,7 @@ import { SideNavPortal } from '@/components/general/side-nav-slot'
 import { BookOpenIcon } from '@/components/icon'
 import { NoAccessView } from '@/components/no-access-view'
 import { useActionData } from '@/lib/action/action-client'
+import { WIKI_TOP_PATH } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { createContext, FC, ReactNode, useContext, useMemo } from 'react'
 import { WikiSideSpaces } from '../side-spaces'
@@ -66,7 +67,7 @@ export const WikiSpaceShell: FC<{ spaceKey: string; children: ReactNode }> = ({ 
         <SideNavPortal label={t('wiki')}>
           <WikiSideSpaces />
         </SideNavPortal>
-        <NoAccessView icon={<BookOpenIcon />} title={t('wiki')} backHref='/wiki' />
+        <NoAccessView icon={<BookOpenIcon />} title={t('wiki')} backHref={WIKI_TOP_PATH} />
       </>
     )
   }

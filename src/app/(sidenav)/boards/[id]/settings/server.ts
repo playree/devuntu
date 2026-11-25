@@ -44,7 +44,6 @@ import {
 } from '@/lib/board/ticket-template'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
-import { assertRateLimit } from '@/lib/rate-limit'
 import { scUUID } from '@/lib/schema/schema'
 import {
   scAddBoardGitlabRepository,
@@ -63,19 +62,12 @@ import {
 } from '@/lib/schema/schema-board'
 import { scCreateTag, scUpdateTag } from '@/lib/schema/schema-ticket'
 import { scCreateTicketTemplate, scUpdateTicketTemplate } from '@/lib/schema/schema-ticket-template'
-import { listSlackChannels } from '@/lib/slack/slack-server'
+import { listSlackChannelsWithRefreshLimit } from '@/lib/slack/slack-server'
 
 /**
  * ボード設定画面の Server Action。
  * 処理本体と権限の検証は `@/lib/board/board-setting` / `board-assignment` / `tag` にある。
  */
-
-/**
- * チャンネル一覧の強制再取得の連打防止。
- * キャッシュは Slack を叩く回数を抑えるための仕組みなので、迂回する経路には歯止めを置く
- * (1 回の取得で最大 CHANNELS_MAX_PAGES 回 Slack を呼ぶ)。
- */
-const CHANNELS_REFRESH_RATE_LIMIT = { limit: 10, windowMs: 60 * 1000 }
 
 /** ボード詳細(概要 + 権限)。メンバー一覧は独立してリロードできるよう getBoardMembers に分けている */
 export const getBoardDetail = safeAuthAction
@@ -130,11 +122,7 @@ export const getBoardSlackChannels = safeAuthAction
   .inputSchema(scGetBoardSlackChannels)
   .action(async ({ ctx: { user }, parsedInput: { id, force } }) => {
     await assertBoardNotifyManageable(user, id, prisma)
-
-    if (force) {
-      assertRateLimit(`slack-channels-refresh:${user.id}`, CHANNELS_REFRESH_RATE_LIMIT)
-    }
-    return listSlackChannels({ force })
+    return listSlackChannelsWithRefreshLimit(user.id, { force })
   })
 export type GetBoardSlackChannelsReturnType = Awaited<ReturnType<typeof getBoardSlackChannels>>['data']
 

@@ -9,11 +9,11 @@ import { assertBoardAccess, assertTicketAccess } from '@/lib/board/board-access'
 import { errInvalidOperation } from '@/lib/error'
 import { registerImageTools } from '@/lib/mcp/mcp-image'
 import { resolveTicketId } from '@/lib/mcp/mcp-ticket'
-import { resolveWikiPageRef } from '@/lib/mcp/mcp-wiki'
 import { saveContentImage } from '@/lib/storage/attachment'
 import { findViewableAttachment } from '@/lib/storage/attachment-access'
 import { resizeWebp } from '@/lib/storage/image'
 import { getObject } from '@/lib/storage/storage'
+import { resolveWikiPageRef } from '@/lib/wiki/wiki-page-ref'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { connectMcpServer, jsonOf } from '../../helpers/mcp-client'
@@ -27,10 +27,7 @@ vi.mock('@/lib/board/board-access', () => ({
 }))
 
 vi.mock('@/lib/mcp/mcp-ticket', () => ({ resolveTicketId: vi.fn() }))
-vi.mock('@/lib/mcp/mcp-wiki', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/lib/mcp/mcp-wiki')>()),
-  resolveWikiPageRef: vi.fn(),
-}))
+vi.mock('@/lib/wiki/wiki-page-ref', () => ({ resolveWikiPageRef: vi.fn() }))
 vi.mock('@/lib/storage/attachment', () => ({ saveContentImage: vi.fn() }))
 vi.mock('@/lib/storage/attachment-access', () => ({ findViewableAttachment: vi.fn() }))
 vi.mock('@/lib/storage/storage', () => ({ getObject: vi.fn() }))
@@ -130,7 +127,7 @@ describe('create_image_upload_token', () => {
       await connectClient()
     ).callTool({ name: 'create_image_upload_token', arguments: { wikiPage: 'DOCS/12' } })
 
-    expect(resolveWikiPageRef).toHaveBeenCalledWith(auth, 'DOCS/12', 'write')
+    expect(resolveWikiPageRef).toHaveBeenCalledWith(auth.user, 'DOCS/12', 'write', 'wikiPage')
     const json = jsonOf(result)
     expect(json.wikiSpaceId).toBe(SPACE_ID)
     expect(json).not.toHaveProperty('boardId')

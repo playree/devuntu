@@ -9,7 +9,7 @@
 import type { Actor } from '../board/board-access'
 import { prisma } from '../prisma'
 import { assertWikiSpaceAccess } from './wiki-access'
-import { frontMatterBlock, startsWithFrontMatter } from './wiki-markdown'
+import { frontMatterBlock, startsWithFrontMatter } from './wiki-front-matter'
 
 /** DB から読む本文の先頭の文字数。front matter には十分な長さ */
 export const DESIGN_DOC_INDEX_HEAD = 8000

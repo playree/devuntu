@@ -9,7 +9,7 @@ import { UpdatedBy } from '@/components/updated-by'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { ClientError } from '@/lib/error'
 import { useConfirmAction } from '@/lib/use-confirm-action'
-import { isFlatWikiSpace, WIKI_TREE_CHANGED } from '@/lib/wiki/wiki-rule'
+import { isFlatWikiSpace, WIKI_TREE_CHANGED, wikiPagePath } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { useRouter } from 'next/navigation'
 import { FC, useState } from 'react'
@@ -143,7 +143,7 @@ export const DeletedPagesModal: FC<{ state: ReturnType<typeof useModalState<stri
 
   const open = (number: number) => {
     state.close()
-    router.push(`/wiki/${space.key}/${number}`)
+    router.push(wikiPagePath({ key: space.key, number: number }))
   }
 
   const parentLabel = (page: DeletedPage) => {

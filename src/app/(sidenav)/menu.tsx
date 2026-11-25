@@ -26,6 +26,7 @@ import { LocaleSwitch } from '@/components/locale/locale-switch'
 import { authClient } from '@/lib/auth/auth-client'
 import { authConfig } from '@/lib/auth/auth-config'
 import { navigateAfterAuth } from '@/lib/client-utils'
+import { WIKI_TOP_PATH } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { Accordion, Button, Card, cn } from '@heroui/react'
 import Image from 'next/image'
@@ -206,7 +207,7 @@ export const Menu: FC<{ closeMenu?: () => void }> = ({ closeMenu }) => {
       </AccordionSection>
 
       <MenuButton // Wiki
-        to='/wiki'
+        to={WIKI_TOP_PATH}
         text={t('wiki')}
         icon={<BookOpenIcon />}
         closeMenu={closeMenu}
