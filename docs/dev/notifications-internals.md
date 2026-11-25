@@ -383,20 +383,23 @@ Wiki のアナウンス用スペースのページを、スペースに設定し
 | イベントの一覧(`notify.ts`)      | `SPACE_NOTIFY_EVENTS` に置き、`DM_NOTIFY_EVENTS` / `CHANNEL_NOTIFY_EVENTS` には入れない(個人設定とボード設定に出さない)                                    |
 
 - 送る操作は保存とは別で、`src/lib/wiki/wiki-announcement-notify.ts` にまとめている。送れるのは `canWrite`(editor 以上、未アーカイブ)。
-  スペース行を `FOR SHARE` でロックして、アーカイブ・ページの削除(どちらも排他ロック)と直列にする
+  スペース行を `shareLockWikiSpace`(FOR SHARE。`src/lib/wiki/wiki-lock.ts`)でロックして、アーカイブ・ページの削除(どちらも排他ロック)と直列にする。
+  送れる状態か(アーカイブされていない・通知先のチャンネルが設定済み・Slack 連携が有効)は `wikiAnnounceReadiness()` 1 か所で判定し、
+  今すぐ・予約・画面の表示(`available`)・予約の送信(見送りの理由)で使う
 - 予約と履歴は `WikiAnnouncementNotify` の 1 テーブルで兼ねる(`NotifyDelivery` は送れたら消えるので履歴にならない)。
   状態は `scheduled` / `sent` / `canceled` / `skipped`。`sentAt` は `sent`、`skipReason` は `skipped` のときだけ持つ(CHECK 制約)。
   ページの削除は論理削除なので履歴は残り、`pageId` の外部キーの Cascade でページの物理削除(保持期間の後)・スペースの削除とともに消える
 - **今すぐ** : `sent` の行の作成と `enqueueNotify()` を同じトランザクションで行う。流量制限で投入できなければ `TOO_MANY_REQUESTS` にしてロールバックする
 - **予約** : `scheduled` で保存するだけ。日時は 15 分刻みに限る(時差は 15 分の倍数なので、UTC で揃っていればどのタイムゾーンでも揃う。変更の画面が刻みで出しても、保存済みの時刻がずれない)。変更で日時を変えていなければ、画面は保存済みの時刻をそのまま送る(夏時間の終わりの重なる時間帯で `zonedMinutes` が早い側を選んでずれるのを防ぐ。`resolveWikiAnnounceScheduledAt`)。変更・取り消しは `updateMany({ where: { id, status: 'scheduled' } })` で行い、
   件数が 0 なら `WIKI_ANNOUNCE_NOT_SCHEDULED`。変更した人を送信者(`senderId`)に置き換え、送る時点の権限もその人で確かめる
-- **ワーカー**(`wiki-announcement-notify-worker.ts`): `createWorkerLoop` で 1 分ごとに回す。`NOTIFY_WORKER_ENABLED` に従う
+- **ワーカー**(`wiki-announcement-notify-worker.ts`): `createWorkerLoop` で 1 分ごとに回す。`NOTIFY_WORKER_ENABLED` に従う。
+  1 周の処理は `createWikiAnnouncementScheduleRunner()` が作り、周をまたぐカーソルはそのクロージャが持つ(モジュールの変数にしない)
   - 期限の来た `scheduled` の ID を引き、1 件ずつトランザクションを分けて、スペース行を `FOR SHARE` でロックしてから予約行を `FOR UPDATE SKIP LOCKED` で取り直す(ロックの条件にも `status` と `scheduledAt` を入れる)。スペース行を先に取るのは、利用者の操作と同じ順にしてアーカイブ・ページの削除・通知先の変更と直列にするため(予約行を先に取ると、スペース行の後に予約行を待つページの削除とデッドロックする)。
     利用者の変更・取り消しが行を持っている間は飛ばし、ワーカーが持っている間は利用者の更新が待ってから `status` を見直す
   - 送る時点のページ・スペース・送信者を引き直し、満たさなければ `skipped` にして理由(`skipReason`)を残す:
     `page_deleted`(削除済みのページ)/ `archived` / `channel_unset` / `slack_disabled` / `no_permission`(退会・BAN を含む)
   - 候補は `scheduledAt, id` の順に `WIKI_ANNOUNCE_BATCH` 件ずつ、前の続き(カーソル)から読む。流量制限に当たった送信者の分は読み直しの条件で外す。
-    送れない予約(流量制限・想定外の例外)が先頭に溜まっても後ろの予約は止まらない。1 周で送るのは `WIKI_ANNOUNCE_BATCH` 件、読むのは `WIKI_ANNOUNCE_SCAN_MAX` 件まで。上限で打ち切った周は、次の周をその続きから始める(末尾まで読んだら先頭へ戻る。カーソルはプロセス内に持つ)ので、失敗し続ける予約が読む上限を超えて溜まっても後ろは止まらない
+    送れない予約(流量制限・想定外の例外)が先頭に溜まっても後ろの予約は止まらない。1 周で送るのは `WIKI_ANNOUNCE_BATCH` 件、読むのは `WIKI_ANNOUNCE_SCAN_MAX` 件まで。上限で打ち切った周は、次の周をその続きから始める(末尾まで読んだら先頭へ戻る。カーソルはプロセス内の runner が持つ)ので、失敗し続ける予約が読む上限を超えて溜まっても後ろは止まらない
   - 満たせば**送る時点の最新のタイトルと本文**で `enqueueNotify()` して `sent` にする。流量制限で投入できなければ予約のまま残し、その送信者の分だけをこの周で飛ばす(ほかの送信者の予約は遅らせない)
   - 1 件の失敗(想定外の例外)はログに残して次へ進む。行は予約のまま残り、次の周でやり直す
 - 予約の作成は、ページ行を `FOR NO KEY UPDATE` でロックしてから予約中の件数を数える(スペース行の共有ロック同士は競合しないので、1 ページの上限 `MAX_WIKI_ANNOUNCE_SCHEDULED_PER_PAGE` を同時の作成で超えないように)

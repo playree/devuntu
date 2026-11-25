@@ -225,6 +225,7 @@ AI へのインプットは、この2つと、次の[ナレッジとメモリ](#
 - 書いたページに画像やファイルを貼ることもできる
 - 設計書ページ([設計書ページ](user-guide.md#設計書ページ))も読み書きできる。AI はページの種類(通常 / 設計書)を読め、書くときに種類を指定できる。
   種類を省いて新しく作ると、本文の front matter に `type: design_doc` があれば設計書になる。既存のページは種類を省けば変わらない。
+  本文を空のまま設計書を作ったときや、本文を書き換えずに種類だけを設計書へ変えたときに front matter が無ければ、最小の front matter が入る。
   [設計書スペース](user-guide.md#設計書スペース)では、種類を省くと常に設計書になり、通常のページは作れない
   - [Markdown Design Doc Viewer](https://github.com/playree/markdown-design-doc-viewer) の markdown-design-doc スキルを入れた AI ツールなら、
     「ログイン機能の設計書を DOCS に書いて」のように頼むと、図と見出しを結び付けた設計書を書いて保存できる

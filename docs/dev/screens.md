@@ -85,12 +85,17 @@ Proxy は通るリクエストのボディを既定 10MB まで複製して溜�
 - スペース内の画面は `wiki/[key]/layout.tsx` でスペース・ツリー(本文なし。タグの ID 付き)・タグを 1 度だけ取得し、`SideNavPortal` でサイドメニューへツリーを差し込む。スペース一覧(`/wiki`)と、取得中・閲覧できないスペースでもスペース一覧などを差し込み、Wiki の中を移る間はサイドメニューのタブを出したままにする
 - スペースの削除(`deleteWikiSpace`。`src/lib/wiki/wiki-space.ts`)は `manage` を要求し、スペース行のロックを取ってから消す。ページ・版・タグ・割り当ては Cascade で消し、添付はボード削除と同じく紐付けを外して削除待ち(`detachedAt`)にしてから、コミット後に実体を消す(`listAttachmentKeysOf` / `detachAttachmentsOf`)。実体の削除に失敗して残った添付は、掃除が回収するまで誰にも配信しない(`canViewAttachment`)。
   キーは作成時に `WikiSpaceKeyHistory` へ登録し、スペースを消しても残す(共有済みの `KEY/番号` が別のスペースのページを指さないため)。履歴にあるキーでの作成は `DUPLICATED_WIKI_SPACE_KEY`
-- スペースの区分(`WikiSpaceType`)は作成時にだけ決め、後から変えない(`updateWikiSpace` / `scUpdateWikiSpace` は区分を受けない。設定画面は表示だけ)。作れるページの種類・ページの置き方が区分で決まるため、変更に伴う既存ページ・テンプレート・予約通知の整合を持たない
+- スペースの区分(`WikiSpaceType`)は作成時にだけ決め、後から変えない(`updateWikiSpace` / `scUpdateWikiSpace` は区分を受けない。設定画面は表示だけ)。作れるページの種類・ページの置き方が区分で決まるため、変更に伴う既存ページ・テンプレート・予約通知の整合を持たない。
+  区分ごとの違い(置ける種類と既定・木を持たないか・アナウンス用か・トップの一覧・種類のエラー文)は仕様表 `WIKI_SPACE_TYPE_SPEC`(`src/lib/wiki/wiki-rule.ts`)に置き、lib・MCP・画面の分岐はここから引く(区分を直接比べない)
+- Wiki のスペース行 / ページ行のロックは `src/lib/wiki/wiki-lock.ts` の関数だけで取る(ロックの順序もそのファイルの先頭に書く)。構造と設定を変える書き込みは `lockWikiSpace`、本文の更新・版の削除・アナウンスは `shareLockWikiSpace`、スペースの削除は `lockWikiSpaceForDelete`、ページ行は常にスペース行の後に `lockWikiPages`
+- ページの書き込みは `wiki-page.ts`(作成・更新・削除・参照)、`wiki-page-tree.ts`(木の読み込み・移動)、`wiki-page-restore.ts`(版の内容へ戻す・削除済みを戻す)に分け、共通の部品(エラー・検証・版のスナップショット・競合判定)は `wiki-page-write.ts` に置く
 - タグ(`src/lib/wiki/wiki-tag.ts`)はスペースごと。作成は `editor` 以上、更新・削除は `manage`。ページへの付与は `assertWikiTagIdsInSpace` で同じスペースのタグに限る
 - ページテンプレート(`WikiTemplate`。`src/lib/wiki/wiki-template.ts`)はスペースごと(20件まで、`MAX_WIKI_TEMPLATES_PER_SPACE`)。設定画面の一覧(本文込み)・追加・編集・削除・並べ替えは `manage` かつ未アーカイブ(`wiki/[key]/settings/space-templates.tsx`)。
-  種類は `isWikiPageTypeAllowed` で区分に合うものに限る。並べ替え(`moveWikiTemplate`)はロックの下で今の並びの隣と入れ替えて `order` を 0 から振り直す。
+  種類は `isWikiPageTypeAllowed` で区分に合うものに限る(エラー文は `wikiPageTypeRuleMessage` で区分に合わせる)。並べ替え(`moveWikiTemplate`)はロックの下で今の並びの隣と入れ替えて `order` を 0 から振り直す。
   ページ作成のモーダル(`CreatePageModal`)は、開いたときに `getWikiTemplateOptions`(`write`。本文なし)で選択肢を引き、選ぶとタイトルと種類を埋めて `createWikiPage` に `templateId` を渡す。
-  サーバーは `renderWikiTemplate` で、`write` を確かめてから同じスペースのテンプレートを引き、作成者の表示名・タイムゾーン(未設定は `DEFAULT_TIMEZONE`)で `{{date}}` / `{{month}}` / `{{user}}` を置き換えた本文と種類で作る(`applyWikiTemplatePlaceholders`。1回の走査で置き換え、置き換えた値は置き換え直さない)。
+  サーバーは `renderWikiTemplate` で、`write` を確かめてから同じスペースのテンプレートを引き、作成者の表示名・タイムゾーン(未設定は `DEFAULT_TIMEZONE`)で `{{date}}` / `{{month}}` / `{{user}}` を置き換える(`applyWikiTemplatePlaceholders`。1回の走査で置き換え、置き換えた値は置き換え直さない)。
+  ページへの当て方は画面と MCP で共通の `applyWikiTemplateToPage`(明示した値 > 本文の front matter > テンプレート の順で、省いた項目だけを埋める)。種類がどれでも決まらなければ `createWikiPage` が区分の既定にする。
+  本文が空の設計書は `createWikiPage` が最小の front matter を入れて作り、本文を渡さずに種類だけを設計書へ変えたときに front matter が無ければ `updateWikiPage` が先頭に入れる(画面・MCP 共通。`designDocFrontMatter`。画面は種類を切り替えた時点で本文へ入れるので、本文を渡す保存ではそのまま使う)。
   タイトルは画面がテンプレートから置き換えて入れたものをそのまま使い、サーバーでは置き換え直さない(表示名の中の `{{date}}` などを置き換えないため)。
   登録時の長さの検査は置き換える前の値で行うので、ページに採るテンプレートの値(画面では本文、MCP では明示しなかったタイトル・本文)が置き換えた結果で最大長を超えたら `WIKI_TEMPLATE_TOO_LONG` にする(`assertWikiTemplateFits`。明示した値で置き換えて使わない項目の長さでは拒まない)。
   更新・削除・並べ替えはスペース行のロックを取ってからテンプレートの有無を確かめ直す(同時の削除で Prisma の行なしエラーにしない)。
@@ -135,7 +140,7 @@ Proxy は通るリクエストのボディを既定 10MB まで複製して溜�
   - 年・月の範囲と集計は、閲覧者のタイムゾーン(未設定なら `DEFAULT_TIMEZONE`)で区切る(`wikiAnnouncementPeriodRange` / `to_char(... AT TIME ZONE tz)`)
   - Slack への通知(`src/lib/wiki/wiki-announcement-notify.ts`。仕組みは [notifications-internals.md](notifications-internals.md#wiki-アナウンス))
     - 通知先は `WikiSpace.announceSlackChannelId`。設定画面のセクション(`settings/space-slack-notify.tsx`)は区分が `announcement` のときだけ出し、`getWikiSlackChannels` / `getWikiAnnounceChannel` / `setWikiAnnounceChannel`(`assertWikiAnnounceChannelManageable` = `manage` + 区分)で扱う。区分は作成後に変わらないので、値を持つのはアナウンス用スペースだけ。
-      保存の前に `listSlackChannels()` と突き合わせる。チャンネルの選択・一覧の再取得・取れないときの案内は、ボードのチャネル通知と共通の `src/components/slack-channel.tsx`
+      保存の前に Bot が参加しているチャンネルと突き合わせる(`assertSlackChannelExists`。一覧の取り直しの回数制限は `listSlackChannelsWithRefreshLimit`。どちらもボードのチャネル通知と共通)。チャンネルの選択・一覧の再取得・取れないときの案内は、ボードのチャネル通知と共通の `src/components/slack-channel.tsx`
     - ページ詳細の「通知」ボタンとモーダル(`[number]/page-announce-modal.tsx`)、下部の履歴(`[number]/page-announce-history.tsx`)。履歴と送れる状態は `getWikiAnnouncementNotifies` で取り、`editor` 以上でなければ引かない。
       予約の日時は利用者のタイムゾーンの日付と時刻(15 分刻み)を `zonedMinutes` で絶対時刻にして送る
     - 一覧・サイドメニューのバッジは `listWikiAnnouncements` の `notifyState`(`editor` 以上にだけ付く)。予約中があれば予約中、送信済みがあれば通知済み、無ければ未通知
