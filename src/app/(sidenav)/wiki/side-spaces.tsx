@@ -3,6 +3,7 @@
 import { PanelSpinner } from '@/components/general/panel'
 import { useSideNav } from '@/components/general/side-nav-slot'
 import { BookOpenIcon } from '@/components/icon'
+import { WikiSpaceTypeIcon } from '@/components/wiki-chip'
 import { useActionData } from '@/lib/action/action-client'
 import { wikiSpacePath } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
@@ -35,7 +36,7 @@ export const WikiSideSpaces: FC = () => {
             key={space.id}
             to={wikiSpacePath(space.key)}
             text={space.name}
-            icon={<BookOpenIcon />}
+            icon={<WikiSpaceTypeIcon type={space.type} />}
             closeMenu={closeMenu}
           />
         ))

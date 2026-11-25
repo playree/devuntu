@@ -1,7 +1,7 @@
 'use client'
 
 import { createEnumChip } from '@/components/enum-chip'
-import { BellIcon, BellSlashIcon, ClockIcon } from '@/components/icon'
+import { BellIcon, BellSlashIcon, BookOpenIcon, ClockIcon, InboxStackIcon, NewspaperIcon } from '@/components/icon'
 import type {
   WikiAnnouncementNotifyKind,
   WikiAnnouncementNotifySkipReason,
@@ -15,7 +15,7 @@ import type {
 import type { WikiAnnounceState } from '@/lib/wiki/wiki-announcement-notify-rule'
 import type { LocaleItem } from '@/locale'
 import { useLocale } from '@/locale/client'
-import type { FC } from 'react'
+import type { FC, SVGProps } from 'react'
 import { tv } from 'tailwind-variants'
 
 const roleChip = createEnumChip<WikiSpaceRole>({
@@ -53,6 +53,18 @@ const spaceTypeChip = createEnumChip<WikiSpaceType>({
 /** スペースの区分 */
 export const WikiSpaceTypeChip = spaceTypeChip.EnumChip
 export const useWikiSpaceTypeOptions = spaceTypeChip.useOptions
+
+const SPACE_TYPE_ICON = {
+  mixed: InboxStackIcon,
+  design_doc: BookOpenIcon,
+  announcement: NewspaperIcon,
+} as const satisfies Record<WikiSpaceType, FC<SVGProps<SVGSVGElement>>>
+
+/** スペースの区分のアイコン。特定のスペースを表す箇所に使い、Wiki 全体を表す箇所は BookOpenIcon のままにする */
+export const WikiSpaceTypeIcon: FC<{ type: WikiSpaceType } & SVGProps<SVGSVGElement>> = ({ type, ...props }) => {
+  const Icon = SPACE_TYPE_ICON[type]
+  return <Icon {...props} />
+}
 
 const pageTypeChip = createEnumChip<WikiPageType>({
   page: { item: 'wiki_page_type_page', color: 'default' },

@@ -5,9 +5,9 @@ import { FlexCol } from '@/components/general/flex'
 import { useModalState } from '@/components/general/modal'
 import { NoticePanel } from '@/components/general/panel'
 import { ContentHeader } from '@/components/header'
-import { BookOpenIcon, Cog6ToothIcon, DocumentPlusIcon, TrashIcon } from '@/components/icon'
+import { Cog6ToothIcon, DocumentPlusIcon, TrashIcon } from '@/components/icon'
 import { ReloadButton } from '@/components/reload-button'
-import { WikiRoleChip, WikiSpaceTypeChip, WikiVisibilityChip } from '@/components/wiki-chip'
+import { WikiRoleChip, WikiSpaceTypeChip, WikiSpaceTypeIcon, WikiVisibilityChip } from '@/components/wiki-chip'
 import { type WikiAnnouncementFilter } from '@/lib/wiki/wiki-announcement-rule'
 import { wikiSettingsPath, wikiSpaceTypeSpec } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
@@ -32,7 +32,10 @@ export const WikiSpaceTopClient: FC<{ announcementFilter: WikiAnnouncementFilter
 
   return (
     <FlexCol>
-      <ContentHeader icon={<BookOpenIcon />} title={<span className='truncate'>{space.name}</span>}>
+      <ContentHeader
+        icon={<WikiSpaceTypeIcon type={space.type} />}
+        title={<span className='truncate'>{space.name}</span>}
+      >
         {access.canWrite && (
           <MultiButton
             isIconOnly

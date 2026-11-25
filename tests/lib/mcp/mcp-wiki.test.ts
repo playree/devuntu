@@ -660,7 +660,7 @@ describe('searchWikiForMcp', () => {
       {
         id: 'p1',
         ref: 'DOCS/1',
-        space: { id: SPACE_ID, key: 'DOCS', name: '開発' },
+        space: { id: SPACE_ID, key: 'DOCS', name: '開発', type: 'mixed' },
         number: 1,
         title: '設計',
         updatedAt: READ_AT,

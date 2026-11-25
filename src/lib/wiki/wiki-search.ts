@@ -9,7 +9,7 @@
  */
 
 import { Prisma } from '@/generated/prisma/client'
-import type { TagColor } from '@/generated/prisma/enums'
+import type { TagColor, WikiSpaceType } from '@/generated/prisma/enums'
 import type { Actor } from '../board/board-access'
 import { dedupeTagNames } from '../board/tag-rule'
 import { splitKeywords } from '../board/ticket-search'
@@ -187,7 +187,7 @@ export type WikiSearchHit = {
   id: string
   /** `KEY/番号` */
   ref: string
-  space: { id: string; key: string; name: string }
+  space: { id: string; key: string; name: string; type: WikiSpaceType }
   number: number
   title: string
   updatedAt: Date
@@ -220,7 +220,10 @@ export const searchWikiPages = async (actor: Actor, params: WikiSearchParams): P
   const hitSpaceIds = [...new Set(rows.map(({ spaceId }) => spaceId))]
   const pageIds = rows.map(({ id }) => id)
   const [spaces, breadcrumbs, pageTags] = await Promise.all([
-    prisma.wikiSpace.findMany({ where: { id: { in: hitSpaceIds } }, select: { id: true, key: true, name: true } }),
+    prisma.wikiSpace.findMany({
+      where: { id: { in: hitSpaceIds } },
+      select: { id: true, key: true, name: true, type: true },
+    }),
     loadBreadcrumbs(pageIds),
     prisma.wikiPageTag.findMany({
       where: { pageId: { in: pageIds } },

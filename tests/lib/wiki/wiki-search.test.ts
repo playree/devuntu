@@ -158,7 +158,9 @@ describe('searchWikiPages', () => {
         { pageId: 'p3', title: '設計書', depth: 1 },
         { pageId: 'p3', title: '開発', depth: 2 },
       ] as never)
-    vi.mocked(prisma.wikiSpace.findMany).mockResolvedValue([{ id: 's1', key: 'DOCS', name: 'ドキュメント' }] as never)
+    vi.mocked(prisma.wikiSpace.findMany).mockResolvedValue([
+      { id: 's1', key: 'DOCS', name: 'ドキュメント', type: 'mixed' },
+    ] as never)
     vi.mocked(prisma.wikiPageTag.findMany).mockResolvedValue([
       { pageId: 'p3', tag: { id: 't1', name: '設計', color: 'blue' } },
     ] as never)
@@ -224,7 +226,7 @@ describe('searchWikiPages', () => {
       {
         id: 'p3',
         ref: 'DOCS/3',
-        space: { id: 's1', key: 'DOCS', name: 'ドキュメント' },
+        space: { id: 's1', key: 'DOCS', name: 'ドキュメント', type: 'mixed' },
         number: 3,
         title: 'API 設計',
         updatedAt: ROW.updatedAt,
