@@ -13,12 +13,14 @@ import { prisma } from '@/lib/prisma'
 import { assertWikiSpaceAccess, getWikiSpaceAccess } from '@/lib/wiki/wiki-access'
 import {
   cancelScheduledWikiAnnouncement,
+  createWikiAnnouncementScheduleRunner,
   getWikiAnnouncementNotifies,
   notifyWikiAnnouncementNow,
   runWikiAnnouncementSchedule,
   scheduleWikiAnnouncement,
   skipScheduledWikiAnnouncementsOf,
   updateScheduledWikiAnnouncement,
+  wikiAnnounceReadiness,
 } from '@/lib/wiki/wiki-announcement-notify'
 import {
   MAX_WIKI_ANNOUNCE_SCHEDULED_PER_PAGE,
@@ -327,12 +329,12 @@ describe('runWikiAnnouncementSchedule', () => {
   const updated = () => vi.mocked(prisma.wikiAnnouncementNotify.update).mock.calls.map(([arg]) => arg.data)
 
   it('送る時点のページは削除済みを除いて引く(削除済みなら page_deleted で見送る)', async () => {
-    await runWikiAnnouncementSchedule(NOW, { resumeFrom: null })
+    await runWikiAnnouncementSchedule({ resumeFrom: null }, NOW)
     expect(vi.mocked(prisma.wikiPage.findUnique).mock.calls[0][0]?.where).toEqual({ id: PAGE_ID, deletedAt: null })
   })
 
   it('期限の来た予約中の行だけを候補にする', async () => {
-    await runWikiAnnouncementSchedule(NOW, { resumeFrom: null })
+    await runWikiAnnouncementSchedule({ resumeFrom: null }, NOW)
     expect(vi.mocked(prisma.wikiAnnouncementNotify.findMany).mock.calls[0][0]).toMatchObject({
       where: { status: 'scheduled', scheduledAt: { lte: NOW } },
     })
@@ -352,7 +354,7 @@ describe('runWikiAnnouncementSchedule', () => {
   })
 
   it('送信時点の最新の内容で投入し、送信済みにする', async () => {
-    expect(await runWikiAnnouncementSchedule(NOW, { resumeFrom: null })).toBe(1)
+    expect(await runWikiAnnouncementSchedule({ resumeFrom: null }, NOW)).toBe(1)
     expect(enqueuedPayload()).toMatchObject({
       pageTitle: '送る時点のタイトル',
       kind: 'updated',
@@ -365,29 +367,23 @@ describe('runWikiAnnouncementSchedule', () => {
 
   it('予約時刻の前の行・送信済み・取り消し済みの行(ロックの条件に合わない)は送らない', async () => {
     vi.mocked(prisma.$queryRaw).mockResolvedValue([] as never)
-    expect(await runWikiAnnouncementSchedule(NOW, { resumeFrom: null })).toBe(0)
+    expect(await runWikiAnnouncementSchedule({ resumeFrom: null }, NOW)).toBe(0)
     expect(enqueueNotify).not.toHaveBeenCalled()
     expect(prisma.wikiAnnouncementNotify.update).not.toHaveBeenCalled()
   })
 
   it('候補が無ければ何もしない', async () => {
     dueRows()
-    expect(await runWikiAnnouncementSchedule(NOW, { resumeFrom: null })).toBe(0)
+    expect(await runWikiAnnouncementSchedule({ resumeFrom: null }, NOW)).toBe(0)
     expect(prisma.$transaction).not.toHaveBeenCalled()
   })
 
   it.each([
     ['page_deleted', () => vi.mocked(prisma.wikiPage.findUnique).mockResolvedValue(null)],
-    [
-      'archived',
-      () => vi.mocked(prisma.wikiSpace.findUniqueOrThrow).mockResolvedValue(space({ archived: true }) as never),
-    ],
+    ['archived', () => vi.mocked(prisma.wikiSpace.findUnique).mockResolvedValue(space({ archived: true }) as never)],
     [
       'channel_unset',
-      () =>
-        vi
-          .mocked(prisma.wikiSpace.findUniqueOrThrow)
-          .mockResolvedValue(space({ announceSlackChannelId: null }) as never),
+      () => vi.mocked(prisma.wikiSpace.findUnique).mockResolvedValue(space({ announceSlackChannelId: null }) as never),
     ],
     ['slack_disabled', () => vi.mocked(isSlackChannelPostEnabled).mockResolvedValue(false)],
     ['no_permission', () => vi.mocked(getWikiSpaceAccess).mockResolvedValue({ canWrite: false } as never)],
@@ -407,7 +403,7 @@ describe('runWikiAnnouncementSchedule', () => {
     ],
   ])('送れない状態(%s)なら理由を付けて見送る', async (skipReason, arrange) => {
     arrange()
-    expect(await runWikiAnnouncementSchedule(NOW, { resumeFrom: null })).toBe(0)
+    expect(await runWikiAnnouncementSchedule({ resumeFrom: null }, NOW)).toBe(0)
     expect(enqueueNotify).not.toHaveBeenCalled()
     expect(updated()).toEqual([{ status: 'skipped', skipReason }])
   })
@@ -419,7 +415,7 @@ describe('runWikiAnnouncementSchedule', () => {
       .mockResolvedValueOnce(scheduledRow({ sender: { ...sender, id: 'u2', name: '別の人' } }) as never)
     vi.mocked(enqueueNotify).mockResolvedValueOnce(false).mockResolvedValueOnce(true)
 
-    expect(await runWikiAnnouncementSchedule(NOW, { resumeFrom: null })).toBe(1)
+    expect(await runWikiAnnouncementSchedule({ resumeFrom: null }, NOW)).toBe(1)
     // n2(同じ送信者)は試さず、n3(別の送信者)は送る
     expect(prisma.$transaction).toHaveBeenCalledTimes(2)
     expect(updated()).toEqual([{ status: 'sent', sentAt: NOW }])
@@ -433,7 +429,7 @@ describe('runWikiAnnouncementSchedule', () => {
       .mockResolvedValueOnce(scheduledRow({ sender: { ...sender, id: 'u2', name: '別の人' } }) as never)
     vi.mocked(enqueueNotify).mockResolvedValueOnce(false).mockResolvedValueOnce(true)
 
-    expect(await runWikiAnnouncementSchedule(NOW, { resumeFrom: null })).toBe(1)
+    expect(await runWikiAnnouncementSchedule({ resumeFrom: null }, NOW)).toBe(1)
     // 流量制限に当たった u1 の残りは試さない
     expect(prisma.$transaction).toHaveBeenCalledTimes(2)
     // 続きは最後に読んだ行の後から、u1 を除いて読む
@@ -453,7 +449,7 @@ describe('runWikiAnnouncementSchedule', () => {
     vi.mocked(prisma.wikiAnnouncementNotify.findUniqueOrThrow).mockRejectedValue(new Error('unexpected'))
     const state = { resumeFrom: null }
 
-    expect(await runWikiAnnouncementSchedule(NOW, state)).toBe(0)
+    expect(await runWikiAnnouncementSchedule(state, NOW)).toBe(0)
     const last = failing.at(-1)!
     expect(state.resumeFrom).toEqual({ scheduledAt: AT, id: last.id })
 
@@ -462,7 +458,7 @@ describe('runWikiAnnouncementSchedule', () => {
     vi.mocked(prisma.wikiAnnouncementNotify.findUniqueOrThrow)
       .mockReset()
       .mockResolvedValue(scheduledRow() as never)
-    expect(await runWikiAnnouncementSchedule(NOW, state)).toBe(1)
+    expect(await runWikiAnnouncementSchedule(state, NOW)).toBe(1)
     expect(vi.mocked(prisma.wikiAnnouncementNotify.findMany).mock.calls[0][0]?.where?.AND).toEqual([
       { OR: [{ scheduledAt: { gt: AT } }, { scheduledAt: AT, id: { gt: last.id } }] },
     ])
@@ -470,11 +466,50 @@ describe('runWikiAnnouncementSchedule', () => {
     expect(state.resumeFrom).toBeNull()
   })
 
+  it('ワーカーの 1 周(runner)は、上限で打ち切った続きを自分の状態に持って次の周へ渡す', async () => {
+    const failing = Array.from({ length: WIKI_ANNOUNCE_SCAN_MAX }, (_, i) => due(`a${String(i).padStart(3, '0')}`))
+    dueRows(
+      ...Array.from({ length: WIKI_ANNOUNCE_SCAN_MAX / WIKI_ANNOUNCE_BATCH }, (_, i) =>
+        failing.slice(i * WIKI_ANNOUNCE_BATCH, (i + 1) * WIKI_ANNOUNCE_BATCH),
+      ),
+    )
+    vi.mocked(prisma.wikiAnnouncementNotify.findUniqueOrThrow).mockRejectedValue(new Error('unexpected'))
+    const run = createWikiAnnouncementScheduleRunner()
+
+    await run()
+    dueRows([])
+    await run()
+    expect(vi.mocked(prisma.wikiAnnouncementNotify.findMany).mock.calls[0][0]?.where?.AND).toEqual([
+      { OR: [{ scheduledAt: { gt: AT } }, { scheduledAt: AT, id: { gt: failing.at(-1)!.id } }] },
+    ])
+
+    // 別の runner は状態を共有しない(先頭から読む)
+    dueRows([])
+    await createWikiAnnouncementScheduleRunner()()
+    expect(vi.mocked(prisma.wikiAnnouncementNotify.findMany).mock.calls[0][0]?.where?.AND).toEqual([])
+  })
+
   it('1件が失敗しても残りは送る', async () => {
     dueRows([due('n1', 'u1'), due('n2', 'u1')])
     vi.mocked(prisma.wikiAnnouncementNotify.findUniqueOrThrow)
       .mockRejectedValueOnce(new Error('P2025'))
       .mockResolvedValue(scheduledRow() as never)
-    expect(await runWikiAnnouncementSchedule(NOW, { resumeFrom: null })).toBe(1)
+    expect(await runWikiAnnouncementSchedule({ resumeFrom: null }, NOW)).toBe(1)
+  })
+})
+
+describe('wikiAnnounceReadiness', () => {
+  it('送れる状態ならチャンネルを返し、送れなければ理由を返す', async () => {
+    expect(await wikiAnnounceReadiness('s1')).toEqual({ ready: true, channelId: 'C0123ABCD' })
+
+    vi.mocked(prisma.wikiSpace.findUnique).mockResolvedValue(space({ archived: true }) as never)
+    expect(await wikiAnnounceReadiness('s1')).toEqual({ ready: false, reason: 'archived' })
+
+    vi.mocked(prisma.wikiSpace.findUnique).mockResolvedValue(space({ announceSlackChannelId: null }) as never)
+    expect(await wikiAnnounceReadiness('s1')).toEqual({ ready: false, reason: 'channel_unset' })
+
+    vi.mocked(prisma.wikiSpace.findUnique).mockResolvedValue(space() as never)
+    vi.mocked(isSlackChannelPostEnabled).mockResolvedValue(false)
+    expect(await wikiAnnounceReadiness('s1')).toEqual({ ready: false, reason: 'slack_disabled' })
   })
 })

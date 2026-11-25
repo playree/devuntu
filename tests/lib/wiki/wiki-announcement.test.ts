@@ -56,7 +56,7 @@ describe('listWikiAnnouncements', () => {
   it('閲覧の権限を確かめ、作成日時の新しい順で 1 ページ分と総件数を返す', async () => {
     const result = await listWikiAnnouncements(actor, SPACE_ID, { page: 3, rowsPerPage: 10 })
 
-    expect(assertWikiSpaceAccess).toHaveBeenCalledWith(actor, SPACE_ID, 'view')
+    expect(assertWikiSpaceAccess).toHaveBeenCalledWith(actor, SPACE_ID, 'view', undefined)
     expect(result).toEqual({
       items: [
         { id: 'p1', number: 3, title: 'お知らせ', createdAt: CREATED_AT, createdByName: '作成者A', tagIds: ['t1'] },

@@ -1035,7 +1035,7 @@ Please copy and use the connection information above.
   msg_wiki_page_invalid_parent: 'The page cannot be moved there (not under itself, its descendants, or another space).',
   msg_wiki_page_too_deep: 'Pages can be nested at most 10 levels deep.',
   msg_wiki_page_type_not_allowed:
-    'This type of page is not allowed in this space (a design doc space only holds design docs, an announcement space only normal pages).',
+    'This type is not allowed for pages or templates in this space (a design doc space only holds design docs, an announcement space only normal pages).',
   msg_wiki_restore_parent_still_deleted:
     ' Its original parent ${parent} is still deleted, so ${target} is restored to the top level.',
   msg_wiki_restore_unchanged: 'No changes. The content is the same as the current one.',

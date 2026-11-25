@@ -6,6 +6,7 @@ import { ArchiveBoxIcon, TrashIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
 import { parseAction } from '@/lib/action/action-client'
 import { useConfirmAction } from '@/lib/use-confirm-action'
+import { WIKI_TOP_PATH } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
@@ -46,7 +47,7 @@ export const WikiSpaceDangerZone: FC<{ space: Space; reload: () => Promise<void>
       async () => {
         await parseAction(deleteWikiSpace({ id: space.id }))
         notify.success(t('msg_deleted_target', { target: space.name }))
-        router.push('/wiki')
+        router.push(WIKI_TOP_PATH)
       },
     )
   }

@@ -6,7 +6,7 @@ import { ArrowPathIcon, BookOpenIcon } from '@/components/icon'
 import { WikiTagLinks } from '@/components/wiki-tag'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { dayformat } from '@/lib/day'
-import { MAX_WIKI_SEARCH_LIMIT } from '@/lib/wiki/wiki-rule'
+import { MAX_WIKI_SEARCH_LIMIT, wikiPagePath } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import Link from 'next/link'
 import { FC } from 'react'
@@ -70,7 +70,7 @@ export const WikiSearchResults: FC<{
               )}
               <div className='flex flex-wrap items-center gap-x-2 gap-y-1'>
                 <Link
-                  href={`/wiki/${hit.space.key}/${hit.number}`}
+                  href={wikiPagePath({ key: hit.space.key, number: hit.number })}
                   className='min-w-0 font-semibold wrap-break-word hover:underline'
                 >
                   {hit.title}

@@ -1,19 +1,19 @@
 /**
- * 編集中の下書きの変更判定(wiki-draft.ts)
+ * 保存する項目の変更判定(wiki-rule.ts の isWikiPageChanged)
  */
 
-import { isWikiDraftChanged, type WikiPageDraft } from '@/lib/wiki/wiki-draft'
+import { isWikiPageChanged, type WikiPageFields } from '@/lib/wiki/wiki-rule'
 import { describe, expect, it } from 'vitest'
 
-const base: WikiPageDraft = { title: 'タイトル', content: '# 本文', type: 'page', tagIds: ['a', 'b'] }
+const base: WikiPageFields = { title: 'タイトル', content: '# 本文', type: 'page', tagIds: ['a', 'b'] }
 
-describe('isWikiDraftChanged', () => {
+describe('isWikiPageChanged', () => {
   it('同じ内容なら変更なし', () => {
-    expect(isWikiDraftChanged(base, { ...base, tagIds: [...base.tagIds] })).toBe(false)
+    expect(isWikiPageChanged(base, { ...base, tagIds: [...base.tagIds] })).toBe(false)
   })
 
   it('タグの並びだけが違うなら変更なし', () => {
-    expect(isWikiDraftChanged(base, { ...base, tagIds: ['b', 'a'] })).toBe(false)
+    expect(isWikiPageChanged(base, { ...base, tagIds: ['b', 'a'] })).toBe(false)
   })
 
   it.each([
@@ -24,6 +24,6 @@ describe('isWikiDraftChanged', () => {
     ['タグの削除', { tagIds: ['a'] }],
     ['タグの入れ替え', { tagIds: ['a', 'c'] }],
   ])('%sが変われば変更あり', (_, patch) => {
-    expect(isWikiDraftChanged(base, { ...base, ...patch })).toBe(true)
+    expect(isWikiPageChanged(base, { ...base, ...patch })).toBe(true)
   })
 })

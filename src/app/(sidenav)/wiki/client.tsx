@@ -15,7 +15,7 @@ import { BookOpenIcon, Cog6ToothIcon, PlusIcon } from '@/components/icon'
 import { ReloadButton } from '@/components/reload-button'
 import { WikiRoleChip, WikiSpaceTypeChip, WikiVisibilityChip } from '@/components/wiki-chip'
 import { parseAction, useActionData } from '@/lib/action/action-client'
-import { MAX_WIKI_SEARCH_KEYWORD, wikiSearchHref } from '@/lib/wiki/wiki-rule'
+import { MAX_WIKI_SEARCH_KEYWORD, wikiSearchHref, wikiSettingsPath, wikiSpacePath } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { Table } from '@heroui/react'
 import Link from 'next/link'
@@ -119,7 +119,7 @@ export const WikiSpacesClient: FC<{ keyword: string }> = ({ keyword }) => {
             <Table.Row key={item.id} id={item.id}>
               <Table.Cell>
                 <div className='flex flex-col gap-0.5'>
-                  <Link href={`/wiki/${item.key}`} className='truncate hover:underline'>
+                  <Link href={wikiSpacePath(item.key)} className='truncate hover:underline'>
                     {item.name}
                   </Link>
                   <span className='text-muted font-mono text-xs'>{item.key}</span>
@@ -145,7 +145,7 @@ export const WikiSpacesClient: FC<{ keyword: string }> = ({ keyword }) => {
                           key: 'settings',
                           icon: <Cog6ToothIcon />,
                           tooltip: t('wiki_space_settings'),
-                          onPress: () => router.push(`/wiki/${item.key}/settings`),
+                          onPress: () => router.push(wikiSettingsPath(item.key)),
                         },
                       ]
                     : []

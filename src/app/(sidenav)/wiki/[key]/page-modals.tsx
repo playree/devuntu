@@ -12,9 +12,17 @@ import { parseAction, useActionData } from '@/lib/action/action-client'
 import { authClient } from '@/lib/auth/auth-client'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { ClientError } from '@/lib/error'
+import { isSameOrder } from '@/lib/list-compare'
 import { type CreateWikiPage, scCreateWikiPage } from '@/lib/schema/schema-wiki'
 import { useConfirmAction } from '@/lib/use-confirm-action'
-import { defaultWikiPageType, MAX_WIKI_DEPTH, WIKI_TREE_CHANGED } from '@/lib/wiki/wiki-rule'
+import {
+  canChooseWikiPageType,
+  defaultWikiPageType,
+  MAX_WIKI_DEPTH,
+  WIKI_TREE_CHANGED,
+  wikiPagePath,
+  wikiSpaceTypeSpec,
+} from '@/lib/wiki/wiki-rule'
 import { applyWikiTemplatePlaceholders } from '@/lib/wiki/wiki-template-rule'
 import {
   depthOf,
@@ -102,7 +110,7 @@ export const CreatePageModal: FC<ModalBaseProps & { parent: { id: string; title:
           reload()
           state.close()
           // 編集中のページから子ページを作ったときは、下書きを捨てて移るかを確かめる(断ればページだけ作られる)
-          await pushIfLeavable(`/wiki/${space.key}/${res.number}?${EDIT_QUERY}=1`)
+          await pushIfLeavable(`${wikiPagePath({ key: space.key, number: res.number })}?${EDIT_QUERY}=1`)
         } catch (e) {
           // 深さの上限などは parseAction が通知済み。入力し直してもらうため画面はそのまま残す
           if (!(e instanceof ClientError)) {
@@ -113,7 +121,7 @@ export const CreatePageModal: FC<ModalBaseProps & { parent: { id: string; title:
       title={{
         text: parent
           ? t('wiki_add_child_page')
-          : space.type === 'announcement'
+          : wikiSpaceTypeSpec(space.type).announce
             ? t('wiki_new_announcement')
             : t('wiki_add_page'),
         icon: <DocumentPlusIcon />,
@@ -146,7 +154,7 @@ export const CreatePageModal: FC<ModalBaseProps & { parent: { id: string; title:
             autoFocus
           />
         </div>
-        {space.type === 'mixed' && ( // 設計書スペースは設計書だけなので選ばせない
+        {canChooseWikiPageType(space.type) && ( // 種類が 1 つしか無い区分では選ばせない
           <div className='col-span-12'>
             <SingleSelectCtrl
               control={control}
@@ -222,8 +230,7 @@ export const MovePageModal: FC<ModalBaseProps & { page: { id: string; title: str
   const afterId = selectedKey === FIRST_KEY ? null : afterIndex < 0 ? undefined : selectedKey
   // サーバーと同じく、並べた結果の id の列で比べる(末尾のページで「末尾」を選んだときなども変化なしになる)
   const isUnchanged =
-    parentId === currentParentId &&
-    placeInSiblings(currentIds, page.id, position).every((id, i) => currentIds[i] === id)
+    parentId === currentParentId && isSameOrder(placeInSiblings(currentIds, page.id, position), currentIds)
 
   const submit = async () => {
     setPending(true)

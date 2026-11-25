@@ -1,6 +1,7 @@
 'use client'
 
 import { TagChips } from '@/components/ticket/ticket-chip'
+import { wikiPagePath } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import Link from 'next/link'
 import { FC } from 'react'
@@ -24,7 +25,7 @@ export const ChildPages: FC<{ parentId: string | null }> = ({ parentId }) => {
           return (
             <li key={page.id}>
               <Link
-                href={`/wiki/${space.key}/${page.number}`}
+                href={wikiPagePath({ key: space.key, number: page.number })}
                 className='flex items-center gap-2 px-3 py-2 text-sm hover:bg-mist-100 dark:hover:bg-neutral-900'
               >
                 <span className='min-w-0 flex-1 truncate'>{page.title}</span>

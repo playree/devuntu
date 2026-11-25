@@ -10,13 +10,21 @@
 import type { WikiPageType } from '@/generated/prisma/enums'
 import { getUserNameAndTimezone } from '../auth/user-profile'
 import type { Actor } from '../board/board-access'
-import { DUPLICATED_TEMPLATE_NAME } from '../board/ticket-template-rule'
-import { ClientError, errClient, errInvalidOperation, errValidation } from '../error'
+import { errDuplicatedTemplateName } from '../board/ticket-template-rule'
+import { ClientError, errInvalidOperation, errValidation } from '../error'
 import { logger } from '../logger'
-import { isUniqueViolation, prisma, type Db } from '../prisma'
+import { prisma, rethrowUniqueViolation, type Db } from '../prisma'
 import type { CreateWikiTemplate, UpdateWikiTemplate } from '../schema/schema-wiki'
 import { assertWikiSpaceAccess, type WikiSpaceAccess } from './wiki-access'
-import { isWikiPageTypeAllowed, MAX_WIKI_CONTENT, MAX_WIKI_TITLE, WIKI_PAGE_TYPE_NOT_ALLOWED } from './wiki-rule'
+import { hasDesignDocFrontMatter } from './wiki-front-matter'
+import { lockWikiSpace } from './wiki-lock'
+import {
+  isWikiPageTypeAllowed,
+  MAX_WIKI_CONTENT,
+  MAX_WIKI_TITLE,
+  WIKI_PAGE_TYPE_NOT_ALLOWED,
+  wikiPageTypeRuleMessage,
+} from './wiki-rule'
 import {
   applyWikiTemplatePlaceholders,
   MAX_WIKI_TEMPLATES_PER_SPACE,
@@ -39,17 +47,6 @@ const ITEM_SELECT = { ...OPTION_SELECT, content: true, order: true } as const
 /** 同値の order でも並びが揺れないよう name を第 2 キーにする */
 const ORDER_BY = [{ order: 'asc' }, { name: 'asc' }] as const
 
-const rethrowDuplicatedName = (e: unknown): never => {
-  if (isUniqueViolation(e)) {
-    throw errClient(DUPLICATED_TEMPLATE_NAME)
-  }
-  throw e
-}
-
-const lockSpace = async (tx: Db, spaceId: string) => {
-  await tx.$queryRaw`SELECT "id" FROM "wiki_space" WHERE "id" = ${spaceId} FOR NO KEY UPDATE`
-}
-
 /** 管理の権限。manage に加えて、アーカイブされていないこと */
 const assertManageable = async (actor: Actor, spaceId: string, tx: Db = prisma): Promise<WikiSpaceAccess> => {
   const access = await assertWikiSpaceAccess(actor, spaceId, 'manage', tx)
@@ -61,10 +58,7 @@ const assertManageable = async (actor: Actor, spaceId: string, tx: Db = prisma):
 
 const assertTypeAllowed = (access: WikiSpaceAccess, type: WikiPageType) => {
   if (!isWikiPageTypeAllowed(access.type, type)) {
-    throw new ClientError(
-      WIKI_PAGE_TYPE_NOT_ALLOWED,
-      'This space is a design doc space: its templates must be design docs (type=design_doc)',
-    )
+    throw new ClientError(WIKI_PAGE_TYPE_NOT_ALLOWED, wikiPageTypeRuleMessage(access.type, 'templates'))
   }
 }
 
@@ -82,7 +76,7 @@ const findTemplateSpace = async (id: string, tx: Db) => {
  */
 const lockTemplateSpace = async (tx: Db, id: string) => {
   const spaceId = await findTemplateSpace(id, tx)
-  await lockSpace(tx, spaceId)
+  await lockWikiSpace(tx, spaceId)
   await findTemplateSpace(id, tx)
   return spaceId
 }
@@ -110,7 +104,7 @@ export const createWikiTemplate = async (
 ): Promise<WikiTemplateOption> => {
   const template = await prisma
     .$transaction(async (tx) => {
-      await lockSpace(tx, spaceId)
+      await lockWikiSpace(tx, spaceId)
       const access = await assertManageable(actor, spaceId, tx)
       assertTypeAllowed(access, fields.type)
       const rows = await tx.wikiTemplate.findMany({ where: { spaceId }, select: { order: true } })
@@ -123,7 +117,7 @@ export const createWikiTemplate = async (
         select: OPTION_SELECT,
       })
     })
-    .catch(rethrowDuplicatedName)
+    .catch(rethrowUniqueViolation(errDuplicatedTemplateName))
 
   logger.info({ userId: actor.id, spaceId, id: template.id }, 'wiki template created')
   return template
@@ -144,7 +138,7 @@ export const updateWikiTemplate = async (
         select: OPTION_SELECT,
       })
     })
-    .catch(rethrowDuplicatedName)
+    .catch(rethrowUniqueViolation(errDuplicatedTemplateName))
 
   logger.info({ userId: actor.id, id }, 'wiki template updated')
   return template
@@ -237,5 +231,33 @@ export const assertWikiTemplateFits = (name: string, adopted: { title?: string; 
       `The template ${name} exceeds the maximum length after replacing placeholders ` +
         `(title ${MAX_WIKI_TITLE} / content ${MAX_WIKI_CONTENT} characters). Shorten the template, or pass the title / content yourself`,
     )
+  }
+}
+
+/** ページ作成の入力(画面・MCP 共通)。省いた項目はテンプレートで埋める */
+export type WikiPageDraftInput = { title?: string; content?: string; type?: WikiPageType }
+
+/**
+ * ページ作成の入力にテンプレートを当てる。明示した値を優先し、省いた項目だけをテンプレートで埋める(明示した値は置き換えない)。
+ * 種類は 明示 > 本文の front matter(`type: design_doc`)> テンプレート の順で決め、どれも無ければ undefined
+ * (`createWikiPage` がロックを取った後に区分の既定にする)。テンプレートから採った項目だけを長さで確かめる
+ */
+export const applyWikiTemplateToPage = (
+  input: WikiPageDraftInput,
+  template: RenderedWikiTemplate | null,
+): { title: string; content: string | undefined; type: WikiPageType | undefined } => {
+  if (template) {
+    assertWikiTemplateFits(template.name, {
+      title: input.title === undefined ? template.title : undefined,
+      content: input.content === undefined ? template.content : undefined,
+    })
+  }
+  return {
+    title: input.title ?? template?.title ?? '',
+    content: input.content ?? template?.content,
+    type:
+      input.type ??
+      (input.content && hasDesignDocFrontMatter(input.content) ? 'design_doc' : undefined) ??
+      template?.type,
   }
 }

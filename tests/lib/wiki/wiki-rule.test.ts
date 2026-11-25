@@ -5,6 +5,7 @@
  */
 
 import {
+  canChooseWikiPageType,
   canDeleteWikiRevision,
   defaultWikiPageType,
   evaluateWikiAccess,
@@ -21,9 +22,15 @@ import {
   revisionTagsOf,
   shouldMergeWikiRevision,
   strongestWikiRole,
+  WIKI_SPACE_TYPE_SPEC,
+  WIKI_TOP_PATH,
+  wikiPagePath,
   wikiPageRef,
+  wikiPageTypeRuleMessage,
   wikiRevisionTagLabels,
   wikiSearchHref,
+  wikiSettingsPath,
+  wikiSpacePath,
   type WikiRevisionOrigin,
   type WikiRole,
 } from '@/lib/wiki/wiki-rule'
@@ -48,6 +55,41 @@ describe('区分ごとのページの種類', () => {
     expect(isFlatWikiSpace('announcement')).toBe(true)
     expect(isFlatWikiSpace('mixed')).toBe(false)
     expect(isFlatWikiSpace('design_doc')).toBe(false)
+  })
+})
+
+describe('WIKI_SPACE_TYPE_SPEC', () => {
+  it('種類を選べるのは複数の種類を置ける区分だけ。既定は置ける種類の先頭', () => {
+    expect(canChooseWikiPageType('mixed')).toBe(true)
+    expect(canChooseWikiPageType('design_doc')).toBe(false)
+    expect(canChooseWikiPageType('announcement')).toBe(false)
+    for (const [type, spec] of Object.entries(WIKI_SPACE_TYPE_SPEC)) {
+      expect(spec.pageTypes, type).toContain(defaultWikiPageType(type as keyof typeof WIKI_SPACE_TYPE_SPEC))
+    }
+  })
+
+  it('アナウンス用だけが平らで、トップの一覧はそれぞれの区分のもの', () => {
+    expect(WIKI_SPACE_TYPE_SPEC.announcement).toMatchObject({ flat: true, announce: true, index: 'announcement' })
+    expect(WIKI_SPACE_TYPE_SPEC.design_doc).toMatchObject({ flat: false, announce: false, index: 'design_doc' })
+    expect(WIKI_SPACE_TYPE_SPEC.mixed).toMatchObject({ flat: false, announce: false, index: 'tree' })
+  })
+
+  it('種類のエラー文は区分と対象(ページ / テンプレート)に合わせる', () => {
+    expect(wikiPageTypeRuleMessage('design_doc', 'pages')).toBe(
+      'This space is a design doc space: its pages must be design docs (type=design_doc)',
+    )
+    expect(wikiPageTypeRuleMessage('announcement', 'templates')).toBe(
+      'This space is an announcement space: its templates must be normal pages (type=page)',
+    )
+  })
+})
+
+describe('Wiki の画面のパス', () => {
+  it('トップ・スペース・設定・ページ', () => {
+    expect(WIKI_TOP_PATH).toBe('/wiki')
+    expect(wikiSpacePath('DOCS')).toBe('/wiki/DOCS')
+    expect(wikiSettingsPath('DOCS')).toBe('/wiki/DOCS/settings')
+    expect(wikiPagePath({ key: 'DOCS', number: 12 })).toBe('/wiki/DOCS/12')
   })
 })
 

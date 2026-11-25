@@ -7,7 +7,7 @@
  * (手での版の削除は owner と管理者に限る)。
  * 保持期間(`WIKI_REVISION_RETENTION_DAYS`)を過ぎた版は自動メンテナンス(`sweepWikiPageRevisions`)で消す。
  * ただしページ(削除済みを含む)の最新の版と直近の `WIKI_REVISION_KEEP_RECENT` 版は残す。版はページの物理削除で一緒に消える。
- * 版の内容への復元は `wiki-page.ts` の `restoreWikiPageRevision`、削除済みのページの復元は `restoreDeletedWikiPage`。
+ * 版の内容への復元は `wiki-page-restore.ts` の `restoreWikiPageRevision`、削除済みのページの復元は `restoreDeletedWikiPage`。
  */
 
 import type { Prisma } from '@/generated/prisma/client'
@@ -22,6 +22,7 @@ import { errInvalidOperation } from '../error'
 import { logger } from '../logger'
 import { prisma, type Db } from '../prisma'
 import { assertWikiSpaceAccess } from './wiki-access'
+import { shareLockWikiSpace } from './wiki-lock'
 import {
   canDeleteWikiRevision,
   resolveWikiRevisionTags,
@@ -35,6 +36,16 @@ import {
 } from './wiki-rule'
 import { listWikiTags, type WikiTagOption } from './wiki-tag'
 import { ancestorIds, arrangeDeletedWikiPages, indexWikiTree } from './wiki-tree'
+
+/** 版の保持設定。画面の説明に出す */
+export const wikiRevisionRetention = () => ({
+  /** 保持期間(日)。削除済みのページもこの期間を過ぎたら物理削除する */
+  retentionDays: envu.server.WIKI_REVISION_RETENTION_DAYS,
+  /** 保持期間を過ぎても残す直近の版の数 */
+  keepRecent: envu.server.WIKI_REVISION_KEEP_RECENT,
+  /** 1ページあたりの版の上限 */
+  maxPerPage: envu.server.WIKI_REVISION_MAX_PER_PAGE,
+})
 
 /** 保持期限。最後の保存(updatedAt)がこれより古い版は「保持期間より前の状態」 */
 export const wikiRevisionCutoff = (now: Date): Date => msBefore(now, envu.server.WIKI_REVISION_RETENTION_DAYS * DAY_MS)
@@ -285,7 +296,7 @@ export const deleteWikiPageRevision = async (actor: Actor, revisionId: string): 
   }
   await prisma.$transaction(async (tx) => {
     // 本文の更新と同じロック。アーカイブとは直列にする
-    await tx.$queryRaw`SELECT "id" FROM "wiki_space" WHERE "id" = ${source.spaceId} FOR SHARE`
+    await shareLockWikiSpace(tx, source.spaceId)
     const access = await assertWikiSpaceAccess(actor, source.spaceId, 'manage', tx)
     if (!canDeleteWikiRevision(access)) {
       throw errInvalidOperation()

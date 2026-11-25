@@ -1,18 +1,16 @@
 /**
- * Wiki ページ本文の節の抽出と部分更新、front matter の判定(wiki-markdown.ts)
+ * Wiki ページ本文の節の抽出と部分更新、front matter の判定(wiki-markdown.ts / wiki-front-matter.ts)
  */
 
 import { VALIDATION_ERROR } from '@/lib/error'
 import {
-  applyTextEdits,
   designDocFrontMatter,
-  extractMarkdownSection,
   frontMatterBlock,
   hasDesignDocFrontMatter,
   hasFrontMatter,
-  listMarkdownHeadings,
   startsWithFrontMatter,
-} from '@/lib/wiki/wiki-markdown'
+} from '@/lib/wiki/wiki-front-matter'
+import { applyTextEdits, extractMarkdownSection, listMarkdownHeadings } from '@/lib/wiki/wiki-markdown'
 import { describe, expect, it, vi } from 'vitest'
 import { parse } from 'yaml'
 

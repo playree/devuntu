@@ -6,6 +6,7 @@
 
 import type { TicketActivityField, TicketPriority } from '@/generated/prisma/enums'
 import type { LocaleItemBase } from '@/locale'
+import { isSameSet } from '../list-compare'
 
 /** 詳細画面に出す件数 */
 export const TICKET_ACTIVITY_LIMIT = 100
@@ -60,9 +61,6 @@ export const excerptContent = (content: string | null): string | null => {
 const joinLines = (lines: string[]): string | null =>
   lines.length > 0 ? clip(lines.join('\n'), ACTIVITY_VALUE_MAX) : null
 
-const sameSet = (a: string[], b: string[]): boolean =>
-  a.length === b.length && [...a].sort().join('\n') === [...b].sort().join('\n')
-
 /**
  * 変更前と変更後(undefined = 変更しない)を比べ、値が変わった項目だけを返す。
  * 本文は全文で比べ、記録には抜粋を残す
@@ -87,7 +85,7 @@ export const diffTicketSnapshot = (
   if (after.assignee && after.assignee.id !== before.assignee.id) {
     entries.push({ field: 'assignee', before: before.assignee.name || null, after: after.assignee.name || null })
   }
-  if (after.tagNames && !sameSet(before.tagNames, after.tagNames)) {
+  if (after.tagNames && !isSameSet(before.tagNames, after.tagNames)) {
     entries.push({
       field: 'tags',
       before: before.tagNames.join(', ') || null,

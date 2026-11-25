@@ -2,13 +2,8 @@
  * Wiki ページの出力(`wiki/wiki-export.ts`)の単体テスト
  */
 
-import {
-  absolutizeUploadUrls,
-  wikiExportFileName,
-  wikiExportTitle,
-  wikiMarkdownExport,
-  wikiPrintPath,
-} from '@/lib/wiki/wiki-export'
+import { absolutizeUploadUrls } from '@/lib/storage/upload'
+import { wikiExportFileName, wikiExportTitle, wikiMarkdownExport, wikiPrintPath } from '@/lib/wiki/wiki-export'
 import { describe, expect, it } from 'vitest'
 
 const ORIGIN = 'https://devuntu.example'

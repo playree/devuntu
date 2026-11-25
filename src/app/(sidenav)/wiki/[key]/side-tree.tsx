@@ -17,7 +17,13 @@ import {
 import { WikiTagDots } from '@/components/wiki-tag'
 import { parseAction } from '@/lib/action/action-client'
 import { ClientError } from '@/lib/error'
-import { MAX_WIKI_SEARCH_KEYWORD, wikiSearchHref } from '@/lib/wiki/wiki-rule'
+import {
+  MAX_WIKI_SEARCH_KEYWORD,
+  wikiPagePath,
+  wikiSearchHref,
+  wikiSettingsPath,
+  wikiSpaceTypeSpec,
+} from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { useParams } from 'next/navigation'
 import { FC, useMemo, useState } from 'react'
@@ -55,14 +61,14 @@ export const WikiSideTree: FC = () => {
         id: page.id,
         parentId: page.parentId,
         label: page.title,
-        href: `/wiki/${space.key}/${page.number}`,
+        href: wikiPagePath({ key: space.key, number: page.number }),
         suffix: <WikiTagDots tags={tagsOf(page.tagIds)} />,
       })),
     [space.key, tree, tagsOf],
   )
   const selectedId = tree.find((page) => String(page.number) === params.number)?.id ?? null
   const canEdit = access.canWrite && isEditMode
-  const isAnnouncement = space.type === 'announcement'
+  const spec = wikiSpaceTypeSpec(space.type)
 
   const reorder = async (item: TreeViewItem, { index }: TreeViewItemPlace, delta: -1 | 1) => {
     setPendingId(item.id)
@@ -93,11 +99,11 @@ export const WikiSideTree: FC = () => {
                 size='sm'
                 variant='ghost'
                 className='size-7 min-w-7'
-                tooltip={isAnnouncement ? t('wiki_new_announcement') : t('wiki_add_page')}
+                tooltip={spec.announce ? t('wiki_new_announcement') : t('wiki_add_page')}
                 icon={<DocumentPlusIcon width={16} />}
                 onPress={() => createModalState.open()}
               />
-              {!isAnnouncement && (
+              {!spec.flat && (
                 <MultiButton
                   isIconOnly
                   size='sm'
@@ -119,13 +125,13 @@ export const WikiSideTree: FC = () => {
               className='size-7 min-w-7'
               tooltip={t('settings')}
               icon={<Cog6ToothIcon width={16} />}
-              onPress={() => void pushIfLeavable(`/wiki/${space.key}/settings`).then(closeMenuIfMoved)}
+              onPress={() => void pushIfLeavable(wikiSettingsPath(space.key)).then(closeMenuIfMoved)}
             />
           )}
         </span>
       </div>
 
-      {(isAnnouncement || tree.length > 0) && (
+      {(spec.flat || tree.length > 0) && (
         <InputSearchField // 見出しのボタンを増やすとスペース名が読めなくなるので、ツリーの上に置く
           isSmart
           aria-label={t('wiki_search')}
@@ -139,7 +145,7 @@ export const WikiSideTree: FC = () => {
         />
       )}
 
-      {isAnnouncement ? (
+      {spec.index === 'announcement' ? (
         <WikiSideAnnouncements onNavigate={closeMenu} />
       ) : tree.length === 0 ? (
         <p className='text-muted px-2 py-1 text-xs'>{t('msg_no_wiki_pages')}</p>

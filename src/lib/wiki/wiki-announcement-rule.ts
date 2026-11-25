@@ -5,6 +5,7 @@
  */
 
 import { addMonthsDateOnly, zonedDayBounds } from '../day'
+import { wikiSpacePath } from './wiki-rule'
 
 /** サイドバーに出す最新のアナウンスの件数 */
 export const WIKI_ANNOUNCEMENT_SIDEBAR_LIMIT = 10
@@ -102,5 +103,5 @@ export const wikiAnnouncementHref = (spaceKey: string, filter: WikiAnnouncementF
     params.set('tag', filter.tag)
   }
   const query = params.toString()
-  return query ? `/wiki/${spaceKey}?${query}` : `/wiki/${spaceKey}`
+  return query ? `${wikiSpacePath(spaceKey)}?${query}` : wikiSpacePath(spaceKey)
 }

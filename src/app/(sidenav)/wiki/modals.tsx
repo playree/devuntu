@@ -10,6 +10,7 @@ import { useWikiSpaceTypeOptions, useWikiVisibilityOptions } from '@/components/
 import { parseAction } from '@/lib/action/action-client'
 import { ClientError } from '@/lib/error'
 import { type CreateWikiSpace, scCreateWikiSpace } from '@/lib/schema/schema-wiki'
+import { wikiSpacePath } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
@@ -43,7 +44,7 @@ export const AddSpaceModal: FC<ModalBaseProps> = ({ state, reload }) => {
           notify.success(t('msg_added_target', { target: res.name }))
           reload()
           state.close()
-          router.push(`/wiki/${res.key}`)
+          router.push(wikiSpacePath(res.key))
         } catch (e) {
           // キーの重複などは parseAction が通知済み。入力し直してもらうため画面はそのまま残す
           if (!(e instanceof ClientError)) {

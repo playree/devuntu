@@ -58,6 +58,16 @@ export const isUploadUrl = (url: string) => url.startsWith(`${UPLOAD_URL_PREFIX}
 /** 保存キーの形式検証(ホワイトリスト方式のため別途のパストラバーサル対策は不要) */
 export const isValidUploadKey = (key: string) => UPLOAD_KEY_REGEX.test(key)
 
+// 括弧・空白・引用符・`<`・`=` の直後(Markdown の画像やリンク、参照形式の定義、HTML の属性)にあるアップロードの相対 URL
+const UPLOAD_URL_PATTERN = new RegExp(`(^|[\\s("'<=])${UPLOAD_URL_PREFIX}/`, 'g')
+
+/**
+ * 本文(Markdown)のアップロード画像・添付の相対 URL(`/api/upload/...`)を絶対 URL にする。保存した .md を別の場所で開いても辿れるように。
+ * 描画済みの HTML のリンク全般は `html-export.ts` の `absolutizeRootLinks`(`<a href>` だけを見る)
+ */
+export const absolutizeUploadUrls = (markdown: string, origin: string): string =>
+  markdown.replace(UPLOAD_URL_PATTERN, (_, before: string) => `${before}${origin}${UPLOAD_URL_PREFIX}/`)
+
 /**
  * 本文(Markdown)に含まれる `/api/upload/<キー>` から保存キーを重複なく取り出す。
  *

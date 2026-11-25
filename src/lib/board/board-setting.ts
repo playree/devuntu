@@ -6,12 +6,12 @@
  */
 
 import type { NotifyEvent } from '@/generated/prisma/enums'
-import { errInvalidOperation, errValidation } from '../error'
+import { errInvalidOperation } from '../error'
 import { logger } from '../logger'
 import { getBoardNotifySetting, setBoardNotifySetting } from '../notify/notify-board-setting'
 import { prisma, type Db } from '../prisma'
 import { getSlackSettings, hasSlackCredentials } from '../slack/slack-account'
-import { listSlackChannels } from '../slack/slack-server'
+import { assertSlackChannelExists } from '../slack/slack-server'
 import { detachAttachmentsOf, listAttachmentKeysOf, removeAttachmentByKey } from '../storage/attachment'
 import { countTicketsByBoard } from './board'
 import { assertBoardAccess, assertTeamBoard, isAdminActor, type Actor } from './board-access'
@@ -184,10 +184,7 @@ export const setBoardNotify = async (
   await assertBoardNotifyManageable(actor, id, prisma)
 
   if (channelId) {
-    const channels = await listSlackChannels()
-    if (!channels?.some((channel) => channel.id === channelId)) {
-      throw errValidation('slackChannelId')
-    }
+    await assertSlackChannelExists(channelId)
   }
 
   await prisma.$transaction(async (tx) => {

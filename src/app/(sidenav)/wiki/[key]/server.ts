@@ -1,7 +1,6 @@
 'use server'
 
 import { safeAuthAction } from '@/lib/action/action-server'
-import { envu } from '@/lib/env-util'
 import { scUUID } from '@/lib/schema/schema'
 import {
   scCreateWikiPage,
@@ -19,24 +18,22 @@ import {
   listWikiAnnouncements,
 } from '@/lib/wiki/wiki-announcement'
 import { getWikiDesignDocIndex as getWikiDesignDocIndexCore } from '@/lib/wiki/wiki-design-doc-index'
-import { designDocFrontMatter } from '@/lib/wiki/wiki-markdown'
+import { createWikiPage as createWikiPageCore, deleteWikiPage as deleteWikiPageCore } from '@/lib/wiki/wiki-page'
 import {
-  createWikiPage as createWikiPageCore,
-  deleteWikiPage as deleteWikiPageCore,
-  getWikiTree,
-  moveWikiPage as moveWikiPageCore,
   restoreDeletedWikiPage as restoreDeletedWikiPageCore,
   restoreWikiPageRevision as restoreWikiPageRevisionCore,
-} from '@/lib/wiki/wiki-page'
+} from '@/lib/wiki/wiki-page-restore'
+import { getWikiTree, moveWikiPage as moveWikiPageCore } from '@/lib/wiki/wiki-page-tree'
 import {
   deleteWikiPageRevision as deleteWikiPageRevisionCore,
   getWikiPageRevisionContent as getWikiPageRevisionContentCore,
   listDeletedWikiPages,
   listWikiPageRevisions,
+  wikiRevisionRetention,
 } from '@/lib/wiki/wiki-revision'
 import { getWikiSpaceByKeyForManage } from '@/lib/wiki/wiki-space'
 import { createWikiTag as createWikiTagCore, listWikiTags } from '@/lib/wiki/wiki-tag'
-import { assertWikiTemplateFits, listWikiTemplateOptions, renderWikiTemplate } from '@/lib/wiki/wiki-template'
+import { applyWikiTemplateToPage, listWikiTemplateOptions, renderWikiTemplate } from '@/lib/wiki/wiki-template'
 
 /**
  * スペース内の画面(トップ・ページ・設定)で共通に使う Server Action。
@@ -48,7 +45,7 @@ const WEB = { via: 'web' } as const
 /**
  * スペースの情報と自分の権限、ツリー(本文なし)、タグ。サイドメニューのツリーとスペース内の画面で使う。
  * 割り当ての無い管理者は設定だけを開けるよう、ツリーとタグを空にして返す。
- * アナウンス用スペースは増え続けるページを平らに置くので、ツリーは空にし、一覧は getWikiAnnouncements でページごとに引く
+ * アナウンス用スペースは増え続けるページを平らに置くので、ツリーは空になる(getWikiTree)。一覧は getWikiAnnouncements でページごとに引く
  */
 export const getWikiSpace = safeAuthAction
   .metadata({ actionName: 'getWikiSpace', role: 'user' })
@@ -56,7 +53,7 @@ export const getWikiSpace = safeAuthAction
   .action(async ({ ctx: { user }, parsedInput: { key } }) => {
     const { space, access } = await getWikiSpaceByKeyForManage(user, key)
     const [tree, tags] = access.canView
-      ? await Promise.all([space.type === 'announcement' ? [] : getWikiTree(user, space.id), listWikiTags(space.id)])
+      ? await Promise.all([getWikiTree(user, space.id), listWikiTags(space.id)])
       : [[], []]
     return { space, access, tree, tags }
   })
@@ -64,26 +61,17 @@ export type GetWikiSpaceReturnType = Awaited<ReturnType<typeof getWikiSpace>>['d
 
 /**
  * ページの作成。親の子(親が無ければスペース直下)の末尾に置く。
- * テンプレートを指定すると、種類と本文はテンプレートのもの(プレースホルダーを置き換える)にする。
- * タイトルは画面がテンプレートから置き換えて入れたものを、入力のまま使う(置き換え直すと表示名の中の `{{date}}` なども置き換わるため)。
- * 本文が空の設計書は最小の front matter を入れて作る(ビューアの設計書ヘッダになる)
+ * テンプレートを指定すると、本文はテンプレートのもの(プレースホルダーを置き換える)にする(MCP と同じ applyWikiTemplateToPage)。
+ * タイトルと種類は画面がテンプレートから入れたものを、入力のまま使う(置き換え直すと表示名の中の `{{date}}` なども置き換わるため)
  */
 export const createWikiPage = safeAuthAction
   .metadata({ actionName: 'createWikiPage', role: 'user' })
   .inputSchema(scCreateWikiPage)
   .action(async ({ ctx: { user }, parsedInput: { spaceId, parentId, title, type, templateId } }) => {
     const template = templateId ? await renderWikiTemplate(user, spaceId, { id: templateId }) : null
-    // 画面から使うのはテンプレートの本文だけ(タイトルは入力欄の値)なので、本文の長さだけを確かめる
-    if (template) {
-      assertWikiTemplateFits(template.name, { content: template.content })
-    }
-    const pageType = template?.type ?? type
-    const content = template?.content ?? ''
     return await createWikiPageCore(user, WEB, spaceId, {
-      title,
+      ...applyWikiTemplateToPage({ title, type }, template),
       parentId,
-      type: pageType,
-      content: pageType === 'design_doc' && content === '' ? designDocFrontMatter(title) : content,
     })
   })
 
@@ -143,9 +131,7 @@ export const getWikiPageRevisions = safeAuthAction
   .inputSchema(scUUID)
   .action(async ({ ctx: { user }, parsedInput: { id } }) => ({
     ...(await listWikiPageRevisions(user, id)),
-    retentionDays: envu.server.WIKI_REVISION_RETENTION_DAYS,
-    keepRecent: envu.server.WIKI_REVISION_KEEP_RECENT,
-    maxPerPage: envu.server.WIKI_REVISION_MAX_PER_PAGE,
+    ...wikiRevisionRetention(),
   }))
 export type GetWikiPageRevisionsReturnType = Awaited<ReturnType<typeof getWikiPageRevisions>>['data']
 
@@ -171,7 +157,7 @@ export const getDeletedWikiPages = safeAuthAction
   .inputSchema(scUUID)
   .action(async ({ ctx: { user }, parsedInput: { id } }) => ({
     pages: await listDeletedWikiPages(user, id),
-    retentionDays: envu.server.WIKI_REVISION_RETENTION_DAYS,
+    retentionDays: wikiRevisionRetention().retentionDays,
   }))
 export type GetDeletedWikiPagesReturnType = Awaited<ReturnType<typeof getDeletedWikiPages>>['data']
 

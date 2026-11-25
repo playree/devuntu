@@ -9,7 +9,8 @@ import { VALIDATION_ERROR } from '@/lib/error'
 import { prisma } from '@/lib/prisma'
 import { assertWikiSpaceAccess } from '@/lib/wiki/wiki-access'
 import { skipScheduledWikiAnnouncementsOf } from '@/lib/wiki/wiki-announcement-notify'
-import { createWikiPage, deleteWikiPage, getWikiPage, moveWikiPage, updateWikiPage } from '@/lib/wiki/wiki-page'
+import { createWikiPage, deleteWikiPage, getWikiPage, saveWikiPage, updateWikiPage } from '@/lib/wiki/wiki-page'
+import { moveWikiPage } from '@/lib/wiki/wiki-page-tree'
 import { writeWikiPageRevision } from '@/lib/wiki/wiki-revision'
 import {
   MAX_WIKI_DEPTH,
@@ -118,7 +119,7 @@ const lockedBeforeAccessCheck = () =>
 beforeEach(() => {
   vi.clearAllMocks()
   tree = TREE
-  vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ key: 'DOCS' } as never)
+  vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ spaceId: SPACE_ID, key: 'DOCS', type: 'mixed' } as never)
   vi.mocked(prisma.wikiPage.findMany).mockImplementation((async (args: { where: { id?: { in: string[] } } }) =>
     args.where.id ? args.where.id.in.map((id) => pageRow(id)) : tree) as never)
   vi.mocked(prisma.wikiPage.findUnique).mockImplementation((async ({ where }: { where: { id: string } }) =>
@@ -181,14 +182,22 @@ describe('createWikiPage', () => {
     expect(vi.mocked(writeWikiPageRevision).mock.calls[0][1].snapshot.type).toBe('design_doc')
   })
 
-  it('設計書スペースでは、種類を省略すると設計書で作る', async () => {
-    vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ key: 'SPEC', type: 'design_doc' } as never)
+  it('設計書スペースでは、種類を省略すると設計書で作り、本文が空なら最小の front matter を入れる(画面・MCP 共通)', async () => {
+    vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ spaceId: SPACE_ID, key: 'SPEC', type: 'design_doc' } as never)
     await createWikiPage(actor, MCP, SPACE_ID, { title: '設計書' })
-    expect(vi.mocked(prisma.wikiPage.create).mock.calls[0][0].data).toMatchObject({ type: 'design_doc' })
+    expect(vi.mocked(prisma.wikiPage.create).mock.calls[0][0].data).toMatchObject({
+      type: 'design_doc',
+      content: '---\ntype: design_doc\ntitle: "設計書"\n---\n\n',
+    })
+  })
+
+  it('本文のある設計書には front matter を足さない', async () => {
+    await createWikiPage(actor, WEB, SPACE_ID, { title: '設計書', type: 'design_doc', content: '# 概要' })
+    expect(vi.mocked(prisma.wikiPage.create).mock.calls[0][0].data).toMatchObject({ content: '# 概要' })
   })
 
   it('設計書スペースには通常のページを作れない', async () => {
-    vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ key: 'SPEC', type: 'design_doc' } as never)
+    vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ spaceId: SPACE_ID, key: 'SPEC', type: 'design_doc' } as never)
     expect(await errorTypeOf(createWikiPage(actor, WEB, SPACE_ID, { title: '通常', type: 'page' }))).toBe(
       WIKI_PAGE_TYPE_NOT_ALLOWED,
     )
@@ -196,7 +205,7 @@ describe('createWikiPage', () => {
   })
 
   it('混合スペースでは、種類を省略すると通常のページで作る', async () => {
-    vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ key: 'DOCS', type: 'mixed' } as never)
+    vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ spaceId: SPACE_ID, key: 'DOCS', type: 'mixed' } as never)
     await createWikiPage(actor, WEB, SPACE_ID, { title: '通常' })
     expect(vi.mocked(prisma.wikiPage.create).mock.calls[0][0].data).toMatchObject({ type: 'page' })
   })
@@ -253,7 +262,11 @@ describe('createWikiPage', () => {
 
 describe('アナウンス用スペース', () => {
   beforeEach(() => {
-    vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ key: 'NEWS', type: 'announcement' } as never)
+    vi.mocked(assertWikiSpaceAccess).mockResolvedValue({
+      spaceId: SPACE_ID,
+      key: 'NEWS',
+      type: 'announcement',
+    } as never)
   })
 
   it('全件の木を読まずに、通常のページとしてスペース直下に作る', async () => {
@@ -362,19 +375,32 @@ describe('updateWikiPage', () => {
     expect(prisma.wikiPage.update).not.toHaveBeenCalled()
   })
 
-  it('種類だけを変えても保存し、版に新しい種類を残す', async () => {
+  it('種類だけを変えても保存し、版に新しい種類を残す。設計書へ変えて front matter が無ければ最小のものを先頭に入れる', async () => {
     const result = await updateWikiPage(actor, WEB, 'b', { type: 'design_doc' })
 
     expect(result.result).toBe('updated')
     expect(vi.mocked(prisma.wikiPage.update).mock.calls[0][0].data).toMatchObject({
-      content: 'content-b',
+      content: '---\ntype: design_doc\ntitle: "title-b"\n---\n\ncontent-b',
       type: 'design_doc',
     })
     expect(vi.mocked(writeWikiPageRevision).mock.calls[0][1].snapshot.type).toBe('design_doc')
   })
 
+  it('設計書へ変えても、本文が front matter を持っていればそのまま保存する(画面が先に入れた分を重ねない)', async () => {
+    const content = '---\ntitle: 既存\n---\n\n# 概要'
+    await updateWikiPage(actor, WEB, 'b', { type: 'design_doc', content })
+
+    expect(vi.mocked(prisma.wikiPage.update).mock.calls[0][0].data).toMatchObject({ content, type: 'design_doc' })
+  })
+
+  it('本文を関数で渡すと、ロックの後に読んだ今の本文から組み立てる', async () => {
+    await updateWikiPage(actor, MCP, 'b', { content: (current) => `${current}\n追記` })
+
+    expect(vi.mocked(prisma.wikiPage.update).mock.calls[0][0].data).toMatchObject({ content: 'content-b\n追記' })
+  })
+
   it('設計書スペースでは、設計書を通常のページに変えられない', async () => {
-    vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ key: 'SPEC', type: 'design_doc' } as never)
+    vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ spaceId: SPACE_ID, key: 'SPEC', type: 'design_doc' } as never)
     vi.mocked(prisma.wikiPage.findUnique).mockResolvedValue(pageRow('b', { type: 'design_doc' }) as never)
 
     expect(await errorTypeOf(updateWikiPage(actor, WEB, 'b', { type: 'page' }))).toBe(WIKI_PAGE_TYPE_NOT_ALLOWED)
@@ -382,7 +408,7 @@ describe('updateWikiPage', () => {
   })
 
   it('設計書スペースでも、種類を変えなければ本文を保存できる', async () => {
-    vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ key: 'SPEC', type: 'design_doc' } as never)
+    vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ spaceId: SPACE_ID, key: 'SPEC', type: 'design_doc' } as never)
     vi.mocked(prisma.wikiPage.findUnique).mockResolvedValue(pageRow('b', { type: 'design_doc' }) as never)
 
     const result = await updateWikiPage(actor, WEB, 'b', { content: '新しい本文', type: 'design_doc' })
@@ -450,6 +476,54 @@ describe('updateWikiPage', () => {
     ).toBe(WIKI_PAGE_CONFLICT)
     await updateWikiPage(actor, WEB, 'b', { content: 'x' }, { expectedUpdatedAt: UPDATED_AT.toISOString() })
     expect(prisma.wikiPage.update).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('saveWikiPage', () => {
+  it('内容の更新と移動を 1 つのトランザクションで行い、スペースは構造のロックで取る', async () => {
+    const result = await saveWikiPage(
+      actor,
+      MCP,
+      'd',
+      { patch: { title: '改名' }, move: { parentId: null } },
+      { expectedUpdatedAt: UPDATED_AT.toISOString() },
+    )
+
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1)
+    expect(String(vi.mocked(prisma.$queryRaw).mock.calls[0][0])).toContain('FOR NO KEY UPDATE')
+    expect(result.changes).toEqual(['updated', 'moved'])
+    expect(result.written.result).toBe('moved')
+    expect(vi.mocked(writeWikiPageRevision).mock.calls.map(([, revision]) => revision.action)).toEqual([
+      'updated',
+      'moved',
+    ])
+  })
+
+  it('移動が失敗すれば同じトランザクションのまま投げる(内容の更新も残らない)', async () => {
+    expect(
+      await errorTypeOf(saveWikiPage(actor, MCP, 'a', { patch: { title: '改名' }, move: { parentId: 'c' } })),
+    ).toBe(WIKI_PAGE_INVALID_PARENT)
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1)
+  })
+
+  it('移動を含まなければスペースは共有ロックで取る', async () => {
+    await saveWikiPage(actor, MCP, 'd', { patch: { title: '改名' } })
+    expect(String(vi.mocked(prisma.$queryRaw).mock.calls[0][0])).toContain('FOR SHARE')
+  })
+
+  it('読んだ後に更新されていれば、何も書かずに WIKI_PAGE_CONFLICT', async () => {
+    expect(
+      await errorTypeOf(
+        saveWikiPage(
+          actor,
+          MCP,
+          'd',
+          { patch: { title: '改名' }, move: { parentId: null } },
+          { expectedUpdatedAt: '2026-10-01T00:00:00.000Z' },
+        ),
+      ),
+    ).toBe(WIKI_PAGE_CONFLICT)
+    expect(prisma.wikiPage.update).not.toHaveBeenCalled()
   })
 })
 
@@ -740,7 +814,7 @@ describe('deleteWikiPage', () => {
 
 describe('getWikiPage', () => {
   it('パンくず(先祖を上から)と子ページを添える', async () => {
-    vi.mocked(getWikiSpaceByKey).mockResolvedValue({ space: { id: SPACE_ID }, access: {} } as never)
+    vi.mocked(getWikiSpaceByKey).mockResolvedValue({ space: { id: SPACE_ID, type: 'mixed' }, access: {} } as never)
     vi.mocked(prisma.wikiPage.findUnique).mockResolvedValue({ id: 'b' } as never)
     const titled = TREE.map((row, i) => ({ ...row, number: i + 1, title: `T-${row.id}` }))
     vi.mocked(prisma.wikiPage.findMany).mockResolvedValue(titled as never)
@@ -752,7 +826,7 @@ describe('getWikiPage', () => {
   })
 
   it('ページと同じトランザクションで読んだ最新の版の番号を添える(移動は更新日時を進めずに版だけを足すため)', async () => {
-    vi.mocked(getWikiSpaceByKey).mockResolvedValue({ space: { id: SPACE_ID }, access: {} } as never)
+    vi.mocked(getWikiSpaceByKey).mockResolvedValue({ space: { id: SPACE_ID, type: 'mixed' }, access: {} } as never)
     vi.mocked(prisma.wikiPage.findUnique).mockResolvedValue({ id: 'b' } as never)
     vi.mocked(prisma.wikiPageRevision.findFirst).mockResolvedValue({ number: 7 } as never)
 

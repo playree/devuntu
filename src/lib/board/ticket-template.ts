@@ -6,16 +6,16 @@
  */
 
 import type { TicketPriority } from '@/generated/prisma/enums'
-import { errClient, errInvalidOperation } from '../error'
+import { errInvalidOperation } from '../error'
 import { logger } from '../logger'
-import { isUniqueViolation, prisma, type Db } from '../prisma'
+import { prisma, rethrowUniqueViolation, type Db } from '../prisma'
 import type { CreateTicketTemplate, UpdateTicketTemplate } from '../schema/schema-ticket-template'
 import { assertBoardAccess, type Actor } from './board-access'
 import { assertBoardContentManageable } from './board-setting'
 import { lockBoardRow } from './row-lock'
 import { assertTagIdsInBoard } from './tag'
 import {
-  DUPLICATED_TEMPLATE_NAME,
+  errDuplicatedTemplateName,
   filterTemplateTagIds,
   MAX_TEMPLATES_PER_BOARD,
   type TicketTemplateValues,
@@ -33,13 +33,6 @@ const TEMPLATE_SELECT = {
 } as const
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-
-const rethrowDuplicatedTemplateName = (e: unknown): never => {
-  if (isUniqueViolation(e)) {
-    throw errClient(DUPLICATED_TEMPLATE_NAME)
-  }
-  throw e
-}
 
 type TemplateRow = {
   id: string
@@ -111,7 +104,7 @@ export const createTicketTemplate = async (actor: Actor, { boardId, tagIds, ...f
         select: { id: true, name: true },
       })
     })
-    .catch(rethrowDuplicatedTemplateName)
+    .catch(rethrowUniqueViolation(errDuplicatedTemplateName))
 
   logger.info({ userId: actor.id, boardId, template }, 'ticket template created')
   return template
@@ -132,7 +125,7 @@ export const updateTicketTemplate = async (actor: Actor, { id, tagIds, ...fields
         select: { id: true, name: true },
       })
     })
-    .catch(rethrowDuplicatedTemplateName)
+    .catch(rethrowUniqueViolation(errDuplicatedTemplateName))
 
   logger.info({ userId: actor.id, id }, 'ticket template updated')
   return template

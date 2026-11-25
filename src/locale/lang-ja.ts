@@ -1031,7 +1031,7 @@ export const ja: DefaultLocaleItems = {
   msg_wiki_page_invalid_parent: 'そのページの下には移動できません(自分自身・子孫・別のスペースは選べません)。',
   msg_wiki_page_too_deep: '階層が深すぎます(10階層まで)。',
   msg_wiki_page_type_not_allowed:
-    'このスペースの区分では、この種類のページは作れません(設計書スペースは設計書だけ、アナウンス用スペースは通常のページだけです)。',
+    'このスペースの区分では、この種類のページ・テンプレートは作れません(設計書スペースは設計書だけ、アナウンス用スペースは通常のページだけです)。',
   msg_wiki_restore_parent_still_deleted:
     '元の親の ${parent} は削除されたままのため、${target} はスペース直下に戻ります。',
   msg_wiki_restore_unchanged: 'いまの内容と同じため、変更はありません。',

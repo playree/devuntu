@@ -19,9 +19,16 @@ import { parseAction } from '@/lib/action/action-client'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { dayformat } from '@/lib/day'
 import { ClientError } from '@/lib/error'
-import { isWikiDraftChanged, type WikiPageDraft } from '@/lib/wiki/wiki-draft'
-import { designDocFrontMatter, hasFrontMatter } from '@/lib/wiki/wiki-markdown'
-import { MAX_WIKI_CONTENT, MAX_WIKI_REVISION_MESSAGE, MAX_WIKI_TITLE, WIKI_PAGE_CONFLICT } from '@/lib/wiki/wiki-rule'
+import { designDocFrontMatter, hasFrontMatter } from '@/lib/wiki/wiki-front-matter'
+import {
+  isWikiPageChanged,
+  MAX_WIKI_CONTENT,
+  MAX_WIKI_REVISION_MESSAGE,
+  MAX_WIKI_TITLE,
+  WIKI_PAGE_CONFLICT,
+  type WikiPageFields,
+  wikiPagePath,
+} from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { FC, useCallback, useEffect, useRef, useState } from 'react'
@@ -93,7 +100,7 @@ export const WikiPageBody: FC<{
   // 最新の下書き。種類の切り替えで確認を待つ間に本文が変わっても、承認した時点の本文を引き継ぐ
   const contentDraftRef = useRef(page.content)
   // 編集を始めた時点の値。下書きに変更があるかをこれと比べる(作成直後の編集は、マウント時の値から始まる)
-  const [draftBase, setDraftBase] = useState<WikiPageDraft>(() => ({
+  const [draftBase, setDraftBase] = useState<WikiPageFields>(() => ({
     title: page.title,
     content: page.content,
     type: page.type,
@@ -244,7 +251,7 @@ export const WikiPageBody: FC<{
     messageDraft.length <= MAX_WIKI_REVISION_MESSAGE
   const isDirty =
     isEditing &&
-    isWikiDraftChanged(draftBase, { title: titleDraft, content: contentDraft, type: typeDraft, tagIds: tagIdsDraft })
+    isWikiPageChanged(draftBase, { title: titleDraft, content: contentDraft, type: typeDraft, tagIds: tagIdsDraft })
 
   // リンク・メニュー・子ページの作成などで画面を移る前と、タブを閉じる前に確認する
   useLeaveGuard({ isActive: isDirty, confirmLeave: confirmDiscard })
@@ -429,7 +436,7 @@ export const WikiPageBody: FC<{
       {!isEditing && !isDesignDoc && !isDiff && <MarkdownToc targetRef={contentRef} />}
       <WikiPageConflictModal
         state={conflictState}
-        href={`/wiki/${space.key}/${page.number}`}
+        href={wikiPagePath({ key: space.key, number: page.number })}
         content={contentDraft}
         isSaving={isSaving}
         isSubmittable={isSubmittable}

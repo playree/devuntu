@@ -7,7 +7,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { assertWikiSpaceAccess } from '@/lib/wiki/wiki-access'
-import { restoreDeletedWikiPage, restoreWikiPageRevision } from '@/lib/wiki/wiki-page'
+import { restoreDeletedWikiPage, restoreWikiPageRevision } from '@/lib/wiki/wiki-page-restore'
 import { writeWikiPageRevision } from '@/lib/wiki/wiki-revision'
 import {
   MAX_WIKI_DEPTH,
@@ -94,7 +94,7 @@ const orderUpdates = () =>
 
 beforeEach(() => {
   vi.clearAllMocks()
-  vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ key: 'DOCS', type: 'mixed' } as never)
+  vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ spaceId: SPACE_ID, key: 'DOCS', type: 'mixed' } as never)
   vi.mocked(prisma.wikiPage.update).mockResolvedValue({ updatedAt: new Date() } as never)
   vi.mocked(prisma.$queryRaw).mockResolvedValue([] as never)
   vi.mocked(prisma.$executeRaw).mockResolvedValue(1 as never)
@@ -229,7 +229,7 @@ describe('restoreWikiPageRevision', () => {
   })
 
   it('スペースの区分で作れない種類の版は戻せない', async () => {
-    vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ key: 'DOCS', type: 'design_doc' } as never)
+    vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ spaceId: SPACE_ID, key: 'DOCS', type: 'design_doc' } as never)
     vi.mocked(prisma.wikiPageRevision.findUnique).mockResolvedValue(revision({ type: 'page' }) as never)
     expect(await errorTypeOf(restoreWikiPageRevision(actor, WEB, 'rev-1'))).toBe(WIKI_PAGE_TYPE_NOT_ALLOWED)
     expect(prisma.wikiPage.update).not.toHaveBeenCalled()
@@ -360,7 +360,11 @@ describe('restoreDeletedWikiPage', () => {
   })
 
   it('アナウンス用スペースは木を読まず、スペース直下へ戻す', async () => {
-    vi.mocked(assertWikiSpaceAccess).mockResolvedValue({ key: 'NEWS', type: 'announcement' } as never)
+    vi.mocked(assertWikiSpaceAccess).mockResolvedValue({
+      spaceId: SPACE_ID,
+      key: 'NEWS',
+      type: 'announcement',
+    } as never)
     target = { ...target, parentId: null, order: 0 }
 
     await restoreDeletedWikiPage(actor, WEB, 'x')

@@ -10,12 +10,12 @@
 import { MINUTE_MS } from '../day'
 import { envu } from '../env-util'
 import { createWorkerLoop } from '../worker-loop'
-import { runWikiAnnouncementSchedule } from './wiki-announcement-notify'
+import { createWikiAnnouncementScheduleRunner } from './wiki-announcement-notify'
 import { WIKI_ANNOUNCE_TICK_MS } from './wiki-announcement-notify-rule'
 
 const loop = createWorkerLoop({
   name: 'wiki-announce',
-  run: () => runWikiAnnouncementSchedule(),
+  run: createWikiAnnouncementScheduleRunner(),
   failedMessage: 'wiki announcement schedule failed',
   intervalMs: WIKI_ANNOUNCE_TICK_MS,
   // 起動直後の負荷と重ねない

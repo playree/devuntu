@@ -21,7 +21,7 @@ import { useWikiPageTypeOptions, WikiPageTypeChip } from '@/components/wiki-chip
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { scWikiTemplateFields, type WikiTemplateFields, type WikiTemplateFieldsIn } from '@/lib/schema/schema-wiki'
 import { useConfirmAction } from '@/lib/use-confirm-action'
-import { defaultWikiPageType, MAX_WIKI_CONTENT } from '@/lib/wiki/wiki-rule'
+import { canChooseWikiPageType, defaultWikiPageType, MAX_WIKI_CONTENT } from '@/lib/wiki/wiki-rule'
 import { MAX_WIKI_TEMPLATES_PER_SPACE } from '@/lib/wiki/wiki-template-rule'
 import { useLocale } from '@/locale/client'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -51,6 +51,7 @@ const TemplateModal: FC<{
 }> = ({ state, space, reload }) => {
   const { t, fet } = useLocale()
   const typeOptions = useWikiPageTypeOptions()
+  const canChooseType = canChooseWikiPageType(space.type)
   const template = state.target
   const [isUploading, setUploading] = useState(false)
 
@@ -110,7 +111,7 @@ const TemplateModal: FC<{
             autoFocus
           />
         </div>
-        <div className={space.type === 'mixed' ? 'col-span-12 md:col-span-5' : 'col-span-12 md:col-span-8'}>
+        <div className={canChooseType ? 'col-span-12 md:col-span-5' : 'col-span-12 md:col-span-8'}>
           <InputCtrl
             control={control}
             name='title'
@@ -119,7 +120,7 @@ const TemplateModal: FC<{
             errorMessage={fet(errors.title)}
           />
         </div>
-        {space.type === 'mixed' && ( // 設計書スペースは設計書だけなので選ばせない
+        {canChooseType && ( // 種類が 1 つしか無い区分では選ばせない
           <div className='col-span-12 md:col-span-3'>
             <SingleSelectCtrl control={control} name='type' groupOptions={typeOptions} label={t('wiki_page_type')} />
           </div>

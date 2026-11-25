@@ -4,6 +4,7 @@ import { usePushIfLeavable } from '@/components/general/leave-guard'
 import { useSideNav } from '@/components/general/side-nav-slot'
 import { BookOpenIcon, ChevronDownIcon } from '@/components/icon'
 import { useActionData } from '@/lib/action/action-client'
+import { WIKI_TOP_PATH, wikiSpacePath } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { Button, cn, Dropdown, Label, Separator } from '@heroui/react'
 import { usePathname } from 'next/navigation'
@@ -28,7 +29,7 @@ export const WikiSpaceSwitcher: FC = () => {
     const list = (data ?? []).map(({ key, name }) => ({ key, name }))
     return list.some((s) => s.key === space.key) ? list : [{ key: space.key, name: space.name }, ...list]
   }, [data, space.key, space.name])
-  const isTop = pathname === `/wiki/${space.key}`
+  const isTop = pathname === wikiSpacePath(space.key)
 
   return (
     <Dropdown>
@@ -51,7 +52,7 @@ export const WikiSpaceSwitcher: FC = () => {
         <Dropdown.Menu
           aria-label={t('wiki_switch_space')}
           onAction={(key) => {
-            void pushIfLeavable(key === ALL_SPACES_KEY ? '/wiki' : `/wiki/${key}`).then((moved) => {
+            void pushIfLeavable(key === ALL_SPACES_KEY ? WIKI_TOP_PATH : wikiSpacePath(String(key))).then((moved) => {
               if (moved) {
                 closeMenu()
               }

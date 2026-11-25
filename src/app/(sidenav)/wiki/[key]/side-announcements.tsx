@@ -6,6 +6,7 @@ import { WikiAnnounceStateIcon } from '@/components/wiki-chip'
 import { WikiTagDots } from '@/components/wiki-tag'
 import { useActionData } from '@/lib/action/action-client'
 import { WIKI_ANNOUNCEMENT_SIDEBAR_LIMIT } from '@/lib/wiki/wiki-announcement-rule'
+import { wikiPagePath, wikiSpacePath } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
@@ -40,7 +41,7 @@ export const WikiSideAnnouncements: FC<{ onNavigate: () => void }> = ({ onNaviga
         id: item.id,
         parentId: null,
         label: item.title,
-        href: `/wiki/${space.key}/${item.number}`,
+        href: wikiPagePath({ key: space.key, number: item.number }),
         suffix: (
           <span className='flex items-center gap-1'>
             <WikiTagDots tags={tagsOf(item.tagIds)} />
@@ -70,7 +71,7 @@ export const WikiSideAnnouncements: FC<{ onNavigate: () => void }> = ({ onNaviga
         />
       )}
       <Link
-        href={`/wiki/${space.key}#archive`}
+        href={`${wikiSpacePath(space.key)}#archive`}
         className='text-accent px-2 py-1 text-xs underline-offset-2 hover:underline'
         onClick={onNavigate}
       >

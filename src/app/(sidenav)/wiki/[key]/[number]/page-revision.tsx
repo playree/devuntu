@@ -12,6 +12,7 @@ import { parseAction, useActionData } from '@/lib/action/action-client'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { ticketShortPath } from '@/lib/board/ticket-id'
 import { dayformat } from '@/lib/day'
+import { isSameSet } from '@/lib/list-compare'
 import { useConfirmAction } from '@/lib/use-confirm-action'
 import { resolveWikiRevisionTags, wikiRevisionTagLabels, type WikiRevisionTag } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
@@ -276,10 +277,11 @@ export const WikiRevisionDiffToggle: FC<{ revisions: WikiPageRevisions }> = ({
 /** タグは ID で比べ、今の名前で出す(過去の版のタグは、その後に削除されていても版の名前に削除済みの印を付けて出る) */
 type RevisionFields = { title: string; type: WikiPageType; tags: readonly WikiRevisionTag[] }
 
-const isSameTags = (a: readonly WikiRevisionTag[], b: readonly WikiRevisionTag[]) => {
-  const idsOfB = new Set(b.map(({ id }) => id))
-  return a.length === b.length && a.every(({ id }) => idsOfB.has(id))
-}
+const isSameTags = (a: readonly WikiRevisionTag[], b: readonly WikiRevisionTag[]) =>
+  isSameSet(
+    a.map(({ id }) => id),
+    b.map(({ id }) => id),
+  )
 
 const tagText = (names: readonly string[]) => [...names].sort().join(', ') || '-'
 

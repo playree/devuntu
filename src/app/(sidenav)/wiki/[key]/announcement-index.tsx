@@ -14,6 +14,7 @@ import {
   type WikiAnnouncementFilter,
   wikiAnnouncementHref,
 } from '@/lib/wiki/wiki-announcement-rule'
+import { wikiPagePath } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -56,7 +57,7 @@ const AnnouncementRow: FC<{ item: Announcement }> = ({ item }) => {
   return (
     <li>
       <Link
-        href={`/wiki/${space.key}/${item.number}`}
+        href={wikiPagePath({ key: space.key, number: item.number })}
         className='flex flex-col gap-1 px-3 py-2 hover:bg-mist-100 sm:flex-row sm:items-center sm:gap-3 dark:hover:bg-neutral-900'
       >
         <span className='min-w-0 flex-1 truncate text-sm font-medium'>{item.title}</span>

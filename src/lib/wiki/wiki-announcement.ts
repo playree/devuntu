@@ -9,8 +9,8 @@ import { Prisma } from '@/generated/prisma/client'
 import { getUserNameAndTimezone } from '../auth/user-profile'
 import type { Actor } from '../board/board-access'
 import { errInvalidOperation } from '../error'
-import { prisma } from '../prisma'
-import { assertWikiSpaceAccess } from './wiki-access'
+import { prisma, type Db } from '../prisma'
+import { assertWikiSpaceAccess, type WikiSpaceAccess } from './wiki-access'
 import { canSeeWikiAnnounce, wikiAnnounceStateOf, type WikiAnnounceState } from './wiki-announcement-notify-rule'
 import {
   MAX_WIKI_ANNOUNCEMENT_PAGE_SIZE,
@@ -19,7 +19,7 @@ import {
   type WikiAnnouncementMonthCount,
   type WikiAnnouncementPeriod,
 } from './wiki-announcement-rule'
-import { WIKI_PAGE_ALIVE } from './wiki-rule'
+import { WIKI_PAGE_ALIVE, wikiSpaceTypeSpec } from './wiki-rule'
 
 export type WikiAnnouncementItem = {
   id: string
@@ -40,33 +40,22 @@ export type WikiAnnouncementQuery = WikiAnnouncementPeriod & {
   rowsPerPage: number
 }
 
-/** 閲覧でき、アナウンス用スペースであること */
-const assertAnnouncementSpace = async (actor: Actor, spaceId: string) => {
-  const access = await assertWikiSpaceAccess(actor, spaceId, 'view')
-  if (access.type !== 'announcement') {
+/** `assertWikiSpaceAccess` に加えて、アナウンス用の区分(`WIKI_SPACE_TYPE_SPEC` の announce)であることを確かめる */
+export const assertWikiAnnouncementSpace = async (
+  actor: Actor,
+  spaceId: string,
+  need: 'view' | 'write' | 'manage',
+  tx?: Db,
+): Promise<WikiSpaceAccess> => {
+  const access = await assertWikiSpaceAccess(actor, spaceId, need, tx)
+  if (!wikiSpaceTypeSpec(access.type).announce) {
     throw errInvalidOperation()
   }
   return access
 }
 
-/** 作成日時の新しい順(同時刻なら番号の大きい順)の 1 ページ分と、絞り込み後の総件数 */
-export const listWikiAnnouncements = async (
-  actor: Actor,
-  spaceId: string,
-  { month, year, tagId, page, rowsPerPage }: WikiAnnouncementQuery,
-): Promise<{ items: WikiAnnouncementItem[]; total: number }> => {
-  const access = await assertAnnouncementSpace(actor, spaceId)
-  const range =
-    month || year
-      ? wikiAnnouncementPeriodRange({ month, year }, (await getUserNameAndTimezone(actor.id)).timezone)
-      : null
-  const where = {
-    spaceId,
-    ...WIKI_PAGE_ALIVE,
-    ...(range ? { createdAt: { gte: range.gte, lt: range.lt } } : {}),
-    ...(tagId ? { tags: { some: { tagId } } } : {}),
-  }
-  const take = Math.min(Math.max(rowsPerPage, 1), MAX_WIKI_ANNOUNCEMENT_PAGE_SIZE)
+/** 作成日時の新しい順(同時刻なら番号の大きい順)の 1 ページ分と、条件に合う総件数 */
+const queryAnnouncements = async (where: Prisma.WikiPageWhereInput, page: { skip?: number; take: number }) => {
   const [rows, total] = await Promise.all([
     prisma.wikiPage.findMany({
       where,
@@ -79,19 +68,44 @@ export const listWikiAnnouncements = async (
         tags: { select: { tagId: true } },
       },
       orderBy: [{ createdAt: 'desc' }, { number: 'desc' }],
-      skip: (Math.max(page, 1) - 1) * take,
-      take,
+      ...page,
     }),
     prisma.wikiPage.count({ where }),
   ])
-  const states = canSeeWikiAnnounce(access.role) ? await notifyStatesOf(rows.map(({ id }) => id)) : null
   return {
     items: rows.map(({ createdBy, tags, ...row }) => ({
       ...row,
       createdByName: createdBy?.name ?? '',
       tagIds: tags.map(({ tagId }) => tagId),
-      ...(states && { notifyState: states.get(row.id) ?? 'none' }),
     })),
+    total,
+  }
+}
+
+/** 作成日時の新しい順(同時刻なら番号の大きい順)の 1 ページ分と、絞り込み後の総件数 */
+export const listWikiAnnouncements = async (
+  actor: Actor,
+  spaceId: string,
+  { month, year, tagId, page, rowsPerPage }: WikiAnnouncementQuery,
+): Promise<{ items: WikiAnnouncementItem[]; total: number }> => {
+  const access = await assertWikiAnnouncementSpace(actor, spaceId, 'view')
+  const range =
+    month || year
+      ? wikiAnnouncementPeriodRange({ month, year }, (await getUserNameAndTimezone(actor.id)).timezone)
+      : null
+  const take = Math.min(Math.max(rowsPerPage, 1), MAX_WIKI_ANNOUNCEMENT_PAGE_SIZE)
+  const { items, total } = await queryAnnouncements(
+    {
+      spaceId,
+      ...WIKI_PAGE_ALIVE,
+      ...(range ? { createdAt: { gte: range.gte, lt: range.lt } } : {}),
+      ...(tagId ? { tags: { some: { tagId } } } : {}),
+    },
+    { skip: (Math.max(page, 1) - 1) * take, take },
+  )
+  const states = canSeeWikiAnnounce(access.role) ? await notifyStatesOf(items.map(({ id }) => id)) : null
+  return {
+    items: states ? items.map((item) => ({ ...item, notifyState: states.get(item.id) ?? 'none' })) : items,
     total,
   }
 }
@@ -117,7 +131,7 @@ export const getWikiAnnouncementArchive = async (
   spaceId: string,
   { tagId }: { tagId?: string } = {},
 ): Promise<WikiAnnouncementMonthCount[]> => {
-  await assertAnnouncementSpace(actor, spaceId)
+  await assertWikiAnnouncementSpace(actor, spaceId, 'view')
   const { timezone } = await getUserNameAndTimezone(actor.id)
   const tagFilter = tagId
     ? Prisma.sql`AND p."id" IN (SELECT "pageId" FROM "wiki_page_tag" WHERE "tagId" = ${tagId})`
@@ -140,15 +154,10 @@ export const listRecentWikiAnnouncements = async (
   actor: Actor,
   spaceId: string,
 ): Promise<{ items: { number: number; title: string; createdAt: Date; tagIds: string[] }[]; total: number }> => {
-  await assertAnnouncementSpace(actor, spaceId)
-  const [rows, total] = await Promise.all([
-    prisma.wikiPage.findMany({
-      where: { spaceId, ...WIKI_PAGE_ALIVE },
-      select: { number: true, title: true, createdAt: true, tags: { select: { tagId: true } } },
-      orderBy: [{ createdAt: 'desc' }, { number: 'desc' }],
-      take: MAX_WIKI_ANNOUNCEMENT_TREE,
-    }),
-    prisma.wikiPage.count({ where: { spaceId, ...WIKI_PAGE_ALIVE } }),
-  ])
-  return { items: rows.map(({ tags, ...row }) => ({ ...row, tagIds: tags.map(({ tagId }) => tagId) })), total }
+  await assertWikiAnnouncementSpace(actor, spaceId, 'view')
+  const { items, total } = await queryAnnouncements(
+    { spaceId, ...WIKI_PAGE_ALIVE },
+    { take: MAX_WIKI_ANNOUNCEMENT_TREE },
+  )
+  return { items: items.map(({ number, title, createdAt, tagIds }) => ({ number, title, createdAt, tagIds })), total }
 }
