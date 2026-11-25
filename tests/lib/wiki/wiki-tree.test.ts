@@ -11,6 +11,8 @@ import {
   isSelfOrDescendant,
   nestWikiTree,
   placeInSiblings,
+  planWikiMove,
+  restorableDescendantsAt,
   subtreeHeight,
 } from '@/lib/wiki/wiki-tree'
 import { describe, expect, it } from 'vitest'
@@ -84,6 +86,20 @@ describe('placeInSiblings', () => {
   })
 })
 
+describe('planWikiMove', () => {
+  it('移動先の兄弟を基準にし、同じ並びになる指定は変更なしとする', () => {
+    expect(planWikiMove(index, 'e', 'a', 'a', 'b')).toEqual({ afterId: 'b', isUnchanged: true })
+    expect(planWikiMove(index, 'b', 'a', 'a', 'e')).toEqual({ afterId: 'e', isUnchanged: false })
+    expect(planWikiMove(index, 'b', 'a', 'a', null)).toEqual({ afterId: null, isUnchanged: true })
+    expect(planWikiMove(index, 'e', 'a', 'f', null)).toEqual({ afterId: null, isUnchanged: false })
+  })
+
+  it('基準の兄弟が消えた場合は末尾にする', () => {
+    expect(planWikiMove(index, 'e', 'a', 'a', 'c')).toEqual({ afterId: undefined, isUnchanged: true })
+    expect(planWikiMove(index, 'b', 'a', 'a', 'c')).toEqual({ afterId: undefined, isUnchanged: false })
+  })
+})
+
 describe('nestWikiTree', () => {
   const rows = [
     { id: 'a', parentId: null, title: 'A' },
@@ -123,6 +139,27 @@ describe('nestWikiTree', () => {
       { id: 'z', parentId: 'y', title: 'Z' },
     ]
     expect(nestWikiTree(broken, toNode, { rootId: 'y' })).toEqual([{ title: 'Z', children: [] }])
+  })
+})
+
+describe('restorableDescendantsAt', () => {
+  const pages = [
+    { id: 'a', depth: 0 },
+    { id: 'b', depth: 1 },
+    { id: 'c', depth: 2 },
+    { id: 'd', depth: 3 },
+    { id: 'e', depth: 1 },
+    { id: 'f', depth: 0 },
+    { id: 'g', depth: 1 },
+  ]
+
+  it('指定した行の直後から、その配下だけを返す', () => {
+    expect(restorableDescendantsAt(pages, 0, new Set())).toEqual(pages.slice(1, 5))
+    expect(restorableDescendantsAt(pages, 1, new Set())).toEqual(pages.slice(2, 4))
+  })
+
+  it('復元済みの子につながる枝を飛ばし、残りの配下を返す', () => {
+    expect(restorableDescendantsAt(pages, 0, new Set(['b']))).toEqual([pages[4]])
   })
 })
 

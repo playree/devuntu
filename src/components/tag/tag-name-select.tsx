@@ -5,7 +5,7 @@ import { useSmart } from '@/components/general/smart'
 import { useLocale } from '@/locale/client'
 import { EmptyState, ListBox, Select, Tooltip } from '@heroui/react'
 import { FC } from 'react'
-import { TagChip } from './ticket-chip'
+import { TagChip } from './tag-chip'
 
 import { NO_KEYS, type TagFieldBaseProps, type TagSelectOption } from './tag-id-select'
 

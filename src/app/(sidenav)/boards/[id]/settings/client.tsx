@@ -27,7 +27,7 @@ import {
 } from '@/components/icon'
 import { NoAccessView } from '@/components/no-access-view'
 import { notify } from '@/components/notify'
-import { TagEditor } from '@/components/ticket/tag-editor'
+import { TagEditor } from '@/components/tag/tag-editor'
 import { useBoardName } from '@/components/ticket/ticket-options'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { useLocale } from '@/locale/client'

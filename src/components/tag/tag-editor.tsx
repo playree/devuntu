@@ -12,8 +12,8 @@ import { useConfirmAction } from '@/lib/use-confirm-action'
 import { useLocale } from '@/locale/client'
 import { FC, useState } from 'react'
 import { tv } from 'tailwind-variants'
-import { TagChip } from './ticket-chip'
-import { tagColorClass } from './ticket-style'
+import { TagChip } from './tag-chip'
+import { tagColorClass } from './tag-style'
 
 export type TagEditorItem = {
   id: string

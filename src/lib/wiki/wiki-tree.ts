@@ -5,6 +5,8 @@
  * 構造を変える書き込み(作成・移動・削除)はスペース行をロックしてから一覧を読むので、ここでは一貫した木を前提にする。
  */
 
+import { isSameOrder } from '../list-compare'
+
 export type WikiTreeNode = { id: string; parentId: string | null }
 
 export type WikiTreeIndex = {
@@ -82,6 +84,25 @@ export const placeInSiblings = (siblingIds: readonly string[], id: string, posit
   const rest = siblingIds.filter((siblingId) => siblingId !== id)
   const at = position === undefined ? rest.length : Math.min(Math.max(position, 0), rest.length)
   return [...rest.slice(0, at), id, ...rest.slice(at)]
+}
+
+/** 移動先は先頭(null)・兄弟の直後・末尾(undefined)。指定の兄弟がもういなければ末尾にする */
+export const planWikiMove = (
+  index: WikiTreeIndex,
+  pageId: string,
+  currentParentId: string | null,
+  parentId: string | null,
+  requestedAfterId: string | null | undefined,
+) => {
+  const siblingIds = index.children.get(parentId) ?? []
+  const otherIds = siblingIds.filter((id) => id !== pageId)
+  const afterIndex = requestedAfterId == null ? -1 : otherIds.indexOf(requestedAfterId)
+  const position = requestedAfterId === null ? 0 : afterIndex < 0 ? undefined : afterIndex + 1
+  const afterId = requestedAfterId === null ? null : afterIndex < 0 ? undefined : otherIds[afterIndex]
+  return {
+    afterId,
+    isUnchanged: parentId === currentParentId && isSameOrder(placeInSiblings(siblingIds, pageId, position), siblingIds),
+  }
 }
 
 export type NestedWikiNode<U> = U & { children?: NestedWikiNode<U>[]; childCount?: number }
@@ -163,6 +184,35 @@ export const arrangeDeletedWikiPages = <T extends DeletedWikiNode>(rows: readonl
   // 親をたどっても先頭の段に着かない(循環した)行は、先頭の段として末尾に足す
   for (const row of rows) {
     visit(row, 0)
+  }
+  return result
+}
+
+/**
+ * 一覧の `index` の行と一緒に戻る配下(一覧で後に続く、段の深い行)。
+ * 復元済みの行は親子がつながらなくなる(サーバーは削除済みの親をたどって配下を探す)ので、その行と配下は含めない
+ */
+export const restorableDescendantsAt = <T extends { id: string; depth: number }>(
+  pages: readonly T[],
+  index: number,
+  restored: ReadonlySet<string>,
+): T[] => {
+  const result: T[] = []
+  let skipBelow: number | undefined
+  for (let next = index + 1; next < pages.length; next++) {
+    const page = pages[next]
+    if (page.depth <= pages[index].depth) {
+      break
+    }
+    if (skipBelow !== undefined && page.depth > skipBelow) {
+      continue
+    }
+    skipBelow = undefined
+    if (restored.has(page.id)) {
+      skipBelow = page.depth
+    } else {
+      result.push(page)
+    }
   }
   return result
 }

@@ -22,7 +22,7 @@ import {
 } from '@/components/icon'
 import { NoAccessView } from '@/components/no-access-view'
 import { notify } from '@/components/notify'
-import { TagEditor } from '@/components/ticket/tag-editor'
+import { TagEditor } from '@/components/tag/tag-editor'
 import { useWikiAssignRoleOptions, useWikiRoleOptions, WikiRoleChip } from '@/components/wiki-chip'
 import type { WikiAssignRole, WikiSpaceRole } from '@/generated/prisma/enums'
 import { parseAction, useActionData } from '@/lib/action/action-client'
@@ -217,7 +217,7 @@ export const WikiSpaceSettingsClient: FC = () => {
           )}
         </AccordionSection>
 
-        <AccordionSection id='wiki_space_templates' icon={<DocumentDuplicateIcon />} title={t('ticket_template')}>
+        <AccordionSection id='wiki_space_templates' icon={<DocumentDuplicateIcon />} title={t('template_label')}>
           <WikiSpaceTemplates space={space} />
         </AccordionSection>
 

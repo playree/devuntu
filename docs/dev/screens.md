@@ -89,8 +89,12 @@ Proxy は通るリクエストのボディを既定 10MB まで複製して溜�
   区分ごとの違い(置ける種類と既定・木を持たないか・アナウンス用か・トップの一覧・種類のエラー文)は仕様表 `WIKI_SPACE_TYPE_SPEC`(`src/lib/wiki/wiki-rule.ts`)に置き、lib・MCP・画面の分岐はここから引く(区分を直接比べない)
 - Wiki のスペース行 / ページ行のロックは `src/lib/wiki/wiki-lock.ts` の関数だけで取る(ロックの順序もそのファイルの先頭に書く)。構造と設定を変える書き込みは `lockWikiSpace`、本文の更新・版の削除・アナウンスは `shareLockWikiSpace`、スペースの削除は `lockWikiSpaceForDelete`、ページ行は常にスペース行の後に `lockWikiPages`
 - ページの書き込みは `wiki-page.ts`(作成・更新・削除・参照)、`wiki-page-tree.ts`(木の読み込み・移動)、`wiki-page-restore.ts`(版の内容へ戻す・削除済みを戻す)に分け、共通の部品(エラー・検証・版のスナップショット・競合判定)は `wiki-page-write.ts` に置く
+- ページ詳細の `page-body.tsx` は、`use-page-editor.ts` の下書き・保存状態と選択中の版を、`page-toolbar.tsx` の操作欄と `page-content.tsx` の本文へ渡す。作成直後の編集開始に使う `EDIT_QUERY` は `wiki-rule.ts` に置く。
+  保存中に下書きが変わった場合は編集を続け、送信した下書きと保存アクションが返した更新日時を、次回の変更・競合判定の基準にする。
+  作成・移動・削除の確認は `create-page-modal.tsx`、`move-page-modal.tsx`、`use-delete-wiki-page.ts` が担う。移動ダイアログの送信位置と同じ並びかどうかは `wiki-tree.ts` の `planWikiMove` で求める。操作欄・検索・設定のタグ選択や表示には、チケットと共通の `src/components/tag/` の部品を使う
 - タグ(`src/lib/wiki/wiki-tag.ts`)はスペースごと。作成は `editor` 以上、更新・削除は `manage`。ページへの付与は `assertWikiTagIdsInSpace` で同じスペースのタグに限る
 - ページテンプレート(`WikiTemplate`。`src/lib/wiki/wiki-template.ts`)はスペースごと(20件まで、`MAX_WIKI_TEMPLATES_PER_SPACE`)。設定画面の一覧(本文込み)・追加・編集・削除・並べ替えは `manage` かつ未アーカイブ(`wiki/[key]/settings/space-templates.tsx`)。
+  一覧はボードのチケットテンプレートと共通の `TemplateListEditor` を使い、Wiki の編集フォームは `wiki-template-modal.tsx` に置く。本文の編集はページと同じ `WikiContentEditor` が種類に応じて切り替える。
   種類は `isWikiPageTypeAllowed` で区分に合うものに限る(エラー文は `wikiPageTypeRuleMessage` で区分に合わせる)。並べ替え(`moveWikiTemplate`)はロックの下で今の並びの隣と入れ替えて `order` を 0 から振り直す。
   ページ作成のモーダル(`CreatePageModal`)は、開いたときに `getWikiTemplateOptions`(`write`。本文なし)で選択肢を引き、選ぶとタイトルと種類を埋めて `createWikiPage` に `templateId` を渡す。
   サーバーは `renderWikiTemplate` で、`write` を確かめてから同じスペースのテンプレートを引き、作成者の表示名・タイムゾーン(未設定は `DEFAULT_TIMEZONE`)で `{{date}}` / `{{month}}` / `{{user}}` を置き換える(`applyWikiTemplatePlaceholders`。1回の走査で置き換え、置き換えた値は置き換え直さない)。
@@ -101,12 +105,12 @@ Proxy は通るリクエストのボディを既定 10MB まで複製して溜�
   更新・削除・並べ替えはスペース行のロックを取ってからテンプレートの有無を確かめ直す(同時の削除で Prisma の行なしエラーにしない)。
   本文の画像は添付の掃除で参照として扱う(`attachment-ref.ts` の `wikiTemplate`)
 - 版(`src/lib/wiki/wiki-revision.ts`)の一覧は本文を含めず、ページ詳細で過去の版を選んだときにその版の本文だけを引く(本文の最大長 × 版数を一度に転送しない)。
-  版の選択は更新者・日時の表示を兼ね(`wiki/[key]/[number]/page-revision.tsx`)、過去の版の表示中は編集させず、ロールバックと版の削除(`deleteWikiPageRevision`。最新の版は消せない)だけを出す。
+  `use-wiki-page-revisions.ts` がページと版一覧の同期、選択、本文取得を担う。版の選択(`revision-select.tsx`)は更新者・日時の表示を兼ねる。過去の版の表示中のロールバックと版の削除(`deleteWikiPageRevision`。最新の版は消せない)は `revision-actions.tsx` に置く。
   版の削除を `editor` に許すと、本文を空にしてから前の版を消して内容を戻せなくできるので、`manage` に限る。
   上限(`WIKI_REVISION_MAX_PER_PAGE`)を超えた古い版は保存のたびに消えるため、`editor` も保存を重ねれば古い版を押し出せるが、
   その保存は本人の名前で版に残り追跡できるので許容する。
   過去の版の表示中は「差分」で、その版から最新への差分に切り替えられる(状態は `useWikiPageRevisions` が持ち、選択を外すと戻す)。表示の形は最新の種類で決め、
-  設計書は `DesignDocView` に最新の本文と `compareWith`(選んだ版の本文)を渡して embed の差分表示を使い(差分バーの × は `onCloseDiff` で切り替えを戻す)、通常のページは `TextDiffView` で行単位に出す(タイトル・種類・タグの変化は `WikiRevisionFieldChanges` で本文の上に出す)。出力メニューは差分中も選んだ版の内容が対象。
+  設計書は `DesignDocView` に最新の本文と `compareWith`(選んだ版の本文)を渡して embed の差分表示を使い(差分バーの × は `onCloseDiff` で切り替えを戻す)、通常のページは `TextDiffView` で行単位に出す。タイトル・種類・タグの変化は `WikiRevisionFieldChanges` が判定し、ボードノートと共通の `RevisionChanges` で本文の上に出す。出力メニューは差分中も選んだ版の内容が対象。
   保存時のコミットメッセージ(`WikiPageRevision.message`)が付いた版は、連続保存のまとめ(`shouldMergeWikiRevision`)の対象にしない。
   版の内容への復元(`restoreWikiPageRevision`)は削除されていないページだけが対象で、タイトル・本文・種類・タグだけを戻して位置を変えない。
   版のタグは ID と書いたときの名前を JSON(`tags: [{ id, name }]`)で持ち、表示・出力・復元では ID で今のタグに引き当てる(`resolveWikiRevisionTags` / `findWikiTagsByIds`)。改名しても外れず、削除したタグは同名で作り直しても引き当てない。名前は差分で削除済みのタグを出すためだけに使う(`wikiRevisionTagLabels`)。
@@ -120,7 +124,7 @@ Proxy は通るリクエストのボディを既定 10MB まで複製して溜�
   一覧からの復元は `restoreDeletedWikiPage` で、`deletedAt` を外すだけなので作成者・作成日時・更新者・更新日時・タグ・本文は削除したときのまま。
   元の親が生きていて深さの上限に収まればその下の元の位置へ、そうでなければスペース直下の末尾へ戻す。
   「配下ごと」(`withDescendants`)は、親をたどって着く削除済みの配下を同じトランザクションで戻す(配下は親子関係を保つ。上限の判定は戻す部分木の高さで行う)。
-  画面は確認で見せた配下を `expectedDescendantIds` で渡し、今の削除済みの配下と違えば `WIKI_TREE_CHANGED` で弾く(削除と同じ)。
+  画面は `wiki-tree.ts` の `restorableDescendantsAt` で復元済みの枝を除いた候補を求め、確認で見せた配下を1回のアクションで渡す。サーバーは `expectedDescendantIds` と今の削除済みの配下が違えば `WIKI_TREE_CHANGED` で弾く(削除と同じ)。
   ページ自体が既に戻されていて配下だけを戻すときも、今の位置で深さの上限を超えるなら `WIKI_PAGE_TOO_DEEP` で弾く。
   一覧を開いた後に別の人が戻したページは上書きせず、戻すものが無ければ unchanged を返す
 - ページの種類(`WikiPageType`)が `design_doc` のページは、`markdown-design-doc-viewer-embed` のビューアで表示し(`src/components/markdown/design-doc-view.tsx`)、

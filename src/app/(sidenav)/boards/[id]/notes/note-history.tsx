@@ -6,7 +6,7 @@ import { DialogModal, useModalState } from '@/components/general/modal'
 import { PanelSkeleton } from '@/components/general/panel'
 import { ArrowUturnLeftIcon, ClockIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
-import { RevisionContentView, RevisionFieldChange } from '@/components/revision-diff'
+import { RevisionChanges, RevisionContentView, type RevisionChange } from '@/components/revision-diff'
 import { TextDiffView } from '@/components/text-diff-view'
 import { UpdatedBy } from '@/components/updated-by'
 import { parseAction, useActionData } from '@/lib/action/action-client'
@@ -16,7 +16,7 @@ import { useLocale } from '@/locale/client'
 import { cn } from '@heroui/react'
 import Link from 'next/link'
 import { FC, useState } from 'react'
-import { getBoardNoteRevisions, type GetBoardNoteRevisionsReturnType, restoreBoardNoteRevision } from './server'
+import { getBoardNoteRevisions, restoreBoardNoteRevision, type GetBoardNoteRevisionsReturnType } from './server'
 
 export type HistoryTarget = { noteId: string; name: string }
 
@@ -31,31 +31,32 @@ const RevisionDiff: FC<{ revision: Revision; previous: Revision | undefined }> =
   if (!previous) {
     return <RevisionContentView content={revision.content} />
   }
-  const changes = [
-    previous.kind !== revision.kind && (
-      <RevisionFieldChange
-        key='kind'
-        label={t('board_note_kind')}
-        before={<BoardNoteKindChip value={previous.kind} />}
-        after={<BoardNoteKindChip value={revision.kind} />}
-      />
-    ),
-    previous.name !== revision.name && (
-      <RevisionFieldChange key='name' label={t('board_note_name')} before={previous.name} after={revision.name} />
-    ),
-    previous.description !== revision.description && (
-      <RevisionFieldChange
-        key='description'
-        label={t('board_note_description')}
-        before={previous.description}
-        after={revision.description}
-      />
-    ),
-  ].filter(Boolean)
+  const changes = (
+    [
+      previous.kind !== revision.kind && {
+        id: 'kind',
+        label: t('board_note_kind'),
+        before: <BoardNoteKindChip value={previous.kind} />,
+        after: <BoardNoteKindChip value={revision.kind} />,
+      },
+      previous.name !== revision.name && {
+        id: 'name',
+        label: t('board_note_name'),
+        before: previous.name,
+        after: revision.name,
+      },
+      previous.description !== revision.description && {
+        id: 'description',
+        label: t('board_note_description'),
+        before: previous.description,
+        after: revision.description,
+      },
+    ] satisfies (RevisionChange | false)[]
+  ).filter((change) => change !== false)
 
   return (
     <div className='space-y-2'>
-      {changes}
+      <RevisionChanges changes={changes} className='space-y-2' />
       {previous.content === revision.content ? (
         changes.length === 0 && <div className='text-muted text-sm'>{t('msg_board_note_no_change')}</div>
       ) : (

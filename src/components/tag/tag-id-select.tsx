@@ -10,7 +10,7 @@ import { useLocale } from '@/locale/client'
 import { Autocomplete, EmptyState, ListBox, SearchField, useFilter } from '@heroui/react'
 import { Ref, useState } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
-import { TagChip } from './ticket-chip'
+import { TagChip } from './tag-chip'
 
 /** 選択肢として渡すタグ。`lib/tag.ts` の TagOption と構造的に一致させる */
 export type TagSelectOption = { id: string; name: string; color: TagColor }

@@ -1,66 +1,23 @@
 'use client'
 
-import { MultiButton, SubmitButtons } from '@/components/general/button'
-import { InputField } from '@/components/general/input'
-import { useLeaveGuard } from '@/components/general/leave-guard'
-import { type ConfirmParam, useConfirmModal, useModalState } from '@/components/general/modal'
-import { PanelSpinner } from '@/components/general/panel'
-import { useSaveShortcut } from '@/components/general/use-save-shortcut'
-import { CheckIcon, PencilSquareIcon } from '@/components/icon'
-import { DesignDocEditor } from '@/components/markdown/design-doc-editor'
-import { DesignDocView } from '@/components/markdown/design-doc-view'
-import { MarkdownField } from '@/components/markdown/markdown-editor'
-import { MarkdownToc } from '@/components/markdown/markdown-toc'
-import { notify } from '@/components/notify'
-import { TextDiffView } from '@/components/text-diff-view'
-import { WikiTagLinks } from '@/components/wiki-tag'
-import type { WikiPageType } from '@/generated/prisma/enums'
-import { parseAction } from '@/lib/action/action-client'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { dayformat } from '@/lib/day'
-import { ClientError } from '@/lib/error'
-import { designDocFrontMatter, hasFrontMatter } from '@/lib/wiki/wiki-front-matter'
-import {
-  isWikiPageChanged,
-  MAX_WIKI_CONTENT,
-  MAX_WIKI_REVISION_MESSAGE,
-  MAX_WIKI_TITLE,
-  WIKI_PAGE_CONFLICT,
-  type WikiPageFields,
-  wikiPagePath,
-} from '@/lib/wiki/wiki-rule'
+import { wikiPagePath } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { FC, useCallback, useEffect, useRef, useState } from 'react'
-import { EDIT_QUERY } from '../page-modals'
+import { FC } from 'react'
 import { useWikiSpace } from '../space-context'
-import { WikiPageConflictModal, type WikiPageConflictTarget } from './page-conflict-modal'
-import { WikiPageEditHeader } from './page-edit-header'
-import { WikiExportMenu } from './page-export'
-import {
-  usePastPageView,
-  useWikiPageRevisions,
-  WikiPastRevisionNotice,
-  WikiRevisionDeleteButton,
-  WikiRevisionDiffToggle,
-  WikiRevisionFieldChanges,
-  WikiRevisionRestoreButton,
-  WikiRevisionSelect,
-} from './page-revision'
-import { getWikiPage, GetWikiPageReturnType, updateWikiPage } from './server'
+import { WikiPageConflictModal } from './page-conflict-modal'
+import { WikiPageContent } from './page-content'
+import { WikiPageToolbar } from './page-toolbar'
+import { WikiPastRevisionNotice } from './revision-actions'
+import { WikiRevisionFieldChanges } from './revision-field-changes'
+import type { GetWikiPageReturnType } from './server'
+import { useWikiPageEditor } from './use-page-editor'
+import { usePastPageView, useWikiPageRevisions } from './use-wiki-page-revisions'
 
 type Page = NonNullable<GetWikiPageReturnType>['page']
 
-/**
- * ページのタイトル・タグ・本文。表示と編集を切り替え、保存したらサーバー値を取り直す。
- * 作成直後(`?edit=1`)は編集から始める。
- * 設計書のページは Markdown Design Doc Viewer で表示し、ソースとプレビューで編集する(幅の制限を外す)。
- * 表示中は更新者・日時から版を選べ、過去の版はその時点の内容で表示する(編集はできず、ロールバックと削除だけ)。
- * 過去の版からは最新への差分も出せる(設計書はビューアの差分表示、通常のページは行単位の差分)。
- * 表示中の版は PDF / HTML / Markdown に出力できる。
- * 編集中に変更があれば、キャンセル・画面の移動・タブを閉じる前に確認する。Ctrl/Cmd+S で保存できる。
- * 保存が競合したら、下書きを残したまま最新の確認・下書きのコピー・上書き保存を選べる
- */
+/** ページの編集状態と選んだ版を、操作欄と本文で共有する */
 export const WikiPageBody: FC<{
   page: Page
   canWrite: boolean
@@ -70,377 +27,54 @@ export const WikiPageBody: FC<{
   const { t } = useLocale()
   const tz = useUserTimezone()
   const { space } = useWikiSpace()
-  const { confirmModal } = useConfirmModal()
-  const conflictState = useModalState<WikiPageConflictTarget>()
+  const editor = useWikiPageEditor(page, canWrite, onSaved)
   const revisions = useWikiPageRevisions(page, onSaved)
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const hasEditQuery = searchParams.get(EDIT_QUERY) === '1'
-  // 作成直後は本文の編集から始める(ページごとに作り直されるので、初期値で決めてよい)
-  const [isEditing, setEditing] = useState(() => canWrite && hasEditQuery)
-  const [titleDraft, setTitleDraft] = useState(page.title)
-  const [contentDraft, setContentDraft] = useState(page.content)
-  const [typeDraft, setTypeDraft] = useState(page.type)
-  /**
-   * エディタを開いた時点の本文。エディタはマウント時にだけ取り込むので、編集中は変えない。
-   * 種類を切り替えたときは、その時点の下書きで開き直す
-   */
-  const [editorBase, setEditorBase] = useState(page.content)
-  const [editorKey, setEditorKey] = useState(0)
-  const pageTagIds = () => page.tags.map(({ tag }) => tag.id)
-  const [tagIdsDraft, setTagIdsDraft] = useState(pageTagIds)
-  const [messageDraft, setMessageDraft] = useState('')
-  // 競合の判定の基準。編集中にページを取り直しても(移動など)、編集を始めた時点の値で比べる
-  const [baseUpdatedAt, setBaseUpdatedAt] = useState(page.updatedAt)
-  const [isSaving, setSaving] = useState(false)
-  // 設計書の画像のアップロード中。終わるまで本文に仮の印があるので、保存と種類の切り替えを止める
-  const [isUploading, setUploading] = useState(false)
-  const contentRef = useRef<HTMLDivElement>(null)
-  // 最新の下書き。種類の切り替えで確認を待つ間に本文が変わっても、承認した時点の本文を引き継ぐ
-  const contentDraftRef = useRef(page.content)
-  // 編集を始めた時点の値。下書きに変更があるかをこれと比べる(作成直後の編集は、マウント時の値から始まる)
-  const [draftBase, setDraftBase] = useState<WikiPageFields>(() => ({
-    title: page.title,
-    content: page.content,
-    type: page.type,
-    tagIds: pageTagIds(),
-  }))
-  // 確認のモーダルを待っている間。Ctrl/Cmd+S で裏から保存しない
-  const isAskingRef = useRef(false)
-
-  const ask = useCallback(
-    async (param: ConfirmParam) => {
-      isAskingRef.current = true
-      try {
-        return await confirmModal().confirm(param)
-      } finally {
-        isAskingRef.current = false
-      }
-    },
-    [confirmModal],
-  )
-  const confirmDiscard = useCallback(
-    () => ask({ title: t('wiki_discard_draft'), text: t('msg_confirm_wiki_discard_draft') }),
-    [ask, t],
-  )
-
-  const changeContent = (content: string) => {
-    contentDraftRef.current = content
-    setContentDraft(content)
-  }
-
-  // クエリは消して、再読み込みで編集に戻らないようにする
-  useEffect(() => {
-    if (hasEditQuery) {
-      router.replace(pathname)
-    }
-  }, [hasEditQuery, pathname, router])
-
-  const startEditing = () => {
-    setDraftBase({ title: page.title, content: page.content, type: page.type, tagIds: pageTagIds() })
-    setTitleDraft(page.title)
-    changeContent(page.content)
-    setTypeDraft(page.type)
-    setUploading(false)
-    setEditorBase(page.content)
-    setEditorKey((key) => key + 1)
-    setTagIdsDraft(pageTagIds())
-    setMessageDraft('')
-    setBaseUpdatedAt(page.updatedAt)
-    setEditing(true)
-  }
-
-  /** 種類を切り替え、下書きを引き継いでエディタを開き直す */
-  const changeType = async (type: WikiPageType) => {
-    if (type === typeDraft || isUploading) {
-      return
-    }
-    if (
-      type === 'page' &&
-      !(await ask({ title: t('wiki_change_page_type'), text: t('msg_confirm_wiki_type_to_page') }))
-    ) {
-      return
-    }
-    let content = contentDraftRef.current
-    // 設計書ヘッダの元になる front matter が無ければ足す
-    if (type === 'design_doc' && !hasFrontMatter(content)) {
-      content = `${designDocFrontMatter(titleDraft.trim() || page.title)}${content}`
-    }
-    changeContent(content)
-    setEditorBase(content)
-    setEditorKey((key) => key + 1)
-    setTypeDraft(type)
-  }
-
-  /** 競合したら最新を取り直し、選択肢のモーダルを出す(取れなくても、最新の確認と下書きのコピーはできる) */
-  const openConflict = async () => {
-    const latest = await parseAction(getWikiPage({ key: space.key, number: page.number }), { handled: 'all' }).catch(
-      () => undefined,
-    )
-    conflictState.open({
-      latest: latest && {
-        updatedAt: latest.page.updatedAt,
-        updatedByName: latest.page.updatedBy?.name ?? latest.page.createdBy?.name,
-      },
-    })
-  }
-
-  /**
-   * 編集を始めた時点の更新日時を渡し、その後に他の人が保存していれば競合として止める(下書きは残る)。
-   * 上書き保存では、競合の後に取り直した最新の更新日時を渡す
-   */
-  const save = async (expectedUpdatedAt = baseUpdatedAt) => {
-    setSaving(true)
-    try {
-      const result = await parseAction(
-        updateWikiPage({
-          id: page.id,
-          title: titleDraft,
-          content: contentDraft,
-          type: typeDraft,
-          tagIds: tagIdsDraft,
-          expectedUpdatedAt: expectedUpdatedAt.toISOString(),
-          message: messageDraft,
-        }),
-        { handled: [WIKI_PAGE_CONFLICT] },
-      )
-      // 変更が無ければ版を作らないので、コミットメッセージも残らない
-      if (result.result === 'unchanged' && messageDraft.trim()) {
-        notify.info(t('msg_wiki_message_not_saved'))
-      } else {
-        notify.success(t('msg_saved'))
-      }
-      // 表示モードへ戻すのはサーバー値が届いた後。先に戻すと旧本文が一瞬見える
-      await onSaved()
-      conflictState.close()
-      setEditing(false)
-    } catch (e) {
-      // 競合以外のエラー表示は parseAction 側で済んでいる。編集中の内容を失わせないため編集状態は維持する
-      if (!(e instanceof ClientError)) {
-        throw e
-      }
-      if (e.errorType === WIKI_PAGE_CONFLICT) {
-        await openConflict()
-      }
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const overwrite = async (expectedUpdatedAt: Date) => {
-    if (!isSubmittable) {
-      return
-    }
-    if (await ask({ title: t('wiki_conflict_overwrite'), text: t('msg_confirm_wiki_overwrite') })) {
-      await save(expectedUpdatedAt)
-    }
-  }
-
-  const cancelEditing = async () => {
-    if (!isDirty || (await confirmDiscard())) {
-      setEditing(false)
-    }
-  }
-
-  const isSubmittable =
-    !isUploading &&
-    titleDraft.trim().length > 0 &&
-    titleDraft.length <= MAX_WIKI_TITLE &&
-    contentDraft.length <= MAX_WIKI_CONTENT &&
-    messageDraft.length <= MAX_WIKI_REVISION_MESSAGE
-  const isDirty =
-    isEditing &&
-    isWikiPageChanged(draftBase, { title: titleDraft, content: contentDraft, type: typeDraft, tagIds: tagIdsDraft })
-
-  // リンク・メニュー・子ページの作成などで画面を移る前と、タブを閉じる前に確認する
-  useLeaveGuard({ isActive: isDirty, confirmLeave: confirmDiscard })
-  useSaveShortcut({
-    isActive: isEditing,
-    onSave: () => {
-      if (isSubmittable && !isSaving && !conflictState.isOpen && !isAskingRef.current) {
-        void save()
-      }
-    },
-  })
+  const past = editor.isEditing ? undefined : revisions.past
+  const pastView = usePastPageView(past)
+  const latest = { title: page.title, type: page.type, tags: page.tags.map(({ tag }) => tag) }
+  const shown = pastView ?? latest
+  const shownContent = past ? revisions.pastContent : page.content
+  const isDiff = !!past && revisions.isDiff
+  // 差分は最新の種類で表示する。過去の版だけを表示するときは、その版の種類を使う
+  const isDesignDoc = (editor.isEditing ? editor.typeDraft : isDiff ? page.type : shown.type) === 'design_doc'
   const updatedBy = page.updatedBy?.name ?? page.createdBy?.name
-  // 過去の版は表示中だけ(編集はいまの内容から始める)
-  const pastView = usePastPageView(isEditing ? undefined : revisions.past)
-  const shown = pastView ?? { title: page.title, type: page.type, tags: page.tags.map(({ tag }) => tag) }
-  const shownContent = pastView ? revisions.pastContent : page.content
-  // 差分は最新の内容に重ねて出すので、版の間で種類が変わっていても最新の種類で表示する
-  const isDiff = !isEditing && pastView !== undefined && revisions.isDiff
-  const isDesignDoc = (isEditing ? typeDraft : isDiff ? page.type : shown.type) === 'design_doc'
-  const isDesignDocView = isDesignDoc && !isEditing
-
   const updatedText = t('wiki_updated_by', { name: updatedBy ?? '-', at: dayformat(page.updatedAt, 'tz-minute', tz) })
-  const updatedInfo = <p className='text-muted text-xs'>{updatedText}</p>
-  const editAction = !isEditing && canWrite && !pastView && (
-    <MultiButton
-      isIconOnly
-      size='sm'
-      variant='outline'
-      tooltip={t('update')}
-      icon={<PencilSquareIcon width={16} />}
-      onPress={startEditing}
-    />
-  )
-  const footer = isEditing && (
-    <div // スマホ幅ではコミットメッセージを1行に取り、ボタンをその下に置く
-      className='flex w-full flex-wrap items-center justify-end gap-2'
-    >
-      <div className='w-full min-w-0 sm:w-auto sm:flex-1'>
-        <InputField // 版に残すコミットメッセージ(任意)
-          isSmart
-          isLabelHidden
-          label={t('wiki_revision_message')}
-          placeholder={t('wiki_revision_message')}
-          value={messageDraft}
-          onChange={(e) => setMessageDraft(e.target.value)}
-          maxLength={MAX_WIKI_REVISION_MESSAGE}
-        />
-      </div>
-      <SubmitButtons
-        size='sm'
-        label={t('save')}
-        icon={<CheckIcon width={16} />}
-        isPending={isSaving}
-        isDisabled={!isSubmittable}
-        onPress={() => save()}
-        onCancel={cancelEditing}
-      />
-    </div>
-  )
-
-  const body =
-    shownContent === undefined ? (
-      // 過去の版の本文を取得中
-      <PanelSpinner />
-    ) : isDiff && isDesignDoc ? (
-      <DesignDocView
-        className='border-default-200 absolute inset-0 overflow-hidden rounded-xl border'
-        markdown={page.content}
-        compareWith={shownContent}
-        compareLabel={t('wiki_diff_compare_label', { version: `v${pastView.number}` })}
-        onCloseDiff={() => revisions.setDiff(false)}
-        documentId={`${page.id}:${pastView.id}:diff`}
-      />
-    ) : isDiff ? (
-      shownContent === page.content ? (
-        <p className='text-muted text-sm'>{t('msg_wiki_diff_no_change')}</p>
-      ) : (
-        <TextDiffView before={shownContent} after={page.content} />
-      )
-    ) : !isDesignDoc ? (
-      <MarkdownField
-        key={editorKey}
-        body={shownContent}
-        isEditing={isEditing}
-        // 編集中に変わらない値を渡す(MDXEditor は編集モードのマウント時にこの値を取り込む)
-        defaultValue={editorBase}
-        onChange={changeContent}
-        length={contentDraft.length}
-        maxLength={MAX_WIKI_CONTENT}
-        label={t('content')}
-        isLabelHidden
-        // 表示中はタイトルの横に出している
-        info={isEditing ? updatedInfo : undefined}
-        minRows={6}
-        allowImages
-        uploadOwner={{ kind: 'wikiSpace', wikiSpaceId: page.spaceId }}
-        footer={footer}
-      />
-    ) : isEditing ? (
-      <DesignDocEditor
-        key={editorKey}
-        initialValue={editorBase}
-        onChange={changeContent}
-        documentId={page.id}
-        length={contentDraft.length}
-        maxLength={MAX_WIKI_CONTENT}
-        label={t('content')}
-        isLabelHidden
-        info={updatedInfo}
-        allowImages
-        uploadOwner={{ kind: 'wikiSpace', wikiSpaceId: page.spaceId }}
-        onUploadingChange={setUploading}
-        footer={footer}
-      />
-    ) : (
-      <DesignDocView // 中でスクロールするので、画面の残りを埋める枠(下の div)いっぱいに広げる
-        className='border-default-200 absolute inset-0 overflow-hidden rounded-xl border'
-        markdown={shownContent}
-        // 版を切り替えたら先頭から表示し直す
-        documentId={pastView ? `${page.id}:${pastView.id}` : page.id}
-      />
-    )
 
   return (
     <>
-      <div
-        // 設計書は図と見出しを横に並べるため、幅の制限(max-w-4xl)を外す
-        data-wide={isDesignDoc ? '' : undefined}
-        className='space-y-1'
-      >
-        {isEditing ? (
-          <WikiPageEditHeader
-            title={titleDraft}
-            onTitleChange={setTitleDraft}
-            type={typeDraft}
-            onTypeChange={changeType}
-            isTypeDisabled={isUploading}
-            tagIds={tagIdsDraft}
-            onTagIdsChange={setTagIdsDraft}
-          />
-        ) : (
-          <div className='flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1'>
-            <h1 className='min-w-0 text-2xl font-bold wrap-break-word'>{shown.title}</h1>
-            <WikiTagLinks spaceKey={space.key} tags={shown.tags} />
-            <div // 差分・編集・戻す・出力・削除は版の選択のすぐ右に置き、版に対する操作だと分かるようにする(タイトルの後で折り返しても離さない。幅が足りなければこの中で折り返す)
-              className='flex flex-wrap items-center gap-2'
-            >
-              <WikiRevisionSelect revisions={revisions} updatedText={updatedText} />
-              {!isEditing && <WikiRevisionDiffToggle revisions={revisions} />}
-              {editAction}
-              {canWrite && !isEditing && <WikiRevisionRestoreButton revisions={revisions} />}
-              <WikiExportMenu // ページを移ったら作り直す(作っている途中の HTML 出力を打ち切り、移った先で保存しない)
-                key={page.id}
-                spaceKey={space.key}
-                number={page.number}
-                title={shown.title}
-                type={shown.type}
-                content={shownContent}
-                revision={revisions.past}
-              />
-              {canDeleteRevision && !isEditing && <WikiRevisionDeleteButton revisions={revisions} />}
-            </div>
-          </div>
-        )}
-      </div>
-      {!isEditing && <WikiPastRevisionNotice revisions={revisions} />}
+      <WikiPageToolbar
+        pageId={page.id}
+        pageNumber={page.number}
+        shown={shown}
+        shownContent={shownContent}
+        isDesignDoc={isDesignDoc}
+        updatedText={updatedText}
+        canWrite={canWrite}
+        canDeleteRevision={canDeleteRevision}
+        editor={editor}
+        revisions={revisions}
+      />
+      {!editor.isEditing && <WikiPastRevisionNotice revisions={revisions} />}
       {isDiff && pastView && (
-        <WikiRevisionFieldChanges
-          before={{ ...pastView, tags: pastView.revisionTags }}
-          after={{ title: page.title, type: page.type, tags: page.tags.map(({ tag }) => tag) }}
-        />
+        <WikiRevisionFieldChanges before={{ ...pastView, tags: pastView.revisionTags }} after={latest} />
       )}
-
-      <div
-        ref={contentRef}
-        // 設計書の表示は、ページ側(data-fill-screen を見て画面 1 枚分の高さを持つ)の残りを埋める
-        data-fill-screen={isDesignDocView ? '' : undefined}
-        className={isDesignDocView ? 'relative min-h-96 flex-1' : 'py-2'}
-      >
-        {body}
-      </div>
-      {!isEditing && !isDesignDoc && !isDiff && <MarkdownToc targetRef={contentRef} />}
+      <WikiPageContent
+        page={page}
+        past={past}
+        shownContent={shownContent}
+        isDesignDoc={isDesignDoc}
+        isDiff={isDiff}
+        onCloseDiff={() => revisions.setDiff(false)}
+        updatedText={updatedText}
+        editor={editor}
+      />
       <WikiPageConflictModal
-        state={conflictState}
+        state={editor.conflictState}
         href={wikiPagePath({ key: space.key, number: page.number })}
-        content={contentDraft}
-        isSaving={isSaving}
-        isSubmittable={isSubmittable}
-        onOverwrite={overwrite}
+        content={editor.contentDraft}
+        isSaving={editor.isSaving}
+        isSubmittable={editor.isSubmittable}
+        onOverwrite={editor.overwrite}
       />
     </>
   )

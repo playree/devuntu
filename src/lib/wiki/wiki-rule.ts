@@ -23,6 +23,9 @@ export const MAX_WIKI_SPACE_KEY = MAX_BOARD_KEY
 export const MAX_WIKI_SPACE_NAME = 100
 export const MAX_WIKI_SPACE_DESCRIPTION = 500
 
+/** 作成後に本文の編集から始めるため、ページ詳細へ付けるクエリ */
+export const EDIT_QUERY = 'edit'
+
 export const MAX_WIKI_TITLE = 200
 /** 本文の最大長。trgm 索引と応答の大きさを抑えるため上限を設ける */
 export const MAX_WIKI_CONTENT = 100_000

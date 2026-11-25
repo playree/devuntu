@@ -1,6 +1,6 @@
 'use client'
 
-import { TagChips } from '@/components/ticket/ticket-chip'
+import { TagChips } from '@/components/tag/tag-chip'
 import { wikiPagePath } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import Link from 'next/link'

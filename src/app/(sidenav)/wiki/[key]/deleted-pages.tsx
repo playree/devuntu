@@ -1,66 +1,20 @@
 'use client'
 
-import { MultiButton } from '@/components/general/button'
 import { DialogModal, useModalState } from '@/components/general/modal'
 import { PanelSkeleton } from '@/components/general/panel'
-import { ArrowTopRightOnSquareIcon, ArrowUturnLeftIcon, TrashIcon } from '@/components/icon'
+import { TrashIcon } from '@/components/icon'
 import { notify } from '@/components/notify'
-import { UpdatedBy } from '@/components/updated-by'
 import { parseAction, useActionData } from '@/lib/action/action-client'
 import { ClientError } from '@/lib/error'
 import { useConfirmAction } from '@/lib/use-confirm-action'
 import { isFlatWikiSpace, WIKI_TREE_CHANGED, wikiPagePath } from '@/lib/wiki/wiki-rule'
+import { restorableDescendantsAt } from '@/lib/wiki/wiki-tree'
 import { useLocale } from '@/locale/client'
 import { useRouter } from 'next/navigation'
 import { FC, useState } from 'react'
-import { tv } from 'tailwind-variants'
-import { getDeletedWikiPages, restoreDeletedWikiPage, type GetDeletedWikiPagesReturnType } from './server'
+import { DeletedPageRow, type DeletedPage } from './deleted-page-row'
+import { getDeletedWikiPages, restoreDeletedWikiPage } from './server'
 import { useWikiSpace } from './space-context'
-
-type DeletedPage = NonNullable<GetDeletedWikiPagesReturnType>['pages'][number]
-
-const row = tv({
-  base: 'border-border flex items-center gap-2 rounded-lg border px-2 py-1',
-  variants: {
-    // スマホ幅でも潰れないよう、字下げは 4 段で止める
-    indent: { 0: '', 1: 'ms-3', 2: 'ms-6', 3: 'ms-9', 4: 'ms-12' },
-  },
-})
-
-const rowBody = tv({
-  base: 'min-w-0 flex-1 space-y-0.5',
-  variants: { isRestored: { true: 'opacity-60' } },
-})
-
-const indentOf = (depth: number) => Math.min(depth, 4) as 0 | 1 | 2 | 3 | 4
-
-/**
- * 一覧の `index` の行と一緒に戻る配下(一覧で後に続く、段の深い行)。
- * 復元済みの行は親子がつながらなくなる(サーバーは削除済みの親をたどって配下を探す)ので、その行と配下は含めない
- */
-const restorableDescendantsAt = (
-  pages: readonly DeletedPage[],
-  index: number,
-  restored: ReadonlySet<string>,
-): DeletedPage[] => {
-  const result: DeletedPage[] = []
-  let skipBelow: number | undefined
-  for (const page of pages.slice(index + 1)) {
-    if (page.depth <= pages[index].depth) {
-      break
-    }
-    if (skipBelow !== undefined && page.depth > skipBelow) {
-      continue
-    }
-    skipBelow = undefined
-    if (restored.has(page.id)) {
-      skipBelow = page.depth
-    } else {
-      result.push(page)
-    }
-  }
-  return result
-}
 
 /**
  * 削除済みのページの一覧。削除したときの内容・タグ・作成者のまま戻る(削除前の内容は、復元したページの履歴で確かめられる)。
@@ -91,10 +45,9 @@ export const DeletedPagesModal: FC<{ state: ReturnType<typeof useModalState<stri
   const restorePage = async (page: DeletedPage, descendants: readonly DeletedPage[]) => {
     setIsRestoring(true)
     try {
-      const result = await parseAction(
-        restoreDeletedWikiPage({ id: page.id, descendantIds: descendants.map(({ id }) => id) }),
-      )
-      setRestored((prev) => new Set([...prev, page.id, ...descendants.map(({ id }) => id)]))
+      const descendantIds = descendants.map(({ id }) => id)
+      const result = await parseAction(restoreDeletedWikiPage({ id: page.id, descendantIds }))
+      setRestored((prev) => new Set([...prev, page.id, ...descendantIds]))
       return result
     } catch (e) {
       if (e instanceof ClientError && e.errorType === WIKI_TREE_CHANGED) {
@@ -173,63 +126,19 @@ export const DeletedPagesModal: FC<{ state: ReturnType<typeof useModalState<stri
                 const isRestored = restored.has(page.id)
                 const descendants = restorableDescendantsAt(pages, index, restored)
                 return (
-                  <li key={page.id} className={row({ indent: indentOf(page.depth) })}>
-                    <div className={rowBody({ isRestored })}>
-                      <div className='flex min-w-0 items-center gap-2'>
-                        <span className='truncate text-sm font-medium' title={page.title}>
-                          {page.title}
-                        </span>
-                        <span className='text-muted shrink-0 font-mono text-xs'>{page.ref}</span>
-                      </div>
-                      {page.depth === 0 && !isFlat && (
-                        <div className='text-muted truncate text-xs' title={parentLabel(page)}>
-                          {parentLabel(page)}
-                        </div>
-                      )}
-                      <UpdatedBy
-                        name={page.deletedByName}
-                        isAgent={page.deletedByIsAgent}
-                        via={page.via}
-                        at={page.deletedAt}
-                      />
-                    </div>
-                    {isRestored ? (
-                      <MultiButton
-                        isIconOnly
-                        size='sm'
-                        variant='ghost'
-                        tooltip={t('wiki_open_restored_page')}
-                        icon={<ArrowTopRightOnSquareIcon width={16} />}
-                        onPress={() => open(page.number)}
-                      />
-                    ) : (
-                      access.canWrite && (
-                        <div className='flex shrink-0 items-center gap-1'>
-                          {descendants.length > 0 && (
-                            <MultiButton
-                              size='sm'
-                              variant='ghost'
-                              tooltip={t('wiki_restore_with_descendants_hint')}
-                              icon={<ArrowUturnLeftIcon width={16} />}
-                              isDisabled={isRestoring}
-                              onPress={() => restoreWithDescendants(page, descendants)}
-                            >
-                              {t('wiki_restore_with_descendants')}
-                            </MultiButton>
-                          )}
-                          <MultiButton
-                            isIconOnly
-                            size='sm'
-                            variant='ghost'
-                            tooltip={t('restore')}
-                            icon={<ArrowUturnLeftIcon width={16} />}
-                            isDisabled={isRestoring}
-                            onPress={() => restore(page)}
-                          />
-                        </div>
-                      )
-                    )}
-                  </li>
+                  <DeletedPageRow
+                    key={page.id}
+                    page={page}
+                    parentLabel={page.depth === 0 && !isFlat ? parentLabel(page) : undefined}
+                    canWrite={access.canWrite}
+                    isRestored={isRestored}
+                    isRestoring={isRestoring}
+                    onOpen={() => open(page.number)}
+                    onRestore={() => restore(page)}
+                    onRestoreDescendants={
+                      descendants.length ? () => restoreWithDescendants(page, descendants) : undefined
+                    }
+                  />
                 )
               })}
             </ul>
