@@ -1,7 +1,7 @@
 ---
 type: design_doc
 title: 環境変数
-updated: 2026-11-07
+updated: 2026-11-26
 ---
 
 # 環境変数
@@ -25,19 +25,19 @@ updated: 2026-11-07
 
 ## 用途別の早見表
 
-| やりたいこと                          | 設定する変数                                                                                                   | あわせて必要な操作                                                                                                        |
-| ------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| 起動する(最小構成)                    | `DATABASE_URL` / `BETTER_AUTH_URL` / `BETTER_AUTH_SECRET` / `S3_*` / `MAIL_*`                                  | `setup-env` がすべて尋ねる                                                                                                |
-| Google でサインイン・カレンダー       | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_ALLOWED_DOMAINS`                                         | サインインは変数だけで有効。カレンダーを使うなら `/admin/settings` で有効化([手順](installation.md#googleアカウント連携)) |
-| Slack 通知・リンクの展開              | `SLACK_CLIENT_ID` / `SLACK_CLIENT_SECRET` / `SLACK_BOT_TOKEN` / `SLACK_SIGNING_SECRET`(任意で `SLACK_TEAM_ID`) | Slack App の作成と `/admin/settings` での有効化([手順](notifications.md#slack-連携を使えるようにする))                    |
-| Webプッシュ通知                       | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`                                                                       | `setup-env` が生成できる                                                                                                  |
-| GitLab 連携                           | `GITLAB_URLS`                                                                                                  | ボード設定で対応付け([手順](git-integration.md))                                                                          |
-| GitHub 連携                           | 不要                                                                                                           | ボード設定で対応付け([手順](git-integration.md))                                                                          |
-| MCP クライアントのブラウザ認可(DCR)   | `OIDC_DCR_ENABLED=true`(claude.ai から使うなら `OIDC_DCR_ALLOWED_REDIRECT_URIS` も)                            | トークンでの接続だけなら不要([mcp-server.md](mcp-server.md))                                                              |
-| AIエージェントの処理に時間がかかる    | `AGENT_RUN_TIMEOUT_MIN`                                                                                        | ランナーの `timeout_sec` も延ばす([手順](agent-runner.md#configjson))                                                     |
-| リモート実行                          | `COMMAND_EXEC_ENABLED=true`                                                                                    | 定義ファイル・SSH 鍵の配置とアサイン([command-exec.md](command-exec.md))                                                  |
-| 別の Devuntu のアカウントでサインイン | `MAIN_DEVUNTU_URL` / `MAIN_DEVUNTU_CLIENT_ID` / `MAIN_DEVUNTU_CLIENT_SECRET`                                   | 連携元の Devuntu の `/admin/oidc-clients` でクライアントを登録                                                            |
-| ダッシュボードに転送量を出す(Linode)  | `LINODE_ID` / `LINODE_PERSONAL_ACCESS_TOKEN`                                                                   | -                                                                                                                         |
+| やりたいこと                              | 設定する変数                                                                                                   | あわせて必要な操作                                                                                                        |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| 起動する(最小構成)                        | `DATABASE_URL` / `BETTER_AUTH_URL` / `BETTER_AUTH_SECRET` / `S3_*` / `MAIL_*`                                  | `setup-env` がすべて尋ねる                                                                                                |
+| Google でサインイン・カレンダー           | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_ALLOWED_DOMAINS`                                         | サインインは変数だけで有効。カレンダーを使うなら `/admin/settings` で有効化([手順](installation.md#googleアカウント連携)) |
+| Slack 通知・リンクの展開・Wiki アナウンス | `SLACK_CLIENT_ID` / `SLACK_CLIENT_SECRET` / `SLACK_BOT_TOKEN` / `SLACK_SIGNING_SECRET`(任意で `SLACK_TEAM_ID`) | Slack App の作成と `/admin/settings` での有効化([手順](notifications.md#slack-連携を使えるようにする))                    |
+| Webプッシュ通知                           | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`                                                                       | `setup-env` が生成できる                                                                                                  |
+| GitLab 連携                               | `GITLAB_URLS`                                                                                                  | ボード設定で対応付け([手順](git-integration.md))                                                                          |
+| GitHub 連携                               | 不要                                                                                                           | ボード設定で対応付け([手順](git-integration.md))                                                                          |
+| MCP クライアントのブラウザ認可(DCR)       | `OIDC_DCR_ENABLED=true`(claude.ai から使うなら `OIDC_DCR_ALLOWED_REDIRECT_URIS` も)                            | トークンでの接続だけなら不要([mcp-server.md](mcp-server.md))                                                              |
+| AIエージェントの処理に時間がかかる        | `AGENT_RUN_TIMEOUT_MIN`                                                                                        | ランナーの `timeout_sec` も延ばす([手順](agent-runner.md#configjson))                                                     |
+| リモート実行                              | `COMMAND_EXEC_ENABLED=true`                                                                                    | 定義ファイル・SSH 鍵の配置とアサイン([command-exec.md](command-exec.md))                                                  |
+| 別の Devuntu のアカウントでサインイン     | `MAIN_DEVUNTU_URL` / `MAIN_DEVUNTU_CLIENT_ID` / `MAIN_DEVUNTU_CLIENT_SECRET`                                   | 連携元の Devuntu の `/admin/oidc-clients` でクライアントを登録                                                            |
+| ダッシュボードに転送量を出す(Linode)      | `LINODE_ID` / `LINODE_PERSONAL_ACCESS_TOKEN`                                                                   | -                                                                                                                         |
 
 ## 基本
 
@@ -227,7 +227,7 @@ updated: 2026-11-07
   - `WIKI_REVISION_KEEP_RECENT` を `0` にすると、最新の版を除いた直近の版は期間どおりに消える(期間を過ぎた版のうち最新の1版は残る)
   - 削除したページは、削除から期間を過ぎるとページごと(版も含めて)消す。**削除したページを復元できるのは、削除から保持期間のあいだだけ**
 - 続けて保存した分をまとめるのは、同じ人が同じ経路(画面 / MCP)・同じチケットで、最初の保存からこの時間内に保存した場合だけ。
-  作成・移動・削除・復元はまとめない。`0` にするとまとめず、保存のたびに版を作る
+  作成・移動・削除・復元と、コミットメッセージを付けた保存はまとめない(付いた版に後の保存もまとめない)。`0` にするとまとめず、保存のたびに版を作る
   - 最後の保存が保持期間を過ぎた版には、この時間内でもまとめない(保持期間以上の時間にしても、期間より前の状態として残す版を上書きしない)
 
 ## リモート実行

@@ -1,7 +1,7 @@
 ---
 type: design_doc
 title: 導入(セルフホスト)
-updated: 2026-10-27
+updated: 2026-11-26
 ---
 
 # 導入(セルフホスト)
@@ -121,11 +121,15 @@ docker compose run --rm tools setup-env
 再実行しても現在値を引き継ぐ。
 
 - 検索エンジンへのインデックスとクロール(`SEARCH_ENGINE_INDEXING` / `SEARCH_ENGINE_ROBOTS_ALLOW`)
+- ダッシュボードのリリースノート(`RELEASE_NOTES_REPO` / `RELEASE_NOTES_LIMIT`)
 - 連携元 Devuntu との連携(`MAIN_DEVUNTU_*`)
 - ホスト情報の表示(`LINODE_*`)
 - 手前のリバースプロキシの段数(`TRUSTED_PROXY_COUNT`)
+- 動的クライアント登録で受け付けるリダイレクトURI(`OIDC_DCR_ALLOWED_REDIRECT_URIS`)
 - ログレベル・セッション期間・自動メンテナンス(`LOG_LEVEL` / `SESSION_*` /
   `MCP_REFRESH_TOKEN_EXPIRES_IN` / `NOTIFY_WORKER_ENABLED` / `MAINTENANCE_*`)
+- 上記以外で [environment-variables.md](environment-variables.md) にある変数(添付のサイズ上限、各種の保持期間、リモート実行など)。
+  書き出す `.env.docker` には載らないので、変える場合は追記する(再実行しても末尾の「その他」として引き継ぐ)
 
 このスクリプトが自動でやること。手で書くと食い違いに気づきにくい箇所を引き受けている。
 
@@ -277,7 +281,7 @@ Google 側のコールバックURLには**次の2つ**を登録する。
 Slack App のマニフェストは `slack/manifest.yaml`。
 
 Slack DM 通知(メンション / 担当者の変更 / エージェントの実行結果)、ボードごとのチャンネル通知、
-Slack に貼られたチケットURLの展開が使えるようになる。
+Wiki のアナウンス用スペースからのチャンネル通知、Slack に貼られたチケットURLの展開が使えるようになる。
 Slack App の作り方から順を追った手順は [notifications.md](notifications.md#slack-連携を使えるようにする) を参照。
 
 ### GitHub連携

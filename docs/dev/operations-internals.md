@@ -1,7 +1,7 @@
 ---
 type: design_doc
 title: 運用の仕組み(開発者向け)
-updated: 2026-10-27
+updated: 2026-11-26
 ---
 
 # 運用の仕組み(開発者向け)
@@ -118,7 +118,8 @@ clone した環境(`pnpm dev` / `pnpm maintenance`)では、どちらもリポ�
 
 ### ワーカーの止め方
 
-バックグラウンドの3つのワーカー(通知 / 掃除 / リモート実行)も止める。動いたままだと DB の接続が
+バックグラウンドの5つのワーカー(通知 / 期日のリマインド / Wiki アナウンスの予約 / 掃除 / リモート実行)も止める。
+どれも `createWorkerLoop`(`src/lib/worker-loop.ts`)で動かしているので、ワーカーを増やしても同じように止まる。動いたままだと DB の接続が
 復活し、リストアの接続チェックに引っかかるため。
 
 ただし**実行中の処理は打ち切らない**。新しい周を始めないだけで、実行中のものは最後にログ・
@@ -144,6 +145,7 @@ clone した環境(`pnpm dev` / `pnpm maintenance`)では、どちらもリポ�
 | `command_run`            | 受付が保持期間より古い + コマンドごとに新しい N 件だけ残す                               | 既定90日   |
 | `ticket_activity`        | 記録が保持期間より古い(チケットの変更履歴)                                               | 既定365日  |
 | `board_note_revision`    | 記録が保持期間より古い(ボードノートの版。削除済みノートはこれで復元できなくなる)         | 既定365日  |
+| `wiki_page`(削除済み)    | 削除(`deletedAt`)が保持期間より古い。版・タグの紐づけも一緒に消える                      | 既定7日    |
 | `wiki_page_revision`     | 最後の保存が保持期間より古い。存在するページは最新の版と直近の版、基準版を残す           | 既定7日    |
 | `git_check_suite`        | 更新が保持期間より古い(GitHub / GitLab 連携の CI 結果。マージ済み・放置された PR のもの) | 90日       |
 | `ticket_due_reminder`    | 期日が保持期間より古い(期日のリマインドの送信記録。期日を過ぎたものはもう送らない)       | 30日       |
@@ -173,7 +175,7 @@ clone した環境(`pnpm dev` / `pnpm maintenance`)では、どちらもリポ�
 ### 添付の掃除
 
 添付は `attachment` テーブルと実体の両方を消す。参照は外部キーではなく本文中のURLなので、
-次の9箇所を見て「どこからも参照されていない」ことを確かめてから消す。
+次の10箇所を見て「どこからも参照されていない」ことを確かめてから消す。
 
 - チケット本文の Markdown
 - コメント本文の Markdown
@@ -181,6 +183,7 @@ clone した環境(`pnpm dev` / `pnpm maintenance`)では、どちらもリポ�
 - チケットテンプレート本文の Markdown(`ticket_template.content`)
 - ボードノートとその版の本文(`board_note.content` / `board_note_revision.content`)
 - Wiki ページとその版の本文(`wiki_page.content` / `wiki_page_revision.content`)
+- Wiki のページテンプレート本文(`wiki_template.content`)
 - ユーザーのアバター(`user.image`)
 - リンクウィジェットのアイコン(`link_widget.iconPath`)
 - お知らせ本文(`key_value_store` の `DASHBOARD_ANNOUNCEMENT`)
@@ -259,6 +262,7 @@ comm -13 /tmp/db-keys /tmp/s3-keys
 ### インデックスを足す目安
 
 掃除用のインデックスは一部のテーブルにだけ置いている(`ticket_activity.createdAt` /
+`board_note_revision.createdAt` / `wiki_page.deletedAt` / `wiki_page_revision.updatedAt` / `ticket_due_reminder.dueDate` /
 `git_check_suite.updatedAt` / `upload_nonce.expiresAt` / `agent_run.(runnerId, startedAt)`)。`session` / `verification` / `oauth_*` には置いていない。
 特に `session.expiresAt` はセッション更新のたびに書き換わる列で、最も書き込みの多いテーブルに索引を足すと
 1時間に1回のスキャンと引き換えにリクエストごとの索引更新を招くため、あえて入れていない。

@@ -16,7 +16,7 @@ Self-hosted kanban & ticket management with a built-in MCP server, where AI agen
   Per-board premises (repository, conventions) reach the AI too
 - **Self-host with one `compose.yaml`**: runs with Docker Compose and keeps your data on your own server. MIT licensed, with no seat limits or fees
 
-Also: GitHub / GitLab integration (PR status, CI results, auto-complete on merge), email / Slack / web push notifications,
+Also: a Wiki (spaces, page history, design document pages, announcements to Slack), GitHub / GitLab integration (PR status, CI results, auto-complete on merge), email / Slack / web push notifications,
 Google Calendar and free/busy sharing, remote execution, passkeys and Google sign-in, English / Japanese UI.
 
 ## Quick start

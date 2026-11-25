@@ -1,7 +1,7 @@
 ---
 type: design_doc
 title: MCP サーバーの仕組み(開発者向け)
-updated: 2026-10-27
+updated: 2026-11-26
 ---
 
 # MCP サーバーの仕組み(開発者向け)
@@ -38,9 +38,13 @@ MCP サーバーの認証の振り分け・ツールの入力仕様・実装上�
 
 登録は `src/lib/mcp/mcp-server.ts` で `auth.kind` ごとに切り替える。
 
-- 共通のツールと画像の添付のツールは、接続の種類を問わず登録する。人間の2経路は登録するツールも権限も同じ
+- 共通のツールと、画像・ファイルの添付(`registerImageTools` / `registerFileTools`)、ボードノート(`registerBoardNoteTools`)、
+  Wiki(`registerWikiTools`)、セットアップ手順(`registerAgentSetupTool`)のツールは、接続の種類を問わず登録する。
+  人間の2経路は登録するツールも権限も同じ
 - `report_acceptance_criteria` は人間の経路だけ。エージェントは受け入れ条件の結果を `finish_agent_task` の `criteria` で
   申告するので、一覧に出すと誤用のもとになる
+- `get_skill_install_guide`(`registerSkillTools`)も人間の経路だけ。スキルを入れる場所を利用者に確かめさせる手順なので、
+  利用者のいないエージェントには出さない
 - `get_agent_task` / `finish_agent_task` / `propose_child_tickets` はエージェント用トークンの接続だけ(`src/lib/mcp/mcp-agent.ts`)。
   人間の MCP クライアントには関係が無く、一覧に出しても誤用のもとにしかならない
 - 新しいツールには `TOOL_ANNOTATIONS`(`src/lib/mcp/mcp.ts`)のどれかを `annotations` に必ず付ける。
@@ -371,16 +375,21 @@ AIエージェント用ユーザーは `User.isAgent` が立ったユーザー�
 
 ## 画像の添付
 
-- 添付先のボードを省略させないのは、ボードに属さない添付は全ログインユーザーが読めてしまうため(MCP からは作らせない)。
-  `ticketId` を指定した場合は、そのチケットを編集できることを確認してからボードを決める
-- 添付の可視判定は `Attachment.boardId` で行う。本文の保存時に付け替える条件は [mcp-tools.md](mcp-tools.md#制限) を参照
+- 添付先(`ticketId` / `boardId` / `wikiPage` のちょうど1つ)を省略させないのは、ボードにも Wiki スペースにも属さない添付は
+  全ログインユーザーが読めてしまうため(MCP からは作らせない)。決め方は `resolveUploadTarget`(`src/lib/mcp/mcp-image.ts`)
+  - `ticketId` は、そのチケットを編集できることを確認してからボードを決める
+  - `wikiPage` は、ページが存在し、スペースに書き込める(editor 以上かつ未アーカイブ)ことを確認してから、そのスペースを添付先にする
+    (添付はページではなくスペースに属する)
+- 添付の可視判定は `Attachment.boardId` / `wikiSpaceId` で行う(`canViewAttachment`、`src/lib/storage/attachment-access.ts`)。
+  本文の保存時に付け替える条件は [mcp-tools.md](mcp-tools.md#制限) を参照
 
 アップロードトークン:
 
 - `/api/upload` 専用(`aud` で固定)。MCP のアクセストークンや長期トークンとは相互に使えない
 - 有効期限は10分。使用した `jti` を `upload_nonce` テーブルへ記録し、その一意制約で 2 回目を必ず弾く
   (記録できない場合もアップロードを断る)
-- 利用する時点で BAN・ボードの所属・アーカイブを引き直すため、発行後に条件が変われば通らない
+- 利用する時点で BAN・ボードの所属(Wiki スペースなら書き込み権限)・アーカイブを引き直すため、発行後に条件が変われば通らない
+  (`src/lib/storage/upload-token.ts`)
 - `BETTER_AUTH_SECRET` を変更すると発行済みのものは即失効する(寿命が短いので実害は無い)
 
 ## 登録できるクライアントの範囲

@@ -15,7 +15,7 @@ Website: https://playree.github.io/devuntu/
 > The detailed documentation is available in Japanese only.
 
 Devuntu は、かんばん形式のボード/チケット管理を中心に、
-カレンダー連携、メール/Slack/Webプッシュ通知、MCP/AIエージェント連携、リモート実行などを備えた
+Wiki、カレンダー連携、メール/Slack/Webプッシュ通知、MCP/AIエージェント連携、リモート実行などを備えた
 セルフホスト型のプロジェクト管理ツールです。
 
 **特徴**
@@ -63,6 +63,7 @@ docker compose up -d --wait
   - [環境変数](#環境変数)
 - [利用者向け](#利用者向け)
   - [シンプルなチケット＆かんばんボード](#シンプルなチケットかんばんボード)
+  - [Wiki](#wiki)
   - [カレンダーと空き時間の共有](#カレンダーと空き時間の共有)
   - [表示言語](#表示言語)
   - [通知](#通知)
@@ -181,17 +182,17 @@ Docker Compose で3つのサービスを起動します(`compose.yaml`)。
 
 いずれも任意です。「前提」の設定を済ませると有効になり、Google と Slack はさらに管理者が `/admin/settings` で有効化します。
 
-| 連携           | 前提                                                                                                           | 有効にすると                                                           |
-| -------------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| メール         | `MAIL_SEND` / `MAIL_FROM`                                                                                      | メールOTPでのサインインとメール通知                                    |
-| Google         | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`                                                                    | Googleサインインとカレンダー機能                                       |
-| Slack          | `SLACK_*` 一式                                                                                                 | Slack DM 通知とチケットURLの展開                                       |
-| Webプッシュ    | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`                                                                       | ブラウザ / スマートフォンへのプッシュ通知                              |
-| GitHub         | 不要(ボード設定で対応付けごとにシークレットを発行)                                                             | PR の状態・CI の反映、マージでの自動完了、エージェントへの自動差し戻し |
-| GitLab         | `GITLAB_URLS`                                                                                                  | MR の状態・CI の反映、マージでの自動完了、エージェントへの自動差し戻し |
-| MCP            | 不要(ブラウザでの認可も使うなら `OIDC_DCR_ENABLED=true`。claude.ai からは `OIDC_DCR_ALLOWED_REDIRECT_URIS` も) | MCPクライアントからの接続                                              |
-| AIエージェント | `/admin/agents` でのエージェント作成とトークン発行                                                             | エージェントによるチケットの自動処理                                   |
-| リモート実行   | `COMMAND_EXEC_ENABLED=true` と定義ファイル / SSH鍵 / known_hosts                                               | 画面からリモートサーバーでの定義済み処理の実行                         |
+| 連携           | 前提                                                                                                           | 有効にすると                                                              |
+| -------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| メール         | `MAIL_SEND` / `MAIL_FROM`                                                                                      | メールOTPでのサインインとメール通知                                       |
+| Google         | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`                                                                    | Googleサインインとカレンダー機能                                          |
+| Slack          | `SLACK_*` 一式                                                                                                 | Slack DM 通知、ボード・Wiki アナウンスのチャンネル通知、チケットURLの展開 |
+| Webプッシュ    | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`                                                                       | ブラウザ / スマートフォンへのプッシュ通知                                 |
+| GitHub         | 不要(ボード設定で対応付けごとにシークレットを発行)                                                             | PR の状態・CI の反映、マージでの自動完了、エージェントへの自動差し戻し    |
+| GitLab         | `GITLAB_URLS`                                                                                                  | MR の状態・CI の反映、マージでの自動完了、エージェントへの自動差し戻し    |
+| MCP            | 不要(ブラウザでの認可も使うなら `OIDC_DCR_ENABLED=true`。claude.ai からは `OIDC_DCR_ALLOWED_REDIRECT_URIS` も) | MCPクライアントからの接続                                                 |
+| AIエージェント | `/admin/agents` でのエージェント作成とトークン発行                                                             | エージェントによるチケットの自動処理                                      |
+| リモート実行   | `COMMAND_EXEC_ENABLED=true` と定義ファイル / SSH鍵 / known_hosts                                               | 画面からリモートサーバーでの定義済み処理の実行                            |
 
 ## 運用
 
@@ -252,6 +253,18 @@ docker compose run --rm tools maintenance off
 
 ![かんばんボード](docs/images/board.webp)
 
+## Wiki
+
+仕様・手順書・設計書など、チケットより長く残す文書を置く場所です。サイドメニューの「Wiki」から開きます。
+
+- スペースごとに、ページを親子の階層で並べる(版の履歴と復元、タグ、検索)
+- スペースごとに公開範囲(割り当てのみ / 全員)と、ユーザー・グループ・ボードへのロール(オーナー / 編集者 / 閲覧者)の割り当てを持つ
+- [Markdown Design Doc Viewer](https://github.com/playree/markdown-design-doc-viewer) 形式の設計書ページで、図と見出しを結び付けて表示・編集できる
+- アナウンス用スペースでお知らせを新しい順に残し、Slack チャンネルへ今すぐ / 予約して通知できる
+- ボードにスペースを割り当てると、そのボードのチケットを扱う AI にスペースの一覧が届き、AI は MCP で関係するページを探して読み書きします
+
+使い方は [docs/guide/user-guide.md](docs/guide/user-guide.md#wiki)、AI からの使い方は [docs/guide/ai.md](docs/guide/ai.md#wiki-を-ai-から使う) を参照。
+
 ## カレンダーと空き時間の共有
 
 Googleアカウントと連携すると、`/cal` で自分の予定を確認できます。
@@ -275,6 +288,7 @@ Googleアカウントと連携すると、`/cal` で自分の予定を確認で�
 - **Webプッシュ** — VAPID 鍵の設定が前提で、通知を受けたい端末ごとに `/account` から購読を登録します
 
 チームボードでは、チケットの作成・完了・担当者の変更・エージェントの実行結果・マージによる自動完了の保留・アナウンス(リリースのお知らせなど)を Slack チャンネルへ流せます。
+Wiki のアナウンス用スペースのページも、スペースに設定した Slack チャンネルへ通知できます。
 また Slack に貼られたチケットURLは、閲覧権限を確認した上でカード表示に展開されます。
 
 Slack App の設定などは [docs/admin/notifications.md](docs/admin/notifications.md)、実装の詳細は [docs/dev/notifications-internals.md](docs/dev/notifications-internals.md) を参照。
@@ -286,7 +300,7 @@ DevuntuはMCPサーバーの単純な提供だけでなく、AI開発に適し�
 ### MCPサーバー
 
 最近では対応サービスも増えてきたMCPサーバー機能です。  
-`/api/mcp` へ接続すると、自分の権限でチケットの検索・作成・更新ができます。  
+`/api/mcp` へ接続すると、自分の権限でチケットの検索・作成・更新と、Wiki の検索・閲覧・編集ができます。  
 コメントを、プラン(`type=plan`)や報告書(`type=report`)として投稿できるようになっており、対応内容を確認し易くなっています。
 
 - チケットURLと共に「このチケットを対応して」と指示すれば、チケット内容を読み取り、プランの投稿から、対応後の報告までをチケットにまとめられます。

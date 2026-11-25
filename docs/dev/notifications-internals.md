@@ -1,7 +1,7 @@
 ---
 type: design_doc
 title: 通知の仕組み(開発者向け)
-updated: 2026-11-07
+updated: 2026-11-26
 ---
 
 # 通知の仕組み(開発者向け)
@@ -132,16 +132,17 @@ advisory lock を保持できないため、そもそも採れない)。
 **どの条件でどのイベントを発火するかは `src/lib/notify/notify-trigger.ts` に閉じる。**
 同じ操作が Web(Server Action)と MCP の 2 系統にあるため、判断を呼び出し元に書くと必ず片方が漏れる。
 
-| 入口                              | 呼び出し元                                                                                                                               | 発火するイベント                                                                    |
-| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `enqueueTicketCreated()`          | `ticket-mutation.ts` の `insertTicket`(`createTicket` / `createTicketForMcp`、起票案の承認で作る子チケット(`agent-proposal.ts`))         | `ticket_created` / `mention` / `ticket_assigned`、完了で作ったら `ticket_completed` |
-| `enqueueTicketUpdated()`          | `ticket-mutation.ts` の `updateTicket`(`patchTicket` / `updateTicketForMcp`)                                                             | `mention` / `ticket_assigned`、完了へ動いたら `ticket_completed`                    |
-| `enqueueTicketMoved()`            | ステータスだけの変更(`changeTicketStatus` = `updateTicketStatus` / かんばんの DnD)、report の承認による完了(`agent-decision.ts`)         | 完了へ動いたら `ticket_completed`                                                   |
-| `enqueueTicketCompletedByMerge()` | `completeTicketByMerge`(`git-webhook.ts` の PR / MR マージによる自動完了)                                                                | `ticket_completed`(操作者なし)                                                      |
-| `enqueueTicketMergeHeld()`        | `completeTicketByMerge`(未達の受け入れ条件があり、自動完了を保留したとき)                                                                | `ticket_merge_held`(操作者なし)                                                     |
-| `enqueueTicketCommented()`        | `ticket-mutation.ts` の `insertComment` / `updateComment`(Web と MCP のコメント、承認 / 差し戻しの返信、`propose_child_tickets` の plan) | `mention`、種別がアナウンスのコメントを投稿したら `announcement`                    |
-| `enqueueAgentRunFinished()`       | `agent-run.ts` の実行を閉じる 3 経路                                                                                                     | `agent_run`                                                                         |
-| `runDueRemind()`                  | `notify-due-worker.ts`(5分ごと)。操作ではなく時刻を起点にする唯一のトリガーなので `notify-due.ts` に分けている                           | `ticket_due`(操作者なし)                                                            |
+| 入口                              | 呼び出し元                                                                                                                                                                                  | 発火するイベント                                                                    |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `enqueueTicketCreated()`          | `ticket-mutation.ts` の `insertTicket`(`createTicket` / `createTicketForMcp`、起票案の承認で作る子チケット(`agent-proposal.ts`))                                                            | `ticket_created` / `mention` / `ticket_assigned`、完了で作ったら `ticket_completed` |
+| `enqueueTicketUpdated()`          | `ticket-mutation.ts` の `updateTicket`(`patchTicket` / `updateTicketForMcp`)                                                                                                                | `mention` / `ticket_assigned`、完了へ動いたら `ticket_completed`                    |
+| `enqueueTicketMoved()`            | ステータスだけの変更(`changeTicketStatus` = `updateTicketStatus` / かんばんの DnD)、report の承認による完了(`agent-decision.ts`)                                                            | 完了へ動いたら `ticket_completed`                                                   |
+| `enqueueTicketCompletedByMerge()` | `completeTicketByMerge`(`git-webhook.ts` の PR / MR マージによる自動完了)                                                                                                                   | `ticket_completed`(操作者なし)                                                      |
+| `enqueueTicketMergeHeld()`        | `completeTicketByMerge`(未達の受け入れ条件があり、自動完了を保留したとき)                                                                                                                   | `ticket_merge_held`(操作者なし)                                                     |
+| `enqueueTicketCommented()`        | `ticket-mutation.ts` の `insertComment` / `updateComment`(Web と MCP のコメント、承認 / 差し戻しの返信、`propose_child_tickets` の plan)                                                    | `mention`、種別がアナウンスのコメントを投稿したら `announcement`                    |
+| `enqueueAgentRunFinished()`       | `agent-run.ts` の実行を閉じる 3 経路                                                                                                                                                        | `agent_run`                                                                         |
+| `runDueRemind()`                  | `notify-due-worker.ts`(5分ごと)。操作ではなく時刻を起点にする唯一のトリガーなので `notify-due.ts` に分けている                                                                              | `ticket_due`(操作者なし)                                                            |
+| `notifyWikiAnnouncementNow()`     | Wiki のページの「今すぐ通知」。予約は `wiki-announcement-notify-worker.ts`(1分ごと)が `runWikiAnnouncementSchedule` で送る。チケットの変化ではないので `wiki-announcement-notify.ts` に置く | `wiki_announcement`([Wiki アナウンス](#wiki-アナウンス))                            |
 
 呼び出し元は「何が起きたか」(前後の状態・増えたメンション)を渡すだけで、発火の判断はしない。
 
@@ -326,8 +327,9 @@ SELECT が増えることはない。
   残ると通知の出方が端末ごとに食い違う
 
 PWA manifest は `src/app/manifest.ts`(`display: 'standalone'`、アイコンは `public/icon-192.png` /
-`icon-512.png`)。`src/proxy.ts` の matcher は `.*\.` を除外しているので、`/sw.js` と
-`/manifest.webmanifest` は認証をかけずに配信される。
+`icon-512.png`)。`/sw.js` と `/manifest.webmanifest` はルート直下の拡張子付きのパスなので、
+Proxy が `isProxyAuthBypassPath()` で素通しにし、認証をかけずに配信される(メンテナンスモードでは遮断される。
+[アクセス制御の仕組み](screens.md#アクセス制御の仕組み))。
 
 ### iOS / iPadOS の判定
 
@@ -537,7 +539,7 @@ Slack は `links:read` があると **アプリが参加していない公開チ
 
 ### リクエストの検証
 
-`/api/slack/events` は `src/proxy.ts` の matcher が `api/` を除外しているため未認証で叩ける。
+`/api/slack/events` は Proxy が `/api/**` を認証処理なしで素通しにする(`isProxyAuthBypassPath()`)ため未認証で叩ける。
 Slack の署名(`src/lib/slack/slack-signature.ts`)だけが門番になるので、検証を通す前に本文を解釈しない。
 
 - 署名は**生ボディ**に対して計算されるため、`request.text()` で読んでから検証する(`request.json()` を先に呼ぶと一致しない)
