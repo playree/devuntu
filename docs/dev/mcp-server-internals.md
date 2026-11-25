@@ -220,7 +220,7 @@ Announce: if the result is worth telling all board members (e.g. a release), pro
 - 各ツールの `inputSchema` は `z.strictObject` で登録し、定義に無い引数はエラーにする(JSON Schema に `additionalProperties: false` が出る)。
   生の shape を渡すと SDK が strip の `z.object` に包み、`content` のつもりの `description` などが黙って捨てられて空のチケットができるため
 - `ticketId` は**表示ID(例: ABC-42)でもチケットIDでも**受け取れる(`resolveTicketId`)。
-  `commentId` と `assigneeId` は UUIDv7 のみ
+  `commentId` は UUIDv7 のみ。`assigneeId` は UUIDv7 か `me`(自分)
 - `boardId` は**ボードID でもボードキー(例: ABC)でも**受け取れる(`resolveBoardId`)。
   キーは全ボード一意で、UUIDv7 は `BOARD_KEY_PATTERN`(大文字英数)に一致しないため取り違えない。
   ただし `search_tickets` の絞り込みでは未知のキーもエラーにせず0件を返す
@@ -230,7 +230,8 @@ Announce: if the result is worth telling all board members (e.g. a release), pro
   一覧に含めなかった項目は消える)。
 - `get_ticket` のコメントには種別(`type`)と、承認 / 差し戻しボタンから投稿された返信の判定(`decision`)が付く。
 - `create_ticket` の `assigneeId` / `tagIds` は `get_board` が返すメンバー・タグの ID を使う。
-  他ボードのタグは付けられず、メンバー以外は担当者にできない
+  他ボードのタグは付けられず、メンバー以外は担当者にできない。
+  `create_ticket` / `update_ticket` の `assigneeId` の `me` は、MCP 側で接続しているユーザーの ID に置き換えてから渡す
 - `search_tickets` の `assignee` は ユーザーID / `me`(自分) / `none`(未割り当て)。`limit` は既定20・最大50
 - `search_tickets` の `relatedTo` は表示ID。`relation` は `child`(直下の子) / `related`(関連) / `all`(両方。既定)
 - 親子・関連は**同じボードのチケット同士だけ**。`parentId` / `relatedTicketId` は表示ID・チケットID・番号だけ(`12`)のいずれでも受け、
