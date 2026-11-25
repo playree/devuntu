@@ -61,8 +61,9 @@ export type GetWikiSpaceReturnType = Awaited<ReturnType<typeof getWikiSpace>>['d
 
 /**
  * ページの作成。親の子(親が無ければスペース直下)の末尾に置く。
- * テンプレートを指定すると、本文はテンプレートのもの(プレースホルダーを置き換える)にする(MCP と同じ applyWikiTemplateToPage)。
- * タイトルと種類は画面がテンプレートから入れたものを、入力のまま使う(置き換え直すと表示名の中の `{{date}}` なども置き換わるため)
+ * テンプレートを指定すると、種類と本文はテンプレートのもの(プレースホルダーを置き換える)にする(MCP と同じ applyWikiTemplateToPage)。
+ * 画面ではテンプレートを選ぶと種類を変えられないので、入力の種類は渡さない(開いた後にテンプレートの種類が変わっても、テンプレートに合わせる)。
+ * タイトルは画面がテンプレートから入れたものを、入力のまま使う(置き換え直すと表示名の中の `{{date}}` なども置き換わるため)
  */
 export const createWikiPage = safeAuthAction
   .metadata({ actionName: 'createWikiPage', role: 'user' })
@@ -70,7 +71,7 @@ export const createWikiPage = safeAuthAction
   .action(async ({ ctx: { user }, parsedInput: { spaceId, parentId, title, type, templateId } }) => {
     const template = templateId ? await renderWikiTemplate(user, spaceId, { id: templateId }) : null
     return await createWikiPageCore(user, WEB, spaceId, {
-      ...applyWikiTemplateToPage({ title, type }, template),
+      ...applyWikiTemplateToPage(template ? { title } : { title, type }, template),
       parentId,
     })
   })

@@ -155,7 +155,10 @@ describe('notifyWikiAnnouncementNow', () => {
   it.each([
     [
       'チャンネルが未設定',
-      () => vi.mocked(prisma.wikiSpace.findUnique).mockResolvedValue(space({ announceSlackChannelId: null }) as never),
+      () =>
+        vi
+          .mocked(prisma.wikiSpace.findUniqueOrThrow)
+          .mockResolvedValue(space({ announceSlackChannelId: null }) as never),
     ],
     ['Slack 連携が無効', () => vi.mocked(isSlackChannelPostEnabled).mockResolvedValue(false)],
   ])('%s なら WIKI_ANNOUNCE_UNAVAILABLE で拒否する', async (_label, arrange) => {
@@ -220,7 +223,7 @@ describe('scheduleWikiAnnouncement', () => {
   })
 
   it('チャンネルが未設定なら予約もできない', async () => {
-    vi.mocked(prisma.wikiSpace.findUnique).mockResolvedValue(space({ announceSlackChannelId: null }) as never)
+    vi.mocked(prisma.wikiSpace.findUniqueOrThrow).mockResolvedValue(space({ announceSlackChannelId: null }) as never)
     await expect(
       scheduleWikiAnnouncement(actor, PAGE_ID, { kind: 'published', scheduledAt: later }),
     ).rejects.toMatchObject({ errorType: WIKI_ANNOUNCE_UNAVAILABLE })
@@ -249,7 +252,7 @@ describe('updateScheduledWikiAnnouncement / cancelScheduledWikiAnnouncement', ()
   })
 
   it('取り消しは予約中の行を canceled にする。チャンネルが未設定でも取り消せる', async () => {
-    vi.mocked(prisma.wikiSpace.findUnique).mockResolvedValue(space({ announceSlackChannelId: null }) as never)
+    vi.mocked(prisma.wikiSpace.findUniqueOrThrow).mockResolvedValue(space({ announceSlackChannelId: null }) as never)
     await cancelScheduledWikiAnnouncement(actor, 'n1')
     expect(prisma.wikiAnnouncementNotify.updateMany).toHaveBeenCalledWith({
       where: { id: 'n1', status: 'scheduled' },
@@ -380,10 +383,16 @@ describe('runWikiAnnouncementSchedule', () => {
 
   it.each([
     ['page_deleted', () => vi.mocked(prisma.wikiPage.findUnique).mockResolvedValue(null)],
-    ['archived', () => vi.mocked(prisma.wikiSpace.findUnique).mockResolvedValue(space({ archived: true }) as never)],
+    [
+      'archived',
+      () => vi.mocked(prisma.wikiSpace.findUniqueOrThrow).mockResolvedValue(space({ archived: true }) as never),
+    ],
     [
       'channel_unset',
-      () => vi.mocked(prisma.wikiSpace.findUnique).mockResolvedValue(space({ announceSlackChannelId: null }) as never),
+      () =>
+        vi
+          .mocked(prisma.wikiSpace.findUniqueOrThrow)
+          .mockResolvedValue(space({ announceSlackChannelId: null }) as never),
     ],
     ['slack_disabled', () => vi.mocked(isSlackChannelPostEnabled).mockResolvedValue(false)],
     ['no_permission', () => vi.mocked(getWikiSpaceAccess).mockResolvedValue({ canWrite: false } as never)],
@@ -502,13 +511,13 @@ describe('wikiAnnounceReadiness', () => {
   it('送れる状態ならチャンネルを返し、送れなければ理由を返す', async () => {
     expect(await wikiAnnounceReadiness('s1')).toEqual({ ready: true, channelId: 'C0123ABCD' })
 
-    vi.mocked(prisma.wikiSpace.findUnique).mockResolvedValue(space({ archived: true }) as never)
+    vi.mocked(prisma.wikiSpace.findUniqueOrThrow).mockResolvedValue(space({ archived: true }) as never)
     expect(await wikiAnnounceReadiness('s1')).toEqual({ ready: false, reason: 'archived' })
 
-    vi.mocked(prisma.wikiSpace.findUnique).mockResolvedValue(space({ announceSlackChannelId: null }) as never)
+    vi.mocked(prisma.wikiSpace.findUniqueOrThrow).mockResolvedValue(space({ announceSlackChannelId: null }) as never)
     expect(await wikiAnnounceReadiness('s1')).toEqual({ ready: false, reason: 'channel_unset' })
 
-    vi.mocked(prisma.wikiSpace.findUnique).mockResolvedValue(space() as never)
+    vi.mocked(prisma.wikiSpace.findUniqueOrThrow).mockResolvedValue(space() as never)
     vi.mocked(isSlackChannelPostEnabled).mockResolvedValue(false)
     expect(await wikiAnnounceReadiness('s1')).toEqual({ ready: false, reason: 'slack_disabled' })
   })

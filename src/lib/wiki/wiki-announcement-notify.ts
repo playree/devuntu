@@ -156,11 +156,11 @@ export type WikiAnnounceReadiness =
  * 今すぐ送る・予約する・画面の表示・予約の送信で同じ判定を使う。権限と区分は呼び出し側で確かめる
  */
 export const wikiAnnounceReadiness = async (spaceId: string, tx: Db = prisma): Promise<WikiAnnounceReadiness> => {
-  const space = await tx.wikiSpace.findUnique({
+  const space = await tx.wikiSpace.findUniqueOrThrow({
     where: { id: spaceId },
     select: { archived: true, announceSlackChannelId: true },
   })
-  if (!space || space.archived) {
+  if (space.archived) {
     return { ready: false, reason: 'archived' }
   }
   if (!space.announceSlackChannelId) {

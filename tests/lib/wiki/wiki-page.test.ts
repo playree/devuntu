@@ -386,6 +386,15 @@ describe('updateWikiPage', () => {
     expect(vi.mocked(writeWikiPageRevision).mock.calls[0][1].snapshot.type).toBe('design_doc')
   })
 
+  it('種類と一緒に本文を渡したときは、front matter を足さずに渡した本文をそのまま保存する(画面で消した front matter を戻さない)', async () => {
+    await updateWikiPage(actor, WEB, 'b', { type: 'design_doc', content: '# 概要' })
+
+    expect(vi.mocked(prisma.wikiPage.update).mock.calls[0][0].data).toMatchObject({
+      content: '# 概要',
+      type: 'design_doc',
+    })
+  })
+
   it('設計書へ変えても、本文が front matter を持っていればそのまま保存する(画面が先に入れた分を重ねない)', async () => {
     const content = '---\ntitle: 既存\n---\n\n# 概要'
     await updateWikiPage(actor, WEB, 'b', { type: 'design_doc', content })
@@ -504,6 +513,13 @@ describe('saveWikiPage', () => {
       await errorTypeOf(saveWikiPage(actor, MCP, 'a', { patch: { title: '改名' }, move: { parentId: 'c' } })),
     ).toBe(WIKI_PAGE_INVALID_PARENT)
     expect(prisma.$transaction).toHaveBeenCalledTimes(1)
+  })
+
+  it('内容を更新して移動が変化なしなら、written は更新の結果にする', async () => {
+    const result = await saveWikiPage(actor, MCP, 'd', { patch: { title: '改名' }, move: { parentId: 'a' } })
+
+    expect(result.changes).toEqual(['updated'])
+    expect(result.written.result).toBe('updated')
   })
 
   it('移動を含まなければスペースは共有ロックで取る', async () => {

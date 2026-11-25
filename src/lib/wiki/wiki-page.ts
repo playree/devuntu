@@ -193,7 +193,8 @@ export type WikiPagePatch = {
 
 /**
  * 更新の本体。スペース行をロックし、書き込みの権限を確かめた後に呼ぶ。
- * 種類を設計書へ変えたときに本文が front matter を持たなければ、最小の front matter を先頭に入れる(画面の編集と同じ)
+ * 本文を渡さずに種類だけを設計書へ変えたとき、本文が front matter を持たなければ最小の front matter を先頭に入れる
+ * (画面は種類を切り替えた時点で本文へ入れる。本文を渡したときは、呼び出し側が組み立てた本文をそのまま使う)
  */
 const updateWikiPageInTx = async (
   tx: Db,
@@ -226,7 +227,7 @@ const updateWikiPageInTx = async (
     ...before,
     title,
     content:
-      type === 'design_doc' && before.type !== 'design_doc' && !hasFrontMatter(content)
+      patch.content === undefined && type === 'design_doc' && before.type !== 'design_doc' && !hasFrontMatter(content)
         ? `${designDocFrontMatter(title)}${content}`
         : content,
     type,
@@ -313,7 +314,8 @@ export const saveWikiPage = async (
         expected: updated ? null : expected,
         ticketId: opts.ticketId,
       }))
-    const written = moved ?? updated
+    // 変えた書き込みのうち最後のもの。どれも変えていなければ最後の結果(unchanged)
+    const written = [moved, updated].find((result) => result && result.result !== 'unchanged') ?? moved ?? updated
     if (!written) {
       throw errInvalidOperation()
     }
@@ -321,11 +323,11 @@ export const saveWikiPage = async (
     return { written, changes }
   })
 
-  if (outcome.changes.length > 0) {
-    logger.info(
-      { userId: actor.id, id: pageId, changes: outcome.changes, parentId: change.move?.parentId, via: writer.via },
-      'wiki page saved',
-    )
+  if (outcome.changes.includes('updated')) {
+    logger.info({ userId: actor.id, id: pageId, via: writer.via }, 'wiki page updated')
+  }
+  if (outcome.changes.includes('moved')) {
+    logger.info({ userId: actor.id, id: pageId, parentId: change.move?.parentId, via: writer.via }, 'wiki page moved')
   }
   return outcome
 }

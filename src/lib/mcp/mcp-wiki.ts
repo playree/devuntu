@@ -562,7 +562,7 @@ export const registerWikiTools = (server: McpServer, auth: ResourceAuth) => {
         'tags replace all tags of the page and must be existing tag names of the space. ' +
         `type design_doc makes the page a design document in the Markdown Design Doc Viewer format (${designDocSkillNote(auth)}); ` +
         'when creating without type, a content whose front matter has type: design_doc becomes one. Omit type when updating to keep it. ' +
-        'A design doc without front matter (created with empty content, or changed to type design_doc) gets a minimal front matter with its title. ' +
+        'A design doc without front matter (created with empty content, or changed to type design_doc without passing content) gets a minimal front matter with its title. ' +
         'In a design doc space (type design_doc in list_wiki_spaces), pages are always design docs: type page is an error, and creating without type makes a design doc. ' +
         'In an announcement space (type announcement), pages are flat normal pages ordered by creation date: parent, position and type design_doc are errors. ' +
         'Write only what the user asked for or agreed to; every change is kept in the page history, from which users can restore it',
