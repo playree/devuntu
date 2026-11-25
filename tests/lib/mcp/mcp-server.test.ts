@@ -240,6 +240,16 @@ describe('createDevuntuMcpServer', () => {
     expect(await descriptionOf(agentAuth)).toContain('Agents cannot post type=announcement')
   })
 
+  it('add_ticket_comment の説明にプランと報告書の Markdown 書式を載せる', async () => {
+    for (const anyAuth of [auth, patAuth, agentAuth]) {
+      const { tools } = await (await connectDevuntuMcp(anyAuth)).listTools()
+      const description = tools.find((tool) => tool.name === 'add_ticket_comment')?.description
+      expect(description).toContain('Write type=plan and type=report bodies in Markdown')
+      expect(description).toContain('blank lines between sections')
+      expect(description).toContain('headings and bullets for changes, verification, and open issues')
+    }
+  })
+
   it('引数を取るツールは inputSchema で未知の引数を許さない', async () => {
     for (const anyAuth of [auth, agentAuth]) {
       const { tools } = await (await connectDevuntuMcp(anyAuth)).listTools()
@@ -493,8 +503,9 @@ describe('createDevuntuMcpServer', () => {
     expect(result.content).toEqual([{ type: 'text', text: JSON.stringify({ id: 'c1' }, null, 2) }])
   })
 
-  it('add_ticket_comment は type と parentId も渡す', async () => {
+  it('add_ticket_comment は改行付き Markdown と type、parentId を渡す', async () => {
     vi.mocked(addTicketCommentForMcp).mockResolvedValueOnce({ id: 'c1' } as never)
+    const content = '## 手順\n\n1. 調査する\n2. 確認する'
 
     await (
       await connectDevuntuMcp()
@@ -502,7 +513,7 @@ describe('createDevuntuMcpServer', () => {
       name: 'add_ticket_comment',
       arguments: {
         ticketId: 'ABC-1',
-        content: 'プラン',
+        content,
         type: 'plan',
         parentId: '0195c1e0-0000-7000-8000-000000000001',
       },
@@ -511,7 +522,7 @@ describe('createDevuntuMcpServer', () => {
     expect(addTicketCommentForMcp).toHaveBeenCalledWith(
       auth,
       'ABC-1',
-      'プラン',
+      content,
       'plan',
       '0195c1e0-0000-7000-8000-000000000001',
       undefined,
