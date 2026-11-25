@@ -1001,6 +1001,7 @@ export type LocaleItemBase =
   | 'notify_msg_ticket_assigned_channel'
   | 'notify_msg_ticket_completed'
   | 'notify_msg_ticket_created'
+  | 'notify_msg_ticket_created_with_assignee'
   | 'notify_msg_ticket_due_day_before'
   | 'notify_msg_ticket_due_due_day'
   | 'notify_msg_ticket_merge_held'

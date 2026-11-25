@@ -113,6 +113,33 @@ describe('resolveNotifyTargets: イベントごとの宛先', () => {
     expect(prisma.ticket.findUnique, '作成者は宛先にしない').not.toHaveBeenCalled()
   })
 
+  it('作成と同時の ticket_assigned は、作成の通知も届くチャンネルへは流さない(DM は送る)', async () => {
+    vi.mocked(getBoardNotifyChannels).mockImplementation(async (_boardId, event) =>
+      event === 'ticket_created' ? ['C-both', 'C-created'] : ['C-both', 'C-assigned'],
+    )
+    const targets = await resolveNotifyTargets(
+      'ticket_assigned',
+      { ticketId: 't1', boardId: 'b1', onCreate: true } as NotifyPayload<'ticket_assigned'>,
+      { userIds: ['u2'] },
+    )
+
+    expect(targets).toEqual({ userIds: ['u2'], slackChannelIds: ['C-assigned'] })
+  })
+
+  it('作成後の ticket_assigned は、作成の通知が届くチャンネルへも流す', async () => {
+    vi.mocked(getBoardNotifyChannels).mockImplementation(async (_boardId, event) =>
+      event === 'ticket_created' ? ['C-both'] : ['C-both', 'C-assigned'],
+    )
+    const targets = await resolveNotifyTargets(
+      'ticket_assigned',
+      { ticketId: 't1', boardId: 'b1' } as NotifyPayload<'ticket_assigned'>,
+      { userIds: [] },
+    )
+
+    expect(targets.slackChannelIds).toEqual(['C-both', 'C-assigned'])
+    expect(getBoardNotifyChannels).not.toHaveBeenCalledWith('b1', 'ticket_created')
+  })
+
   it.each(['ticket_created', 'ticket_completed', 'announcement'] as const)(
     '%s はチャネル通知だけで、渡された宛先があっても DM しない',
     async (event) => {

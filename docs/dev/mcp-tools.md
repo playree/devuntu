@@ -55,6 +55,8 @@ MCP サーバー(`/api/mcp`)が提供するツールと、その権限・入力�
 - `delete_ticket` — オーナー・メンバーともに**自分が作成したチケットのみ**削除できる(画面より厳しい)
 - `delete_ticket_comment` — 自分が投稿したコメント、またはチケットを削除できる権限を持つ場合。返信は親と一緒に消えるため、
   他人の返信が付いたコメントはチケットを削除できる権限が無いと削除できない(`COMMENT_HAS_OTHERS_REPLIES`。画面と同じ)
+- `create_ticket` / `update_ticket` の `assigneeId` には、ユーザーID(`get_board` の `members`)のほか `me`(接続しているユーザー自身)を指定できる。
+  自分の ID を引かずに「自分を担当にして作成」が 1 回で済む(`search_tickets` の `assignee` の `me` と同じ)
 - 本文やコメントのメンション(`@[アドレス]`)は画面から書いた場合と同じように解決され、通知も飛ぶ
 - `link_ticket_artifact` / `unlink_ticket_artifact` — コメントの投稿と同じく、チケットを編集できれば使える
 - `link_related_ticket` / `unlink_ticket_relation` — `update_ticket` と同じ制限を受ける。親子は子のチケットで判定し、

@@ -234,8 +234,15 @@ export const getTicketForMcp = async (auth: ResourceAuth, ticketIdOrDisplayId: s
   }
 }
 
-/** `search_tickets` の `assignee` に指定できる自分自身の別名。担当チケットの巡回に使う */
+/**
+ * 自分自身の別名。`search_tickets` の `assignee`(担当チケットの巡回)と、
+ * `create_ticket` / `update_ticket` の `assigneeId`(自分のユーザーIDを引かずに担当になる)に指定できる
+ */
 export const MCP_ASSIGNEE_ME = 'me'
+
+/** `assigneeId` の `me` を自分のユーザーIDへ。未指定(変更しない)と null(外す)はそのまま */
+const resolveAssigneeId = <T extends string | null | undefined>(assigneeId: T, userId: string): T | string =>
+  assigneeId === MCP_ASSIGNEE_ME ? userId : assigneeId
 
 export type McpTicketSearchInput = {
   keyword?: string
@@ -323,7 +330,11 @@ export const createTicketForMcp = async (auth: ResourceAuth, { templateId, ...in
     await assertBoardAccess(auth.user, boardId, 'view')
   }
   const template = templateId ? await findTicketTemplate(boardId, templateId) : null
-  const ticket = await createTicket(auth.user, { ...applyTicketTemplate(input, template), boardId })
+  const ticket = await createTicket(auth.user, {
+    ...applyTicketTemplate(input, template),
+    boardId,
+    assigneeId: resolveAssigneeId(input.assigneeId, auth.user.id),
+  })
 
   logger.info({ userId: auth.user.id, ticket }, 'mcp ticket created')
   return ticket
@@ -358,7 +369,12 @@ export const updateTicketForMcp = async (
   input: McpUpdateTicketInput,
 ) => {
   const id = await resolveTicketId(auth, ticketIdOrDisplayId)
-  const ticket = await updateTicket(auth.user, id, input, { authorize: mcpUpdateAuthorize(auth) })
+  const ticket = await updateTicket(
+    auth.user,
+    id,
+    { ...input, assigneeId: resolveAssigneeId(input.assigneeId, auth.user.id) },
+    { authorize: mcpUpdateAuthorize(auth) },
+  )
 
   logger.info({ userId: auth.user.id, id }, 'mcp ticket updated')
   return ticket

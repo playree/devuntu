@@ -1117,6 +1117,7 @@ export const ja: DefaultLocaleItems = {
   notify_msg_ticket_completed: '${from}さんがチケットを完了しました',
   notify_msg_ticket_completed_by_pr: 'プルリクエスト ${pr} の完了により、チケットを自動で完了しました',
   notify_msg_ticket_created: '${from}さんがチケットを作成しました',
+  notify_msg_ticket_created_with_assignee: '${from}さんが${assignee}さんを担当者にしてチケットを作成しました',
   notify_msg_ticket_due_day_before: '明日(${due})が期日です',
   notify_msg_ticket_due_due_day: '今日(${due})が期日です',
   notify_msg_ticket_merge_held:

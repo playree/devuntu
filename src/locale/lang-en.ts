@@ -1119,6 +1119,7 @@ Expiration time: 5 minutes
   notify_msg_ticket_completed: '${from} completed this ticket',
   notify_msg_ticket_completed_by_pr: 'Completed automatically as pull request ${pr} was finished',
   notify_msg_ticket_created: '${from} created this ticket',
+  notify_msg_ticket_created_with_assignee: '${from} created this ticket and assigned it to ${assignee}',
   notify_msg_ticket_due_day_before: 'This ticket is due tomorrow (${due})',
   notify_msg_ticket_due_due_day: 'This ticket is due today (${due})',
   notify_msg_ticket_merge_held:

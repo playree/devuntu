@@ -135,38 +135,52 @@ const enqueueMentioned = async (
   )
 }
 
+/** 新しく担当になった人。通知の宛先と文面に使う */
+type NewAssignee = { id: string; name: string; isAgent: boolean }
+
+/**
+ * 担当が実際に変わって、かつ新しい担当者がいるときだけ、その人を返す
+ * (担当を外しただけでは知らせる相手も内容も無い)。
+ */
+const findNewAssignee = async (
+  before: string | null,
+  after: string | null,
+  tx: Prisma.TransactionClient,
+): Promise<NewAssignee | null> => {
+  if (!after || after === before) {
+    return null
+  }
+  const user = await tx.user.findUnique({ where: { id: after }, select: { name: true, isAgent: true } })
+  return user ? { id: after, ...user } : null
+}
+
 /**
  * 担当者が変わったことの通知。
  *
- * 発火するのは担当が実際に変わって、かつ新しい担当者がいるときだけ
- * (担当を外しただけでは知らせる相手も内容も無い)。
- *
  * DM の宛先は新しい担当者。自分で自分を担当にした場合と、担当がエージェント用ユーザー
  * (DM を読まない)の場合は DM の宛先から外すが、**チャネル通知は宛先が別なので発火させる**。
+ *
+ * 作成時の担当(`onCreate`)は作成の通知の文面にも載るので、作成の通知も届くチャンネルへは
+ * 配信時に送らない(`notify-recipient.ts`)。
  */
 const enqueueAssigned = async (
   param: {
     actorId: string
     ticket: TicketNotifyRef
-    before: string | null
-    after: string | null
+    assignee: NewAssignee | null
+    onCreate?: boolean
   },
   tx: Prisma.TransactionClient,
 ): Promise<void> => {
-  const { actorId, ticket, before, after } = param
-  if (!after || after === before) {
-    return
-  }
-
-  const assignee = await tx.user.findUnique({ where: { id: after }, select: { name: true, isAgent: true } })
+  const { actorId, ticket, assignee, onCreate } = param
   if (!assignee) {
     return
   }
 
   // DM を届ける相手がいない場合も、チャンネルへは「誰が担当になったか」を知らせる
-  const targetUserIds = assignee.isAgent || after === actorId ? [] : [after]
+  const targetUserIds = assignee.isAgent || assignee.id === actorId ? [] : [assignee.id]
 
-  logger.info({ ticketId: ticket.id, actorId, assigneeId: after, targetUserIds }, 'ticket assigned notify')
+  logger.info({ ticketId: ticket.id, actorId, assigneeId: assignee.id, targetUserIds }, 'ticket assigned notify')
 
   await enqueueNotify(
     {
@@ -177,15 +191,16 @@ const enqueueAssigned = async (
         ...ticketPayload(ticket),
         fromName: await actorName(actorId, tx),
         assigneeName: assignee.name,
+        ...(onCreate && { onCreate }),
       },
     },
     tx,
   )
 }
 
-/** 完了 / 作成のようにチャネル通知だけのイベント。宛先はボードの設定から引く */
+/** 完了のようにチャネル通知だけのイベント。宛先はボードの設定から引く */
 const enqueueTicketChanged = async (
-  event: 'ticket_created' | 'ticket_completed',
+  event: 'ticket_completed',
   param: { actorId: string; ticket: TicketNotifyRef },
   tx: Prisma.TransactionClient,
 ): Promise<void> => {
@@ -207,7 +222,8 @@ const enqueueTicketChanged = async (
  * チケット作成。
  *
  * 作成時に担当者を付けるのも「担当者に指定された」ことなので、更新時と同じ扱いにする
- * (`before` が無い状態からの変更とみなす)。
+ * (`before` が無い状態からの変更とみなす)。チャンネルで作成と担当の 2 通に分かれないよう、
+ * 担当者の名前は作成の通知にも載せる。
  */
 export const enqueueTicketCreated = async (
   param: {
@@ -220,9 +236,23 @@ export const enqueueTicketCreated = async (
   tx: Prisma.TransactionClient = prisma,
 ): Promise<void> => {
   const { actorId, ticket, assigneeId, status, mentionedUserIds } = param
-  await enqueueTicketChanged('ticket_created', { actorId, ticket }, tx)
+  const assignee = await findNewAssignee(null, assigneeId, tx)
+
+  logger.info({ ticketId: ticket.id, actorId, event: 'ticket_created' }, 'ticket notify')
+  await enqueueNotify(
+    {
+      event: 'ticket_created',
+      actorId,
+      payload: {
+        ...ticketPayload(ticket),
+        fromName: await actorName(actorId, tx),
+        ...(assignee && { assigneeName: assignee.name }),
+      },
+    },
+    tx,
+  )
   await enqueueMentioned({ actorId, ticket, userIds: mentionedUserIds }, tx)
-  await enqueueAssigned({ actorId, ticket, before: null, after: assigneeId }, tx)
+  await enqueueAssigned({ actorId, ticket, assignee, onCreate: true }, tx)
   // 最初から完了で作ることもできる
   if (status === 'done') {
     await enqueueTicketChanged('ticket_completed', { actorId, ticket }, tx)
@@ -247,7 +277,10 @@ export const enqueueTicketUpdated = async (
 ): Promise<void> => {
   const { actorId, ticket, before, after, addedMentionUserIds } = param
   await enqueueMentioned({ actorId, ticket, userIds: addedMentionUserIds }, tx)
-  await enqueueAssigned({ actorId, ticket, before: before.assigneeId, after: after.assigneeId }, tx)
+  await enqueueAssigned(
+    { actorId, ticket, assignee: await findNewAssignee(before.assigneeId, after.assigneeId, tx) },
+    tx,
+  )
   // 完了レーンへ入った瞬間だけ発火する(完了のまま並べ替えても発火しない)
   if (before.status !== 'done' && after.status === 'done') {
     await enqueueTicketChanged('ticket_completed', { actorId, ticket }, tx)

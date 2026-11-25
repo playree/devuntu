@@ -117,11 +117,15 @@ const RESOLVERS = {
     slackChannelIds: await boardChannels(payload.boardId, 'agent_run'),
   }),
 
-  /** 担当変更の DM は新しい担当者へ(トリガー側で actor 自身とエージェントを除いてある) */
-  ticket_assigned: async (payload, explicit) => ({
-    userIds: explicit.userIds,
-    slackChannelIds: await boardChannels(payload.boardId, 'ticket_assigned'),
-  }),
+  /**
+   * 担当変更の DM は新しい担当者へ(トリガー側で actor 自身とエージェントを除いてある)。
+   * 作成と同時の担当は作成の通知に載るので、作成の通知も届くチャンネルへは送らない
+   */
+  ticket_assigned: async (payload, explicit) => {
+    const channels = await boardChannels(payload.boardId, 'ticket_assigned')
+    const created = payload.onCreate ? new Set(await boardChannels(payload.boardId, 'ticket_created')) : new Set()
+    return { userIds: explicit.userIds, slackChannelIds: channels.filter((id) => !created.has(id)) }
+  },
 
   /** 作成 / 完了はチャネル通知のみ。個人宛の設定では表せない */
   ticket_created: async (payload) => ({

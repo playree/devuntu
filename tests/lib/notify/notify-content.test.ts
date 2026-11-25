@@ -133,6 +133,18 @@ describe('buildNotifyContent: ticket_created / ticket_completed', () => {
   }
 })
 
+describe('buildNotifyContent: ticket_created の担当者', () => {
+  it('作成と同時に付けた担当者がいれば、作成の文面に担当者の名前を出す', () => {
+    const { body } = buildNotifyContent('ticket_created', changed({ assigneeName: '担当になった人' }), 'ja', 'channel')
+    expect(body).toBe('テストユーザーさんが担当になった人さんを担当者にしてチケットを作成しました')
+  })
+
+  it('担当者がいなければ作成だけの文面にする', () => {
+    const { body } = buildNotifyContent('ticket_created', changed(), 'ja', 'channel')
+    expect(body).toBe('テストユーザーさんがチケットを作成しました')
+  })
+})
+
 describe('buildNotifyContent: ticket_merge_held', () => {
   it('短縮URLへリンクし、PR / MR と未達の受け入れ条件の件数を出す', () => {
     const content = buildNotifyContent('ticket_merge_held', mergeHeld(), 'ja', 'dm')

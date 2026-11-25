@@ -136,7 +136,9 @@ const BUILDERS = {
 
   ticket_created: (payload, locale) => ({
     ...ticketHeading(payload, locale),
-    body: t(locale, 'notify_msg_ticket_created', { from: payload.fromName }),
+    body: payload.assigneeName
+      ? t(locale, 'notify_msg_ticket_created_with_assignee', { from: payload.fromName, assignee: payload.assigneeName })
+      : t(locale, 'notify_msg_ticket_created', { from: payload.fromName }),
     url: shortUrl(payload.displayId).toString(),
   }),
 
