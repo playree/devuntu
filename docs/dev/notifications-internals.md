@@ -10,15 +10,19 @@ updated: 2026-11-07
 有効にする条件・Slack App の設定・トラブル対応(運用者向け)は [notifications.md](../admin/notifications.md)、
 利用者の設定方法は [user-guide.md](../guide/user-guide.md#通知) を参照。
 
-通知は宛先の決まり方で 2 種類に分かれる。
+通知は宛先の決まり方で 3 種類に分かれる。
 
-| 種類         | 宛先             | 設定場所                                      | イベント                                                                                                       | チャネル                         |
-| ------------ | ---------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | -------------------------------- |
-| DM 通知      | ユーザー個人     | `/account` の通知設定(`UserNotifySetting`)    | `mention` / `agent_run` / `ticket_assigned` / `ticket_merge_held` / `ticket_due`                               | メール / Slack DM / Web プッシュ |
-| チャネル通知 | Slack チャンネル | `/boards/[id]/settings`(`BoardNotifySetting`) | `agent_run` / `ticket_assigned` / `ticket_created` / `ticket_completed` / `ticket_merge_held` / `announcement` | Slack                            |
+| 種類         | 宛先             | 設定場所                                                | イベント                                                                                                       | チャネル                         |
+| ------------ | ---------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| DM 通知      | ユーザー個人     | `/account` の通知設定(`UserNotifySetting`)              | `mention` / `agent_run` / `ticket_assigned` / `ticket_merge_held` / `ticket_due`                               | メール / Slack DM / Web プッシュ |
+| チャネル通知 | Slack チャンネル | `/boards/[id]/settings`(`BoardNotifySetting`)           | `agent_run` / `ticket_assigned` / `ticket_created` / `ticket_completed` / `ticket_merge_held` / `announcement` | Slack                            |
+| スペース通知 | Slack チャンネル | Wiki スペースの設定(`WikiSpace.announceSlackChannelId`) | `wiki_announcement`                                                                                            | Slack                            |
 
-イベント種別は Prisma の `NotifyEvent`、チャネルは `NotifyChannel`。どちらの宛先に出るイベントかは
-`DM_NOTIFY_EVENTS` / `CHANNEL_NOTIFY_EVENTS`(`src/lib/notify/notify.ts`)で分ける。
+イベント種別は Prisma の `NotifyEvent`、チャネルは `NotifyChannel`。どの宛先に出るイベントかは
+イベントごとの定義表 `NOTIFY_EVENT_SPEC`(`src/lib/notify/notify.ts`)で決める。`dm` は個人設定に出す DM 通知か、
+`channel` はチャンネルの宛先の決め方(`board`: ボードの通知設定 / `space`: Wiki スペースの通知先 / `null`: 送らない)。
+設定画面と入力検証が使う `DM_NOTIFY_EVENTS` / `CHANNEL_NOTIFY_EVENTS`(と型 `DmNotifyEvent` / `ChannelNotifyEvent`)はこの表から導く。
+宛先の解決(`notify-recipient.ts`)が表と合っていることは `tests/lib/notify/notify-recipient.test.ts` で確かめる。
 
 `agent_run` / `ticket_assigned` / `ticket_merge_held` のように**DM とチャネルの両方を持つイベント**もある。1 回の発生で
 両方へ展開されるので、発火の記録は 1 行で済む。同じイベントでも本人宛の DM と第三者が読む
@@ -288,7 +292,8 @@ SELECT が増えることはない。
   - 判断材料が無いまま周が終わったら、通常の失敗として再試行へ回す(1 人の古い購読でチャネル全体を止めない)
 - 1 ユーザーの購読は `MAX_WEBPUSH_SUBSCRIPTIONS`(10)で頭打ちにし、超えた分は古い順に消す
   (端末を買い替えるたびに積み上がると 1 回の通知で叩く先が際限なく増える)
-- 通知には `tag` にチケットIDを入れる。同じチケットの通知は端末上で 1 件に畳まれる
+- 通知の `tag` には文面の組み立て(`notify-content.ts`)が返すまとめキー(`NotifyContent.tag`)を入れる。
+  チケットの通知はチケット ID、Wiki のアナウンスは `wiki:<pageId>` で、同じ対象の通知は端末上で 1 件に畳まれる
 - エンドポイントは利用者が申告した URL がそのままサーバーの接続先になるので、内部へ繋がせない
   - 保存時と送信時に URL の形を検査する(`webpush-endpoint.ts`。https・既定ポートのみ、`localhost` / 私設・予約の IPv4 / IPv6 を拒否。
     IPv4 射影・IPv4 互換・NAT64(`64:ff9b::/96`)・6to4(`2002::/16`)は埋め込まれた IPv4 で判定する)
@@ -357,7 +362,7 @@ PWA manifest は `src/app/manifest.ts`(`display: 'standalone'`、アイコンは
   行ごとに `` ` `` で囲む(`` ` `` を含む行は ` ``` ` で囲み、` ``` ` を含む行はそのまま)。コード内のメンション記法も `@表示名` にする。
   表示名は画面と同じくボードのメンバーからだけ引き、引けなければメールアドレスのまま出す(ボード外のユーザーの名前をチャンネルへ流さない)。
   上限は `NOTIFY_ANNOUNCEMENT_MAX`(2000 文字)で、見出し・本文と合わせても Slack の section 上限(3000)に収まる
-- Slack では抜粋の位置に引用として出す。`buildTicketMessage()` は抜粋を行ごとに `>` を付けて引用にする
+- Slack では抜粋の位置に引用として出す。`buildLinkMessage()` は抜粋を行ごとに `>` を付けて引用にする
   (mrkdwn の引用は行頭の `>` でしか続かない)
 - リンク先はアナウンスしたコメントの位置(`/t/<表示ID>#comment-<id>`)
 - `enqueueTicketCommented()` は、アナウンスをチャンネルへ流す投入をしたかを返す(流れる先が無い・流量制限で捨てた・本文が空なら `false`)。
@@ -373,14 +378,13 @@ PWA manifest は `src/app/manifest.ts`(`display: 'standalone'`、アイコンは
 Wiki のアナウンス用スペースのページを、スペースに設定した Slack チャンネルへ流すイベント(`wiki_announcement`)。
 ほかのイベントと違い**チケットを参照しない**ので、通知基盤のうちチケットを前提にしていた所を一般化している。
 
-| 対象                             | 扱い                                                                                                                                                       |
-| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ペイロード(`notify-payload.ts`)  | `scWikiAnnouncement` は `scTicketRef` を継承しない。スペース・ページ(`KEY/番号`・タイトル)・種類・送信者名・抜粋を持つ                                     |
-| まとめキー(`notify-dispatch.ts`) | `notifyTagOf()` はチケットならチケット ID、そうでなければ `wiki:<pageId>`(Web プッシュは送らないが、型の上で全イベントを扱う)                              |
-| 文面(`notify-content.ts`)        | 件名は `[KEY/番号] タイトル`、リンクは `/wiki/KEY/番号`。初回(`published`)と更新(`updated`)で本文を分ける。ボタンの文言は `NotifyContent.openLabel` で渡す |
-| Slack(`notify-slack.ts`)         | `openLabel` が無ければ従来の「チケットを開く」                                                                                                             |
-| 宛先(`notify-recipient.ts`)      | DM は空。チャンネルは**配信時点の** `WikiSpace.announceSlackChannelId`(区分は作成後に変わらないので、値を持つのはアナウンス用スペースだけ)                 |
-| イベントの一覧(`notify.ts`)      | `SPACE_NOTIFY_EVENTS` に置き、`DM_NOTIFY_EVENTS` / `CHANNEL_NOTIFY_EVENTS` には入れない(個人設定とボード設定に出さない)                                    |
+| 対象                            | 扱い                                                                                                                                                                                                                                                |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ペイロード(`notify-payload.ts`) | `scWikiAnnouncement` は `scTicketRef` を継承しない。スペース・ページ(`KEY/番号`・タイトル)・種類・送信者名・抜粋を持つ                                                                                                                              |
+| 文面(`notify-content.ts`)       | 件名は `[KEY/番号] タイトル`、リンクは `/wiki/KEY/番号`。初回(`published`)と更新(`updated`)で本文を分ける。ボタンの文言(`openLabel`)は「ページを開く」、まとめキー(`tag`)は `wiki:<pageId>`(Web プッシュは送らないが、どのイベントも文面が必ず返す) |
+| Slack(`notify-slack.ts`)        | 文面の `openLabel` をそのままボタンにする(チケットの通知は「チケットを開く」)                                                                                                                                                                       |
+| 宛先(`notify-recipient.ts`)     | DM は空。チャンネルは**配信時点の** `WikiSpace.announceSlackChannelId`(区分は作成後に変わらないので、値を持つのはアナウンス用スペースだけ)                                                                                                          |
+| 定義表(`notify.ts`)             | `NOTIFY_EVENT_SPEC` で `dm: false` / `channel: 'space'`。個人設定とボード設定には出ない                                                                                                                                                             |
 
 - 送る操作は保存とは別で、`src/lib/wiki/wiki-announcement-notify.ts` にまとめている。送れるのは `canWrite`(editor 以上、未アーカイブ)。
   スペース行を `shareLockWikiSpace`(FOR SHARE。`src/lib/wiki/wiki-lock.ts`)でロックして、アーカイブ・ページの削除(どちらも排他ロック)と直列にする。
@@ -405,7 +409,7 @@ Wiki のアナウンス用スペースのページを、スペースに設定し
 - 予約の作成は、ページ行を `FOR NO KEY UPDATE` でロックしてから予約中の件数を数える(スペース行の共有ロック同士は競合しないので、1 ページの上限 `MAX_WIKI_ANNOUNCE_SCHEDULED_PER_PAGE` を同時の作成で超えないように)
 - `sent` は通知キューへ投入したことを表す。宛先は配信時点のスペースの設定から引くので、投入の後にチャンネルを外した・Slack への投稿に失敗した場合でも `sent` のまま残る(投稿の失敗はほかの通知と同じくログにだけ残る)
 - ページの削除は、同じトランザクションで配下を含む予約を `skipped(page_deleted)` にする(復元しても予約は戻さない)
-- 抜粋は一言(利用者がそのまま書いた文なので記法を落とさない。Slack のエスケープは配信時の `buildTicketMessage()` が行う)、空なら本文を `announcementText()` に通したもの(2000 文字に丸める)。Wiki の本文はボードのメンバーを持たないので、メンションの名前は引かない
+- 抜粋は一言(利用者がそのまま書いた文なので記法を落とさない。Slack のエスケープは配信時の `buildLinkMessage()` が行う。上限 `MAX_WIKI_ANNOUNCE_MESSAGE` は `NOTIFY_ANNOUNCEMENT_MAX` と同じ)、空なら本文を `announcementText()` に通したもの(2000 文字に丸める)。Wiki の本文はボードのメンバーを持たないので、メンションの名前は引かない
 - 一覧・サイドバーのバッジ(`listWikiAnnouncements()` の `notifyState`)と履歴は、送る側の情報なので editor 以上にだけ返す
 
 ## エージェント実行結果の通知
@@ -574,15 +578,16 @@ docker compose exec -T db psql -U devuser -d devuntu \
 
 1. Prisma の `NotifyEvent` enum と `NOTIFY_EVENTS`(`src/lib/notify/notify.ts`)を揃える。
    並びの一致は `tests/lib/notify/notify.test.ts` で固定しているので、**値の追加は末尾のみ**
-2. DM 通知なら `DM_NOTIFY_EVENTS`、チャネル通知なら `CHANNEL_NOTIFY_EVENTS` へ追加する
-   (両方に出るイベントは両方へ。Wiki スペースの設定で宛先を決めるものは `SPACE_NOTIFY_EVENTS`)。前者は `/account` の通知設定と `scUpdateNotifySetting`、
-   後者はボード設定と `scSetBoardNotifySetting`(`src/lib/schema/schema-board.ts`)の入力範囲を兼ねるので、
-   **画面と入力検証は追加するだけで追従する**
+2. 定義表 `NOTIFY_EVENT_SPEC` に `dm` / `channel` を足す(`satisfies Record<NotifyEvent, …>` なので漏れはコンパイルエラー)。
+   `DM_NOTIFY_EVENTS` は `/account` の通知設定と `scUpdateNotifySetting`、`CHANNEL_NOTIFY_EVENTS` はボード設定と
+   `scSetBoardNotifySetting`(`src/lib/schema/schema-board.ts`)の入力範囲を兼ね、どちらも表から導くので、
+   **画面と入力検証は表に足すだけで追従する**
 3. `NOTIFY_PAYLOAD_SCHEMA`(`notify-payload.ts`)・文面(`notify-content.ts`)・宛先の決め方
    (`notify-recipient.ts`)へ追加する。いずれも `satisfies Record<NotifyEvent, …>` なので、
    **定義漏れはコンパイルエラーになる**。DM とチャネルで文面が変わるイベントは
-   `NotifyAudience` で出し分ける
-4. ロケールキー(`notify_event_*` / `notify_msg_*`)を `src/locale/index.ts` と ja / en へ追加する
+   `NotifyAudience` で出し分ける。文面はまとめキー(`tag`)とボタンの文言(`openLabel`)も必ず返す。
+   宛先の決め方は定義表と合わせる(`notify-recipient.test.ts` が全イベントで突き合わせる)
+4. ロケールキー(DM 通知は `notify_event_*`、チャネル通知は `board_notify_event_*`、文面は `notify_msg_*`)を `src/locale/index.ts` と ja / en へ追加する
 5. `notify-trigger.ts` の発火条件を足す。**呼び出し元(Server Action / MCP)は触らない**
    ── 触る必要が出たら、判断が呼び出し元へ漏れている
 
