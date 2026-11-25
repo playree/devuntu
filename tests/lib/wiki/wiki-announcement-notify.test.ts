@@ -101,7 +101,7 @@ describe('notifyWikiAnnouncementNow', () => {
       message: null,
       status: 'sent',
       sentAt: NOW,
-      createdById: 'u1',
+      senderId: 'u1',
     })
     expect(vi.mocked(enqueueNotify).mock.calls[0][0]).toMatchObject({ event: 'wiki_announcement', actorId: 'u1' })
     // 同じトランザクションのクライアント(ここでは prisma 自体)で投入する
@@ -193,7 +193,7 @@ describe('scheduleWikiAnnouncement', () => {
     expect(vi.mocked(prisma.wikiAnnouncementNotify.create).mock.calls[0][0].data).toMatchObject({
       status: 'scheduled',
       scheduledAt: later,
-      createdById: 'u1',
+      senderId: 'u1',
     })
     expect(enqueueNotify).not.toHaveBeenCalled()
   })
@@ -232,7 +232,7 @@ describe('updateScheduledWikiAnnouncement / cancelScheduledWikiAnnouncement', ()
     await updateScheduledWikiAnnouncement({ id: 'u2' }, 'n1', { kind: 'updated', message: '再送', scheduledAt: later })
     expect(prisma.wikiAnnouncementNotify.updateMany).toHaveBeenCalledWith({
       where: { id: 'n1', status: 'scheduled' },
-      data: { kind: 'updated', message: '再送', scheduledAt: later, createdById: 'u2' },
+      data: { kind: 'updated', message: '再送', scheduledAt: later, senderId: 'u2' },
     })
   })
 
@@ -264,14 +264,14 @@ describe('updateScheduledWikiAnnouncement / cancelScheduledWikiAnnouncement', ()
 describe('getWikiAnnouncementNotifies', () => {
   beforeEach(() => {
     vi.mocked(prisma.wikiAnnouncementNotify.findMany).mockResolvedValue([
-      { id: 'n1', status: 'sent', createdBy: { name: '送った人' } },
-      { id: 'n2', status: 'scheduled', createdBy: null },
+      { id: 'n1', status: 'sent', sender: { name: '送った人' } },
+      { id: 'n2', status: 'scheduled', sender: null },
     ] as never)
   })
 
   it('editor 以上には履歴と、送れる状態かを返す', async () => {
     const result = await getWikiAnnouncementNotifies(actor, PAGE_ID)
-    expect(result.items.map(({ id, createdByName }) => [id, createdByName])).toEqual([
+    expect(result.items.map(({ id, senderName }) => [id, senderName])).toEqual([
       ['n1', '送った人'],
       ['n2', ''],
     ])
@@ -302,11 +302,11 @@ describe('runWikiAnnouncementSchedule', () => {
     pageId: PAGE_ID,
     kind: 'updated',
     message: null,
-    createdBy: sender,
+    sender,
     ...override,
   })
   const AT = new Date(NOW.getTime() - 60 * 1000)
-  const due = (id: string, createdById = 'u1') => ({ id, spaceId: SPACE_ID, createdById, scheduledAt: AT })
+  const due = (id: string, senderId = 'u1') => ({ id, spaceId: SPACE_ID, senderId, scheduledAt: AT })
   /** 候補の読み出し。1 回目に `rows`、続きの読み出しでは空を返す */
   const dueRows = (...pages: ReturnType<typeof due>[][]) => {
     const findMany = vi.mocked(prisma.wikiAnnouncementNotify.findMany).mockReset().mockResolvedValue([])
@@ -325,6 +325,11 @@ describe('runWikiAnnouncementSchedule', () => {
   })
 
   const updated = () => vi.mocked(prisma.wikiAnnouncementNotify.update).mock.calls.map(([arg]) => arg.data)
+
+  it('送る時点のページは削除済みを除いて引く(削除済みなら page_deleted で見送る)', async () => {
+    await runWikiAnnouncementSchedule(NOW, { resumeFrom: null })
+    expect(vi.mocked(prisma.wikiPage.findUnique).mock.calls[0][0]?.where).toEqual({ id: PAGE_ID, deletedAt: null })
+  })
 
   it('期限の来た予約中の行だけを候補にする', async () => {
     await runWikiAnnouncementSchedule(NOW, { resumeFrom: null })
@@ -378,10 +383,6 @@ describe('runWikiAnnouncementSchedule', () => {
       () => vi.mocked(prisma.wikiSpace.findUniqueOrThrow).mockResolvedValue(space({ archived: true }) as never),
     ],
     [
-      'not_announcement',
-      () => vi.mocked(prisma.wikiSpace.findUniqueOrThrow).mockResolvedValue(space({ type: 'mixed' }) as never),
-    ],
-    [
       'channel_unset',
       () =>
         vi
@@ -395,14 +396,14 @@ describe('runWikiAnnouncementSchedule', () => {
       () =>
         vi
           .mocked(prisma.wikiAnnouncementNotify.findUniqueOrThrow)
-          .mockResolvedValue(scheduledRow({ createdBy: null }) as never),
+          .mockResolvedValue(scheduledRow({ sender: null }) as never),
     ],
     [
       'no_permission',
       () =>
         vi
           .mocked(prisma.wikiAnnouncementNotify.findUniqueOrThrow)
-          .mockResolvedValue(scheduledRow({ createdBy: { ...sender, banned: true } }) as never),
+          .mockResolvedValue(scheduledRow({ sender: { ...sender, banned: true } }) as never),
     ],
   ])('送れない状態(%s)なら理由を付けて見送る', async (skipReason, arrange) => {
     arrange()
@@ -415,7 +416,7 @@ describe('runWikiAnnouncementSchedule', () => {
     dueRows([due('n1', 'u1'), due('n2', 'u1'), due('n3', 'u2')])
     vi.mocked(prisma.wikiAnnouncementNotify.findUniqueOrThrow)
       .mockResolvedValueOnce(scheduledRow() as never)
-      .mockResolvedValueOnce(scheduledRow({ createdBy: { ...sender, id: 'u2', name: '別の人' } }) as never)
+      .mockResolvedValueOnce(scheduledRow({ sender: { ...sender, id: 'u2', name: '別の人' } }) as never)
     vi.mocked(enqueueNotify).mockResolvedValueOnce(false).mockResolvedValueOnce(true)
 
     expect(await runWikiAnnouncementSchedule(NOW, { resumeFrom: null })).toBe(1)
@@ -429,7 +430,7 @@ describe('runWikiAnnouncementSchedule', () => {
     dueRows(blocked, [due('b1', 'u2')])
     vi.mocked(prisma.wikiAnnouncementNotify.findUniqueOrThrow)
       .mockResolvedValueOnce(scheduledRow() as never)
-      .mockResolvedValueOnce(scheduledRow({ createdBy: { ...sender, id: 'u2', name: '別の人' } }) as never)
+      .mockResolvedValueOnce(scheduledRow({ sender: { ...sender, id: 'u2', name: '別の人' } }) as never)
     vi.mocked(enqueueNotify).mockResolvedValueOnce(false).mockResolvedValueOnce(true)
 
     expect(await runWikiAnnouncementSchedule(NOW, { resumeFrom: null })).toBe(1)
@@ -439,7 +440,7 @@ describe('runWikiAnnouncementSchedule', () => {
     const second = vi.mocked(prisma.wikiAnnouncementNotify.findMany).mock.calls[1][0]
     expect(second?.where?.AND).toEqual([
       { OR: [{ scheduledAt: { gt: AT } }, { scheduledAt: AT, id: { gt: `a${WIKI_ANNOUNCE_BATCH - 1}` } }] },
-      { OR: [{ createdById: null }, { createdById: { notIn: ['u1'] } }] },
+      { OR: [{ senderId: null }, { senderId: { notIn: ['u1'] } }] },
     ])
   })
 

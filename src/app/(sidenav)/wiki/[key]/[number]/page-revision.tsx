@@ -13,12 +13,7 @@ import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { ticketShortPath } from '@/lib/board/ticket-id'
 import { dayformat } from '@/lib/day'
 import { useConfirmAction } from '@/lib/use-confirm-action'
-import {
-  isWikiPageTypeAllowed,
-  resolveWikiRevisionTags,
-  wikiRevisionTagLabels,
-  type WikiRevisionTag,
-} from '@/lib/wiki/wiki-rule'
+import { resolveWikiRevisionTags, wikiRevisionTagLabels, type WikiRevisionTag } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { Button, Chip, cn, Dropdown } from '@heroui/react'
 import Link from 'next/link'
@@ -325,7 +320,6 @@ export const WikiRevisionRestoreButton: FC<{ revisions: WikiPageRevisions }> = (
 }) => {
   const { t } = useLocale()
   const confirmAction = useConfirmAction()
-  const { space } = useWikiSpace()
   if (!past) {
     return null
   }
@@ -352,8 +346,6 @@ export const WikiRevisionRestoreButton: FC<{ revisions: WikiPageRevisions }> = (
       variant='outline'
       tooltip={t('wiki_restore_this')}
       icon={<ArrowUturnLeftIcon width={16} />}
-      // 設計書スペースへ通常ページの版は戻せない(サーバーでも弾く)
-      isDisabled={!isWikiPageTypeAllowed(space.type, past.type)}
       onPress={restore}
     />
   )
@@ -393,20 +385,14 @@ export const WikiRevisionDeleteButton: FC<{ revisions: WikiPageRevisions }> = ({
   )
 }
 
-/**
- * 過去の版を表示していることの注記。コミットメッセージ・チケット・版の保持期間も添える。
- * 「この版に戻す」を押せない(設計書スペースの通常ページの版)ときは、その理由も出す
- */
-export const WikiPastRevisionNotice: FC<{ revisions: WikiPageRevisions; canWrite: boolean }> = ({
+/** 過去の版を表示していることの注記。コミットメッセージ・チケット・版の保持期間も添える */
+export const WikiPastRevisionNotice: FC<{ revisions: WikiPageRevisions }> = ({
   revisions: { past, retention, isDiff },
-  canWrite,
 }) => {
   const { t } = useLocale()
-  const { space } = useWikiSpace()
   if (!past) {
     return null
   }
-  const cannotRestore = canWrite && !isWikiPageTypeAllowed(space.type, past.type)
   return (
     <NoticePanel status='warning'>
       {t(isDiff ? 'msg_wiki_viewing_diff' : 'msg_wiki_viewing_revision', { target: `v${past.number}` })}
@@ -424,8 +410,6 @@ export const WikiPastRevisionNotice: FC<{ revisions: WikiPageRevisions; canWrite
         keep: retention?.keepRecent ?? '-',
         max: retention?.maxPerPage ?? '-',
       })}`}
-      {cannotRestore &&
-        `\n${t(space.type === 'announcement' ? 'msg_wiki_cannot_restore_design_doc' : 'msg_wiki_cannot_restore_regular_page')}`}
     </NoticePanel>
   )
 }

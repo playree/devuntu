@@ -681,7 +681,6 @@ export const en: DefaultLocaleItems = {
   wiki_announce_skip_archived: 'Skipped: the space was archived',
   wiki_announce_skip_channel_unset: 'Skipped: no Slack channel is set',
   wiki_announce_skip_no_permission: 'Skipped: the sender can no longer edit the space',
-  wiki_announce_skip_not_announcement: 'Skipped: the space is no longer an announcement space',
   wiki_announce_skip_page_deleted: 'Skipped: the page was deleted',
   wiki_announce_skip_slack_disabled: 'Skipped: Slack integration is disabled',
   wiki_announce_state_none: 'Not notified',
@@ -704,7 +703,6 @@ export const en: DefaultLocaleItems = {
   wiki_delete_revision: 'Delete this version',
   wiki_deleted_pages: 'Deleted pages',
   wiki_deleted_parent: 'Original parent: ${path}',
-  wiki_deleted_parent_missing: 'The original parent no longer exists (restores to the top level)',
   wiki_deleted_parent_root: 'Originally at the top level',
   wiki_deleted_tag: '${name} (deleted)',
   wiki_design_doc_editor: 'Design doc editor',
@@ -880,7 +878,7 @@ Please copy and use the connection information above.
   msg_confirm_restore_deleted_wiki_page_parent_deleted:
     'Restores ${target}. Its original parent ${parent} is still deleted, so it is restored to the top level. Restore ${parent} first to put it back in its original position (unless that exceeds the depth limit).',
   msg_confirm_restore_wiki_page_with_descendants:
-    'Restores ${target} and its ${count} descendant pages, parents first.',
+    'Restores ${target} together with its ${count} deleted descendant pages.',
   msg_confirm_restore_wiki_page:
     'Restores the title, content and tags of ${target} to this version. The position of the page does not change.',
   msg_confirm_revoke_consent:
@@ -1021,8 +1019,6 @@ Please copy and use the connection information above.
   msg_user_not_exist: 'User does not exist.',
   msg_wiki_board_assign:
     'Members of the board (direct or via groups) can use this space with the chosen role. You can assign boards you belong to.',
-  msg_wiki_cannot_restore_design_doc: 'Design docs cannot be restored to an announcement space.',
-  msg_wiki_cannot_restore_regular_page: 'Regular pages cannot be restored to a design doc space.',
   msg_wiki_deleted_pages_hint:
     'Deleted pages can be restored only for ${days} days after deletion. Restoring them from the top puts them back in their original hierarchy (a page that would exceed the depth limit under its original parent goes to the top level).',
   msg_wiki_design_docs_load_failed: 'Failed to load the design doc list. Please wait a moment and reload.',
@@ -1040,9 +1036,6 @@ Please copy and use the connection information above.
   msg_wiki_page_too_deep: 'Pages can be nested at most 10 levels deep.',
   msg_wiki_page_type_not_allowed:
     'This type of page is not allowed in this space (a design doc space only holds design docs, an announcement space only normal pages).',
-  msg_wiki_pages_already_restored: '${count} pages had already been restored, so they were left unchanged.',
-  msg_wiki_restore_excluded_pages:
-    ' Regular pages, which cannot be restored to a design doc space, and their descendants (${count} pages) are not restored.',
   msg_wiki_restore_parent_still_deleted:
     ' Its original parent ${parent} is still deleted, so ${target} is restored to the top level.',
   msg_wiki_restore_unchanged: 'No changes. The content is the same as the current one.',
@@ -1056,16 +1049,10 @@ Please copy and use the connection information above.
   msg_wiki_search_hint: 'Enter keywords or choose tags. Words of two characters or fewer may take longer to search.',
   msg_wiki_search_limit: 'Up to ${max} results are shown. If you cannot find the page, add words or filter by tags.',
   msg_wiki_space_archived: 'This space is archived and read-only.',
-  msg_wiki_space_cannot_be_announcement:
-    'The space has pages with child pages, design docs, or design doc templates, so it cannot be an announcement space. Move child pages to the top level and delete the design docs or change them to normal pages first.',
-  msg_wiki_space_has_normal_pages:
-    'The space has normal pages, so it cannot be a design doc space. Delete them or change their type to design doc first.',
-  msg_wiki_space_has_normal_templates:
-    'The space has normal page templates, so it cannot be a design doc space. Delete them or change their type to design doc first.',
   msg_wiki_space_key: 'Pages are referenced as KEY/number (e.g. DOCS/12). The key cannot be changed later.',
   msg_wiki_space_no_owner: 'A space needs at least one owner. Assign another owner first.',
   msg_wiki_space_type:
-    'With "Design docs", only design docs can be created and the space top shows the list of design docs (not available while the space has normal pages or normal page templates). With "Announcements", normal pages are listed flat, newest first, and the space top shows the list and the archive (not available while the space has child pages or design docs).',
+    'The type is chosen when the space is created and cannot be changed later. With "Design docs", only design docs can be created and the space top shows the list of design docs. With "Announcements", normal pages are listed flat, newest first, and the space top shows the list and the archive.',
   msg_wiki_template_desc:
     "Choose a template when creating a page to fill in its title, type and content. {{date}} (YYYY-MM-DD), {{month}} (YYYY-MM) and {{user}} (the creator's display name) are replaced on creation, using the creator's time zone. Templates can also be used by name with template in the MCP tool save_wiki_page.",
   msg_wiki_template_too_long:

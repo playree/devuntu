@@ -463,7 +463,7 @@ export const WIKI_AGENT_RECURSIVE_DELETE_DENIED = 'WIKI_AGENT_RECURSIVE_DELETE_D
  * 同じ入力で繰り返しても結果が変わらないよう、無いページは deleted: 0 で返す。
  *
  * エージェントには配下ごとの削除をさせない。プロンプトインジェクションを受けうるうえ、確認する相手がいないので
- * description の「消す前に利用者に確かめる」が効かず、配下ごと消したページは1ページずつしか戻せないため
+ * description の「消す前に利用者に確かめる」が効かず、利用者が気づいて画面から戻すまで失われたままになるため
  * (ボードのナレッジをエージェントに変えさせないのと同じ考え)
  */
 export const deleteWikiPageForMcp = async (

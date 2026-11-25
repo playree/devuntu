@@ -12,6 +12,7 @@ import type {
   WikiSpaceType,
   WikiVia,
 } from '@/generated/prisma/enums'
+import { z } from 'zod'
 import { MAX_TAG_NAME, MAX_TICKET_TAGS } from '../board/tag-rule'
 import { BOARD_KEY_PATTERN, MAX_BOARD_KEY } from '../board/ticket-id'
 
@@ -51,13 +52,15 @@ export const WIKI_PAGE_INVALID_PARENT = 'WIKI_PAGE_INVALID_PARENT'
 export const WIKI_SPACE_NO_OWNER = 'WIKI_SPACE_NO_OWNER'
 /** スペースの区分で作れない種類のページ(設計書スペースの通常ページ) */
 export const WIKI_PAGE_TYPE_NOT_ALLOWED = 'WIKI_PAGE_TYPE_NOT_ALLOWED'
-/** 通常ページが残っているスペースを設計書スペースにしようとした */
-export const WIKI_SPACE_HAS_NORMAL_PAGES = 'WIKI_SPACE_HAS_NORMAL_PAGES'
 
 /** アナウンス用スペースで、親の指定・位置の指定・移動・並べ替えをしようとした(ページは平らに置き、作成日時の順に並べる) */
 export const WIKI_ANNOUNCEMENT_FLAT = 'WIKI_ANNOUNCEMENT_FLAT'
-/** 子を持つページ・設計書ページ・設計書のテンプレートが残っているスペースを、アナウンス用にしようとした */
-export const WIKI_SPACE_CANNOT_BE_ANNOUNCEMENT = 'WIKI_SPACE_CANNOT_BE_ANNOUNCEMENT'
+
+/**
+ * 削除されていないページの条件。ページを読むクエリはすべてこれを付ける。
+ * 添付の参照判定(attachment-ref / ticket-write)だけは、復元したときに添付が消えていないよう削除済みのページも数える
+ */
+export const WIKI_PAGE_ALIVE = { deletedAt: null } as const
 
 /** スペースの区分で作れるページの種類か(設計書スペースは設計書だけ、アナウンス用スペースは通常ページだけ) */
 export const isWikiPageTypeAllowed = (spaceType: WikiSpaceType, pageType: WikiPageType): boolean =>
@@ -142,20 +145,17 @@ export type WikiPageSnapshot = {
   tags: WikiRevisionTag[]
 }
 
-/** 版のタグを DB の列(同じ並びの ID と名前)にする */
-export const revisionTagColumns = (tags: readonly WikiRevisionTag[]): { tagIds: string[]; tagNames: string[] } => ({
-  tagIds: tags.map(({ id }) => id),
-  tagNames: tags.map(({ name }) => name),
-})
+const scRevisionTags = z.array(z.object({ id: z.string(), name: z.string() }))
 
-/** DB の列(同じ並びの ID と名前)から版のタグにする */
-export const revisionTagsOf = ({
-  tagIds,
-  tagNames,
-}: {
-  tagIds: readonly string[]
-  tagNames: readonly string[]
-}): WikiRevisionTag[] => tagIds.map((id, index) => ({ id, name: tagNames[index] ?? '' }))
+/** 版の `tags` 列(JSON)を読む。形が崩れていれば(手で書き換えた DB など)タグなしとして扱う */
+export const revisionTagsOf = (json: unknown): WikiRevisionTag[] => {
+  const parsed = scRevisionTags.safeParse(json)
+  return parsed.success ? parsed.data : []
+}
+
+/** 版の `tags` 列(JSON)に書く値。ID と名前だけを残す */
+export const revisionTagsJson = (tags: readonly WikiRevisionTag[]): WikiRevisionTag[] =>
+  tags.map(({ id, name }) => ({ id, name }))
 
 /** 版の書き込み元の情報(まとめてよいかの判定に使う) */
 export type WikiRevisionOrigin = {

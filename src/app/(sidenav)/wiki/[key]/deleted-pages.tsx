@@ -7,8 +7,9 @@ import { ArrowTopRightOnSquareIcon, ArrowUturnLeftIcon, TrashIcon } from '@/comp
 import { notify } from '@/components/notify'
 import { UpdatedBy } from '@/components/updated-by'
 import { parseAction, useActionData } from '@/lib/action/action-client'
+import { ClientError } from '@/lib/error'
 import { useConfirmAction } from '@/lib/use-confirm-action'
-import { isFlatWikiSpace, isWikiPageTypeAllowed } from '@/lib/wiki/wiki-rule'
+import { isFlatWikiSpace, WIKI_TREE_CHANGED } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
 import { useRouter } from 'next/navigation'
 import { FC, useState } from 'react'
@@ -33,56 +34,73 @@ const rowBody = tv({
 
 const indentOf = (depth: number) => Math.min(depth, 4) as 0 | 1 | 2 | 3 | 4
 
-/** 一覧の `index` の行の配下(一覧で後に続く、段の深い行) */
-const descendantsAt = (pages: readonly DeletedPage[], index: number): DeletedPage[] => {
-  const depth = pages[index].depth
-  let end = index + 1
-  while (end < pages.length && pages[end].depth > depth) {
-    end++
+/**
+ * 一覧の `index` の行と一緒に戻る配下(一覧で後に続く、段の深い行)。
+ * 復元済みの行は親子がつながらなくなる(サーバーは削除済みの親をたどって配下を探す)ので、その行と配下は含めない
+ */
+const restorableDescendantsAt = (
+  pages: readonly DeletedPage[],
+  index: number,
+  restored: ReadonlySet<string>,
+): DeletedPage[] => {
+  const result: DeletedPage[] = []
+  let skipBelow: number | undefined
+  for (const page of pages.slice(index + 1)) {
+    if (page.depth <= pages[index].depth) {
+      break
+    }
+    if (skipBelow !== undefined && page.depth > skipBelow) {
+      continue
+    }
+    skipBelow = undefined
+    if (restored.has(page.id)) {
+      skipBelow = page.depth
+    } else {
+      result.push(page)
+    }
   }
-  return pages.slice(index + 1, end)
+  return result
 }
 
 /**
- * 削除済みのページの一覧。最後の削除の版から復元できる(削除前の内容は、復元したページの履歴で確かめられる)。
- * 一覧は元の親 → 子の順で、上から順に復元すれば元の親子関係に戻る。
- * 復元してもモーダルは閉じず、開き直すまで一覧は取り直さない。復元した行はページを開くボタンに替える
+ * 削除済みのページの一覧。削除したときの内容・タグ・作成者のまま戻る(削除前の内容は、復元したページの履歴で確かめられる)。
+ * 一覧は元の親 → 子の順で、上から順に復元すれば元の親子関係に戻る。配下ごとの復元は1回の操作でまとめて戻す。
+ * 復元してもモーダルは閉じず、開き直すまで一覧は取り直さない(配下が変わっていて弾かれたときだけ取り直す)。復元した行はページを開くボタンに替える
  */
 export const DeletedPagesModal: FC<{ state: ReturnType<typeof useModalState<string>> }> = ({ state }) => {
   const { t } = useLocale()
   const router = useRouter()
   const confirmAction = useConfirmAction()
   const { space, access, reloadSpace } = useWikiSpace()
-  const { data, isLoading } = useActionData(() => getDeletedWikiPages({ id: space.id }), {
+  const { data, isLoading, reload } = useActionData(() => getDeletedWikiPages({ id: space.id }), {
     skip: !state.isOpen,
     key: `${space.id}_${state.isOpen}`,
   })
-  /** 復元したページ(pageId → 番号) */
-  const [restored, setRestored] = useState<ReadonlyMap<string, number>>(new Map())
+  /** 復元したページの ID */
+  const [restored, setRestored] = useState<ReadonlySet<string>>(new Set())
   const [isRestoring, setIsRestoring] = useState(false)
 
   const pages = data?.pages ?? []
-  // 設計書スペースへ通常ページは戻せない(サーバーでも弾く)
-  const canRestore = (page: DeletedPage) => isWikiPageTypeAllowed(space.type, page.type)
   // アナウンス用スペースは平らで、どのページもスペース直下に戻るので、元の親は示さない
   const isFlat = isFlatWikiSpace(space.type)
 
   /**
-   * 1 ページずつ順に戻し、既に戻されていた(一覧を開いた後に別の人が戻した)ページの数を返す。
-   * 既に戻されていたページは上書きせず、復元済みとして扱う。失敗したらそこで止まり、戻した分は復元済みのまま残る
+   * 戻して、戻した行を復元済みにする。
+   * 確認で見せた配下と今の削除済みの配下が違えば(WIKI_TREE_CHANGED)何も戻っていないので、一覧を取り直して確認し直せるようにする
    */
-  const restorePages = async (targets: readonly DeletedPage[]): Promise<number> => {
+  const restorePage = async (page: DeletedPage, descendants: readonly DeletedPage[]) => {
     setIsRestoring(true)
-    let existed = 0
     try {
-      for (const page of targets) {
-        const result = await parseAction(restoreDeletedWikiPage({ id: page.id }))
-        if (result.result === 'unchanged') {
-          existed++
-        }
-        setRestored((prev) => new Map(prev).set(page.pageId, result.number))
+      const result = await parseAction(
+        restoreDeletedWikiPage({ id: page.id, descendantIds: descendants.map(({ id }) => id) }),
+      )
+      setRestored((prev) => new Set([...prev, page.id, ...descendants.map(({ id }) => id)]))
+      return result
+    } catch (e) {
+      if (e instanceof ClientError && e.errorType === WIKI_TREE_CHANGED) {
+        await reload()
       }
-      return existed
+      throw e
     } finally {
       setIsRestoring(false)
       await reloadSpace()
@@ -99,7 +117,7 @@ export const DeletedPagesModal: FC<{ state: ReturnType<typeof useModalState<stri
       ? t('msg_confirm_restore_deleted_wiki_page_parent_deleted', { target: page.title, parent: parent.title })
       : t('msg_confirm_restore_deleted_wiki_page', { target: page.title })
     return confirmAction({ title: t('restore'), text }, async () => {
-      if ((await restorePages([page])) > 0) {
+      if ((await restorePage(page, [])).result === 'unchanged') {
         notify.info(t('msg_wiki_page_already_restored', { target: page.title }))
       } else {
         notify.success(t('msg_restored_target', { target: page.title }))
@@ -107,48 +125,18 @@ export const DeletedPagesModal: FC<{ state: ReturnType<typeof useModalState<stri
     })
   }
 
-  /**
-   * 配下ごと戻す対象(一覧の順)と、戻さない未復元のページの数。
-   * 戻せない種類のページは、その配下ごと飛ばす(親が無いと配下はスペース直下へ入るため)。
-   * ただしアナウンス用スペースはどのページもスペース直下へ戻すので、配下は飛ばさない。
-   * 復元済みのページは飛ばすが、その配下は対象にする
-   */
-  const restoreTargetsAt = (index: number): { targets: DeletedPage[]; excluded: number } => {
-    const targets = [pages[index]]
-    let excluded = 0
-    let skipBelow: number | undefined
-    for (const page of descendantsAt(pages, index)) {
-      if (skipBelow !== undefined && page.depth > skipBelow) {
-        excluded += restored.has(page.pageId) ? 0 : 1
-        continue
-      }
-      skipBelow = undefined
-      if (!canRestore(page)) {
-        if (!isFlat) {
-          skipBelow = page.depth
-        }
-        excluded++
-      } else if (!restored.has(page.pageId)) {
-        targets.push(page)
-      }
-    }
-    return { targets, excluded }
-  }
-
-  const restoreWithDescendants = (page: DeletedPage, { targets, excluded }: ReturnType<typeof restoreTargetsAt>) => {
+  const restoreWithDescendants = (page: DeletedPage, descendants: readonly DeletedPage[]) => {
     const parent = deletedParentOf(page)
     const text = [
-      t('msg_confirm_restore_wiki_page_with_descendants', { target: page.title, count: targets.length - 1 }),
+      t('msg_confirm_restore_wiki_page_with_descendants', { target: page.title, count: descendants.length }),
       parent ? t('msg_wiki_restore_parent_still_deleted', { target: page.title, parent: parent.title }) : '',
-      excluded > 0 ? t('msg_wiki_restore_excluded_pages', { count: excluded }) : '',
     ].join('')
     return confirmAction({ title: t('wiki_restore_with_descendants_hint'), text }, async () => {
-      const existed = await restorePages(targets)
-      notify.success(
-        t('msg_restored_wiki_page_with_descendants', { target: page.title, count: targets.length - existed }),
-      )
-      if (existed > 0) {
-        notify.info(t('msg_wiki_pages_already_restored', { count: existed }))
+      const result = await restorePage(page, descendants)
+      if (result.result === 'unchanged') {
+        notify.info(t('msg_wiki_page_already_restored', { target: page.title }))
+      } else {
+        notify.success(t('msg_restored_wiki_page_with_descendants', { target: page.title, count: result.restored }))
       }
     })
   }
@@ -167,8 +155,6 @@ export const DeletedPagesModal: FC<{ state: ReturnType<typeof useModalState<stri
         return t('wiki_deleted_parent', { path: parent.path.join(' › ') })
       case 'deleted':
         return t('wiki_deleted_parent', { path: parent.title })
-      case 'missing':
-        return t('wiki_deleted_parent_missing')
     }
   }
 
@@ -184,9 +170,8 @@ export const DeletedPagesModal: FC<{ state: ReturnType<typeof useModalState<stri
           ) : (
             <ul className='space-y-1'>
               {pages.map((page, index) => {
-                const restoredNumber = restored.get(page.pageId)
-                const isRestored = restoredNumber !== undefined
-                const plan = access.canWrite && !isRestored && canRestore(page) ? restoreTargetsAt(index) : undefined
+                const isRestored = restored.has(page.id)
+                const descendants = restorableDescendantsAt(pages, index, restored)
                 return (
                   <li key={page.id} className={row({ indent: indentOf(page.depth) })}>
                     <div className={rowBody({ isRestored })}>
@@ -201,18 +186,12 @@ export const DeletedPagesModal: FC<{ state: ReturnType<typeof useModalState<stri
                           {parentLabel(page)}
                         </div>
                       )}
-                      <UpdatedBy name={page.actorName} isAgent={page.actorIsAgent} via={page.via} at={page.updatedAt} />
-                      {access.canWrite && !isRestored && !canRestore(page) && (
-                        <div // 無効のボタンには tooltip が出ないので、押せない理由を行に出す
-                          className='text-warning text-xs'
-                        >
-                          {t(
-                            space.type === 'announcement'
-                              ? 'msg_wiki_cannot_restore_design_doc'
-                              : 'msg_wiki_cannot_restore_regular_page',
-                          )}
-                        </div>
-                      )}
+                      <UpdatedBy
+                        name={page.deletedByName}
+                        isAgent={page.deletedByIsAgent}
+                        via={page.via}
+                        at={page.deletedAt}
+                      />
                     </div>
                     {isRestored ? (
                       <MultiButton
@@ -221,19 +200,19 @@ export const DeletedPagesModal: FC<{ state: ReturnType<typeof useModalState<stri
                         variant='ghost'
                         tooltip={t('wiki_open_restored_page')}
                         icon={<ArrowTopRightOnSquareIcon width={16} />}
-                        onPress={() => open(restoredNumber)}
+                        onPress={() => open(page.number)}
                       />
                     ) : (
                       access.canWrite && (
                         <div className='flex shrink-0 items-center gap-1'>
-                          {plan && plan.targets.length > 1 && (
+                          {descendants.length > 0 && (
                             <MultiButton
                               size='sm'
                               variant='ghost'
                               tooltip={t('wiki_restore_with_descendants_hint')}
                               icon={<ArrowUturnLeftIcon width={16} />}
                               isDisabled={isRestoring}
-                              onPress={() => restoreWithDescendants(page, plan)}
+                              onPress={() => restoreWithDescendants(page, descendants)}
                             >
                               {t('wiki_restore_with_descendants')}
                             </MultiButton>
@@ -244,7 +223,7 @@ export const DeletedPagesModal: FC<{ state: ReturnType<typeof useModalState<stri
                             variant='ghost'
                             tooltip={t('restore')}
                             icon={<ArrowUturnLeftIcon width={16} />}
-                            isDisabled={!canRestore(page) || isRestoring}
+                            isDisabled={isRestoring}
                             onPress={() => restore(page)}
                           />
                         </div>

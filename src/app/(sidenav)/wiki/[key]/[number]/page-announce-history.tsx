@@ -59,7 +59,7 @@ export const WikiAnnounceHistory: FC<{
               <WikiAnnounceStatusChip value={item.status} />
               <WikiAnnounceKindChip value={item.kind} />
               <AnnounceTime item={item} />
-              <span className='text-muted shrink-0'>{item.createdByName || '-'}</span>
+              <span className='text-muted shrink-0'>{item.senderName || '-'}</span>
               <span className='min-w-0 flex-1 truncate' title={item.message ?? undefined}>
                 {item.message || <span className='text-muted'>{t('wiki_announce_message_excerpt')}</span>}
               </span>

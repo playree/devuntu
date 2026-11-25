@@ -206,10 +206,7 @@ describe('resolveNotifyTargets(wiki_announcement)', () => {
   const wikiPayload = { spaceId: 's1' } as NotifyPayload<'wiki_announcement'>
 
   it('配信時点のスペースのチャンネルだけに送り、渡された宛先があっても DM しない', async () => {
-    vi.mocked(prisma.wikiSpace.findUnique).mockResolvedValue({
-      type: 'announcement',
-      announceSlackChannelId: 'C0123ABCD',
-    } as never)
+    vi.mocked(prisma.wikiSpace.findUnique).mockResolvedValue({ announceSlackChannelId: 'C0123ABCD' } as never)
 
     expect(await resolveNotifyTargets('wiki_announcement', wikiPayload, { userIds: ['u1'] })).toEqual({
       userIds: [],
@@ -219,8 +216,7 @@ describe('resolveNotifyTargets(wiki_announcement)', () => {
   })
 
   it.each([
-    ['チャンネルが外された', { type: 'announcement', announceSlackChannelId: null }],
-    ['アナウンス用でなくなった', { type: 'mixed', announceSlackChannelId: 'C0123ABCD' }],
+    ['チャンネルが外された', { announceSlackChannelId: null }],
     ['スペースが消えた', null],
   ])('%s スペースには送らない', async (_label, space) => {
     vi.mocked(prisma.wikiSpace.findUnique).mockResolvedValue(space as never)

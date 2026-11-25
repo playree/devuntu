@@ -15,7 +15,7 @@ import { errInvalidOperation, errValidation } from '../error'
 import { logger } from '../logger'
 import { prisma, type Db } from '../prisma'
 import { assertWikiSpaceAccess, getWikiSpaceAccess } from './wiki-access'
-import { MAX_WIKI_PAGE_TAGS } from './wiki-rule'
+import { MAX_WIKI_PAGE_TAGS, WIKI_PAGE_ALIVE } from './wiki-rule'
 
 export type WikiTagOption = { id: string; name: string; color: TagColor; order: number }
 
@@ -44,7 +44,8 @@ export const listWikiTagsForManage = async (actor: Actor, spaceId: string): Prom
   }
   const tags = await prisma.wikiTag.findMany({
     where: { spaceId },
-    select: { ...WIKI_TAG_SELECT, _count: { select: { pages: true } } },
+    // 削除済みのページは数えない
+    select: { ...WIKI_TAG_SELECT, _count: { select: { pages: { where: { page: WIKI_PAGE_ALIVE } } } } },
     orderBy: [...WIKI_TAG_ORDER_BY],
   })
   return tags.map(({ _count, ...tag }) => ({ ...tag, usageCount: _count.pages }))

@@ -85,12 +85,18 @@ describe('reassignContentAttachments', () => {
     expect(tx.attachment.updateMany).not.toHaveBeenCalled()
   })
 
-  it('別ボードの自分の添付で未使用なら付け替える(Wiki スペースの添付は候補にしない)', async () => {
+  it('別ボードの自分の添付で未使用なら付け替える(Wiki スペースの添付・削除待ちの添付は候補にしない)', async () => {
     const tx = fakeAttachmentTx()
     await reassignContentAttachments(tx as never, content, BOARD_ID, actor)
 
     expect(tx.attachment.findMany).toHaveBeenCalledWith({
-      where: { key: { in: [KEY] }, createdById: 'u1', boardId: { not: BOARD_ID }, wikiSpaceId: null },
+      where: {
+        key: { in: [KEY] },
+        createdById: 'u1',
+        boardId: { not: BOARD_ID },
+        wikiSpaceId: null,
+        detachedAt: null,
+      },
       select: { key: true },
     })
     expect(tx.attachment.updateMany).toHaveBeenCalledWith({

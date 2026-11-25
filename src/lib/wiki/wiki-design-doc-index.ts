@@ -29,7 +29,7 @@ export const getWikiDesignDocIndex = async (actor: Actor, spaceId: string) => {
       left("content", ${DESIGN_DOC_INDEX_HEAD}::int) AS "head",
       octet_length("content") > octet_length(left("content", ${DESIGN_DOC_INDEX_HEAD}::int)) AS "truncated"
     FROM "wiki_page"
-    WHERE "spaceId" = ${spaceId} AND "type" = 'design_doc'
+    WHERE "spaceId" = ${spaceId} AND "type" = 'design_doc' AND "deletedAt" IS NULL
     ORDER BY "order", "number"`
 
   const frontMatters = new Map(rows.map((row) => [row.id, frontMatterOfHead(row)]))

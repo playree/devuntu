@@ -19,6 +19,7 @@ import {
   type WikiAnnouncementMonthCount,
   type WikiAnnouncementPeriod,
 } from './wiki-announcement-rule'
+import { WIKI_PAGE_ALIVE } from './wiki-rule'
 
 export type WikiAnnouncementItem = {
   id: string
@@ -61,6 +62,7 @@ export const listWikiAnnouncements = async (
       : null
   const where = {
     spaceId,
+    ...WIKI_PAGE_ALIVE,
     ...(range ? { createdAt: { gte: range.gte, lt: range.lt } } : {}),
     ...(tagId ? { tags: { some: { tagId } } } : {}),
   }
@@ -124,7 +126,7 @@ export const getWikiAnnouncementArchive = async (
   return prisma.$queryRaw<WikiAnnouncementMonthCount[]>`
     SELECT to_char((p."createdAt" AT TIME ZONE 'UTC') AT TIME ZONE ${timezone}, 'YYYY-MM') AS "month", count(*)::int AS "count"
     FROM "wiki_page" p
-    WHERE p."spaceId" = ${spaceId} ${tagFilter}
+    WHERE p."spaceId" = ${spaceId} AND p."deletedAt" IS NULL ${tagFilter}
     GROUP BY 1
     ORDER BY 1 DESC
   `
@@ -141,12 +143,12 @@ export const listRecentWikiAnnouncements = async (
   await assertAnnouncementSpace(actor, spaceId)
   const [rows, total] = await Promise.all([
     prisma.wikiPage.findMany({
-      where: { spaceId },
+      where: { spaceId, ...WIKI_PAGE_ALIVE },
       select: { number: true, title: true, createdAt: true, tags: { select: { tagId: true } } },
       orderBy: [{ createdAt: 'desc' }, { number: 'desc' }],
       take: MAX_WIKI_ANNOUNCEMENT_TREE,
     }),
-    prisma.wikiPage.count({ where: { spaceId } }),
+    prisma.wikiPage.count({ where: { spaceId, ...WIKI_PAGE_ALIVE } }),
   ])
   return { items: rows.map(({ tags, ...row }) => ({ ...row, tagIds: tags.map(({ tagId }) => tagId) })), total }
 }

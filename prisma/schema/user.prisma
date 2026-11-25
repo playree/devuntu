@@ -93,10 +93,11 @@ model User {
   wikiSpaceMembers         WikiSpaceMember[]
   createdWikiPages         WikiPage[]               @relation("WikiPageCreatedBy")
   updatedWikiPages         WikiPage[]               @relation("WikiPageUpdatedBy")
+  deletedWikiPages         WikiPage[]               @relation("WikiPageDeletedBy")
   createdWikiTemplates     WikiTemplate[]           @relation("WikiTemplateCreatedBy")
   updatedWikiTemplates     WikiTemplate[]           @relation("WikiTemplateUpdatedBy")
   wikiPageRevisions        WikiPageRevision[]
-  wikiAnnouncementNotifies WikiAnnouncementNotify[] @relation("WikiAnnouncementNotifyCreatedBy")
+  wikiAnnouncementNotifies WikiAnnouncementNotify[] @relation("WikiAnnouncementNotifySender")
 
   // MCP
   mcpTokens McpToken[]

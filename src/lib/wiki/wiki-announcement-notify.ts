@@ -32,6 +32,7 @@ import {
   WIKI_ANNOUNCE_TOO_MANY_SCHEDULED,
   WIKI_ANNOUNCE_UNAVAILABLE,
 } from './wiki-announcement-notify-rule'
+import { WIKI_PAGE_ALIVE } from './wiki-rule'
 
 export type WikiAnnounceInput = {
   kind: WikiAnnouncementNotifyKind
@@ -79,7 +80,7 @@ const NOTIFY_SELECT = {
   sentAt: true,
   skipReason: true,
   createdAt: true,
-  createdBy: { select: { name: true } },
+  sender: { select: { name: true } },
 } as const
 
 const PAYLOAD_PAGE_SELECT = {
@@ -126,11 +127,11 @@ const payloadOf = (
 }
 
 /**
- * アナウンス用スペースのページに書き込めること。スペース行を共有ロックし、
- * アーカイブ・区分の変更・ページの削除(どれもスペース行を排他ロックする)と直列にする
+ * アナウンス用スペースの(削除されていない)ページに書き込めること。スペース行を共有ロックし、
+ * アーカイブ・ページの削除(どちらもスペース行を排他ロックする)と直列にする
  */
 const lockWritableAnnouncement = async (actor: Actor, pageId: string, tx: Db) => {
-  const found = await tx.wikiPage.findUnique({ where: { id: pageId }, select: { spaceId: true } })
+  const found = await tx.wikiPage.findUnique({ where: { id: pageId, ...WIKI_PAGE_ALIVE }, select: { spaceId: true } })
   if (!found) {
     throw errInvalidOperation()
   }
@@ -140,7 +141,7 @@ const lockWritableAnnouncement = async (actor: Actor, pageId: string, tx: Db) =>
     throw errInvalidOperation()
   }
   // ロックを待つ間に消えていないか
-  const page = await tx.wikiPage.findUnique({ where: { id: pageId }, select: PAYLOAD_PAGE_SELECT })
+  const page = await tx.wikiPage.findUnique({ where: { id: pageId, ...WIKI_PAGE_ALIVE }, select: PAYLOAD_PAGE_SELECT })
   if (!page) {
     throw errInvalidOperation()
   }
@@ -173,7 +174,7 @@ export const notifyWikiAnnouncementNow = async (actor: Actor, pageId: string, in
         scheduledAt: now,
         status: 'sent',
         sentAt: now,
-        createdById: actor.id,
+        senderId: actor.id,
       },
       select: NOTIFY_SELECT,
     })
@@ -209,7 +210,7 @@ export const scheduleWikiAnnouncement = async (actor: Actor, pageId: string, inp
         message,
         scheduledAt: input.scheduledAt,
         status: 'scheduled',
-        createdById: actor.id,
+        senderId: actor.id,
       },
       select: NOTIFY_SELECT,
     })
@@ -244,7 +245,7 @@ export const updateScheduledWikiAnnouncement = async (
     await assertChannelReady(page.spaceId, tx)
     const { count } = await tx.wikiAnnouncementNotify.updateMany({
       where: { id: notifyId, status: 'scheduled' },
-      data: { kind: input.kind, message, scheduledAt: input.scheduledAt, createdById: actor.id },
+      data: { kind: input.kind, message, scheduledAt: input.scheduledAt, senderId: actor.id },
     })
     if (count === 0) {
       throw errNotScheduled()
@@ -273,7 +274,10 @@ export const cancelScheduledWikiAnnouncement = async (actor: Actor, notifyId: st
  * アーカイブ済みでも履歴は見られる(送る・変えるは canWrite で画面が閉じる)
  */
 export const getWikiAnnouncementNotifies = async (actor: Actor, pageId: string) => {
-  const page = await prisma.wikiPage.findUnique({ where: { id: pageId }, select: { spaceId: true } })
+  const page = await prisma.wikiPage.findUnique({
+    where: { id: pageId, ...WIKI_PAGE_ALIVE },
+    select: { spaceId: true },
+  })
   if (!page) {
     throw errInvalidOperation()
   }
@@ -292,7 +296,7 @@ export const getWikiAnnouncementNotifies = async (actor: Actor, pageId: string) 
     isSlackChannelPostEnabled(),
   ])
   return {
-    items: items.map(({ createdBy, ...item }) => ({ ...item, createdByName: createdBy?.name ?? '' })),
+    items: items.map(({ sender, ...item }) => ({ ...item, senderName: sender?.name ?? '' })),
     /** 通知先のチャンネルが設定済みで、Slack 連携が有効 */
     available: !!space?.announceSlackChannelId && slackEnabled,
     canWrite: access.canWrite,
@@ -303,7 +307,7 @@ export type WikiAnnouncementNotifyItem = Awaited<ReturnType<typeof getWikiAnnoun
 
 /**
  * ページの削除と同じトランザクションで、予約中の通知を見送りにする。
- * 復元しても予約は戻さない(消した時点で知らせる意思は無くなったとみなす)
+ * 復元しても予約は戻さない(消した時点で知らせる意思は無くなったとみなす)。送った・見送った履歴は残る
  */
 export const skipScheduledWikiAnnouncementsOf = async (tx: Db, pageIds: readonly string[]) => {
   await tx.wikiAnnouncementNotify.updateMany({
@@ -320,7 +324,7 @@ const sendScheduled = async (
   { id: notifyId, spaceId }: { id: string; spaceId: string },
   now: Date,
 ): Promise<ScheduledOutcome> => {
-  // 利用者の操作と同じく、先にスペース行を共有ロックして、アーカイブ・区分の変更・ページの削除・通知先の変更と直列にする
+  // 利用者の操作と同じく、先にスペース行を共有ロックして、アーカイブ・ページの削除・通知先の変更と直列にする
   // (予約行を先に取ると、スペース行の後に予約行を待つページの削除とデッドロックする)
   await tx.$queryRaw`SELECT "id" FROM "wiki_space" WHERE "id" = ${spaceId} FOR SHARE`
   // 期限が来ていて、まだ予約中の行だけを取る。他の周・利用者の変更が持っている行は飛ばす
@@ -339,7 +343,7 @@ const sendScheduled = async (
       pageId: true,
       kind: true,
       message: true,
-      createdBy: { select: { id: true, role: true, name: true, banned: true } },
+      sender: { select: { id: true, role: true, name: true, banned: true } },
     },
   })
   const skip = async (skipReason: WikiAnnouncementNotifySkipReason): Promise<ScheduledOutcome> => {
@@ -352,19 +356,21 @@ const sendScheduled = async (
     return 'skipped'
   }
 
-  const page = await tx.wikiPage.findUnique({ where: { id: row.pageId }, select: PAYLOAD_PAGE_SELECT })
-  if (!page || page.spaceId !== row.spaceId) {
+  // ページの削除は予約を見送りにするが、取りこぼしても削除済みのページは送らない
+  const page = await tx.wikiPage.findUnique({
+    where: { id: row.pageId, ...WIKI_PAGE_ALIVE },
+    select: PAYLOAD_PAGE_SELECT,
+  })
+  if (!page) {
     return skip('page_deleted')
   }
+  // 区分は作成後に変わらないので、予約を作れた(アナウンス用)スペースのままである
   const space = await tx.wikiSpace.findUniqueOrThrow({
     where: { id: row.spaceId },
-    select: { type: true, archived: true, announceSlackChannelId: true },
+    select: { archived: true, announceSlackChannelId: true },
   })
   if (space.archived) {
     return skip('archived')
-  }
-  if (space.type !== 'announcement') {
-    return skip('not_announcement')
   }
   if (!space.announceSlackChannelId) {
     return skip('channel_unset')
@@ -372,7 +378,7 @@ const sendScheduled = async (
   if (!(await isSlackChannelPostEnabled())) {
     return skip('slack_disabled')
   }
-  const sender = row.createdBy
+  const sender = row.sender
   if (!sender || sender.banned || !(await getWikiSpaceAccess(sender, row.spaceId, tx))?.canWrite) {
     return skip('no_permission')
   }
@@ -408,10 +414,10 @@ const dueAfter = (now: Date, cursor: DueCursor | null, throttled: ReadonlySet<st
               },
             ]
           : []),
-        ...(throttled.size > 0 ? [{ OR: [{ createdById: null }, { createdById: { notIn: [...throttled] } }] }] : []),
+        ...(throttled.size > 0 ? [{ OR: [{ senderId: null }, { senderId: { notIn: [...throttled] } }] }] : []),
       ],
     },
-    select: { id: true, spaceId: true, createdById: true, scheduledAt: true },
+    select: { id: true, spaceId: true, senderId: true, scheduledAt: true },
     orderBy: [{ scheduledAt: 'asc' }, { id: 'asc' }],
     take: WIKI_ANNOUNCE_BATCH,
   })
@@ -452,7 +458,7 @@ export const runWikiAnnouncementSchedule = async (
       }
       cursor = row
       scanned++
-      if (row.createdById && throttled.has(row.createdById)) {
+      if (row.senderId && throttled.has(row.senderId)) {
         continue
       }
       try {

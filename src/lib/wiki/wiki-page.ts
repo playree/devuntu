@@ -3,6 +3,8 @@
  *
  * 閲覧は viewer 以上、書き込みは editor 以上(アーカイブ済みのスペースは不可)。変更はすべて版として残し(wiki-revision.ts)、
  * 版の内容へ戻せる(`restoreWikiPageRevision`)。
+ * 削除は `deletedAt` を立てる論理削除で、削除済みのページは読み書きの対象から外す(`WIKI_PAGE_ALIVE`)。
+ * 削除済みは `restoreDeletedWikiPage` で戻し、保持期間を過ぎたら自動メンテナンスで物理削除する。
  *
  * 書き込みは必ずスペース行のロックを先に取り、その後で権限(アーカイブを含む)を判定する。
  * - 構造を変える書き込み(作成・移動・削除)は FOR NO KEY UPDATE で直列にし、同時の移動で循環や深さ超過を作らない
@@ -26,6 +28,7 @@ import {
   MAX_WIKI_REVISION_MESSAGE,
   MAX_WIKI_TITLE,
   WIKI_ANNOUNCEMENT_FLAT,
+  WIKI_PAGE_ALIVE,
   WIKI_PAGE_CONFLICT,
   WIKI_PAGE_HAS_CHILDREN,
   WIKI_PAGE_INVALID_PARENT,
@@ -35,6 +38,7 @@ import {
   defaultWikiPageType,
   isFlatWikiSpace,
   isWikiPageTypeAllowed,
+  revisionTagsOf,
   wikiPageRef,
   type WikiPageSnapshot,
   type WikiWriter,
@@ -121,9 +125,9 @@ const lockPageRows = async (tx: Db, pageIds: readonly string[]) => {
 const TREE_SELECT = { id: true, parentId: true, number: true, title: true, order: true } as const
 const TREE_ORDER = [{ order: 'asc' }, { number: 'asc' }] as const
 
-/** スペースの木(本文なし)。兄弟の並び順で返す */
+/** スペースの木(削除済みを除く、本文なし)。兄弟の並び順で返す */
 const loadTree = (tx: Db, spaceId: string) =>
-  tx.wikiPage.findMany({ where: { spaceId }, select: TREE_SELECT, orderBy: [...TREE_ORDER] })
+  tx.wikiPage.findMany({ where: { spaceId, ...WIKI_PAGE_ALIVE }, select: TREE_SELECT, orderBy: [...TREE_ORDER] })
 
 type TreeRow = { id: string; parentId: string | null; order: number }
 
@@ -333,7 +337,6 @@ export const createWikiPage = async (
     await writeWikiPageRevision(tx, {
       spaceId,
       pageId: created.id,
-      pageNumber: number,
       action: 'created',
       snapshot: { parentId, order, title, content, type, tags },
       actorId: actor.id,
@@ -348,18 +351,21 @@ export const createWikiPage = async (
   return { result: 'created', ...page }
 }
 
-/** スペース内の番号でページを引く(権限は見ない。呼び出し側で assertWikiSpaceAccess を通すこと)。無ければ null */
+/** スペース内の番号でページを引く(削除済みは除く。権限は見ない。呼び出し側で assertWikiSpaceAccess を通すこと)。無ければ null */
 export const findWikiPageByNumber = async (spaceId: string, number: number) =>
   prisma.wikiPage.findUnique({
-    where: { spaceId_number: { spaceId, number } },
+    where: { spaceId_number: { spaceId, number }, ...WIKI_PAGE_ALIVE },
     select: { id: true, parentId: true, updatedAt: true },
   })
 
-/** 本文と更新日時(部分更新の組み立て用。権限は見ない)。無ければ null */
+/** 本文と更新日時(部分更新の組み立て用。削除済みは除く。権限は見ない)。無ければ null */
 export const readWikiPageContent = async (pageId: string) =>
-  prisma.wikiPage.findUnique({ where: { id: pageId }, select: { content: true, updatedAt: true } })
+  prisma.wikiPage.findUnique({ where: { id: pageId, ...WIKI_PAGE_ALIVE }, select: { content: true, updatedAt: true } })
 
-/** 対象ページのスペースを引く(ロックを取る前に要る)。無ければ errInvalidOperation */
+/**
+ * 対象ページのスペースを引く(ロックを取る前に要る)。無ければ errInvalidOperation。
+ * スペースは変わらないので、ロックの後で削除済みかどうかを読み直す
+ */
 const findPageSpace = async (pageId: string) => {
   const page = await prisma.wikiPage.findUnique({ where: { id: pageId }, select: { spaceId: true } })
   if (!page) {
@@ -387,7 +393,7 @@ export const updateWikiPage = async (
     const access = await assertWikiSpaceAccess(actor, spaceId, 'write', tx)
     await lockPageRows(tx, [pageId])
     const existing = await tx.wikiPage.findUnique({
-      where: { id: pageId },
+      where: { id: pageId, ...WIKI_PAGE_ALIVE },
       select: { ...SNAPSHOT_SELECT, number: true, updatedAt: true },
     })
     if (!existing) {
@@ -441,7 +447,6 @@ export const updateWikiPage = async (
     await writeWikiPageRevision(tx, {
       spaceId,
       pageId,
-      pageNumber: existing.number,
       action: 'updated',
       snapshot: next,
       actorId: actor.id,
@@ -551,7 +556,6 @@ export const moveWikiPage = async (
     await writeWikiPageRevision(tx, {
       spaceId,
       pageId,
-      pageNumber: existing.number,
       action: 'moved',
       snapshot: { ...snapshotOf(existing), parentId, order },
       actorId: actor.id,
@@ -568,8 +572,9 @@ export const moveWikiPage = async (
 }
 
 /**
- * ページの削除。子孫がいれば `recursive` を指定したときだけ配下ごと消す。
- * 消すページごとに deleted の版を残すので、保持期間内なら復元できる。戻り値は消したページ数。
+ * ページの削除(ゴミ箱へ移す)。子孫がいれば `recursive` を指定したときだけ配下ごと消す。
+ * 対象と配下に同じ `deletedAt` を立て、ページごとに deleted の版を残す。保持期間内なら `restoreDeletedWikiPage` で戻せる。
+ * 戻り値は消したページ数。
  * `expectedDescendantIds` は利用者に確認した配下のページで、今の配下と違えば(件数が同じでも入れ替わっていれば)消さずに弾く
  */
 export const deleteWikiPage = async (
@@ -587,7 +592,8 @@ export const deleteWikiPage = async (
     const index = isFlat ? null : indexWikiTree(await loadTree(tx, spaceId))
     const exists = index
       ? index.byId.has(pageId)
-      : (await tx.wikiPage.findFirst({ where: { id: pageId, spaceId }, select: { id: true } })) !== null
+      : (await tx.wikiPage.findFirst({ where: { id: pageId, spaceId, ...WIKI_PAGE_ALIVE }, select: { id: true } })) !==
+        null
     if (!exists) {
       throw errInvalidOperation()
     }
@@ -608,25 +614,25 @@ export const deleteWikiPage = async (
     await lockPageRows(tx, targetIds)
     const targets = await tx.wikiPage.findMany({
       where: { id: { in: targetIds } },
-      select: { ...SNAPSHOT_SELECT, id: true, number: true, createdAt: true, createdById: true },
+      select: { ...SNAPSHOT_SELECT, id: true },
     })
     for (const target of targets) {
       await writeWikiPageRevision(tx, {
         spaceId,
         pageId: target.id,
-        pageNumber: target.number,
         action: 'deleted',
         snapshot: snapshotOf(target),
         actorId: actor.id,
         via: writer.via,
         ticketId,
-        pageCreatedAt: target.createdAt,
-        pageCreatedById: target.createdById,
       })
     }
     await skipScheduledWikiAnnouncementsOf(tx, targetIds)
-    // 子孫は parentId の Cascade で一緒に消える
-    await tx.wikiPage.delete({ where: { id: pageId }, select: { id: true } })
+    // 本文は変えないので更新日時は進めない(@updatedAt を避けて SQL で書く)
+    await tx.$executeRaw`
+      UPDATE "wiki_page" SET "deletedAt" = ${new Date()}, "deletedById" = ${actor.id}
+      WHERE "id" IN (${Prisma.join(targetIds)})
+    `
     return targets.length
   })
 
@@ -634,58 +640,15 @@ export const deleteWikiPage = async (
   return { deleted }
 }
 
-const RESTORE_SOURCE_SELECT = {
-  spaceId: true,
-  pageId: true,
-  pageNumber: true,
-  parentId: true,
-  order: true,
-  title: true,
-  content: true,
-  type: true,
-  tagIds: true,
-} as const
-
 /**
- * 削除済みのページを作り直すときの作成日時・作成者。最後の削除の版に残した値を使い(作成の版が保持期間や件数の上限で
- * 消えていても元の作成日時に戻す)、無ければ(列を足す前に削除した版)残っている最も古い版から取る。
- * 作成者が退会していれば空にする。戻し元の版をロックの後で読めているので、版はどちらかが見つかる
- */
-const originalCreationOf = async (tx: Db, pageId: string): Promise<{ at: Date; byId: string | null } | null> => {
-  const deleted = await tx.wikiPageRevision.findFirst({
-    where: { pageId, action: 'deleted', pageCreatedAt: { not: null } },
-    select: { pageCreatedAt: true, pageCreatedById: true },
-    orderBy: WIKI_REVISION_ORDER,
-  })
-  if (deleted?.pageCreatedAt) {
-    const creator = deleted.pageCreatedById
-      ? await tx.user.findUnique({ where: { id: deleted.pageCreatedById }, select: { id: true } })
-      : null
-    return { at: deleted.pageCreatedAt, byId: creator?.id ?? null }
-  }
-  const oldest = await tx.wikiPageRevision.findFirst({
-    where: { pageId },
-    select: { actorId: true, createdAt: true },
-    orderBy: { number: 'asc' },
-  })
-  return oldest ? { at: oldest.createdAt, byId: oldest.actorId } : null
-}
-
-/**
- * 版の内容へ戻し、restored の版を残す。タグは ID で引き当て(改名したタグは今の名前で付く)、スペースから消えたタグは外す。
- * - ページが残っている: タイトル・本文・種類・タグだけを戻す。位置(親・並び)は変えない(位置は移動で変える)
- * - 削除済み: 同じ id・番号で作り直す。版の親が残っていて深さの上限に収まればその下の元の位置へ、
- *   そうでなければスペース直下の末尾へ戻す。配下ごと削除したページは1ページずつ戻す。
- *   作成者・作成日時は、残っている最も古い版(作成の版が残っていればそれ)の作成者・作成日時にする
- *
- * `deletedOnly` は削除済みのページの一覧からの復元。一覧を開いた後に別の人が戻して編集したページを、削除の版で上書きしないよう、
- * ロックの後でページが存在すれば何もせず unchanged を返す
+ * 版の内容へ戻し、restored の版を残す。対象は削除されていないページだけ(削除済みは `restoreDeletedWikiPage`)。
+ * タイトル・本文・種類・タグだけを戻し、位置(親・並び)は変えない(位置は移動で変える)。
+ * タグは ID で引き当て(改名したタグは今の名前で付く)、スペースから消えたタグは外す
  */
 export const restoreWikiPageRevision = async (
   actor: Actor,
   writer: WikiWriter,
   revisionId: string,
-  opts: { deletedOnly?: boolean } = {},
 ): Promise<WikiPageWriteResult> => {
   const source = await prisma.wikiPageRevision.findUnique({ where: { id: revisionId }, select: { spaceId: true } })
   if (!source) {
@@ -693,120 +656,74 @@ export const restoreWikiPageRevision = async (
   }
   const spaceId = source.spaceId
   const outcome = await prisma.$transaction(async (tx) => {
-    // 削除済みのページは木に差し込むので、構造を変える書き込みとして直列にする
-    await lockSpaceForStructure(tx, spaceId)
+    await lockSpaceForContent(tx, spaceId)
     const access = await assertWikiSpaceAccess(actor, spaceId, 'write', tx)
     // ロックを取った後で読み直す(掃除で消えた版からは戻さない)
-    const revision = await tx.wikiPageRevision.findUnique({ where: { id: revisionId }, select: RESTORE_SOURCE_SELECT })
+    const revision = await tx.wikiPageRevision.findUnique({
+      where: { id: revisionId },
+      select: { pageId: true, title: true, content: true, type: true, tags: true },
+    })
     if (!revision) {
       throw errInvalidOperation()
     }
     assertPageTypeAllowed(access, revision.type)
-    const { pageId, pageNumber: number } = revision
-    const ref = wikiPageRef({ key: access.key, number })
-    const tags = await findWikiTagsByIds(tx, spaceId, revision.tagIds)
-    const tagIds = tags.map(({ id }) => id)
-    const writeRestored = (snapshot: WikiPageSnapshot) =>
-      writeWikiPageRevision(tx, {
-        spaceId,
-        pageId,
-        pageNumber: number,
-        action: 'restored',
-        snapshot,
-        actorId: actor.id,
-        via: writer.via,
-        restoredFromId: revisionId,
-      })
-
+    const { pageId } = revision
     await lockPageRows(tx, [pageId])
     const existing = await tx.wikiPage.findUnique({
-      where: { id: pageId },
-      select: { ...SNAPSHOT_SELECT, updatedAt: true },
+      where: { id: pageId, ...WIKI_PAGE_ALIVE },
+      select: { ...SNAPSHOT_SELECT, number: true, updatedAt: true },
     })
-    if (existing && opts.deletedOnly) {
+    if (!existing) {
+      throw errInvalidOperation()
+    }
+    const { number } = existing
+    const ref = wikiPageRef({ key: access.key, number })
+    const tags = await findWikiTagsByIds(
+      tx,
+      spaceId,
+      revisionTagsOf(revision.tags).map(({ id }) => id),
+    )
+    const tagIds = tags.map(({ id }) => id)
+    const currentTagIds = existing.tags.map(({ tag }) => tag.id)
+    const tagsChanged = tagIds.length !== currentTagIds.length || tagIds.some((id) => !currentTagIds.includes(id))
+    if (
+      existing.title === revision.title &&
+      existing.content === revision.content &&
+      existing.type === revision.type &&
+      !tagsChanged
+    ) {
       return { result: 'unchanged' as const, id: pageId, ref, number, updatedAt: existing.updatedAt }
     }
-    if (existing) {
-      const currentTagIds = existing.tags.map(({ tag }) => tag.id)
-      const tagsChanged = tagIds.length !== currentTagIds.length || tagIds.some((id) => !currentTagIds.includes(id))
-      if (
-        existing.title === revision.title &&
-        existing.content === revision.content &&
-        existing.type === revision.type &&
-        !tagsChanged
-      ) {
-        return { result: 'unchanged' as const, id: pageId, ref, number, updatedAt: existing.updatedAt }
-      }
-      const updated = await tx.wikiPage.update({
-        where: { id: pageId },
-        data: {
-          title: revision.title,
-          content: revision.content,
-          type: revision.type,
-          updatedById: actor.id,
-          updatedVia: writer.via,
-        },
-        select: { updatedAt: true },
-      })
-      if (tagsChanged) {
-        await syncWikiPageTags(tx, pageId, currentTagIds, tagIds)
-      }
-      await writeRestored({
-        ...snapshotOf(existing),
-        title: revision.title,
-        content: revision.content,
-        type: revision.type,
-        tags,
-      })
-      return { result: 'updated' as const, id: pageId, ref, number, updatedAt: updated.updatedAt }
-    }
-
-    // アナウンス用スペースは平らなので、親を持っていた版(区分を変える前のもの)もスペース直下へ戻し、全件の木は読まない
-    const isFlat = isFlatWikiSpace(access.type)
-    const rows = isFlat ? [] : await loadTree(tx, spaceId)
-    const index = indexWikiTree(rows)
-    const parentId =
-      !isFlat &&
-      revision.parentId !== null &&
-      index.byId.has(revision.parentId) &&
-      depthOf(index, revision.parentId) + 1 <= MAX_WIKI_DEPTH
-        ? revision.parentId
-        : null
-    const ordered = placeInSiblings(
-      siblingIdsOf(rows, parentId),
-      pageId,
-      parentId === revision.parentId ? revision.order : undefined,
-    )
-    const order = isFlat ? 0 : ordered.indexOf(pageId)
-    const created = await originalCreationOf(tx, pageId)
-    await applySiblingOrders(tx, rows, ordered, pageId)
-    const recreated = await tx.wikiPage.create({
+    const updated = await tx.wikiPage.update({
+      where: { id: pageId },
       data: {
-        id: pageId,
-        spaceId,
-        parentId,
-        number,
         title: revision.title,
         content: revision.content,
         type: revision.type,
-        order,
-        createdById: created ? created.byId : actor.id,
-        ...(created ? { createdAt: created.at } : {}),
         updatedById: actor.id,
         updatedVia: writer.via,
       },
       select: { updatedAt: true },
     })
-    await syncWikiPageTags(tx, pageId, [], tagIds)
-    await writeRestored({
-      parentId,
-      order,
-      title: revision.title,
-      content: revision.content,
-      type: revision.type,
-      tags,
+    if (tagsChanged) {
+      await syncWikiPageTags(tx, pageId, currentTagIds, tagIds)
+    }
+    await writeWikiPageRevision(tx, {
+      spaceId,
+      pageId,
+      action: 'restored',
+      snapshot: {
+        ...snapshotOf(existing),
+        title: revision.title,
+        content: revision.content,
+        type: revision.type,
+        tags,
+      },
+      actorId: actor.id,
+      via: writer.via,
+      restoredFromId: revisionId,
     })
-    return { result: 'created' as const, id: pageId, ref, number, updatedAt: recreated.updatedAt }
+    return { result: 'updated' as const, id: pageId, ref, number, updatedAt: updated.updatedAt }
   })
 
   if (outcome.result !== 'unchanged') {
@@ -815,11 +732,131 @@ export const restoreWikiPageRevision = async (
   return outcome
 }
 
+export type RestoreDeletedWikiPageResult = {
+  /** 戻した(restored)か、一覧を開いた後に別の人が戻していて戻すものが無かった(unchanged)か */
+  result: 'restored' | 'unchanged'
+  id: string
+  /** `KEY/番号` */
+  ref: string
+  number: number
+  /** 戻したページ数(配下を含む) */
+  restored: number
+}
+
+/**
+ * 削除済みのページを戻し、ページごとに restored の版を残す。作成者・作成日時・本文は削除したときのまま
+ * (タグは削除中にスペースから消されたものだけが外れる)。
+ * - 元の親が生きていて、戻す部分木が深さの上限に収まればその下の元の位置へ、そうでなければスペース直下の末尾へ戻す
+ *   (アナウンス用スペースは平らなので常にスペース直下)
+ * - `withDescendants` を指定すると、削除済みの配下(親をたどって着く削除済みのページ)も同じトランザクションで戻す。
+ *   配下は親子関係を保ったまま戻る。`expectedDescendantIds` は利用者に確認した配下で、今の削除済みの配下と違えば戻さずに弾く
+ * 既に戻されていれば(一覧を開いた後に別の人が戻した)そのページは上書きせず、配下だけを戻す。
+ * そのページが別の人に深い位置へ移されていて、配下を戻すと深さの上限を超えるなら弾く
+ */
+export const restoreDeletedWikiPage = async (
+  actor: Actor,
+  writer: WikiWriter,
+  pageId: string,
+  opts: { withDescendants?: boolean; expectedDescendantIds?: readonly string[] } = {},
+): Promise<RestoreDeletedWikiPageResult> => {
+  const spaceId = await findPageSpace(pageId)
+  const outcome = await prisma.$transaction(async (tx) => {
+    // 木に差し込むので、構造を変える書き込みとして直列にする
+    await lockSpaceForStructure(tx, spaceId)
+    const access = await assertWikiSpaceAccess(actor, spaceId, 'write', tx)
+    const target = await tx.wikiPage.findUnique({
+      where: { id: pageId },
+      select: { id: true, number: true, parentId: true, order: true, deletedAt: true },
+    })
+    if (!target) {
+      throw errInvalidOperation()
+    }
+    const ref = wikiPageRef({ key: access.key, number: target.number })
+    const deletedRows = opts.withDescendants
+      ? await tx.wikiPage.findMany({
+          where: { spaceId, deletedAt: { not: null } },
+          select: { id: true, parentId: true },
+        })
+      : []
+    const deletedIndex = indexWikiTree(deletedRows)
+    const descendants = descendantIds(deletedIndex, pageId)
+    if (opts.expectedDescendantIds) {
+      const expectedIds = new Set(opts.expectedDescendantIds)
+      if (expectedIds.size !== descendants.length || descendants.some((id) => !expectedIds.has(id))) {
+        throw errTreeChanged()
+      }
+    }
+    const restoreIds = [...(target.deletedAt ? [pageId] : []), ...descendants]
+    if (restoreIds.length === 0) {
+      return { result: 'unchanged' as const, id: pageId, ref, number: target.number, restored: 0 }
+    }
+    await lockPageRows(tx, restoreIds)
+
+    if (target.deletedAt) {
+      // アナウンス用スペースは平らなので、全件の木は読まずにスペース直下へ戻す
+      const isFlat = isFlatWikiSpace(access.type)
+      const rows = isFlat ? [] : await loadTree(tx, spaceId)
+      const index = indexWikiTree(rows)
+      const height = descendants.length > 0 ? subtreeHeight(deletedIndex, pageId) : 1
+      const parentId =
+        !isFlat &&
+        target.parentId !== null &&
+        index.byId.has(target.parentId) &&
+        depthOf(index, target.parentId) + height <= MAX_WIKI_DEPTH
+          ? target.parentId
+          : null
+      const ordered = placeInSiblings(
+        siblingIdsOf(rows, parentId),
+        pageId,
+        parentId === target.parentId ? target.order : undefined,
+      )
+      const order = isFlat ? 0 : ordered.indexOf(pageId)
+      await applySiblingOrders(tx, rows, ordered, pageId)
+      // 位置だけを戻すので、更新日時は進めない(@updatedAt を避けて SQL で書く)
+      await tx.$executeRaw`
+        UPDATE "wiki_page" SET "parentId" = ${parentId}, "order" = ${order} WHERE "id" = ${pageId}
+      `
+    } else if (!isFlatWikiSpace(access.type)) {
+      // 戻されたページの下へ配下を戻す。そのページが深い位置へ移されていれば上限を超えうる
+      const index = indexWikiTree(await loadTree(tx, spaceId))
+      if (depthOf(index, pageId) + subtreeHeight(deletedIndex, pageId) - 1 > MAX_WIKI_DEPTH) {
+        throw errTooDeep()
+      }
+    }
+    await tx.$executeRaw`
+      UPDATE "wiki_page" SET "deletedAt" = NULL, "deletedById" = NULL WHERE "id" IN (${Prisma.join(restoreIds)})
+    `
+    const restored = await tx.wikiPage.findMany({
+      where: { id: { in: restoreIds } },
+      select: { ...SNAPSHOT_SELECT, id: true },
+    })
+    for (const page of restored) {
+      await writeWikiPageRevision(tx, {
+        spaceId,
+        pageId: page.id,
+        action: 'restored',
+        snapshot: snapshotOf(page),
+        actorId: actor.id,
+        via: writer.via,
+      })
+    }
+    return { result: 'restored' as const, id: pageId, ref, number: target.number, restored: restored.length }
+  })
+
+  if (outcome.result === 'restored') {
+    logger.info(
+      { userId: actor.id, id: pageId, restored: outcome.restored, via: writer.via },
+      'wiki deleted page restored',
+    )
+  }
+  return outcome
+}
+
 /** スペースのツリー(本文なし)。兄弟の並び順で返す。表示用にタグの ID を添える */
 export const getWikiTree = async (actor: Actor, spaceId: string) => {
   await assertWikiSpaceAccess(actor, spaceId, 'view')
   const rows = await prisma.wikiPage.findMany({
-    where: { spaceId },
+    where: { spaceId, ...WIKI_PAGE_ALIVE },
     select: { ...TREE_SELECT, tags: { select: { tagId: true } } },
     orderBy: [...TREE_ORDER],
   })
@@ -861,7 +898,7 @@ export const getWikiPage = async (actor: Actor, key: string, number: number) => 
     prisma.$transaction(
       async (tx) => {
         const row = await tx.wikiPage.findUnique({
-          where: { spaceId_number: { spaceId: space.id, number } },
+          where: { spaceId_number: { spaceId: space.id, number }, ...WIKI_PAGE_ALIVE },
           select: PAGE_DETAIL_SELECT,
         })
         if (!row) {

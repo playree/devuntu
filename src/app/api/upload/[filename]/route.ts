@@ -1,7 +1,6 @@
 import { getActiveSession } from '@/lib/auth/auth'
-import { prisma } from '@/lib/prisma'
 import { ACCEPTED_IMAGE_TYPES } from '@/lib/schema/schema'
-import { canViewAttachment } from '@/lib/storage/attachment-access'
+import { findViewableAttachment } from '@/lib/storage/attachment-access'
 import { getObject } from '@/lib/storage/storage'
 import { isValidUploadKey } from '@/lib/storage/upload'
 import { resolveDownloadToken } from '@/lib/storage/upload-token'
@@ -46,24 +45,9 @@ export const GET = async (req: Request, { params }: { params: Promise<{ filename
     return new Response(null, { status: 401 })
   }
 
-  // 存在しないキーはストレージを叩かずに返す
-  const attachment = await prisma.attachment.findUnique({
-    where: { key: filename },
-    select: { mimeType: true, boardId: true, wikiSpaceId: true, detachedAt: true, originalName: true },
-  })
+  // 存在しないキーはストレージを叩かずに返す。アクセス不可は未存在と区別せず 404 にして、キーの当たり判定を返さない
+  const attachment = await findViewableAttachment(user, filename)
   if (!attachment) {
-    return new Response(null, { status: 404 })
-  }
-
-  // アクセス不可は未存在と区別せず 404 にして、キーの当たり判定を返さない
-  if (
-    !(await canViewAttachment(user, {
-      key: filename,
-      boardId: attachment.boardId,
-      wikiSpaceId: attachment.wikiSpaceId,
-      detachedAt: attachment.detachedAt,
-    }))
-  ) {
     return new Response(null, { status: 404 })
   }
 

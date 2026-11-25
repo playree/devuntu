@@ -18,13 +18,12 @@ import { assertBoardAccess, assertTicketAccess } from '../board/board-access'
 import { errInvalidOperation, errValidation } from '../error'
 import { logger } from '../logger'
 import type { ResourceAuth } from '../oauth/oauth-resource'
-import { prisma } from '../prisma'
 import { assertRateLimit } from '../rate-limit'
 import { ACCEPTED_IMAGE_TYPES, zImageFile } from '../schema/schema'
 import { makeUrl } from '../server-utils'
 import type { AttachmentTarget } from '../storage/attachment'
 import { saveContentImage } from '../storage/attachment'
-import { canViewAttachment } from '../storage/attachment-access'
+import { findViewableAttachment } from '../storage/attachment-access'
 import { resizeWebp, WEBP_MIME } from '../storage/image'
 import { getObject } from '../storage/storage'
 import { isValidUploadKey, toUploadKey, UPLOAD_URL_PREFIX } from '../storage/upload'
@@ -180,20 +179,9 @@ const getImageForMcp = async (auth: ResourceAuth, input: { image: string; maxSiz
   assertRateLimit(`get-image:${auth.user.id}`, READ_RATE_LIMIT)
   const key = parseUploadKey(input.image)
 
-  const attachment = await prisma.attachment.findUnique({
-    where: { key },
-    select: { boardId: true, wikiSpaceId: true, detachedAt: true, originalName: true, size: true, mimeType: true },
-  })
   // アクセス不可は未存在と区別せず、キーの当たり判定を返さない(配信APIと同じ扱い)
-  if (
-    !attachment ||
-    !(await canViewAttachment(auth.user, {
-      key,
-      boardId: attachment.boardId,
-      wikiSpaceId: attachment.wikiSpaceId,
-      detachedAt: attachment.detachedAt,
-    }))
-  ) {
+  const attachment = await findViewableAttachment(auth.user, key)
+  if (!attachment) {
     throw errInvalidOperation()
   }
   // 添付ファイル(最大 ATTACHMENT_MAX_SIZE_MB)を丸ごと読んで sharp に渡さないよう、画像以外はここで返す

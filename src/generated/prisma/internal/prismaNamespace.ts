@@ -6785,6 +6785,8 @@ export const WikiPageScalarFieldEnum = {
   createdById: 'createdById',
   updatedById: 'updatedById',
   updatedVia: 'updatedVia',
+  deletedAt: 'deletedAt',
+  deletedById: 'deletedById',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -6819,7 +6821,6 @@ export const WikiPageRevisionScalarFieldEnum = {
   id: 'id',
   spaceId: 'spaceId',
   pageId: 'pageId',
-  pageNumber: 'pageNumber',
   number: 'number',
   action: 'action',
   parentId: 'parentId',
@@ -6827,14 +6828,11 @@ export const WikiPageRevisionScalarFieldEnum = {
   title: 'title',
   content: 'content',
   type: 'type',
-  tagIds: 'tagIds',
-  tagNames: 'tagNames',
+  tags: 'tags',
   actorId: 'actorId',
   via: 'via',
   ticketId: 'ticketId',
   restoredFromId: 'restoredFromId',
-  pageCreatedAt: 'pageCreatedAt',
-  pageCreatedById: 'pageCreatedById',
   message: 'message',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -6870,7 +6868,7 @@ export const WikiAnnouncementNotifyScalarFieldEnum = {
   status: 'status',
   sentAt: 'sentAt',
   skipReason: 'skipReason',
-  createdById: 'createdById',
+  senderId: 'senderId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

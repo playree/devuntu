@@ -7,13 +7,14 @@
  */
 
 import { prisma } from '@/lib/prisma'
-import { canViewAttachment } from '@/lib/storage/attachment-access'
+import { canViewAttachment, findViewableAttachment } from '@/lib/storage/attachment-access'
 import type { WikiRole } from '@/lib/wiki/wiki-rule'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/prisma', async () =>
   (await import('../../helpers/prisma')).mockPrisma({
     wikiSpace: ['findUnique'],
+    attachment: ['findUnique'],
     board: ['findUnique'],
     ticket: ['count'],
   }),
@@ -88,5 +89,38 @@ describe('canViewAttachment(削除待ちの添付)', () => {
 
   it('印の無いどこにも属さない添付(お知らせのアイコンなど)は配信する', async () => {
     expect(await canViewAttachment(user, { key: KEY, boardId: null, wikiSpaceId: null, detachedAt: null })).toBe(true)
+  })
+})
+
+describe('findViewableAttachment', () => {
+  const row = (override: Record<string, unknown> = {}) => ({
+    boardId: null,
+    wikiSpaceId: SPACE_ID,
+    detachedAt: null,
+    originalName: 'a.png',
+    size: 10,
+    mimeType: 'image/webp',
+    ...override,
+  })
+
+  it('配信してよければ、配信に使う項目だけを返す', async () => {
+    vi.mocked(prisma.attachment.findUnique).mockResolvedValue(row() as never)
+    mockSpace({ direct: 'viewer' })
+    expect(await findViewableAttachment(user, KEY)).toEqual({ originalName: 'a.png', size: 10, mimeType: 'image/webp' })
+    expect(vi.mocked(prisma.attachment.findUnique).mock.calls[0][0]?.where).toEqual({ key: KEY })
+  })
+
+  it('存在しない・配信できない添付は区別せず null', async () => {
+    vi.mocked(prisma.attachment.findUnique).mockResolvedValue(null)
+    expect(await findViewableAttachment(user, KEY)).toBeNull()
+
+    vi.mocked(prisma.attachment.findUnique).mockResolvedValue(row() as never)
+    mockSpace({})
+    expect(await findViewableAttachment(user, KEY)).toBeNull()
+
+    vi.mocked(prisma.attachment.findUnique).mockResolvedValue(
+      row({ wikiSpaceId: null, detachedAt: new Date() }) as never,
+    )
+    expect(await findViewableAttachment(user, KEY)).toBeNull()
   })
 })

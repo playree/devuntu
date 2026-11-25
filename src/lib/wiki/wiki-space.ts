@@ -3,6 +3,7 @@
  *
  * スペースはログインユーザーなら誰でも作れ、作成者が owner になる。
  * 設定の変更(名前・説明・公開範囲・アーカイブ)と削除は owner と管理者。
+ * 区分(type)は作成時に決め、後から変えない(作れるページの種類・ページの置き方が区分で決まるため)。
  */
 
 import type { WikiSpaceType, WikiVisibility } from '@/generated/prisma/enums'
@@ -24,17 +25,15 @@ import {
   evaluateWikiAccess,
   MAX_WIKI_SPACE_DESCRIPTION,
   MAX_WIKI_SPACE_NAME,
-  WIKI_SPACE_CANNOT_BE_ANNOUNCEMENT,
-  WIKI_SPACE_HAS_NORMAL_PAGES,
   WIKI_SPACE_KEY_PATTERN,
 } from './wiki-rule'
-import { WIKI_SPACE_HAS_NORMAL_TEMPLATES } from './wiki-template-rule'
 
 export type WikiSpaceInput = {
   key: string
   name: string
   description?: string | null
   visibility?: WikiVisibility
+  /** 区分。作成時だけ指定でき、後から変えない */
   type?: WikiSpaceType
 }
 
@@ -43,25 +42,6 @@ const errDuplicatedKey = () =>
     DUPLICATED_WIKI_SPACE_KEY,
     'This key is already used by a wiki space (including deleted ones). Choose another key',
   )
-const errHasNormalPages = (count: number) =>
-  new ClientError(
-    WIKI_SPACE_HAS_NORMAL_PAGES,
-    `The space has ${count} normal page(s). Delete them or change them to design docs before making it a design doc space`,
-  )
-
-const errHasNormalTemplates = (count: number) =>
-  new ClientError(
-    WIKI_SPACE_HAS_NORMAL_TEMPLATES,
-    `The space has ${count} normal page template(s). Delete them or change them to design docs before making it a design doc space`,
-  )
-
-const errCannotBeAnnouncement = (counts: { nested: number; designDocs: number; designDocTemplates: number }) =>
-  new ClientError(
-    WIKI_SPACE_CANNOT_BE_ANNOUNCEMENT,
-    `The space has ${counts.nested} child page(s), ${counts.designDocs} design doc(s) and ${counts.designDocTemplates} design doc template(s). ` +
-      'Announcement spaces only hold flat normal pages: move the child pages to the top level and delete or convert the design docs first',
-  )
-
 const assertName = (name: string) => {
   if (name.trim() === '' || name.length > MAX_WIKI_SPACE_NAME) {
     throw errValidation(`name must be 1 to ${MAX_WIKI_SPACE_NAME} characters`)
@@ -122,47 +102,25 @@ export const createWikiSpace = async (actor: Actor, input: WikiSpaceInput) => {
   return space
 }
 
-/**
- * 名前・説明・公開範囲・区分の変更。undefined の項目はそのまま残す。
- * 設計書スペースにできるのは通常ページ(と通常ページのテンプレート)が無いときだけ。
- * アナウンス用スペースにできるのは、子を持つページ・設計書ページ・設計書のテンプレートが無いときだけ(ページを平らに置くため)。
- * ページとテンプレートの書き込みはスペース行のロックを取ってから区分を読むので、同じロックを取ってから数える
- */
-export const updateWikiSpace = async (actor: Actor, spaceId: string, patch: Partial<Omit<WikiSpaceInput, 'key'>>) => {
+/** 名前・説明・公開範囲の変更。undefined の項目はそのまま残す。キーと区分は変えられない */
+export const updateWikiSpace = async (
+  actor: Actor,
+  spaceId: string,
+  patch: Partial<Omit<WikiSpaceInput, 'key' | 'type'>>,
+) => {
   if (patch.name !== undefined) {
     assertName(patch.name)
   }
   assertDescription(patch.description)
   const space = await prisma.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT "id" FROM "wiki_space" WHERE "id" = ${spaceId} FOR NO KEY UPDATE`
-    const access = await assertWikiSpaceAccess(actor, spaceId, 'manage', tx)
-    if (patch.type === 'design_doc' && access.type !== 'design_doc') {
-      const normalPages = await tx.wikiPage.count({ where: { spaceId, type: 'page' } })
-      if (normalPages > 0) {
-        throw errHasNormalPages(normalPages)
-      }
-      const normalTemplates = await tx.wikiTemplate.count({ where: { spaceId, type: 'page' } })
-      if (normalTemplates > 0) {
-        throw errHasNormalTemplates(normalTemplates)
-      }
-    }
-    if (patch.type === 'announcement' && access.type !== 'announcement') {
-      const [nested, designDocs, designDocTemplates] = await Promise.all([
-        tx.wikiPage.count({ where: { spaceId, parentId: { not: null } } }),
-        tx.wikiPage.count({ where: { spaceId, type: 'design_doc' } }),
-        tx.wikiTemplate.count({ where: { spaceId, type: 'design_doc' } }),
-      ])
-      if (nested + designDocs + designDocTemplates > 0) {
-        throw errCannotBeAnnouncement({ nested, designDocs, designDocTemplates })
-      }
-    }
+    await assertWikiSpaceAccess(actor, spaceId, 'manage', tx)
     return tx.wikiSpace.update({
       where: { id: spaceId },
       data: {
         ...(patch.name !== undefined ? { name: patch.name.trim() } : {}),
         ...(patch.description !== undefined ? { description: patch.description?.trim() || null } : {}),
         ...(patch.visibility !== undefined ? { visibility: patch.visibility } : {}),
-        ...(patch.type !== undefined ? { type: patch.type } : {}),
       },
       select: SPACE_SELECT,
     })

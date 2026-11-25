@@ -12,10 +12,9 @@ import { envu } from '../env-util'
 import { errInvalidOperation } from '../error'
 import { logger } from '../logger'
 import type { ResourceAuth } from '../oauth/oauth-resource'
-import { prisma } from '../prisma'
 import { assertRateLimit } from '../rate-limit'
 import { makeUrl } from '../server-utils'
-import { canViewAttachment } from '../storage/attachment-access'
+import { findViewableAttachment } from '../storage/attachment-access'
 import { getObject } from '../storage/storage'
 import { toUploadUrl, UPLOAD_KIND_PARAM, UPLOAD_URL_PREFIX } from '../storage/upload'
 import { DOWNLOAD_TOKEN_TTL_SECONDS, signDownloadToken, UPLOAD_TOKEN_TTL_SECONDS } from '../storage/upload-token'
@@ -63,20 +62,9 @@ const getFileForMcp = async (auth: ResourceAuth, input: { file: string }) => {
   assertRateLimit(`get-file:${auth.user.id}`, READ_RATE_LIMIT)
   const key = parseUploadKey(input.file)
 
-  const attachment = await prisma.attachment.findUnique({
-    where: { key },
-    select: { boardId: true, wikiSpaceId: true, detachedAt: true, originalName: true, size: true, mimeType: true },
-  })
   // アクセス不可は未存在と区別せず、キーの当たり判定を返さない(配信APIと同じ扱い)
-  if (
-    !attachment ||
-    !(await canViewAttachment(auth.user, {
-      key,
-      boardId: attachment.boardId,
-      wikiSpaceId: attachment.wikiSpaceId,
-      detachedAt: attachment.detachedAt,
-    }))
-  ) {
+  const attachment = await findViewableAttachment(auth.user, key)
+  if (!attachment) {
     throw errInvalidOperation()
   }
   const meta = { key, name: attachment.originalName, size: attachment.size, mimeType: attachment.mimeType }

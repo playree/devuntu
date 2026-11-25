@@ -1024,11 +1024,13 @@ export type $AttachmentPayload<ExtArgs extends runtime.Types.Extensions.Internal
      */
     boardId: string | null
     /**
-     * 添付先の Wiki スペース。値がある場合は配信時にそのスペースの閲覧判定を通す。boardId とは同時に持たない
+     * 添付先の Wiki スペース。値がある場合は配信時にそのスペースの閲覧判定を通す。
+     * boardId とは同時に持たない(CHECK 制約。マイグレーションで張る)
      */
     wikiSpaceId: string | null
     /**
-     * ボード / Wiki スペースの削除で紐付けを外した日時(削除待ち)。値があれば誰にも配信せず、
+     * ボード / Wiki スペースの削除で紐付けを外した日時(削除待ち)。値があるときは boardId / wikiSpaceId を持たない(CHECK 制約)。
+     * 値があれば誰にも配信せず、
      * 実体の削除に失敗して残った分は掃除が猶予・参照を問わず回収する
      */
     detachedAt: Date | null

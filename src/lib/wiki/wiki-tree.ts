@@ -119,19 +119,19 @@ export const nestWikiTree = <T extends WikiTreeNode, U extends object>(
   return build(opts.rootId, 1)
 }
 
-export type DeletedWikiNode = { pageId: string; parentId: string | null; order: number; pageNumber: number }
+export type DeletedWikiNode = { id: string; parentId: string | null; order: number; number: number }
 
 /**
  * 削除済みのページを元の親子関係の前順(親 → 子)に並べ、削除済み同士の段数(0 始まり)を添える。
  * 上から順に復元すれば親が先に戻り、子も元の親の下へ戻る。
- * 親が一覧に無いものを先頭の段とし、入力の順(削除した日時の新しい順)を保つ。兄弟は削除時の並び順
+ * 親が一覧に無いものを先頭の段とし、入力の順(削除した日時の新しい順)を保つ。兄弟は元の並び順
  */
 export const arrangeDeletedWikiPages = <T extends DeletedWikiNode>(rows: readonly T[]): (T & { depth: number })[] => {
-  const ids = new Set(rows.map(({ pageId }) => pageId))
+  const ids = new Set(rows.map(({ id }) => id))
   const roots: T[] = []
   const children = new Map<string, T[]>()
   for (const row of rows) {
-    if (row.parentId === null || row.parentId === row.pageId || !ids.has(row.parentId)) {
+    if (row.parentId === null || row.parentId === row.id || !ids.has(row.parentId)) {
       roots.push(row)
     } else {
       const siblings = children.get(row.parentId)
@@ -143,17 +143,17 @@ export const arrangeDeletedWikiPages = <T extends DeletedWikiNode>(rows: readonl
     }
   }
   for (const siblings of children.values()) {
-    siblings.sort((a, b) => a.order - b.order || a.pageNumber - b.pageNumber)
+    siblings.sort((a, b) => a.order - b.order || a.number - b.number)
   }
   const result: (T & { depth: number })[] = []
   const seen = new Set<string>()
   const visit = (row: T, depth: number) => {
-    if (seen.has(row.pageId)) {
+    if (seen.has(row.id)) {
       return
     }
-    seen.add(row.pageId)
+    seen.add(row.id)
     result.push({ ...row, depth })
-    for (const child of children.get(row.pageId) ?? []) {
+    for (const child of children.get(row.id) ?? []) {
       visit(child, depth + 1)
     }
   }

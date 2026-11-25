@@ -9,8 +9,6 @@ import { toZone } from '../day'
 /** 1 スペースあたりのテンプレート数の上限(作成モーダルの選択肢が破綻しない範囲。チケットテンプレートと同じ) */
 export const MAX_WIKI_TEMPLATES_PER_SPACE = 20
 
-/** 種類 page のテンプレートが残っているスペースを設計書スペースにしようとした */
-export const WIKI_SPACE_HAS_NORMAL_TEMPLATES = 'WIKI_SPACE_HAS_NORMAL_TEMPLATES'
 /** プレースホルダーを置き換えたら、タイトルか本文が最大長を超えた */
 export const WIKI_TEMPLATE_TOO_LONG = 'WIKI_TEMPLATE_TOO_LONG'
 
