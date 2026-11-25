@@ -23,6 +23,14 @@ import type { WikiPageConflictTarget } from './page-conflict-modal'
 import { getWikiPage, type GetWikiPageReturnType, updateWikiPage } from './server'
 
 type Page = NonNullable<GetWikiPageReturnType>['page']
+type WikiPageDraft = WikiPageFields & { tagIds: string[]; message: string }
+
+const pageFields = (page: Page) => ({
+  title: page.title,
+  content: page.content,
+  type: page.type,
+  tagIds: page.tags.map(({ tag }) => tag.id),
+})
 
 /** 編集の下書きと保存。サーバーからページを取り直しても、編集中の値と競合の判定基準は保持する */
 export const useWikiPageEditor = (page: Page, canWrite: boolean, onSaved: () => Promise<void>) => {
@@ -36,32 +44,34 @@ export const useWikiPageEditor = (page: Page, canWrite: boolean, onSaved: () => 
   const hasEditQuery = searchParams.get(EDIT_QUERY) === '1'
   // 作成直後は本文の編集から始める(ページごとに作り直されるので、初期値で決めてよい)
   const [isEditing, setEditing] = useState(() => canWrite && hasEditQuery)
-  const [titleDraft, setTitleDraft] = useState(page.title)
-  const [contentDraft, setContentDraft] = useState(page.content)
-  const [typeDraft, setTypeDraft] = useState(page.type)
+  const [draft, setDraft] = useState<WikiPageDraft>(() => ({ ...pageFields(page), message: '' }))
+  // 保存や確認の応答を待つ間の入力も、再描画を待たずに参照できるようにする
+  const draftRef = useRef(draft)
+  const {
+    title: titleDraft,
+    content: contentDraft,
+    type: typeDraft,
+    tagIds: tagIdsDraft,
+    message: messageDraft,
+  } = draft
+  const updateDraft = (changes: Partial<WikiPageDraft>) => {
+    const next = { ...draftRef.current, ...changes }
+    draftRef.current = next
+    setDraft(next)
+  }
   /**
    * エディタを開いた時点の本文。エディタはマウント時にだけ取り込むので、編集中は変えない。
    * 種類を切り替えたときは、その時点の下書きで開き直す
    */
   const [editorBase, setEditorBase] = useState(page.content)
   const [editorKey, setEditorKey] = useState(0)
-  const pageTagIds = () => page.tags.map(({ tag }) => tag.id)
-  const [tagIdsDraft, setTagIdsDraft] = useState(pageTagIds)
-  const [messageDraft, setMessageDraft] = useState('')
-  // 競合の判定の基準。編集中にページを取り直しても(移動など)、編集を始めた時点の値で比べる
-  const [baseUpdatedAt, setBaseUpdatedAt] = useState(page.updatedAt)
+  // 再取得したページには他の人の変更が含まれうるので、編集開始時か自分の保存結果の更新日時で比べる
+  const baseUpdatedAt = useRef(page.updatedAt)
+  const isSavingRef = useRef(false)
   const [isSaving, setSaving] = useState(false)
   // 設計書の画像のアップロード中。終わるまで本文に仮の印があるので、保存と種類の切り替えを止める
   const [isUploading, setUploading] = useState(false)
-  // 最新の下書き。種類の切り替えで確認を待つ間に本文が変わっても、承認した時点の本文を引き継ぐ
-  const contentDraftRef = useRef(page.content)
-  // 編集を始めた時点の値。下書きに変更があるかをこれと比べる(作成直後の編集は、マウント時の値から始まる)
-  const [draftBase, setDraftBase] = useState<WikiPageFields>(() => ({
-    title: page.title,
-    content: page.content,
-    type: page.type,
-    tagIds: pageTagIds(),
-  }))
+  const [draftBase, setDraftBase] = useState<WikiPageFields>(() => pageFields(page))
   // 確認のモーダルを待っている間。Ctrl/Cmd+S で裏から保存しない
   const isAskingRef = useRef(false)
 
@@ -81,11 +91,6 @@ export const useWikiPageEditor = (page: Page, canWrite: boolean, onSaved: () => 
     [ask, t],
   )
 
-  const changeContent = (content: string) => {
-    contentDraftRef.current = content
-    setContentDraft(content)
-  }
-
   // クエリは消して、再読み込みで編集に戻らないようにする
   useEffect(() => {
     if (hasEditQuery) {
@@ -94,22 +99,19 @@ export const useWikiPageEditor = (page: Page, canWrite: boolean, onSaved: () => 
   }, [hasEditQuery, pathname, router])
 
   const startEditing = () => {
-    setDraftBase({ title: page.title, content: page.content, type: page.type, tagIds: pageTagIds() })
-    setTitleDraft(page.title)
-    changeContent(page.content)
-    setTypeDraft(page.type)
+    const fields = pageFields(page)
+    setDraftBase(fields)
+    updateDraft({ ...fields, message: '' })
     setUploading(false)
     setEditorBase(page.content)
     setEditorKey((key) => key + 1)
-    setTagIdsDraft(pageTagIds())
-    setMessageDraft('')
-    setBaseUpdatedAt(page.updatedAt)
+    baseUpdatedAt.current = page.updatedAt
     setEditing(true)
   }
 
   /** 種類を切り替え、下書きを引き継いでエディタを開き直す */
   const changeType = async (type: WikiPageType) => {
-    if (type === typeDraft || isUploading) {
+    if (type === draftRef.current.type || isUploading) {
       return
     }
     if (
@@ -118,15 +120,15 @@ export const useWikiPageEditor = (page: Page, canWrite: boolean, onSaved: () => 
     ) {
       return
     }
-    let content = contentDraftRef.current
+    const { title, content: currentContent } = draftRef.current
+    let content = currentContent
     // 設計書ヘッダの元になる front matter が無ければ足す
     if (type === 'design_doc' && !hasFrontMatter(content)) {
-      content = `${designDocFrontMatter(titleDraft.trim() || page.title)}${content}`
+      content = `${designDocFrontMatter(title.trim() || page.title)}${content}`
     }
-    changeContent(content)
+    updateDraft({ content, type })
     setEditorBase(content)
     setEditorKey((key) => key + 1)
-    setTypeDraft(type)
   }
 
   /** 競合したら最新を取り直し、選択肢のモーダルを出す(取れなくても、最新の確認と下書きのコピーはできる) */
@@ -143,34 +145,46 @@ export const useWikiPageEditor = (page: Page, canWrite: boolean, onSaved: () => 
   }
 
   /**
-   * 編集を始めた時点の更新日時を渡し、その後に他の人が保存していれば競合として止める(下書きは残る)。
+   * 編集開始時か最後に自分で保存した時点の更新日時を渡す。その後に他の人が保存していれば、下書きを残して競合を知らせる。
    * 上書き保存では、競合の後に取り直した最新の更新日時を渡す
    */
-  const save = async (expectedUpdatedAt = baseUpdatedAt) => {
+  const save = async (expectedUpdatedAt = baseUpdatedAt.current) => {
+    if (isSavingRef.current) {
+      return
+    }
+    const { message, ...fields } = draftRef.current
+    isSavingRef.current = true
     setSaving(true)
     try {
       const result = await parseAction(
         updateWikiPage({
           id: page.id,
-          title: titleDraft,
-          content: contentDraft,
-          type: typeDraft,
-          tagIds: tagIdsDraft,
+          ...fields,
           expectedUpdatedAt: expectedUpdatedAt.toISOString(),
-          message: messageDraft,
+          message,
         }),
         { handled: [WIKI_PAGE_CONFLICT] },
       )
       // 変更が無ければ版を作らないので、コミットメッセージも残らない
-      if (result.result === 'unchanged' && messageDraft.trim()) {
+      if (result.result === 'unchanged' && message.trim()) {
         notify.info(t('msg_wiki_message_not_saved'))
       } else {
         notify.success(t('msg_saved'))
       }
-      // 表示モードへ戻すのはサーバー値が届いた後。先に戻すと旧本文が一瞬見える
+      // 再取得中の入力も含めて確認してから、表示モードへ戻せるかを決める
       await onSaved()
       conflictState.close()
-      setEditing(false)
+      const latest = draftRef.current
+      const hasNewMessage = latest.message !== message
+      if (hasNewMessage || isWikiPageChanged(fields, latest)) {
+        baseUpdatedAt.current = result.updatedAt
+        setDraftBase({ ...fields, title: fields.title.trim() })
+        if (!hasNewMessage) {
+          updateDraft({ message: '' })
+        }
+      } else {
+        setEditing(false)
+      }
     } catch (e) {
       // 競合以外のエラー表示は parseAction 側で済んでいる。編集中の内容を失わせないため編集状態は維持する
       if (!(e instanceof ClientError)) {
@@ -180,6 +194,7 @@ export const useWikiPageEditor = (page: Page, canWrite: boolean, onSaved: () => 
         await openConflict()
       }
     } finally {
+      isSavingRef.current = false
       setSaving(false)
     }
   }
@@ -205,9 +220,7 @@ export const useWikiPageEditor = (page: Page, canWrite: boolean, onSaved: () => 
     titleDraft.length <= MAX_WIKI_TITLE &&
     contentDraft.length <= MAX_WIKI_CONTENT &&
     messageDraft.length <= MAX_WIKI_REVISION_MESSAGE
-  const isDirty =
-    isEditing &&
-    isWikiPageChanged(draftBase, { title: titleDraft, content: contentDraft, type: typeDraft, tagIds: tagIdsDraft })
+  const isDirty = isEditing && isWikiPageChanged(draftBase, draft)
 
   // リンク・メニュー・子ページの作成などで画面を移る前と、タブを閉じる前に確認する
   useLeaveGuard({ isActive: isDirty, confirmLeave: confirmDiscard })
@@ -227,17 +240,17 @@ export const useWikiPageEditor = (page: Page, canWrite: boolean, onSaved: () => 
     isUploading,
     setUploading,
     titleDraft,
-    setTitleDraft,
+    setTitleDraft: (title: string) => updateDraft({ title }),
     typeDraft,
     changeType,
     tagIdsDraft,
-    setTagIdsDraft,
+    setTagIdsDraft: (tagIds: string[]) => updateDraft({ tagIds }),
     contentDraft,
-    changeContent,
+    changeContent: (content: string) => updateDraft({ content }),
     editorBase,
     editorKey,
     messageDraft,
-    setMessageDraft,
+    setMessageDraft: (message: string) => updateDraft({ message }),
     startEditing,
     cancelEditing,
     save,

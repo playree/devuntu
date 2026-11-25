@@ -199,7 +199,8 @@ export const restorableDescendantsAt = <T extends { id: string; depth: number }>
 ): T[] => {
   const result: T[] = []
   let skipBelow: number | undefined
-  for (const page of pages.slice(index + 1)) {
+  for (let next = index + 1; next < pages.length; next++) {
+    const page = pages[next]
     if (page.depth <= pages[index].depth) {
       break
     }

@@ -90,6 +90,7 @@ Proxy は通るリクエストのボディを既定 10MB まで複製して溜�
 - Wiki のスペース行 / ページ行のロックは `src/lib/wiki/wiki-lock.ts` の関数だけで取る(ロックの順序もそのファイルの先頭に書く)。構造と設定を変える書き込みは `lockWikiSpace`、本文の更新・版の削除・アナウンスは `shareLockWikiSpace`、スペースの削除は `lockWikiSpaceForDelete`、ページ行は常にスペース行の後に `lockWikiPages`
 - ページの書き込みは `wiki-page.ts`(作成・更新・削除・参照)、`wiki-page-tree.ts`(木の読み込み・移動)、`wiki-page-restore.ts`(版の内容へ戻す・削除済みを戻す)に分け、共通の部品(エラー・検証・版のスナップショット・競合判定)は `wiki-page-write.ts` に置く
 - ページ詳細の `page-body.tsx` は、`use-page-editor.ts` の下書き・保存状態と選択中の版を、`page-toolbar.tsx` の操作欄と `page-content.tsx` の本文へ渡す。作成直後の編集開始に使う `EDIT_QUERY` は `wiki-rule.ts` に置く。
+  保存中に下書きが変わった場合は編集を続け、送信した下書きと保存アクションが返した更新日時を、次回の変更・競合判定の基準にする。
   作成・移動・削除の確認は `create-page-modal.tsx`、`move-page-modal.tsx`、`use-delete-wiki-page.ts` が担う。移動ダイアログの送信位置と同じ並びかどうかは `wiki-tree.ts` の `planWikiMove` で求める。操作欄・検索・設定のタグ選択や表示には、チケットと共通の `src/components/tag/` の部品を使う
 - タグ(`src/lib/wiki/wiki-tag.ts`)はスペースごと。作成は `editor` 以上、更新・削除は `manage`。ページへの付与は `assertWikiTagIdsInSpace` で同じスペースのタグに限る
 - ページテンプレート(`WikiTemplate`。`src/lib/wiki/wiki-template.ts`)はスペースごと(20件まで、`MAX_WIKI_TEMPLATES_PER_SPACE`)。設定画面の一覧(本文込み)・追加・編集・削除・並べ替えは `manage` かつ未アーカイブ(`wiki/[key]/settings/space-templates.tsx`)。
