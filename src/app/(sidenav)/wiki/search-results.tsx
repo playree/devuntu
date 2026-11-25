@@ -2,7 +2,8 @@
 
 import { MultiButton } from '@/components/general/button'
 import { NoticePanel, PanelSkeleton } from '@/components/general/panel'
-import { ArrowPathIcon, BookOpenIcon } from '@/components/icon'
+import { ArrowPathIcon } from '@/components/icon'
+import { WikiSpaceTypeIcon } from '@/components/wiki-chip'
 import { WikiTagLinks } from '@/components/wiki-tag'
 import { useUserTimezone } from '@/lib/auth/use-timezone'
 import { dayformat } from '@/lib/day'
@@ -64,7 +65,7 @@ export const WikiSearchResults: FC<{
             <li key={hit.id} className='space-y-1 px-3 py-2'>
               {breadcrumbs.length > 0 && (
                 <p className='text-muted flex min-w-0 items-center gap-1 text-xs'>
-                  {showSpace && <BookOpenIcon width={12} className='shrink-0' />}
+                  {showSpace && <WikiSpaceTypeIcon type={hit.space.type} width={12} className='shrink-0' />}
                   <span className='truncate'>{breadcrumbs.join(' › ')}</span>
                 </p>
               )}

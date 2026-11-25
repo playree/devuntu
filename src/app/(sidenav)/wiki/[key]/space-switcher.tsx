@@ -2,7 +2,8 @@
 
 import { usePushIfLeavable } from '@/components/general/leave-guard'
 import { useSideNav } from '@/components/general/side-nav-slot'
-import { BookOpenIcon, ChevronDownIcon } from '@/components/icon'
+import { ChevronDownIcon } from '@/components/icon'
+import { WikiSpaceTypeIcon } from '@/components/wiki-chip'
 import { useActionData } from '@/lib/action/action-client'
 import { WIKI_TOP_PATH, wikiSpacePath } from '@/lib/wiki/wiki-rule'
 import { useLocale } from '@/locale/client'
@@ -26,9 +27,11 @@ export const WikiSpaceSwitcher: FC = () => {
 
   // アーカイブ済み・取得中でも、今のスペースは必ず選べるようにする
   const spaces = useMemo(() => {
-    const list = (data ?? []).map(({ key, name }) => ({ key, name }))
-    return list.some((s) => s.key === space.key) ? list : [{ key: space.key, name: space.name }, ...list]
-  }, [data, space.key, space.name])
+    const list = (data ?? []).map(({ key, name, type }) => ({ key, name, type }))
+    return list.some((s) => s.key === space.key)
+      ? list
+      : [{ key: space.key, name: space.name, type: space.type }, ...list]
+  }, [data, space.key, space.name, space.type])
   const isTop = pathname === wikiSpacePath(space.key)
 
   return (
@@ -42,7 +45,7 @@ export const WikiSpaceSwitcher: FC = () => {
           isTop ? 'bg-accent-soft text-accent-soft-foreground' : 'hover:bg-mist-100 dark:hover:bg-neutral-900',
         )}
       >
-        <BookOpenIcon width={16} className='shrink-0' />
+        <WikiSpaceTypeIcon type={space.type} width={16} className='shrink-0' />
         <span className='truncate' title={space.name}>
           {space.name}
         </span>
@@ -68,6 +71,7 @@ export const WikiSpaceSwitcher: FC = () => {
             {spaces.map((s) => (
               <Dropdown.Item key={s.key} id={s.key} textValue={s.name}>
                 <Dropdown.ItemIndicator />
+                <WikiSpaceTypeIcon type={s.type} width={16} className='shrink-0' />
                 <Label className='truncate'>{s.name}</Label>
               </Dropdown.Item>
             ))}

@@ -9,6 +9,7 @@ import { ContentHeader } from '@/components/header'
 import { BookOpenIcon, DocumentPlusIcon, FolderArrowRightIcon, MegaphoneIcon, TrashIcon } from '@/components/icon'
 import { NoAccessView } from '@/components/no-access-view'
 import { ReloadButton } from '@/components/reload-button'
+import { WikiSpaceTypeIcon } from '@/components/wiki-chip'
 import { useActionData } from '@/lib/action/action-client'
 import { canSeeWikiAnnounce } from '@/lib/wiki/wiki-announcement-notify-rule'
 import {
@@ -59,7 +60,7 @@ const WikiBreadcrumbs: FC<{ detail: PageDetail }> = ({ detail: { space, ancestor
   >
     <Breadcrumbs.Item href={wikiSpacePath(space.key)} className={crumbItem({ kind: 'space' })}>
       <span className='flex min-w-0 items-center gap-1'>
-        <BookOpenIcon width={16} className='shrink-0' />
+        <WikiSpaceTypeIcon type={space.type} width={16} className='shrink-0' />
         <span className='max-w-32 truncate sm:max-w-48'>{space.name}</span>
       </span>
     </Breadcrumbs.Item>
