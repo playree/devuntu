@@ -380,7 +380,13 @@ standalone ビルドの起動確認は `pnpm test:standalone`(`scripts/test-stan
 ## 画面の動作確認
 
 ブラウザで実際に画面を開いて確認する手順(開発サーバーの起動、メールOTPでのログイン、スクリーンショット)は
-`.claude/skills/screen-check/SKILL.md` にまとめてある。
+[screen-check スキル](../../.claude/skills/screen-check/SKILL.md)にまとめてある。Claude Code と Codex で同じ手順を使う。
+
+1. リポジトリのルートで `pnpm exec playwright-mcp install-browser chromium` を実行し、Chromium を用意する。
+2. 同じディレクトリから Claude Code または Codex を起動する。Claude Code は [`.mcp.json`](../../.mcp.json)、Codex は信頼済みプロジェクトの [`.codex/config.toml`](../../.codex/config.toml) から `playwright` を読み込む。どちらも共通の [Playwright 設定](../../scripts/playwright-mcp.config.json)を使い、ブラウザプロファイルは `.work/playwright/profiles/` 配下でクライアントごとに分ける。接続状態は各クライアントの `/mcp` で確認できる。
+3. OTP ログインを使う場合は、開発DBにある確認用アカウントのメールアドレスを環境変数 `DEVUNTU_SCREEN_CHECK_EMAIL` に設定して起動するか、Git 管理外の `.work/screen-check.env` に `DEVUNTU_SCREEN_CHECK_EMAIL=<確認用アカウントのメールアドレス>` の形式で保存する。環境変数に値がある場合はそちらが優先される。
+
+画面確認は `http://localhost:3000` に接続する。複数の worktree がある場合は、確認対象の worktree で起動したサーバーを使う。ポートが別の worktree に使われている場合は、そちらの画面確認が終わってから対象を切り替える。
 
 ## パッケージ更新
 

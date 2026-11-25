@@ -61,10 +61,11 @@ Branch, commit, PR, and coding rules are in [CONTRIBUTING.md](CONTRIBUTING.md). 
 
 # Checking screens
 
+- Follow the shared [screen-check skill](.claude/skills/screen-check/SKILL.md) with Playwright MCP. See [development setup](docs/dev/development.md#画面の動作確認) for client configuration.
 - Keep screen checks to the minimum needed. Not required for minor fixes.
 - Run the browser headless (no DISPLAY)
 - The dev server must be `http://localhost:3000`. `BETTER_AUTH_URL` is fixed to localhost:3000, so on any other port auth POSTs fail the origin check with 403
-- If `pnpm dev` is already running, reuse it and do not restart it. If you started it yourself, stop it when done
+- Reuse an existing `pnpm dev` server from the current checkout. Only stop a server you started during this session
 - Login is via email OTP. Get the OTP from the `verification` table (`sign-in-otp-<lowercased email>`)
 - Dev server log goes to `.work/dev-server.log`, screenshots to `.work/playwright`
 
