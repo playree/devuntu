@@ -224,9 +224,31 @@ describe('担当者の指定: 投入する内容', () => {
     expect(enqueued('ticket_assigned')?.targetUserIds).toEqual([OTHER])
   })
 
-  it('作成時に担当者を付けなければ担当変更は投入しない', async () => {
+  it('作成時の担当者は作成の通知にも載せ、担当変更には作成時の印を付ける(チャンネルで 2 通に分けない)', async () => {
+    findUser.mockImplementation((async ({ where }: { where: { id: string } }) => ({
+      name: where.id === OTHER ? '担当する人' : '操作した人',
+      isAgent: false,
+    })) as never)
+    await enqueueTicketCreated({ actorId: ACTOR, ticket, assigneeId: OTHER, status: 'todo', mentionedUserIds: [] })
+    expect(enqueued('ticket_created')?.payload).toMatchObject({ fromName: '操作した人', assigneeName: '担当する人' })
+    expect(enqueued('ticket_assigned')?.payload).toMatchObject({ assigneeName: '担当する人', onCreate: true })
+  })
+
+  it('作成時に担当者を付けなければ担当変更は投入せず、作成の通知にも担当者を載せない', async () => {
     await enqueueTicketCreated({ actorId: ACTOR, ticket, assigneeId: null, status: 'todo', mentionedUserIds: [] })
     expect(events()).not.toContain('ticket_assigned')
+    expect(enqueued('ticket_created')?.payload).not.toHaveProperty('assigneeName')
+  })
+
+  it('作成後の担当変更には作成時の印を付けない', async () => {
+    await enqueueTicketUpdated({
+      actorId: ACTOR,
+      ticket,
+      before: { assigneeId: null, status: 'todo' },
+      after: { assigneeId: OTHER, status: 'todo' },
+      addedMentionUserIds: [],
+    })
+    expect(enqueued('ticket_assigned')?.payload).not.toHaveProperty('onCreate')
   })
 
   it('メンションと担当変更は別のイベントとして投入する', async () => {

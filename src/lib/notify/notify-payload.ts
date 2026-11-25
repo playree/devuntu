@@ -69,11 +69,18 @@ const scTicketAssigned = scTicketRef.extend({
   fromName: z.string(),
   /** 新しい担当者の表示名。宛先が本人でないチャネル通知で「誰が担当になったか」に使う */
   assigneeName: z.string().optional(),
+  /** チケットの作成と同時に担当を付けた。作成の通知も届くチャンネルへは送らない */
+  onCreate: z.boolean().optional(),
 })
 
 /** 作成 / 完了はチャネル通知のみ。操作した人の名前だけを出す */
 const scTicketChanged = scTicketRef.extend({
   fromName: z.string(),
+})
+
+const scTicketCreated = scTicketChanged.extend({
+  /** 作成と同時に付けた担当者の表示名。担当の通知と 2 通に分かれないよう作成の通知に載せる */
+  assigneeName: z.string().optional(),
 })
 
 const scTicketCompleted = scTicketChanged.extend({
@@ -125,7 +132,7 @@ export const NOTIFY_PAYLOAD_SCHEMA = {
   mention: scMention,
   agent_run: scAgentRun,
   ticket_assigned: scTicketAssigned,
-  ticket_created: scTicketChanged,
+  ticket_created: scTicketCreated,
   ticket_completed: scTicketCompleted,
   ticket_merge_held: scTicketMergeHeld,
   ticket_due: scTicketDue,

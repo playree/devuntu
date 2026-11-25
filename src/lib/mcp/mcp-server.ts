@@ -100,6 +100,11 @@ const ACCEPTANCE_CRITERIA_DESCRIPTION =
   'Include work that remains after the pull request is merged (e.g. tagging a release): ' +
   'while it is unmet, merging does not complete the ticket unless mergeCompletion in get_ticket is absent or its criteriaCheck is none'
 
+const ASSIGNEE_ID_DESCRIPTION = `Assignee. User ID from get_board members, or '${MCP_ASSIGNEE_ME}' to assign yourself`
+
+/** 担当者。自分を担当にするのにユーザーIDを引かなくて済むよう、自分の別名も受ける */
+const zMcpAssigneeId = z.union([z.uuidv7(), z.literal(MCP_ASSIGNEE_ME)]).nullish()
+
 /** priority / tagIds はテンプレートで埋めるかを決めるため、既定値を外して未指定を区別する */
 const mcpCreateTicketSchema = scCreateTicket.omit({ criteria: true }).extend({
   boardId: zBoardIdOrKey.describe('Board ID or board key (e.g. ABC). Find it with list_boards'),
@@ -123,6 +128,7 @@ const mcpCreateTicketSchema = scCreateTicket.omit({ criteria: true }).extend({
     .describe(ACCEPTANCE_CRITERIA_DESCRIPTION),
   parentId: zRelationTarget.optional().describe(PARENT_ID_DESCRIPTION),
   childOrder: zMcpChildOrder.optional(),
+  assigneeId: zMcpAssigneeId.describe(ASSIGNEE_ID_DESCRIPTION),
 })
 
 /** Web の詳細画面と違い、ステータスと受け入れ条件の変更も同じツールで受ける */
@@ -130,6 +136,7 @@ const mcpUpdateTicketSchema = scPatchTicket.omit({ id: true }).extend({
   ticketId: z.string().min(1),
   status: zTicketStatus.optional(),
   content: zMcpTicketContent,
+  assigneeId: zMcpAssigneeId.describe(`${ASSIGNEE_ID_DESCRIPTION}. Pass null to unassign`),
   acceptanceCriteria: zCriterionItems
     .optional()
     .describe(

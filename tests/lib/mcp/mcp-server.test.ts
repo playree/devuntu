@@ -456,6 +456,38 @@ describe('createDevuntuMcpServer', () => {
     expect(result.content).toEqual([{ type: 'text', text: JSON.stringify({ id: 't1', title: '更新後' }, null, 2) }])
   })
 
+  it("create_ticket / update_ticket の assigneeId は 'me'(自分)も受け付ける", async () => {
+    vi.mocked(createTicketForMcp).mockResolvedValueOnce({ id: 't1' } as never)
+    vi.mocked(updateTicketForMcp).mockResolvedValueOnce({ id: 't1' } as never)
+    const client = await connectDevuntuMcp()
+
+    await client.callTool({ name: 'create_ticket', arguments: { boardId: 'b1', title: '新規', assigneeId: 'me' } })
+    await client.callTool({ name: 'update_ticket', arguments: { ticketId: 'ABC-1', assigneeId: 'me' } })
+
+    expect(createTicketForMcp).toHaveBeenCalledWith(auth, expect.objectContaining({ assigneeId: 'me' }))
+    expect(updateTicketForMcp).toHaveBeenCalledWith(auth, 'ABC-1', { assigneeId: 'me' })
+  })
+
+  it("create_ticket / update_ticket の assigneeId は userId か 'me' のみ受け付ける", async () => {
+    vi.mocked(createTicketForMcp).mockClear()
+    vi.mocked(updateTicketForMcp).mockClear()
+    const client = await connectDevuntuMcp()
+
+    const created = await client.callTool({
+      name: 'create_ticket',
+      arguments: { boardId: 'b1', title: '新規', assigneeId: 'anyone' },
+    })
+    const updated = await client.callTool({
+      name: 'update_ticket',
+      arguments: { ticketId: 'ABC-1', assigneeId: 'none' },
+    })
+
+    expect(created.isError).toBe(true)
+    expect(updated.isError).toBe(true)
+    expect(createTicketForMcp).not.toHaveBeenCalled()
+    expect(updateTicketForMcp).not.toHaveBeenCalled()
+  })
+
   it('受け入れ条件は acceptanceCriteria で受け、criteria として渡す', async () => {
     vi.mocked(createTicketForMcp).mockResolvedValueOnce({ id: 't1' } as never)
     vi.mocked(updateTicketForMcp).mockResolvedValueOnce({ id: 't1' } as never)
