@@ -14,6 +14,10 @@ notifications (email / Slack / web push), an MCP server, and AI agent integratio
 - Zod v4
 - next-safe-action v8
 
+## Local instructions
+
+If `CLAUDE.local.md` exists in the repository root, read it at the start of the first task in the session and follow its instructions for this repository.
+
 ## Documentation
 
 When investigating or changing a feature or spec, read and update the corresponding docs. The docs are written in Japanese.
