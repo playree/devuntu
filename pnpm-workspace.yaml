@@ -16,6 +16,8 @@ onlyBuiltDependencies:
   - unrs-resolver
 overrides:
   sharp: '0.35.5'
+  # @prisma/config が effect を 3.22.1 以上(GHSA-7589-6fvf-x4pw の修正版)に上げたら削除する。docker/Dockerfile の Prisma Migrate 用にも同じ上書きがある
+  '@prisma/config>effect': '^3.22.1'
 # 各プラグインが peerDependencies に eslint@10 を載せたら削除する
 peerDependencyRules:
   allowedVersions:
