@@ -128,8 +128,9 @@ docker compose run --rm tools setup-env
 - 動的クライアント登録で受け付けるリダイレクトURI(`OIDC_DCR_ALLOWED_REDIRECT_URIS`)
 - ログレベル・セッション期間・自動メンテナンス(`LOG_LEVEL` / `SESSION_*` /
   `MCP_REFRESH_TOKEN_EXPIRES_IN` / `NOTIFY_WORKER_ENABLED` / `MAINTENANCE_*`)
-- 対話で尋ねる変数と上記を除いた、[environment-variables.md](environment-variables.md) のそのほかの変数(添付のサイズ上限、各種の保持期間、リモート実行など)。
-  書き出す `.env.docker` には載らないので、変える場合は追記する(再実行しても末尾の「その他」として引き継ぐ)
+- このスクリプトが `.env.docker` に書き出さない変数(添付のサイズ上限、各種の保持期間、リモート実行など。
+  [environment-variables.md](environment-variables.md) のうち、対話で尋ねるもの・自動で作るもの(`BETTER_AUTH_SECRET` など)・上に挙げたもの以外)。
+  変える場合は追記する(再実行しても末尾の「その他」として引き継ぐ)
 
 このスクリプトが自動でやること。手で書くと食い違いに気づきにくい箇所を引き受けている。
 
