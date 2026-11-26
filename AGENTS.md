@@ -1,6 +1,6 @@
 # Project overview
 
-A self-hosted project management tool centered on kanban boards / tickets, with calendar integration,
+A self-hosted project management tool centered on kanban boards / tickets, with a Wiki, calendar integration,
 notifications (email / Slack / web push), an MCP server, and AI agent integration.
 
 - Node.js v24

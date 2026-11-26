@@ -1,7 +1,7 @@
 ---
 type: design_doc
 title: 通知
-updated: 2026-10-27
+updated: 2026-11-26
 ---
 
 # 通知
@@ -142,13 +142,13 @@ Slack DM は、次の 3 段がすべて揃ったユーザーにだけ届く。
 ## Wiki アナウンスの通知
 
 Wiki のアナウンス用スペースのページを、スペースごとに設定した Slack チャンネルへ投稿する。
-保存とは別の操作で、editor 以上がページ詳細の「通知」から今すぐ送るか、日時を指定して予約する。使い方は [user-guide.md](../guide/user-guide.md#slack-への通知)。
+保存とは別の操作で、編集者以上がページ詳細の「通知」から今すぐ送るか、日時を指定して予約する。使い方は [user-guide.md](../guide/user-guide.md#slack-への通知)。
 
 - 通知先は、スペース設定の「Slack 通知」で選ぶ(スペースのオーナーと管理者。区分が「アナウンス」のスペースだけに出る)。一覧はボードの [通知先チャンネルの一覧](#通知先チャンネルの一覧) と同じ
 - 個人宛(メール / Slack DM / Web プッシュ)には送らない。`/account` の通知設定やボードのチャネル通知には出ない
 - 前提はボードのチャネル通知と同じ(Slack の環境変数と、管理者による Slack 連携の有効化)。満たさない間は送れず、予約は送る時点で見送りになる
 - 予約はアプリ内のワーカーが 1 分ごとに確認して送る。`NOTIFY_WORKER_ENABLED=false` にすると、通知の配信と一緒に止まる(止めている間に時刻を過ぎた予約は、再開後に送られる)
-- 公開範囲が「割り当てられた人のみ」のスペースでも、件名と抜粋はチャンネルの全員に見える(設定画面に注意を出す)
+- 公開範囲が「割り当てのみ」のスペースでも、件名と抜粋はチャンネルの全員に見える(設定画面に注意を出す)
 - 送った・予約した・見送った記録はページの「通知の履歴」に残る(テーブル `wiki_announcement_notify`)
 
 ## エージェント実行結果の通知
@@ -179,15 +179,15 @@ AIエージェント([agent-runner.md](agent-runner.md))の実行が終了した
 作り方は [Slack 連携を使えるようにする](#slack-連携を使えるようにする) を参照(既存アプリには App Manifest 画面から反映する)。
 マニフェストの主な項目は次のとおり。
 
-| マニフェストの項目                                           | 用途                                              |
-| ------------------------------------------------------------ | ------------------------------------------------- |
-| `oauth_config.scopes.user`                                   | `/account` からの Sign in with Slack              |
-| `oauth_config.scopes.bot` の `chat:write`                    | メンション通知の DM 送信とボードのチャンネル通知  |
-| `oauth_config.scopes.bot` の `links:read`                    | リンクの検知(`link_shared`)                       |
-| `oauth_config.scopes.bot` の `links:write`                   | プレビューの反映(`chat.unfurl`)                   |
-| `oauth_config.scopes.bot` の `channels:read` / `groups:read` | 通知先チャンネルの一覧取得(`users.conversations`) |
-| `features.unfurl_domains`                                    | 展開対象のドメイン                                |
-| `settings.event_subscriptions.request_url`                   | `/api/slack/events`                               |
+| マニフェストの項目                                           | 用途                                                                     |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------ |
+| `oauth_config.scopes.user`                                   | `/account` からの Sign in with Slack                                     |
+| `oauth_config.scopes.bot` の `chat:write`                    | メンション通知の DM 送信、ボードのチャンネル通知と Wiki アナウンスの投稿 |
+| `oauth_config.scopes.bot` の `links:read`                    | リンクの検知(`link_shared`)                                              |
+| `oauth_config.scopes.bot` の `links:write`                   | プレビューの反映(`chat.unfurl`)                                          |
+| `oauth_config.scopes.bot` の `channels:read` / `groups:read` | 通知先チャンネルの一覧取得(`users.conversations`)                        |
+| `features.unfurl_domains`                                    | 展開対象のドメイン                                                       |
+| `settings.event_subscriptions.request_url`                   | `/api/slack/events`                                                      |
 
 反映後は以下を確認する。
 

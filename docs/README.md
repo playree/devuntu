@@ -1,7 +1,7 @@
 ---
 type: design_doc
 title: Devuntu ドキュメント
-updated: 2026-10-27
+updated: 2026-11-26
 ---
 
 # Devuntu ドキュメント
@@ -18,6 +18,7 @@ updated: 2026-10-27
 
 - [AI ツールからつなぐ(MCP)](guide/ai.md#aiツールからつなぐmcp)
 - [エージェントにチケットを任せる](guide/ai.md#エージェントにチケットを任せる)
+- [Wiki](guide/user-guide.md#wiki) / [Wiki を AI から使う](guide/ai.md#wiki-を-ai-から使う)
 - [バックアップ・リストア](admin/operations.md#まずはこれだけ)
 - [環境変数の早見表](admin/environment-variables.md#用途別の早見表)
 

@@ -1,7 +1,7 @@
 ---
 type: design_doc
 title: AIエージェントの自動運用の仕組み(開発者向け)
-updated: 2026-11-07
+updated: 2026-11-26
 ---
 
 # AIエージェントの自動運用の仕組み(開発者向け)
@@ -93,6 +93,7 @@ revise の実行中(`task.decision` を引くとき)や再実行で、返答待�
 | `AgentRunner.rule`(カスタム指示) | エージェント | そのエージェントの `get_agent_task`                                        | 作業の進め方・作法         |
 | `Board.aiContext`                | ボード       | ボードのメンバーの `get_ticket` など / 担当エージェントの `get_agent_task` | 対象リポジトリ・規約・用語 |
 | ボードノート(ナレッジ / メモリ)  | ボード       | 上と同じ。ただし索引(`task.boardKnowledge` / `task.boardMemory`)だけ       | 作業の中で溜まる知見       |
+| Wiki スペース(ボードに割り当て)  | スペース     | 上と同じ。ただしスペースの一覧(`task.wikiSpaces`)だけ                      | 設計書・仕様などの文書     |
 
 両方に書いた内容が食い違う場合の優先順位はサーバーでは決めていないので、ルール側に書いておく。
 
@@ -361,6 +362,7 @@ CodeRabbit は push のたびに再レビューするので、指摘が続くと
 - `get_agent_task` の `task` には、受け入れ条件(`acceptanceCriteria`)と、revise のきっかけになった承認 / 差し戻し
   (`decision`)と CI の失敗・PR / MR のレビュー指摘(`autoRevise`。[自動差し戻し](#自動差し戻しci-の失敗レビュー指摘))、
   設定されていればボードの AI 向けコンテキスト(`boardContext`)とボードノートの索引(`boardKnowledge` / `boardMemory`)、
+  ボードに割り当てられた Wiki スペースの一覧(`wikiSpaces`。ページは `search_wiki` / `get_wiki_page` で読む)、
   処理中ならこのランナーの実行中の実行の ID(`runId`)が載る
 - `finish_agent_task` の `runId` を指定すると、その実行だけを閉じる。閉じ済み(停止・時間切れ)・別チケットの実行なら、
   チケットの状態も実行も変えずに `stale: true` を返す。指定が無ければ従来どおり、このランナーのそのチケットの最新の実行中の実行を閉じる

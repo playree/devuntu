@@ -1,7 +1,7 @@
 ---
 type: design_doc
 title: AIエージェントの自動運用(Devuntu Agent)
-updated: 2026-11-07
+updated: 2026-11-26
 ---
 
 # AIエージェントの自動運用(Devuntu Agent)
@@ -45,6 +45,9 @@ MCP ツール `get_agent_setup_guide` がそのマシン向けの手順を返し
   上書きすると、そのディレクトリにあったエージェントは置き換わる。新しく作る場合は、別のエージェントのトークンが要る(ランナーはエージェント 1 つにつき 1 つ)
 - 途中で、エージェントにどの CLI(Claude Code / Codex CLI / OpenCode)を使わせるかを聞かれる。セットアップを頼んだ CLI と同じでなくてよい
 - ランナー本体は `curl <Devuntu の URL>/agent/devuntu_agent.py` で、サーバーと同じ版が取得される
+- エージェントに Wiki の設計書を書かせるなら、エージェントが使う CLI に markdown-design-doc スキルを人が入れておく
+  (エージェントは自分では入れない)。個人の MCP トークンなどで Devuntu をつないだそのマシンの CLI で(ランナーの作業ディレクトリの外で)「markdown-design-doc スキルを入れて」と頼み、入れる場所は「すべてのプロジェクト」を選ぶ
+  ([AIとの連携](../guide/ai.md#wiki-を-ai-から使う))
 
 ## 画面での設定
 

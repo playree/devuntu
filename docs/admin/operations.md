@@ -1,7 +1,7 @@
 ---
 type: design_doc
 title: 運用(バックアップ・リストア・メンテナンス)
-updated: 2026-10-27
+updated: 2026-11-26
 ---
 
 # 運用(バックアップ・リストア・メンテナンス)
@@ -225,10 +225,11 @@ docker compose run --rm tools maintenance off     # 解除する
 | リモート実行の履歴(ログを含む)  | 90日より古いもの。期間内でもコマンドごとに新しい300件を超えた分。実行中のものは消さない                                                                                            | `COMMAND_RUN_RETENTION_DAYS` / `COMMAND_RUN_KEEP`                                           |
 | チケットの変更履歴              | 365日より古いもの。チケットを削除したときも一緒に消える                                                                                                                            | `TICKET_ACTIVITY_RETENTION_DAYS`                                                            |
 | ナレッジ / メモリの変更履歴     | 365日より古いもの。期間内でも1件あたり新しい50版を超えた分は書き込み時に消える                                                                                                     | `BOARD_NOTE_REVISION_RETENTION_DAYS` / `BOARD_NOTE_REVISION_MAX_PER_NOTE`                   |
+| 削除した Wiki ページ            | 削除から7日後。版・タグも一緒に消える(それまでは削除済みのページの一覧から復元できる)                                                                                              | `WIKI_REVISION_RETENTION_DAYS`                                                              |
 | Wiki ページの変更履歴           | 最後の保存から7日より古いもの。ページが残っていれば、最新の版と直近2版、および期限より古い版のうち最新の1版は残す。期間内でも1ページあたり新しい50版を超えた分は書き込み時に消える | `WIKI_REVISION_RETENTION_DAYS` / `WIKI_REVISION_KEEP_RECENT` / `WIKI_REVISION_MAX_PER_PAGE` |
 | GitHub / GitLab 連携の CI 結果  | 更新から90日後。ボードからリポジトリの対応付けを外したときも消える                                                                                                                 | -                                                                                           |
 | 期日のリマインドの送信記録      | 期日から30日後。チケットを削除したときも一緒に消える                                                                                                                               | -                                                                                           |
-| 添付(画像の実体を含む)          | どこからも参照されず、アップロードから24時間たったもの                                                                                                                             | `MAINTENANCE_ATTACHMENT_MODE` / `MAINTENANCE_ATTACHMENT_GRACE_HOURS`                        |
+| 添付(画像の実体を含む)          | どこからも参照されず、アップロードから24時間たったもの。削除したボード・Wiki スペースの添付の残りはすぐ                                                                            | `MAINTENANCE_ATTACHMENT_MODE` / `MAINTENANCE_ATTACHMENT_GRACE_HOURS`                        |
 
 - エージェントの月ごとの利用量(コスト・トークン数)は消さない。実行履歴が消えても月の集計と予算上限の判定は変わらない
 - 環境変数の詳細は [環境変数](environment-variables.md#メンテナンス) と [リモート実行](environment-variables.md#リモート実行)・[ボードノート](environment-variables.md#ボードノート)・[Wiki](environment-variables.md#wiki)、
@@ -237,15 +238,17 @@ docker compose run --rm tools maintenance off     # 解除する
 
 ### 添付の掃除
 
-チケット・コメント・テンプレート・ボードノートの本文、アバター、リンクウィジェットのアイコン、お知らせのどこからも
-使われていない添付を消す(画像の実体も消える)。作成フォームを開いたままの画像を消さないよう、
-アップロードから `MAINTENANCE_ATTACHMENT_GRACE_HOURS`(既定24時間)は対象にしない。
+チケット・コメント・テンプレート・ボードノートの本文、Wiki のページ(削除済みを含む)・その変更履歴・ページテンプレートの本文、
+アバター、リンクウィジェットのアイコン、お知らせのどこからも使われていない添付を消す(画像の実体も消える)。
+作成フォームを開いたままの画像を消さないよう、アップロードから `MAINTENANCE_ATTACHMENT_GRACE_HOURS`(既定24時間)は対象にしない。
+
+ボード・Wiki スペースを削除したときに実体を消し損ねた添付は、もう誰にも配信しないので、猶予と参照の確認をせずに消す。
 
 導入時は `MAINTENANCE_ATTACHMENT_MODE=dry-run` で起動し、`orphan attachment (dry-run)` に
 出たキーが本当に参照されていないことを確かめてから `delete` へ切り替える。
 `off` / `dry-run` のままにしている環境では、使われなくなった添付が溜まり続ける。
 
-ボードを削除したときのログ(`board deleted`)の `attachments` と `removed` の件数が食い違っていても、
+ボード・Wiki スペースを削除したときのログ(`board deleted` / `wiki space deleted`)の `attachments` と `removed` の件数が食い違っていても、
 残りはこの掃除が回収するので手当ては要らない。
 
 ### アバターの配信

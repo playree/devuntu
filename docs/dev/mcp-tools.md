@@ -1,7 +1,7 @@
 ---
 type: design_doc
 title: MCP ツールのリファレンス(開発者向け)
-updated: 2026-11-09
+updated: 2026-11-26
 ---
 
 # MCP ツールのリファレンス(開発者向け)
@@ -291,7 +291,7 @@ instructions には `wikiSpaces` の読み方(関係する文書を `search_wiki
 ## スキルのインストール
 
 `get_skill_install_guide` は、AI ツールのスキル([Agent Skills](https://agentskills.io/))を利用者のマシンへ入れる手順を返す。
-今は Wiki の設計書ページの記法を教える markdown-design-doc だけを扱う(`skill` は列挙値なので、増やすときは `src/lib/ai-skill.ts` の `AI_SKILLS` に足す)。
+今は Wiki の設計書ページの記法を教える markdown-design-doc だけを扱う(`skill` は列挙値なので、増やすときは `src/lib/ai-skill.ts` の `SKILL_NAMES` と `AI_SKILLS` に足す)。
 手順の本文と配布は `src/lib/ai-skill.ts`、ツールの登録は `src/lib/mcp/mcp-skill.ts`。
 
 - スキルの本体は依存パッケージに同梱されたものを使う。markdown-design-doc は `markdown-design-doc-viewer-embed/skill` の `agentSkill`

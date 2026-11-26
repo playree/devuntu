@@ -1,7 +1,7 @@
 ---
 type: design_doc
 title: 画面一覧とアクセス制御
-updated: 2026-11-08
+updated: 2026-11-26
 ---
 
 # 画面一覧とアクセス制御
@@ -93,7 +93,7 @@ Proxy は通るリクエストのボディを既定 10MB まで複製して溜�
   保存中に下書きが変わった場合は編集を続け、送信した下書きと保存アクションが返した更新日時を、次回の変更・競合判定の基準にする。
   作成・移動・削除の確認は `create-page-modal.tsx`、`move-page-modal.tsx`、`use-delete-wiki-page.ts` が担う。移動ダイアログの送信位置と同じ並びかどうかは `wiki-tree.ts` の `planWikiMove` で求める。操作欄・検索・設定のタグ選択や表示には、チケットと共通の `src/components/tag/` の部品を使う
 - タグ(`src/lib/wiki/wiki-tag.ts`)はスペースごと。作成は `editor` 以上、更新・削除は `manage`。ページへの付与は `assertWikiTagIdsInSpace` で同じスペースのタグに限る
-- ページテンプレート(`WikiTemplate`。`src/lib/wiki/wiki-template.ts`)はスペースごと(20件まで、`MAX_WIKI_TEMPLATES_PER_SPACE`)。設定画面の一覧(本文込み)・追加・編集・削除・並べ替えは `manage` かつ未アーカイブ(`wiki/[key]/settings/space-templates.tsx`)。
+- ページテンプレート(`WikiTemplate`。`src/lib/wiki/wiki-template.ts`)はスペースごと(20件まで、`MAX_WIKI_TEMPLATES_PER_SPACE`)。設定画面の一覧(本文込み)は `manage`(アーカイブ済みでも読める)、追加・編集・削除・並べ替えは `manage` かつ未アーカイブ(`wiki/[key]/settings/space-templates.tsx`)。
   一覧はボードのチケットテンプレートと共通の `TemplateListEditor` を使い、Wiki の編集フォームは `wiki-template-modal.tsx` に置く。本文の編集はページと同じ `WikiContentEditor` が種類に応じて切り替える。
   種類は `isWikiPageTypeAllowed` で区分に合うものに限る(エラー文は `wikiPageTypeRuleMessage` で区分に合わせる)。並べ替え(`moveWikiTemplate`)はロックの下で今の並びの隣と入れ替えて `order` を 0 から振り直す。
   ページ作成のモーダル(`CreatePageModal`)は、開いたときに `getWikiTemplateOptions`(`write`。本文なし)で選択肢を引き、選ぶとタイトルと種類を埋めて `createWikiPage` に `templateId` を渡す。
