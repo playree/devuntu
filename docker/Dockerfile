@@ -11,8 +11,10 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 RUN pnpm install --frozen-lockfile
 
 # Prisma Migrate用
+# npm で別に入れるため pnpm-workspace.yaml の overrides が効かない。effect の上書きはここにも書く
 RUN mkdir migrate && cd migrate \
     && npm init -y \
+    && npm pkg set 'overrides.@prisma/config.effect=^3.22.1' \
     && npm install prisma@$(node -p "require('/app/node_modules/prisma/package.json').version")
 
 # ソースをコピー

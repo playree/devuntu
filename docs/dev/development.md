@@ -324,6 +324,8 @@ pnpm patch-commit '<出力されたパス>'
 | `sharp`                 | `0.35.5`  | Next.js の画像最適化で使うバージョンを固定                                                                                     |
 | `@prisma/config>effect` | `^3.22.1` | `@prisma/config`が`effect@3.20.0`固定のため、脆弱性(GHSA-7589-6fvf-x4pw)の修正版へ上げる。`@prisma/config`が追随したら削除する |
 
+Docker イメージの Prisma Migrate 用の依存(`docker/Dockerfile`の`/app/migrate`)は npm で別にインストールしており、`pnpm-workspace.yaml`の`overrides`が効かない。そちらは npm の`overrides`(`npm pkg set`)で同じ上書きをしているので、上書きを追加・削除するときは両方を揃える。
+
 `lexical`と`@lexical/react`は`package.json`で`0.48.0`に固定している。`@mdxeditor/editor`が`@lexical/*`を`^0.48.0`で要求しているため、ルートだけ 0.49 系以降へ上げると MDXEditor 配下に 0.48 系が別インスタンスで残り、`useLexicalComposerContext`が別モジュールの Context を引いてメンション機能が実行時に壊れる。`overrides`で全体を揃える手もあるが、0.49.0 が組み込みノードの`$config()`移行で`importJSON`/`importDOM`/`clone`/`transform`の static を落としており、以降のバージョンも含めて MDXEditor 側が未対応。MDXEditor が追随したら上げる。
 
 ## TypeScript v7 と v6 の併存
