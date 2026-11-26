@@ -9,7 +9,7 @@
  */
 
 import { nowDate } from '@/lib/day'
-import webpush, { WebPushError } from 'web-push'
+import { sendNotification, setVapidDetails, WebPushError } from 'web-push'
 import { envu } from '../env-util'
 import { errNotFound } from '../error'
 import { logger } from '../logger'
@@ -37,7 +37,7 @@ export const isWebPushConfigured = () => !!envu.server.VAPID_PUBLIC_KEY && !!env
  * 環境変数の差し替え(再起動なしの検証)にも追従させる。
  */
 const applyVapidDetails = () => {
-  webpush.setVapidDetails(
+  setVapidDetails(
     envu.server.VAPID_SUBJECT,
     envu.server.VAPID_PUBLIC_KEY as string,
     envu.server.VAPID_PRIVATE_KEY as string,
@@ -106,7 +106,7 @@ export const sendWebPush = async (
   applyVapidDetails()
 
   try {
-    await webpush.sendNotification(
+    await sendNotification(
       { endpoint: subscription.endpoint, keys: { p256dh: subscription.p256dh, auth: subscription.auth } },
       JSON.stringify(message),
       // 形は通っても名前解決すると内部を指すホストがあるので、接続時の名前解決で止める

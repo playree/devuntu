@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import webpush from 'web-push'
+import { setVapidDetails } from 'web-push'
 import {
   ENV_DOCKER_SECTIONS,
   MANUAL_KEYS,
@@ -288,7 +288,7 @@ describe('自動生成', () => {
     expect(raw).toHaveLength(65)
     expect(raw[0]).toBe(0x04)
     expect(Buffer.from(privateKey, 'base64url')).toHaveLength(32)
-    expect(() => webpush.setVapidDetails('mailto:devuntu@example.com', publicKey, privateKey)).not.toThrow()
+    expect(() => setVapidDetails('mailto:devuntu@example.com', publicKey, privateKey)).not.toThrow()
   })
 })
 
