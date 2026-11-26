@@ -281,7 +281,11 @@ pnpm v12 の `pnpm-lock.yaml` は YAML の2ドキュメント構成(1つ目が p
 
 - **`prisma`** … `latest`のdist-tagが8系のRCを指している(`@prisma/client`の`latest`は7系)。`^7`の範囲では入らないので実害は無い。8系への移行はCLIとクライアントの安定版が揃ってから行う
 - **`lexical` / `@lexical/react`** … 後述の[パッケージのバージョン上書き](#パッケージのバージョン上書き)を参照
-- **`tailwind-variants`** … `@heroui/react`(3.2.7時点)が依存の`tailwind-variants`を3.3.1に固定しているため、4系へは HeroUI が追随してから上げる。ルートだけ上げると自前の`tv`/`cn`と HeroUI 内部で3系と4系が併存する
+
+### 上げるときに揃えるもの
+
+- **`tailwind-variants`** … `@heroui/react` / `@heroui/styles` が依存の`tailwind-variants`をバージョン固定で持つ(3.2.8 時点で 4.0.2)。ルートの`tailwind-variants`は HeroUI が固定している版に合わせて上げ下げする。ずれると自前の`tv`と HeroUI 内部(`cn`もここから import している)で別バージョンが併存する
+- **`@types/web-push`** … `web-push` 4.0.0 は型を同梱しないので、3 系向けの`@types/web-push`を使っている。4.0.0 では default export と`supportedUrgency`が無くなっており、型が通っても実行時に`undefined`になる。名前付き import(`setVapidDetails` / `sendNotification` / `WebPushError`)だけを使う
 
 ### 重複インスタンスの確認
 
