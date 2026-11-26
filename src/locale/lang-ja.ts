@@ -1037,7 +1037,7 @@ export const ja: DefaultLocaleItems = {
   msg_wiki_viewing_diff: '過去の版(${target})から最新への差分を表示しています。',
   msg_wiki_viewing_revision: '過去の版(${target})を表示しています。',
   msg_wiki_role_note:
-    '閲覧者は読むだけ、編集者はページの作成・編集・移動・削除、owner は設定も変更できます。owner は1人以上必要です。',
+    '閲覧者は読むだけ、編集者はページの作成・編集・移動・削除、オーナーは設定も変更できます。オーナーは1人以上必要です。',
   msg_wiki_search_failed: '検索できませんでした。時間をおいてリロードしてください。',
   msg_wiki_search_hint:
     'キーワードを入力するか、タグを選んでください。2文字以下の語は検索に時間がかかることがあります。',
@@ -1045,7 +1045,7 @@ export const ja: DefaultLocaleItems = {
     '検索結果は最大${max}件まで表示します。見つからないときは語を増やすか、タグで絞り込んでください。',
   msg_wiki_space_archived: 'このスペースはアーカイブされているため、閲覧のみです。',
   msg_wiki_space_key: 'ページは「キー/番号」(例: DOCS/12)で指定します。キーは作成後に変更できません。',
-  msg_wiki_space_no_owner: 'owner が1人もいなくなる変更はできません。先に別の owner を割り当ててください。',
+  msg_wiki_space_no_owner: 'オーナーが1人もいなくなる変更はできません。先に別のオーナーを割り当ててください。',
   msg_wiki_space_type:
     '区分は作成時に選び、後から変更できません。「設計書」は作れるページが設計書だけになり、スペースのトップに設計書一覧を表示します。「アナウンス」は通常のページを親子なしで作成日時の新しい順に並べ、トップに一覧とバックナンバーを表示します。',
   msg_wiki_template_desc:
