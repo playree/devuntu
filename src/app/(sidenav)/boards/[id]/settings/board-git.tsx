@@ -75,34 +75,30 @@ export const GitProviderSettings: FC<{
 
   return (
     <FlexCol>
-      <FlexCol isSmart>
-        <SwitchField
-          id={`complete-on-${provider}-merge`}
+      <SwitchField
+        id={`complete-on-${provider}-merge`}
+        isSmart
+        label={t(texts.completeOnMerge)}
+        help={t('msg_git_complete_on_pr_merge')}
+        isSelected={setting.completeOnMerge}
+        isDisabled={isSaving}
+        onChange={(completeOnMerge) => void save({ completeOnMerge })}
+      />
+      <div className='w-full sm:w-60'>
+        <SingleSelectField
           isSmart
-          label={t(texts.completeOnMerge)}
-          isSelected={setting.completeOnMerge}
-          isDisabled={isSaving}
-          onChange={(completeOnMerge) => void save({ completeOnMerge })}
+          label={t('merge_criteria_check')}
+          help={t('msg_merge_criteria_check')}
+          groupOptions={criteriaCheckOptions}
+          value={setting.mergeCriteriaCheck}
+          isDisabled={isSaving || !setting.completeOnMerge}
+          onChange={(value) => {
+            if (isMergeCriteriaCheck(value) && value !== setting.mergeCriteriaCheck) {
+              void save({ mergeCriteriaCheck: value })
+            }
+          }}
         />
-        <span className='text-muted text-xs'>{t('msg_git_complete_on_pr_merge')}</span>
-      </FlexCol>
-      <FlexCol isSmart>
-        <div className='w-full sm:w-60'>
-          <SingleSelectField
-            isSmart
-            label={t('merge_criteria_check')}
-            groupOptions={criteriaCheckOptions}
-            value={setting.mergeCriteriaCheck}
-            isDisabled={isSaving || !setting.completeOnMerge}
-            onChange={(value) => {
-              if (isMergeCriteriaCheck(value) && value !== setting.mergeCriteriaCheck) {
-                void save({ mergeCriteriaCheck: value })
-              }
-            }}
-          />
-        </div>
-        <span className='text-muted text-xs'>{t('msg_merge_criteria_check')}</span>
-      </FlexCol>
+      </div>
       <FlexCol isSmart>
         <SwitchField
           id={`${provider}-agent-auto-revise`}

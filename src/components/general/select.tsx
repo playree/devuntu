@@ -126,6 +126,7 @@ export const MultiSelectCtrl = <
 }
 
 export type SingleSelectFieldProps = SelectFieldBaseProps & {
+  help?: ReactNode
   value: string | null
   onChange: (value: string | null) => void
   isClearable?: boolean
@@ -147,6 +148,7 @@ export type SingleSelectFieldProps = SelectFieldBaseProps & {
 export const SingleSelectField = ({
   groupOptions,
   label,
+  help,
   isLabelHidden,
   isRequired,
   variant,
@@ -174,7 +176,7 @@ export const SingleSelectField = ({
         onBlur={onBlur}
         ref={ref}
       >
-        <FieldLabel isCompact={isCompact} isHidden={isLabelHidden} isRequired={isRequired}>
+        <FieldLabel isCompact={isCompact} isHidden={isLabelHidden} isRequired={isRequired} help={help}>
           {label}
         </FieldLabel>
         <Select.Trigger // isCompact: 既定 36px を 28px に詰める
