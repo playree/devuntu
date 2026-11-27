@@ -1,20 +1,17 @@
 'use client'
 
 import { Switch, SwitchProps } from '@heroui/react'
-import { FC } from 'react'
+import { FC, ReactNode } from 'react'
 import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form'
+import { HelpTip } from './help-tip'
 import { useIsSmart } from './smart'
 
+type SwitchFieldProps = SwitchProps & { id: string; label: string; help?: ReactNode; isSmart?: boolean }
+
 /** react-hook-form に依存しない Switch 本体 */
-export const SwitchField: FC<SwitchProps & { id: string; label: string; isSmart?: boolean }> = ({
-  id,
-  label,
-  isSmart: isSmartProp,
-  size,
-  ...props
-}) => {
+export const SwitchField: FC<SwitchFieldProps> = ({ id, label, help, isSmart: isSmartProp, size, ...props }) => {
   const isSmart = useIsSmart(isSmartProp)
-  return (
+  const field = (
     <Switch // Switchはvariantを持たずsizeで大きさを変えるため、isSmartはclassNameではなくsizeへ反映する
       {...props}
       size={size ?? (isSmart ? 'md' : 'lg')}
@@ -27,6 +24,15 @@ export const SwitchField: FC<SwitchProps & { id: string; label: string; isSmart?
         {label}
       </Switch.Content>
     </Switch>
+  )
+  if (!help) {
+    return field
+  }
+  return (
+    <div className='flex items-center gap-1'>
+      {field}
+      <HelpTip label={label}>{help}</HelpTip>
+    </div>
   )
 }
 
@@ -41,12 +47,9 @@ export const SwitchCtrl = <
   id,
   name,
   ...props
-}: SwitchProps & {
+}: SwitchFieldProps & {
   control: Control<TFieldValues>
   name: TName
-  id: string
-  label: string
-  isSmart?: boolean
 }) => {
   return (
     <Controller

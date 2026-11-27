@@ -31,6 +31,7 @@ export const GitlabAutoReviseReviewers: FC<{
           <InputField
             isSmart
             label={t('agent_auto_revise_reviewers')}
+            help={t('msg_gitlab_auto_revise_reviewers_desc')}
             placeholder='coderabbitai, reviewer'
             autoComplete='off'
             value={draft}
@@ -60,7 +61,6 @@ export const GitlabAutoReviseReviewers: FC<{
           {t('@invalid_auto_revise_reviewers')}
         </span>
       )}
-      <span className='text-muted text-xs'>{t('msg_gitlab_auto_revise_reviewers_desc')}</span>
     </FlexCol>
   )
 }
