@@ -87,7 +87,6 @@ Keep in sync with `path_filters` in `.coderabbit.yaml`.
 
 - The released version is defined by the remote tags (`v<version>` / `stable`). Check with `pnpm release:version`
 - After creating a feature branch, run `pnpm release:version --bump`. If the version was bumped, make that alone the first commit (e.g. `v1.0.2 start (DEVUNTU-1)`)
-  - Look up the release ticket (see the board's AI context) by the bumped version
   - With an already-released version, PR CI and the edge build fail
 - The edge build is done by a human
 
