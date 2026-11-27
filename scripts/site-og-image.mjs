@@ -24,7 +24,7 @@ const VARIANTS = [
     out: 'site/assets/og-image.png',
     shot: 'docs/images/board.webp',
     // サイドバーとフィルタを除いて、かんばんの列だけを見せる(元画像に対する比率)
-    crop: { left: 0.215, top: 0.286, width: 0.785, height: 0.714 },
+    crop: { left: 0.215, top: 0.135, width: 0.785, height: 0.67 },
     lines: ['AI エージェントと進める', 'セルフホスト型の', 'かんばん・チケット管理'],
     chips: ['MCP サーバー内蔵', 'Claude / Codex / OpenCode', 'GitHub / GitLab / Slack', 'Docker Compose / MIT'],
   },
