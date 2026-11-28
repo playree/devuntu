@@ -134,6 +134,7 @@ export const WikiPageClient: FC<{ spaceKey: string; number: number }> = ({ space
       >
         <ContentHeader
           isTitleWide
+          className='pl-12 md:pl-8 lg:pl-0' // 左上のサイドメニューボタンとパンくずの重なりを防ぐ
           title={
             <>
               <WikiBreadcrumbs detail={data} />

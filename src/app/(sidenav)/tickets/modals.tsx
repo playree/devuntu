@@ -145,6 +145,7 @@ export const AddModal: FC<
     <FormModal
       state={state}
       size='5xl'
+      isCompactOnMobile
       onSubmit={handleSubmit(async (req) => {
         const res = await parseAction(
           createTicket({
@@ -176,7 +177,7 @@ export const AddModal: FC<
       }
       submit={{ isPending: isSubmitting, isDisabled: !isValidCriterionRows(criteria) }}
     >
-      <GridBox isSmart>
+      <GridBox className='max-sm:px-0' isSmart>
         {parent && (
           <div className='col-span-12 flex min-w-0 items-center gap-2 text-sm'>
             <span className='text-muted shrink-0 text-xs'>{t('parent_ticket')}</span>

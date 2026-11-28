@@ -176,6 +176,7 @@ export const BoardKanbanClient: FC<{ boardId: string }> = ({ boardId }) => {
         <AccordionSection
           id='filter'
           icon={<FunnelIcon />}
+          bodyClassName='max-md:px-1.5 max-md:pb-2'
           title={
             <span className='flex items-center gap-2'>
               {t('filter')}

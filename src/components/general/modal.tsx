@@ -73,6 +73,7 @@ type ModalFrameProps = {
   /** 見出しの右(閉じるボタンの左)に置く要素 */
   headerEnd?: ReactNode
   size?: FormModalSize
+  isCompactOnMobile?: boolean
   hiddenCloseButton?: boolean
   /** 閉じられない処理中。閉じるボタンと Esc を無効にする */
   isPending?: boolean
@@ -88,6 +89,7 @@ const ModalFrame: FC<ModalFrameProps & { children: ReactNode }> = ({
   title,
   headerEnd,
   size,
+  isCompactOnMobile,
   hiddenCloseButton,
   isPending,
   isDismissable = false,
@@ -107,10 +109,19 @@ const ModalFrame: FC<ModalFrameProps & { children: ReactNode }> = ({
       UNSTABLE_portalContainer={portalContainer}
     >
       <Modal.Container placement='top' size={extraSizeClass ? undefined : (size as ModalContainerProps['size'])}>
-        <Modal.Dialog className={extraSizeClass}>
-          {!hiddenCloseButton && <Modal.CloseTrigger isDisabled={isPending} />}
-          <Modal.Header className='flex-row flex-wrap items-center justify-between gap-2'>
-            <Modal.Heading className={cn('flex items-center gap-2', headerEnd && 'shrink-0 whitespace-nowrap')}>
+        <Modal.Dialog className={cn(extraSizeClass, isCompactOnMobile && 'max-sm:px-2')}>
+          {!hiddenCloseButton && (
+            <Modal.CloseTrigger className={cn(isCompactOnMobile && 'max-sm:end-2')} isDisabled={isPending} />
+          )}
+          <Modal.Header
+            className={cn('flex-row flex-wrap items-center justify-between gap-2', !hiddenCloseButton && 'max-sm:pe-8')}
+          >
+            <Modal.Heading
+              className={cn(
+                'flex items-center gap-2 max-sm:wrap-anywhere',
+                headerEnd && 'sm:shrink-0 sm:whitespace-nowrap',
+              )}
+            >
               {title.icon}
               {title.text}
             </Modal.Heading>
@@ -184,7 +195,7 @@ export const DialogModal: FC<
   const content = resolveFooter({ footer, submit })
   return (
     <ModalFrame {...frameProps} isPending={frameProps.isPending || submit?.isPending}>
-      <Modal.Body className={cn('pt-2', bodyClassName)}>{children}</Modal.Body>
+      <Modal.Body className={cn('pt-2 max-sm:mt-0', bodyClassName)}>{children}</Modal.Body>
       {content && (
         <Modal.Footer>
           <SmartProvider isSmart>{content}</SmartProvider>

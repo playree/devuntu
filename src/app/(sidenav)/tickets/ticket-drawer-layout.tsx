@@ -82,7 +82,7 @@ export const TicketDrawerLayout: FC<{
         isOpen={!!selectedId}
         aria-label={t('ticket')}
         onClose={onClose}
-        className='bg-background border-l p-4 shadow-2xl'
+        className='bg-background p-2 shadow-2xl md:border-l md:p-4'
       >
         {selectedId && (
           <TicketDetailClient
