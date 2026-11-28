@@ -323,6 +323,9 @@
   .modal__dialog:not(.modal__dialog--full) {
     @apply max-sm:p-4;
   }
+  .modal__dialog:not(.modal__dialog--full) .modal__body + .modal__footer {
+    @apply max-sm:mt-3;
+  }
 
   /* MDXEditor: 他のフォーム部品(rounded-xl border-2)と枠線を揃える */
   .mdxeditor {

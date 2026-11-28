@@ -191,7 +191,7 @@ export const DialogModal: FC<
   const content = resolveFooter({ footer, submit })
   return (
     <ModalFrame {...frameProps} isPending={frameProps.isPending || submit?.isPending}>
-      <Modal.Body className={cn('pt-2', bodyClassName)}>{children}</Modal.Body>
+      <Modal.Body className={cn('pt-2 max-sm:mt-0', bodyClassName)}>{children}</Modal.Body>
       {content && (
         <Modal.Footer>
           <SmartProvider isSmart>{content}</SmartProvider>
