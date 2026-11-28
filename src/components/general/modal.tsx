@@ -109,8 +109,15 @@ const ModalFrame: FC<ModalFrameProps & { children: ReactNode }> = ({
       <Modal.Container placement='top' size={extraSizeClass ? undefined : (size as ModalContainerProps['size'])}>
         <Modal.Dialog className={extraSizeClass}>
           {!hiddenCloseButton && <Modal.CloseTrigger isDisabled={isPending} />}
-          <Modal.Header className='flex-row flex-wrap items-center justify-between gap-2'>
-            <Modal.Heading className={cn('flex items-center gap-2', headerEnd && 'shrink-0 whitespace-nowrap')}>
+          <Modal.Header
+            className={cn('flex-row flex-wrap items-center justify-between gap-2', !hiddenCloseButton && 'max-sm:pe-8')}
+          >
+            <Modal.Heading
+              className={cn(
+                'flex items-center gap-2 max-sm:wrap-anywhere',
+                headerEnd && 'sm:shrink-0 sm:whitespace-nowrap',
+              )}
+            >
               {title.icon}
               {title.text}
             </Modal.Heading>

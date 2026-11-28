@@ -27,7 +27,7 @@ const SideNavLayout: FC<{ children: ReactNode }> = async ({ children }) => {
           <SessionPending>
             <SideNavbar menu={createMenu} defaultWidth={sideNavWidth}>
               <div // 子が data-wide のときだけ幅制限を外し、data-fit-screen のときは #side-main の高さも子へ通す
-                className='mx-auto max-w-4xl px-2 has-data-wide:max-w-none md:has-data-fit-screen:h-full lg:px-0'
+                className='mx-auto max-w-4xl has-data-wide:max-w-none md:px-2 md:has-data-fit-screen:h-full lg:px-0'
               >
                 {children}
               </div>

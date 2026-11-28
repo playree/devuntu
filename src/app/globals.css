@@ -314,8 +314,14 @@
   .table__cell {
     @apply overflow-hidden;
   }
+  .modal__container:not(.modal__container--full) {
+    @apply max-sm:p-2;
+  }
   .modal__dialog {
     @apply bg-stone-50 dark:bg-stone-950;
+  }
+  .modal__dialog:not(.modal__dialog--full) {
+    @apply max-sm:p-4;
   }
 
   /* MDXEditor: 他のフォーム部品(rounded-xl border-2)と枠線を揃える */

@@ -1,13 +1,19 @@
 ---
 type: design_doc
 title: 画面一覧とアクセス制御
-updated: 2026-11-26
+updated: 2026-11-28
 ---
 
 # 画面一覧とアクセス制御
 
 開発者向け(画面・API の実装とアクセス制御)。画面の使い方は [user-guide.md](../guide/user-guide.md)、
 導入・運用は [installation.md](../admin/installation.md) / [operations.md](../admin/operations.md) を参照。
+
+## スマホ幅での共通レイアウト
+
+- 768px 未満では、サイドナビ付きページの本文とチケット詳細ドロワーの左右余白を各 8px に揃える。
+- 640px 未満では、フォーム・ダイアログ・確認モーダルの左右余白を外側 8px、内側 16px にする。
+- 画像のライトボックスは画面幅にかかわらず全画面で表示する。
 
 ## アクセス制御の仕組み
 

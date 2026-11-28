@@ -15,8 +15,8 @@ import {
 
 /**
  * サイドメニュー付きのレイアウト。
- * 配下に `data-nav-hidden` を持つ要素があると、lg 以上でもサイドメニューを左へ隠して
- * メインコンテンツを全幅にする(チケット詳細パネルのような広い表示用)。
+ * 配下に `data-nav-hidden` を持つ要素があると、サイドメニューのトリガーを隠す。
+ * lg 以上ではサイドメニューも左へ隠してメインコンテンツを全幅にする。
  *
  * 幅は CSS 変数 `--side-nav-w` で持ち、lg 以上では右端のハンドルで変えられる(Cookie に保存)。
  * オーバーレイ表示(lg 未満)では画面を覆い切らないよう 85vw で頭打ちにする。
@@ -60,7 +60,7 @@ export const SideNavbar: FC<{
           className={cn(
             'text-muted fixed z-40 mt-2 ml-3 rounded-lg bg-gray-200 p-2 text-sm',
             'opacity-50 hover:bg-gray-300 focus:ring-2 focus:ring-gray-200 focus:outline-hidden',
-            'lg:hidden dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600',
+            'group-has-data-nav-hidden/sidenav:hidden lg:hidden dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600',
           )}
           onClick={() => {
             setIsOpen(true)
@@ -99,7 +99,7 @@ export const SideNavbar: FC<{
         <div // メインコンテンツ
           id='side-main'
           className={cn(
-            'p-4 transition-[margin] group-has-data-nav-hidden/sidenav:ml-0 lg:ml-(--side-nav-w)',
+            'px-2 py-4 transition-[margin] group-has-data-nav-hidden/sidenav:ml-0 md:p-4 lg:ml-(--side-nav-w)',
             // ドラッグ中に余白が遅れて付いてこないよう、アニメーションを止める
             isResizing && 'transition-none',
             /**
