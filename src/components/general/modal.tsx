@@ -73,6 +73,7 @@ type ModalFrameProps = {
   /** 見出しの右(閉じるボタンの左)に置く要素 */
   headerEnd?: ReactNode
   size?: FormModalSize
+  isCompactOnMobile?: boolean
   hiddenCloseButton?: boolean
   /** 閉じられない処理中。閉じるボタンと Esc を無効にする */
   isPending?: boolean
@@ -88,6 +89,7 @@ const ModalFrame: FC<ModalFrameProps & { children: ReactNode }> = ({
   title,
   headerEnd,
   size,
+  isCompactOnMobile,
   hiddenCloseButton,
   isPending,
   isDismissable = false,
@@ -107,8 +109,10 @@ const ModalFrame: FC<ModalFrameProps & { children: ReactNode }> = ({
       UNSTABLE_portalContainer={portalContainer}
     >
       <Modal.Container placement='top' size={extraSizeClass ? undefined : (size as ModalContainerProps['size'])}>
-        <Modal.Dialog className={extraSizeClass}>
-          {!hiddenCloseButton && <Modal.CloseTrigger isDisabled={isPending} />}
+        <Modal.Dialog className={cn(extraSizeClass, isCompactOnMobile && 'max-sm:px-2')}>
+          {!hiddenCloseButton && (
+            <Modal.CloseTrigger className={cn(isCompactOnMobile && 'max-sm:end-2')} isDisabled={isPending} />
+          )}
           <Modal.Header
             className={cn('flex-row flex-wrap items-center justify-between gap-2', !hiddenCloseButton && 'max-sm:pe-8')}
           >

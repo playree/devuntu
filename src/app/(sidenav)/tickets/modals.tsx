@@ -145,6 +145,7 @@ export const AddModal: FC<
     <FormModal
       state={state}
       size='5xl'
+      isCompactOnMobile
       onSubmit={handleSubmit(async (req) => {
         const res = await parseAction(
           createTicket({
